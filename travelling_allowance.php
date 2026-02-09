@@ -26,14 +26,14 @@ try {
     $roleStmt = $pdo->prepare($roleQuery);
     $roleStmt->bindParam(':user_id', $currentUserId, PDO::PARAM_INT);
     $roleStmt->execute();
-    
+
     $userRole = $roleStmt->fetchColumn();
-    
+
     // Allow access only to Purchase Manager role
     if ($userRole !== 'Purchase Manager') {
         // Get the user's actual role for a more informative message
         $actualRole = $userRole ?: 'Unknown';
-        
+
         // Return access denied page
         http_response_code(403); // Forbidden
         echo '<!DOCTYPE html>
@@ -68,7 +68,7 @@ try {
 } catch (PDOException $e) {
     // Log error for debugging
     error_log('Error checking user role: ' . $e->getMessage());
-    
+
     // Redirect to error page
     header('Location: error.php?message=' . urlencode('Database error occurred while checking permissions.'));
     exit;
@@ -96,14 +96,23 @@ $dayOfMonth = $today->format('j');
 // Generate years for dropdown (current year and 3 years back, 2 years forward)
 $years = [];
 for ($i = -3; $i <= 2; $i++) {
-    $years[] = (int)$currentYear + $i;
+    $years[] = (int) $currentYear + $i;
 }
 
 // Month names
 $months = [
-    1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
-    5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
-    9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'
+    1 => 'January',
+    2 => 'February',
+    3 => 'March',
+    4 => 'April',
+    5 => 'May',
+    6 => 'June',
+    7 => 'July',
+    8 => 'August',
+    9 => 'September',
+    10 => 'October',
+    11 => 'November',
+    12 => 'December'
 ];
 
 // Calculate weeks for the selected month and year
@@ -115,8 +124,8 @@ $firstDay = new DateTime("$selectedYear-$selectedMonthNum-01");
 $lastDay = new DateTime($firstDay->format('Y-m-t')); // t = last day of month
 
 // Get day of week for first day (0 = Sunday, 6 = Saturday)
-$firstDayOfWeek = (int)$firstDay->format('w');
-$lastDate = (int)$lastDay->format('j');
+$firstDayOfWeek = (int) $firstDay->format('w');
+$lastDate = (int) $lastDay->format('j');
 
 // Calculate weeks based on the actual calendar
 $weeks = [];
@@ -143,8 +152,8 @@ while ($weekStart <= $lastDate) {
 $currentWeek = '';
 foreach ($weeks as $key => $weekLabel) {
     if (preg_match('/\((\d+)-(\d+)\)/', $weekLabel, $matches)) {
-        $start = (int)$matches[1];
-        $end = (int)$matches[2];
+        $start = (int) $matches[1];
+        $end = (int) $matches[2];
         if ($dayOfMonth >= $start && $dayOfMonth <= $end && $month == $currentMonth && $year == $currentYear) {
             $currentWeek = $key;
             break;
@@ -153,8 +162,8 @@ foreach ($weeks as $key => $weekLabel) {
 }
 
 // If no week was selected and we're viewing the current month, select current week
-$week = isset($_GET['week']) && $_GET['week'] ? $_GET['week'] : 
-       ($month == $currentMonth && $year == $currentYear ? $currentWeek : '');
+$week = isset($_GET['week']) && $_GET['week'] ? $_GET['week'] :
+    ($month == $currentMonth && $year == $currentYear ? $currentWeek : '');
 
 // Get current user info (for the profile section)
 $current_user = [];
@@ -163,7 +172,7 @@ try {
     $userStmt = $pdo->prepare($userQuery);
     $userStmt->bindParam(':user_id', $currentUserId, PDO::PARAM_INT);
     $userStmt->execute();
-    
+
     $userData = $userStmt->fetch(PDO::FETCH_ASSOC);
     if ($userData) {
         $current_user = [
@@ -199,7 +208,7 @@ try {
              ORDER BY username ASC";
     $stmt = $pdo->prepare($query);
     $stmt->execute();
-    
+
     // First option is "All Employees"
     $employees[] = [
         'id' => '',
@@ -208,7 +217,7 @@ try {
         'department' => '',
         'employee_id' => ''
     ];
-    
+
     // Add each user to the employees array
     while ($row = $stmt->fetch()) {
         $employees[] = [
@@ -255,7 +264,7 @@ $approval_status_groups = [
 $travel_expenses = [];
 $totalRecords = 0;
 $recordsPerPage = 20;
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
 try {
@@ -269,22 +278,22 @@ try {
                   u.username, u.designation, u.profile_picture,
                   u_updated.username as updated_by_name ";
     $dataQuery .= $baseQuery;
-    
+
     // Add filters
     $params = [];
-    
+
     // Employee filter
     if (!empty($employee)) {
         $baseQuery .= " AND te.user_id = :employee";
         $params[':employee'] = $employee;
     }
-    
+
     // Status filter
     if (!empty($status) && $status !== 'All Statuses') {
         $baseQuery .= " AND te.status = :status";
         $params[':status'] = $status;
     }
-    
+
     // Month and year filter for travel date
     if (empty($_GET)) {
         // First page load - use current month and year
@@ -310,20 +319,20 @@ try {
         $baseQuery .= " AND YEAR(te.travel_date) = :year";
         $params[':year'] = $year;
     }
-    
+
     // Week filter - only apply if we have month and year context
     if (!empty($week) && !empty($month) && !empty($year)) {
         // Extract the day range from the week format (e.g., "Week 2 (8-14)")
         if (preg_match('/\((\d+)-(\d+)\)/', $weeks[$week], $matches)) {
-            $weekStartDay = (int)$matches[1];
-            $weekEndDay = (int)$matches[2];
-            
+            $weekStartDay = (int) $matches[1];
+            $weekEndDay = (int) $matches[2];
+
             // Create date strings in SQL format (YYYY-MM-DD)
             $monthNum = array_search($month, $months);
             if ($monthNum) {
                 $startDate = sprintf('%04d-%02d-%02d', $year, $monthNum, $weekStartDay);
                 $endDate = sprintf('%04d-%02d-%02d', $year, $monthNum, $weekEndDay);
-                
+
                 // Add date range filter to query
                 $baseQuery .= " AND te.travel_date BETWEEN :week_start AND :week_end";
                 $params[':week_start'] = $startDate;
@@ -331,7 +340,7 @@ try {
             }
         }
     }
-    
+
     // Approval status filter
     if (!empty($approval_status) && $approval_status !== 'All Approvals') {
         if (strpos($approval_status, 'Manager') !== false) {
@@ -352,7 +361,7 @@ try {
             $params[':approval_status'] = strtolower($approval_status);
         }
     }
-    
+
     // Search filter
     if (!empty($search)) {
         $baseQuery .= " AND (u.username LIKE :search OR te.purpose LIKE :search OR 
@@ -360,10 +369,10 @@ try {
                       te.mode_of_transport LIKE :search OR te.notes LIKE :search)";
         $params[':search'] = "%$search%";
     }
-    
+
     // Update count query
     $countQuery = "SELECT COUNT(*) as total " . $baseQuery;
-    
+
     // Add pagination to data query
     $dataQuery = "SELECT te.*, 
                  u.username, u.designation, u.profile_picture, u.id as user_id,
@@ -371,7 +380,7 @@ try {
                  te.confirmed_distance, te.distance_confirmed_by, te.distance_confirmed_at,
                  te.hr_confirmed_distance, te.hr_id, te.hr_confirmed_at " . $baseQuery;
     $dataQuery .= " ORDER BY te.travel_date DESC, u.username ASC, te.created_at DESC LIMIT :offset, :limit";
-    
+
     // Execute count query
     $countStmt = $pdo->prepare($countQuery);
     foreach ($params as $key => $value) {
@@ -379,7 +388,7 @@ try {
     }
     $countStmt->execute();
     $totalRecords = $countStmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
+
     // Execute data query with pagination
     $dataStmt = $pdo->prepare($dataQuery);
     foreach ($params as $key => $value) {
@@ -388,30 +397,30 @@ try {
     $dataStmt->bindValue(':offset', $offset, PDO::PARAM_INT);
     $dataStmt->bindValue(':limit', $recordsPerPage, PDO::PARAM_INT);
     $dataStmt->execute();
-    
+
     // Fetch all expense records
     $travel_expenses = $dataStmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // Total pages for pagination
     $totalPages = ceil($totalRecords / $recordsPerPage);
-    
+
     // Group expenses by travel date and user
     $grouped_expenses = [];
     foreach ($travel_expenses as $expense) {
         $date_key = $expense['travel_date'];
         $user_key = $expense['user_id'];
-        
+
         if (!isset($grouped_expenses[$date_key])) {
             $grouped_expenses[$date_key] = [];
         }
-        
+
         if (!isset($grouped_expenses[$date_key][$user_key])) {
             $grouped_expenses[$date_key][$user_key] = [];
         }
-        
+
         $grouped_expenses[$date_key][$user_key][] = $expense;
     }
-    
+
 } catch (PDOException $e) {
     error_log("Error fetching travel expenses: " . $e->getMessage());
     $travel_expenses = [];
@@ -423,6 +432,7 @@ try {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -447,11 +457,11 @@ try {
             --dark-text: #1e293b;
             --muted-text: #64748b;
             --border-color: #e2e8f0;
-            --card-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            --hover-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.1);
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --hover-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
             --transition-speed: 0.2s;
         }
-        
+
         body {
             background-color: var(--light-bg);
             color: var(--dark-text);
@@ -460,20 +470,20 @@ try {
             line-height: 1.6;
             font-weight: 400;
         }
-        
+
         /* Layout and containers */
         .container-fluid {
             max-width: 1600px;
             padding: 1.5rem;
         }
-        
+
         .page-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 2rem;
         }
-        
+
         .page-title {
             font-weight: 600;
             font-size: 1.75rem;
@@ -481,7 +491,7 @@ try {
             margin-bottom: 0;
             letter-spacing: -0.025rem;
         }
-        
+
         /* Cards */
         .card {
             border: 1px solid var(--border-color);
@@ -492,15 +502,15 @@ try {
             background-color: white;
             overflow: hidden;
         }
-        
+
         .card:hover {
             box-shadow: var(--hover-shadow);
         }
-        
+
         .card-body {
             padding: 1.5rem;
         }
-        
+
         .card-header {
             background-color: white;
             padding: 1.25rem 1.5rem;
@@ -509,7 +519,7 @@ try {
             align-items: center;
             justify-content: space-between;
         }
-        
+
         .card-title {
             font-weight: 600;
             font-size: 1.1rem;
@@ -519,7 +529,7 @@ try {
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         /* Form elements */
         .form-label {
             font-weight: 500;
@@ -527,8 +537,9 @@ try {
             color: var(--dark-text);
             margin-bottom: 0.5rem;
         }
-        
-        .form-control, .form-select {
+
+        .form-control,
+        .form-select {
             border-radius: 0.5rem;
             border: 1px solid var(--border-color);
             padding: 0.6rem 0.75rem;
@@ -536,21 +547,22 @@ try {
             box-shadow: none;
             transition: all var(--transition-speed) ease;
         }
-        
-        .form-control:focus, .form-select:focus {
+
+        .form-control:focus,
+        .form-select:focus {
             border-color: var(--accent-color);
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
-        
+
         /* Search input */
         .search-container {
             position: relative;
         }
-        
+
         .search-container .form-control {
             padding-left: 2.5rem;
         }
-        
+
         .search-icon {
             position: absolute;
             left: 0.75rem;
@@ -559,7 +571,7 @@ try {
             color: var(--muted-text);
             pointer-events: none;
         }
-        
+
         /* Option groups in select */
         .form-select optgroup {
             font-weight: 600;
@@ -568,28 +580,28 @@ try {
             padding-top: 5px;
             padding-bottom: 5px;
         }
-        
+
         .form-select option {
             padding: 4px 8px;
         }
-        
+
         .form-select option.indent {
             padding-left: 16px;
         }
-        
+
         /* Status colors */
         .status-pending {
             color: var(--warning-color);
         }
-        
+
         .status-approved {
             color: var(--success-color);
         }
-        
+
         .status-rejected {
             color: var(--danger-color);
         }
-        
+
         /* Buttons */
         .btn {
             border-radius: 0.5rem;
@@ -601,30 +613,31 @@ try {
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .btn-primary {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
         }
-        
-        .btn-primary:hover, .btn-primary:focus {
+
+        .btn-primary:hover,
+        .btn-primary:focus {
             background-color: var(--secondary-color);
             border-color: var(--secondary-color);
             box-shadow: 0 4px 6px rgba(67, 97, 238, 0.15);
         }
-        
+
         .btn-outline-secondary {
             color: var(--dark-text);
             border-color: var(--border-color);
             background-color: white;
         }
-        
+
         .btn-outline-secondary:hover {
             background-color: var(--light-bg);
             color: var(--dark-text);
             border-color: var(--muted-text);
         }
-        
+
         /* User profile */
         .user-profile {
             display: flex;
@@ -635,7 +648,7 @@ try {
             box-shadow: var(--card-shadow);
             border: 1px solid var(--border-color);
         }
-        
+
         .user-avatar {
             width: 38px;
             height: 38px;
@@ -643,24 +656,24 @@ try {
             margin-right: 12px;
             background-color: var(--primary-light);
         }
-        
+
         .user-info {
             display: flex;
             flex-direction: column;
         }
-        
+
         .user-name {
             font-weight: 600;
             font-size: 0.95rem;
             margin: 0;
             color: var(--dark-text);
         }
-        
+
         .user-role {
             font-size: 0.8rem;
             color: var(--muted-text);
         }
-        
+
         /* Filter toggle */
         .filter-toggle {
             cursor: pointer;
@@ -671,7 +684,7 @@ try {
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         /* Empty state */
         .empty-state {
             display: flex;
@@ -680,54 +693,54 @@ try {
             justify-content: center;
             padding: 3rem 0;
         }
-        
+
         .empty-state-icon {
             font-size: 3rem;
             color: var(--muted-text);
             opacity: 0.3;
             margin-bottom: 1.25rem;
         }
-        
+
         .empty-state-title {
             font-weight: 600;
             color: var(--dark-text);
             margin-bottom: 0.5rem;
         }
-        
+
         .empty-state-description {
             color: var(--muted-text);
             max-width: 400px;
             text-align: center;
             font-size: 0.95rem;
         }
-        
+
         /* Status badge styles */
         .badge {
             font-weight: 500;
             letter-spacing: 0.3px;
         }
-        
+
         /* Clickable row styles */
         .clickable-row {
             cursor: pointer;
             transition: background-color 0.15s ease-in-out;
         }
-        
+
         .clickable-row:hover {
             background-color: rgba(67, 97, 238, 0.05);
         }
-        
+
         .clickable-row td {
             position: relative;
         }
-        
+
         /* Make sure buttons inside rows don't trigger the row click */
-        .clickable-row button, 
+        .clickable-row button,
         .clickable-row a {
             position: relative;
             z-index: 2;
         }
-        
+
         /* Badge for more expenses */
         .more-expenses-badge {
             font-size: 0.75rem;
@@ -739,18 +752,19 @@ try {
             display: inline-flex;
             align-items: center;
             gap: 0.25rem;
-    }
-    
+        }
+
         /* Mobile-specific styles */
         @media (max-width: 767.98px) {
             .modal-content {
                 min-height: 100vh;
             }
-            
+
             .modal-body {
-                padding-bottom: 70px; /* Space for footer buttons */
+                padding-bottom: 70px;
+                /* Space for footer buttons */
             }
-            
+
             .modal-footer {
                 position: fixed;
                 bottom: 0;
@@ -764,43 +778,44 @@ try {
                 justify-content: space-between;
                 align-items: center;
             }
-            
+
             /* Adjust table for mobile */
             .modal .table {
-                min-width: 800px; /* Ensures horizontal scroll on mobile */
+                min-width: 800px;
+                /* Ensures horizontal scroll on mobile */
             }
-            
+
             /* Better button spacing for mobile */
             .btn-group-sm .btn {
                 padding: 0.25rem 0.5rem;
                 font-size: 0.875rem;
             }
-            
+
             /* Ensure header stays on top */
             .modal-header.sticky-top {
                 z-index: 1030;
                 box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             }
         }
-        
+
         /* Custom styles for the page */
         .filter-card {
             border: none;
             border-radius: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
         }
-        
+
         .filter-card .card-header {
             background-color: #f8f9fa;
             border-bottom: 1px solid #e9ecef;
         }
-        
+
         .table-container {
             border-radius: 0.5rem;
             overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
         }
-        
+
         .table thead th {
             background-color: #f8f9fa;
             border-bottom: 2px solid #e9ecef;
@@ -809,103 +824,103 @@ try {
             font-size: 0.75rem;
             letter-spacing: 0.5px;
         }
-        
+
         .table-hover tbody tr:hover {
-            background-color: rgba(0,123,255,0.04);
+            background-color: rgba(0, 123, 255, 0.04);
         }
-        
+
         .clickable-row {
             cursor: pointer;
         }
-        
+
         .profile-pic-sm {
             width: 32px;
             height: 32px;
             border-radius: 50%;
             object-fit: cover;
         }
-        
+
         .badge-pending {
             background-color: #fef3c7;
             color: #92400e;
         }
-        
+
         .badge-approved {
             background-color: #d1fae5;
             color: #065f46;
         }
-        
+
         .badge-rejected {
             background-color: #fee2e2;
             color: #b91c1c;
         }
-        
+
         .badge-paid {
             background-color: #dbeafe;
             color: #1e40af;
         }
-        
+
         .badge-mixed {
             background-color: #e0f2fe;
             color: #0369a1;
         }
-        
+
         .badge-sm {
             font-size: 0.75rem;
             padding: 0.2rem 0.5rem;
         }
-        
+
         .auto-rejected-badge {
             font-size: 0.7rem;
             padding: 0.15rem 0.3rem;
             margin-right: 0.3rem;
         }
-        
-                /* Table highlight effect when unlocked */
+
+        /* Table highlight effect when unlocked */
         .expenses-table-container.border-success {
             border: 2px solid #10b981;
             border-radius: 0.5rem;
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
             transition: all 0.5s ease;
         }
-        
+
         /* Table column width adjustments */
         .modal .table th.col-route {
             width: 200px;
             min-width: 200px;
             max-width: 200px;
         }
-        
+
         .modal .table th.col-purpose {
             width: 220px;
             min-width: 220px;
         }
-        
+
         .modal .table th.col-mode {
             width: 120px;
         }
-        
+
         .modal .table th.col-amount {
             width: 100px;
         }
-        
+
         .modal .table th.col-date {
             width: 120px;
         }
-        
+
         .modal .table th.col-status {
             width: 100px;
         }
-        
+
         .modal .table th.col-actions {
             width: 150px;
         }
-        
+
         /* Route text hover effect */
         .route-text {
             transition: all 0.2s ease;
         }
-        
+
         .route-text:hover {
             overflow: visible;
             white-space: normal;
@@ -913,43 +928,43 @@ try {
             z-index: 10;
             position: relative;
             background-color: #f8f9fa;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             padding: 2px 5px;
             border-radius: 3px;
         }
-        
+
         /* Status confirmation modal styling */
         #statusConfirmationModal {
             z-index: 1060 !important;
         }
-        
-        #statusConfirmationModal + .modal-backdrop {
+
+        #statusConfirmationModal+.modal-backdrop {
             z-index: 1059 !important;
         }
-        
+
         /* Remove all shadows from the status confirmation modal */
         #statusConfirmationModal .modal-dialog,
         #statusConfirmationModal .modal-content,
         #statusConfirmationModal * {
             box-shadow: none !important;
         }
-        
+
         /* Override Bootstrap default shadow */
         .modal-content {
             box-shadow: none !important;
         }
-        
+
         /* Fix for multiple modal backdrops */
         body.modal-open {
             overflow: hidden;
             padding-right: 0 !important;
         }
-        
+
         /* Ensure only one backdrop is visible */
-        .modal-backdrop + .modal-backdrop {
+        .modal-backdrop+.modal-backdrop {
             display: none;
         }
-        
+
         /* Status badges for edit modal */
         [class^="status-badge-"] {
             padding: 0.35rem 0.75rem;
@@ -960,27 +975,27 @@ try {
             letter-spacing: 0.5px;
             display: inline-block;
         }
-        
+
         .status-badge-pending {
             background-color: #fef3c7;
             color: #92400e;
         }
-        
+
         .status-badge-approved {
             background-color: #d1fae5;
             color: #065f46;
         }
-    
+
         .status-badge-rejected {
             background-color: #fee2e2;
             color: #b91c1c;
         }
-        
+
         .status-badge-paid {
             background-color: #dbeafe;
             color: #1e40af;
         }
-        
+
         /* Loading overlay */
         .loading-overlay {
             position: fixed;
@@ -993,8 +1008,8 @@ try {
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            }
-        
+        }
+
         .spinner-container {
             text-align: center;
             padding: 2rem;
@@ -1002,7 +1017,7 @@ try {
             border-radius: 0.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        
+
         /* Toast notifications */
         .toast {
             position: fixed;
@@ -1010,85 +1025,85 @@ try {
             right: 20px;
             padding: 12px 20px;
             border-radius: 4px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             z-index: 9999;
             transition: all 0.5s ease;
         }
-        
+
         .toast-success {
             background-color: #10b981;
             color: white;
         }
-        
+
         .toast-info {
             background-color: #3949ab;
             color: white;
         }
-        
+
         .toast-error {
             background-color: #ef4444;
             color: white;
         }
-        
+
         /* Modal enhancements */
         .modal-header.sticky-top {
             z-index: 1055;
         }
-        
+
         .modal-footer.sticky-bottom {
             z-index: 1055;
         }
-        
-                        /* Timeline button styles */
-                .btn-icon-only {
-                    background: transparent;
-                    border: none;
-                    color: rgba(255, 255, 255, 0.85);
-                    padding: 0.4rem;
-                    line-height: 1;
-                    border-radius: 50%;
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: all 0.2s ease;
-                    width: 32px;
-                    height: 32px;
-                }
-                
-                .btn-icon-only:hover {
-                    background-color: rgba(255, 255, 255, 0.15);
-                    color: #ffffff;
-                    transform: scale(1.05);
-                }
-                
-                .btn-icon-only:active {
-                    transform: scale(0.95);
-                }
-                
-                .btn-icon-only i {
-                    font-size: 1.1rem;
-                }
-                
-                /* Mobile optimizations */
-                @media (max-width: 767.98px) {
-                    .modal-dialog-scrollable .modal-content {
-                        max-height: 100%;
-                    }
-                    
-                    .modal-dialog-scrollable .modal-body {
-                        overflow-y: auto;
-                    }
-                    
-                    .modal-footer.sticky-bottom {
-                        position: sticky;
-                        bottom: 0;
-                    }
-                    
-                    .table-responsive {
-                        min-width: 800px;
-                }
+
+        /* Timeline button styles */
+        .btn-icon-only {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.85);
+            padding: 0.4rem;
+            line-height: 1;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            width: 32px;
+            height: 32px;
         }
-        
+
+        .btn-icon-only:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .btn-icon-only:active {
+            transform: scale(0.95);
+        }
+
+        .btn-icon-only i {
+            font-size: 1.1rem;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 767.98px) {
+            .modal-dialog-scrollable .modal-content {
+                max-height: 100%;
+            }
+
+            .modal-dialog-scrollable .modal-body {
+                overflow-y: auto;
+            }
+
+            .modal-footer.sticky-bottom {
+                position: sticky;
+                bottom: 0;
+            }
+
+            .table-responsive {
+                min-width: 800px;
+            }
+        }
+
         /* Attendance photo styles */
         .punch-photo {
             width: 100%;
@@ -1096,20 +1111,21 @@ try {
             object-fit: cover;
             transition: all 0.3s ease;
         }
-        
+
         .punch-photo:hover {
             transform: scale(1.02);
-    }
-    
-        .card-header.bg-primary, .card-header.bg-success {
+        }
+
+        .card-header.bg-primary,
+        .card-header.bg-success {
             font-weight: 500;
         }
-        
+
         /* Add a subtle zoom effect when hovering over the photo links */
         a:hover .punch-photo {
             opacity: 0.9;
         }
-        
+
         /* Style for the photo placeholder */
         .p-4.text-muted {
             height: 200px;
@@ -1119,18 +1135,18 @@ try {
             align-items: center;
             background-color: #f8f9fa;
         }
-        
+
         /* Locked row styles */
         .locked-row {
             opacity: 0.75;
             filter: blur(0.3px);
             cursor: not-allowed !important;
         }
-        
+
         .locked-row:hover {
             background-color: inherit !important;
         }
-        
+
         .awaiting-badge {
             display: inline-block;
             padding: 0.25em 0.6em;
@@ -1144,7 +1160,7 @@ try {
             border-radius: 0.375rem;
             background-color: #6c757d;
         }
-        
+
         /* Ensure distance is properly hidden */
         [id^="total-distance-display-"][style*="display:none"] {
             display: none !important;
@@ -1157,1654 +1173,1792 @@ try {
         }
     </style>
 </head>
+
 <body>
     <?php include 'includes/manager_panel.php'; ?>
-    
+
     <div class="main-content">
         <div class="container-fluid">
             <div class="page-header mb-4">
                 <h1 class="page-title">Travel Expenses Approval</h1>
                 <div class="d-flex align-items-center">
-                    <a href="#" id="exportExpensesBtn" class="btn btn-primary me-2"><i class="bi bi-file-earmark-excel me-1"></i> Export Expenses</a>
+                    <a href="#" id="exportExpensesBtn" class="btn btn-primary me-2"><i
+                            class="bi bi-file-earmark-excel me-1"></i> Export Expenses</a>
                     <div class="user-profile">
-                        <img src="https://ui-avatars.com/api/?name=<?= urlencode(substr($current_user['name'], 0, 1)) ?>&background=4361ee&color=fff&bold=true" alt="User Avatar" class="user-avatar">
+                        <img src="https://ui-avatars.com/api/?name=<?= urlencode(substr($current_user['name'], 0, 1)) ?>&background=4361ee&color=fff&bold=true"
+                            alt="User Avatar" class="user-avatar">
                         <div class="user-info">
                             <div class="user-name"><?= htmlspecialchars($current_user['name']) ?></div>
-                            <div class="user-role"><?= htmlspecialchars(!empty($current_user['designation']) ? $current_user['designation'] : $current_user['role']) ?></div>
+                            <div class="user-role">
+                                <?= htmlspecialchars(!empty($current_user['designation']) ? $current_user['designation'] : $current_user['role']) ?>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-        <!-- Filter Section -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="card-title"><i class="bi bi-funnel me-2"></i>Filter Expenses</h5>
-                <span class="filter-toggle" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
-                    <i class="bi bi-sliders"></i> Toggle Filters
-                </span>
-            </div>
-            <div class="collapse show" id="filterCollapse">
-                <div class="card-body">
-                    <form id="filterForm" method="GET" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
-                        <!-- Search bar -->
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <div class="search-container">
-                                    <i class="bi bi-search search-icon"></i>
-                                    <input type="text" class="form-control" id="search" name="search" placeholder="Search by employee name, expense type, location, etc..." value="<?= htmlspecialchars($search) ?>">
+            <!-- Filter Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title"><i class="bi bi-funnel me-2"></i>Filter Expenses</h5>
+                    <span class="filter-toggle" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+                        <i class="bi bi-sliders"></i> Toggle Filters
+                    </span>
+                </div>
+                <div class="collapse show" id="filterCollapse">
+                    <div class="card-body">
+                        <form id="filterForm" method="GET" action="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>">
+                            <!-- Search bar -->
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <div class="search-container">
+                                        <i class="bi bi-search search-icon"></i>
+                                        <input type="text" class="form-control" id="search" name="search"
+                                            placeholder="Search by employee name, expense type, location, etc..."
+                                            value="<?= htmlspecialchars($search) ?>">
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="row g-3">
-                            <div class="col-md-6 col-lg-2">
-                                <label for="employee" class="form-label">Employee</label>
-                                <select class="form-select" id="employee" name="employee">
-                                    <?php foreach ($employees as $emp): ?>
-                                        <option value="<?= htmlspecialchars($emp['id']) ?>" <?= $employee == $emp['id'] ? 'selected' : '' ?> 
-                                            <?= !empty($emp['employee_id']) ? 'data-employee-id="' . htmlspecialchars($emp['employee_id']) . '"' : '' ?>>
-                                            <?= htmlspecialchars($emp['name']) ?>
-                                            <?= !empty($emp['department']) ? ' (' . htmlspecialchars($emp['department']) . ')' : '' ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            
-                            <div class="col-md-6 col-lg-2">
-                                <label for="status" class="form-label">Status</label>
-                                <select class="form-select" id="status" name="status">
-                                    <?php foreach ($statuses as $statusOption): ?>
-                                        <option value="<?= htmlspecialchars($statusOption) ?>" <?= $status === $statusOption ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($statusOption) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            
-                            <div class="col-md-6 col-lg-2">
-                                <label for="month" class="form-label">Month</label>
-                                <select class="form-select" id="month" name="month">
-                                    <option value="" <?= ($month === '') && !empty($_GET) ? 'selected' : '' ?>>All Months</option>
-                                    <?php foreach ($months as $monthNum => $monthName): ?>
-                                        <option value="<?= htmlspecialchars($monthName) ?>" 
-                                            <?= ($month === $monthName || (empty($_GET) && $monthName === $currentMonth)) ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($monthName) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            
-                            <div class="col-md-6 col-lg-2">
-                                <label for="week" class="form-label">Week</label>
-                                <select class="form-select" id="week" name="week">
-                                    <option value="">All Weeks</option>
-                                    <?php foreach ($weeks as $weekKey => $weekLabel): ?>
-                                        <option value="<?= htmlspecialchars($weekKey) ?>" <?= $week === $weekKey ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($weekLabel) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            
-                            <div class="col-md-6 col-lg-2">
-                                <label for="year" class="form-label">Year</label>
-                                <select class="form-select" id="year" name="year">
-                                    <?php foreach ($years as $yearOption): ?>
-                                        <option value="<?= htmlspecialchars($yearOption) ?>" <?= $year == $yearOption ? 'selected' : '' ?>>
-                                            <?= htmlspecialchars($yearOption) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            
-                            <div class="col-md-6 col-lg-2">
-                                <label for="approval_status" class="form-label">Approval Status</label>
-                                <select class="form-select" id="approval_status" name="approval_status">
-                                    <option value="All Approvals" <?= $approval_status === 'All Approvals' ? 'selected' : '' ?>>All Approvals</option>
-                                    <?php foreach ($approval_status_groups as $group => $statuses): ?>
-                                        <optgroup label="<?= htmlspecialchars($group) ?>">
-                                            <?php foreach ($statuses as $status): ?>
-                                                <?php
+
+                            <div class="row g-3">
+                                <div class="col-md-6 col-lg-2">
+                                    <label for="employee" class="form-label">Employee</label>
+                                    <select class="form-select" id="employee" name="employee">
+                                        <?php foreach ($employees as $emp): ?>
+                                            <option value="<?= htmlspecialchars($emp['id']) ?>" <?= $employee == $emp['id'] ? 'selected' : '' ?>     <?= !empty($emp['employee_id']) ? 'data-employee-id="' . htmlspecialchars($emp['employee_id']) . '"' : '' ?>>
+                                                <?= htmlspecialchars($emp['name']) ?>
+                                                <?= !empty($emp['department']) ? ' (' . htmlspecialchars($emp['department']) . ')' : '' ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 col-lg-2">
+                                    <label for="status" class="form-label">Status</label>
+                                    <select class="form-select" id="status" name="status">
+                                        <?php foreach ($statuses as $statusOption): ?>
+                                            <option value="<?= htmlspecialchars($statusOption) ?>"
+                                                <?= $status === $statusOption ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($statusOption) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 col-lg-2">
+                                    <label for="month" class="form-label">Month</label>
+                                    <select class="form-select" id="month" name="month">
+                                        <option value="" <?= ($month === '') && !empty($_GET) ? 'selected' : '' ?>>All
+                                            Months</option>
+                                        <?php foreach ($months as $monthNum => $monthName): ?>
+                                            <option value="<?= htmlspecialchars($monthName) ?>" <?= ($month === $monthName || (empty($_GET) && $monthName === $currentMonth)) ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($monthName) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 col-lg-2">
+                                    <label for="week" class="form-label">Week</label>
+                                    <select class="form-select" id="week" name="week">
+                                        <option value="">All Weeks</option>
+                                        <?php foreach ($weeks as $weekKey => $weekLabel): ?>
+                                            <option value="<?= htmlspecialchars($weekKey) ?>" <?= $week === $weekKey ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($weekLabel) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 col-lg-2">
+                                    <label for="year" class="form-label">Year</label>
+                                    <select class="form-select" id="year" name="year">
+                                        <?php foreach ($years as $yearOption): ?>
+                                            <option value="<?= htmlspecialchars($yearOption) ?>" <?= $year == $yearOption ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($yearOption) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 col-lg-2">
+                                    <label for="approval_status" class="form-label">Approval Status</label>
+                                    <select class="form-select" id="approval_status" name="approval_status">
+                                        <option value="All Approvals" <?= $approval_status === 'All Approvals' ? 'selected' : '' ?>>All Approvals</option>
+                                        <?php foreach ($approval_status_groups as $group => $statuses): ?>
+                                            <optgroup label="<?= htmlspecialchars($group) ?>">
+                                                <?php foreach ($statuses as $status): ?>
+                                                    <?php
                                                     $statusClass = '';
-                                                    if (strpos($status, 'Approved') !== false) $statusClass = 'status-approved';
-                                                    elseif (strpos($status, 'Rejected') !== false) $statusClass = 'status-rejected';
-                                                    elseif (strpos($status, 'Pending') !== false) $statusClass = 'status-pending';
-                                                ?>
-                                                <option value="<?= htmlspecialchars($status) ?>" 
-                                                        class="<?= $statusClass ?>" 
+                                                    if (strpos($status, 'Approved') !== false)
+                                                        $statusClass = 'status-approved';
+                                                    elseif (strpos($status, 'Rejected') !== false)
+                                                        $statusClass = 'status-rejected';
+                                                    elseif (strpos($status, 'Pending') !== false)
+                                                        $statusClass = 'status-pending';
+                                                    ?>
+                                                    <option value="<?= htmlspecialchars($status) ?>" class="<?= $statusClass ?>"
                                                         <?= $approval_status === $status ? 'selected' : '' ?>>
-                                                    <?= htmlspecialchars($status) ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </optgroup>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            
-                            <div class="col-12 mt-4">
-                                <hr class="my-1">
-                                <div class="d-flex justify-content-end gap-2 mt-3">
-                                    <a href="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>" class="btn btn-outline-secondary">
-                                        <i class="bi bi-x-circle"></i> Clear All
-                                    </a>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="bi bi-search"></i> Apply Filters
-                                    </button>
+                                                        <?= htmlspecialchars($status) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </optgroup>
+                                        <?php endforeach; ?>
+                                    </select>
                                 </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
 
-        <!-- Quick Overview Section -->
-        <?php include 'components/dashboard_widgets/travel_expenses_overview.php'; ?>
-        
-        <!-- Status Legend -->
-        <div class="alert alert-info mb-4">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-info-circle-fill me-2 fs-5"></i>
-                <div>
-                    <strong>Status Guide:</strong>
-                    <p class="mb-1 mt-1">
-                        <span class="badge bg-info me-1">Mixed (1/1)</span> 
-                        indicates that some expenses have different statuses. The format shows 
-                        <span class="badge bg-success me-1 badge-sm">Approved (1)</span> / 
-                        <span class="badge bg-danger me-1 badge-sm">Rejected (1)</span> counts.
-                    </p>
-                    <p class="mb-0">
-                        <small>Click on any row to see all expenses for that employee on that date.</small>
-                    </p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Results Area -->
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title"><i class="bi bi-receipt me-2"></i>Travel Expenses</h5>
-                <button class="btn btn-outline-secondary btn-sm">
-                    <i class="bi bi-download"></i> Export
-                </button>
-            </div>
-            <div class="card-body p-0">
-                <?php if (!empty($grouped_expenses)): ?>
-                <!-- Table for travel expenses -->
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th><i class="bi bi-person-circle me-1"></i> Employee</th>
-                                <th><i class="bi bi-card-text me-1"></i> Purpose</th>
-                                <th><i class="bi bi-calendar-plus me-1"></i> Submitted Date</th>
-                                <th><i class="bi bi-calendar-event me-1"></i> Travel Date</th>
-                                <th><i class="bi bi-currency-rupee me-1"></i> Amount</th>
-                                <th><i class="bi bi-tag me-1"></i> Status</th>
-                                <th><i class="bi bi-calculator me-1"></i> Accountant</th>
-                                <th><i class="bi bi-briefcase me-1"></i> Manager</th>
-                                <th><i class="bi bi-people me-1"></i> HR</th>
-                                <th class="text-center"><i class="bi bi-gear me-1"></i> Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php 
-                            $modal_id = 0;
-                            foreach($grouped_expenses as $date => $users_expenses): 
-                                foreach($users_expenses as $user_id => $user_expenses):
-                                    // Show first expense for this user on this date
-                                    $expense = $user_expenses[0];
-                                    $additional_expenses = count($user_expenses) - 1;
-                                    // Generate a unique modal ID using date and user_id to ensure proper linking
-                                    $modal_id = "modal_" . str_replace(['-', ' '], '_', $date) . "_" . $user_id;
-                                    
-                                    // Calculate aggregate status for all expenses on this date
-                                    $pending_count = 0;
-                                    $approved_count = 0;
-                                    $rejected_count = 0;
-                                    
-                                    foreach($user_expenses as $exp) {
-                                        $exp_status = strtolower($exp['status']);
-                                        if ($exp_status == 'pending') {
-                                            $pending_count++;
-                                        } elseif ($exp_status == 'approved') {
-                                            $approved_count++;
-                                        } elseif ($exp_status == 'rejected') {
-                                            $rejected_count++;
-                                        }
-                                    }
-                                    
-                                    // Determine overall status class and text
-                                    $statusClass = '';
-                                    $statusText = '';
-                                    
-                                    if ($pending_count > 0) {
-                                        // If any expense is pending, show pending
-                                        $statusClass = 'bg-warning text-dark';
-                                        $statusText = "Pending";
-                                    } elseif ($approved_count > 0 && $rejected_count > 0) {
-                                        // If mix of approved and rejected, show mixed
-                                        $statusClass = 'bg-info';
-                                        $statusText = "Mixed";
-                                    } elseif ($approved_count > 0) {
-                                        // If all approved
-                                        $statusClass = 'bg-success';
-                                        $statusText = "Approved";
-                                    } elseif ($rejected_count > 0) {
-                                        // If all rejected
-                                        $statusClass = 'bg-danger';
-                                        $statusText = "Rejected";
-                                    } else {
-                                        // Default case
-                                        $statusClass = 'bg-secondary';
-                                        $statusText = "Unknown";
-                                    }
-                                    
-                                    $managerStatusClass = '';
-                                    switch(strtolower($expense['manager_status'] ?? 'not_reviewed')) {
-                                                                                    case 'approved': $managerStatusClass = 'bg-success'; break;
-                                        case 'pending': $managerStatusClass = 'bg-warning text-dark'; break;
-                                        case 'rejected': $managerStatusClass = 'bg-danger'; break;
-                                        default: $managerStatusClass = 'bg-secondary'; break;
-                                    }
-                                    
-                                    $accountantStatusClass = '';
-                                    switch(strtolower($expense['accountant_status'] ?? 'not_reviewed')) {
-                                                                                    case 'approved': $accountantStatusClass = 'bg-success'; break;
-                                        case 'pending': $accountantStatusClass = 'bg-warning text-dark'; break;
-                                        case 'rejected': $accountantStatusClass = 'bg-danger'; break;
-                                        default: $accountantStatusClass = 'bg-secondary'; break;
-                                    }
-                                    
-                                    $hrStatusClass = '';
-                                    switch(strtolower($expense['hr_status'] ?? 'not_reviewed')) {
-                                                                                    case 'approved': $hrStatusClass = 'bg-success'; break;
-                                        case 'pending': $hrStatusClass = 'bg-warning text-dark'; break;
-                                        case 'rejected': $hrStatusClass = 'bg-danger'; break;
-                                        default: $hrStatusClass = 'bg-secondary'; break;
-                                    }
-                                    
-                                    // Format the travel date
-                                    $travelDate = date('d M Y', strtotime($expense['travel_date']));
-                                    
-                                    // Format the submission date (created_at)
-                                    $submittedDate = date('d M Y', strtotime($expense['created_at']));
-                                    
-                                    // Calculate total amount for all expenses on this date for this user
-                                    $totalAmount = 0;
-                                    foreach($user_expenses as $exp) {
-                                        $totalAmount += $exp['amount'];
-                                    }
-                                    
-                                    // Generate profile picture URL (or use default if not available)
-                                    $profilePicture = !empty($expense['profile_picture']) ? 
-                                        'uploads/profile_pictures/' . $expense['profile_picture'] : 
-                                        'https://ui-avatars.com/api/?name=' . urlencode(substr($expense['username'], 0, 2)) . '&background=4361ee&color=fff&bold=true';
-                                    
-                                    // Check if current time is within approval window
-                                    // Approval window: Thursday 00:01 to Tuesday 17:00
-                                    $currentDay = date('N'); // 1 (Monday) to 7 (Sunday)
-                                    $currentHour = date('H'); // 00 to 23
-                                    $currentMinute = date('i'); // 00 to 59
-                                    
-                                    // Calculate if current time is within approval window
-                                    $isApprovalTime = false;
-                                    
-                                    // Thursday (day 4) - approval starts at 00:01
-                                    if ($currentDay == 4 && ($currentHour > 0 || ($currentHour == 0 && $currentMinute >= 1))) {
-                                        $isApprovalTime = true;
-                                    }
-                                    // Friday (day 5), Saturday (day 6), Sunday (day 7)
-                                    elseif ($currentDay >= 5 && $currentDay <= 7) {
-                                        $isApprovalTime = true;
-                                    }
-                                    // Monday (day 1) - approval continues all day
-                                    elseif ($currentDay == 1) {
-                                        $isApprovalTime = true;
-                                    }
-                                    // Tuesday (day 2) - approval ends at 17:00
-                                    elseif ($currentDay == 2 && $currentHour < 17) {
-                                        $isApprovalTime = true;
-                                    }
-                                    
-                                    // Lock all expenses if outside approval window
-                                    $isLocked = !$isApprovalTime;
-                                    $rowClass = "group-row " . ($isLocked ? "locked-row" : "clickable-row");
-                                    $modalAttributes = $isLocked ? "" : "data-bs-toggle=\"modal\" data-bs-target=\"#$modal_id\"";
-                            ?>
-                            <tr class="<?= $rowClass ?>" <?= $modalAttributes ?>>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <img src="<?= htmlspecialchars($profilePicture) ?>" 
-                                             class="rounded-circle me-2" width="36" height="36" alt="Profile Picture">
-                                        <div>
-                                            <div class="fw-medium"><?= htmlspecialchars($expense['username']) ?></div>
-                                            <div class="text-muted small"><?= htmlspecialchars($expense['designation'] ?? 'Employee') ?></div>
-                                            <?php if ($additional_expenses > 0): ?>
-                                            <div class="mt-1">
-                                                <span class="more-expenses-badge">
-                                                    <i class="bi bi-plus-circle"></i> <?= $additional_expenses ?> more expense<?= $additional_expenses > 1 ? 's' : '' ?>
-                                                </span>
-                                            </div>
-                                            <?php endif; ?>
-                                            
-                                            <?php if ($isLocked): ?>
-                                            <div class="d-flex flex-column gap-1 mt-1">
-                                                <?php
-                                                // Prepare awaiting text if locked
-                                                $awaitingText = "Locked (System locked outside Thu 00:01 - Tue 17:00)";
-                                                ?>
-                                                <div class="locked-indicator">
-                                                    <i class="bi bi-lock-fill text-secondary me-1"></i>
-                                                    <span class="awaiting-badge"><?= $awaitingText ?></span>
-                                                </div>
-                                            </div>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <?= htmlspecialchars($expense['purpose']) ?>
-                                    <div class="text-muted small text-truncate" style="max-width: 250px;" title="<?= htmlspecialchars($expense['from_location'] . ' → ' . $expense['to_location']) ?>">
-                                        <?= htmlspecialchars($expense['from_location']) ?> → <?= htmlspecialchars($expense['to_location']) ?>
-                                    </div>
-                                </td>
-                                <td><?= $submittedDate ?></td>
-                                <td><?= $travelDate ?></td>
-                                <td>
-                                    ₹<?= number_format($expense['amount'], 2) ?>
-                                    <?php if ($additional_expenses > 0): ?>
-                                    <div class="text-muted small">
-                                        Total: ₹<?= number_format($totalAmount, 2) ?>
-                                    </div>
-                                    <?php endif; ?>
-                                </td>
-                                <td><span class="badge <?= $statusClass ?>"><?= htmlspecialchars($statusText) ?></span></td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <?php
-                                        // Calculate accountant status counts
-                                        $acc_pending_count = 0;
-                                        $acc_approved_count = 0;
-                                        $acc_rejected_count = 0;
-                                        
-                                        foreach($user_expenses as $exp) {
-                                            $acc_status = strtolower($exp['accountant_status'] ?? 'pending');
-                                            if ($acc_status == 'pending' || $acc_status == 'not_reviewed' || empty($acc_status)) {
-                                                $acc_pending_count++;
-                                            } elseif ($acc_status == 'approved') {
-                                                $acc_approved_count++;
-                                            } elseif ($acc_status == 'rejected') {
-                                                $acc_rejected_count++;
-                                            }
-                                        }
-                                        
-                                        // Determine accountant status badge
-                                        $acc_status_text = '';
-                                        $acc_status_class = '';
-                                        
-                                        if ($acc_pending_count > 0) {
-                                            $acc_status_class = 'bg-warning text-dark';
-                                            $acc_status_text = "Pending ({$acc_pending_count})";
-                                        } elseif ($acc_approved_count > 0 && $acc_rejected_count > 0) {
-                                            $acc_status_class = 'bg-info';
-                                            $acc_status_text = "Mixed ({$acc_approved_count}/{$acc_rejected_count})";
-                                        } elseif ($acc_approved_count > 0) {
-                                            $acc_status_class = 'bg-success';
-                                            $acc_status_text = "Approved ({$acc_approved_count})";
-                                        } elseif ($acc_rejected_count > 0) {
-                                            $acc_status_class = 'bg-danger';
-                                            $acc_status_text = "Rejected ({$acc_rejected_count})";
-                                        } else {
-                                            $acc_status_class = 'bg-secondary';
-                                            $acc_status_text = "Not Reviewed";
-                                        }
-                                        ?>
-                                        <span class="badge <?= $acc_status_class ?> me-1">
-                                            <?= $acc_status_text ?>
-                                        </span>
-                                        <?php if (!empty($expense['accountant_reason'])): ?>
-                                            <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
-                                                    data-bs-toggle="modal" data-bs-target="#reasonModal" 
-                                                    data-title="Accountant's Reason" 
-                                                    data-reason="<?= htmlspecialchars($expense['accountant_reason']) ?>">
-                                                <i class="bi bi-info-circle"></i>
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
-
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <?php
-                                        // Calculate manager status counts
-                                        $mgr_pending_count = 0;
-                                        $mgr_approved_count = 0;
-                                        $mgr_rejected_count = 0;
-                                        
-                                        foreach($user_expenses as $exp) {
-                                            $mgr_status = strtolower($exp['manager_status'] ?? 'pending');
-                                            if ($mgr_status == 'pending' || $mgr_status == 'not_reviewed' || empty($mgr_status)) {
-                                                $mgr_pending_count++;
-                                            } elseif ($mgr_status == 'approved') {
-                                                $mgr_approved_count++;
-                                            } elseif ($mgr_status == 'rejected') {
-                                                $mgr_rejected_count++;
-                                            }
-                                        }
-                                        
-                                        // Determine manager status badge
-                                        $mgr_status_text = '';
-                                        $mgr_status_class = '';
-                                        
-                                        if ($mgr_pending_count > 0) {
-                                            $mgr_status_class = 'bg-warning text-dark';
-                                            $mgr_status_text = "Pending ({$mgr_pending_count})";
-                                        } elseif ($mgr_approved_count > 0 && $mgr_rejected_count > 0) {
-                                            $mgr_status_class = 'bg-info';
-                                            $mgr_status_text = "Mixed ({$mgr_approved_count}/{$mgr_rejected_count})";
-                                        } elseif ($mgr_approved_count > 0) {
-                                            $mgr_status_class = 'bg-success';
-                                            $mgr_status_text = "Approved ({$mgr_approved_count})";
-                                        } elseif ($mgr_rejected_count > 0) {
-                                            $mgr_status_class = 'bg-danger';
-                                            $mgr_status_text = "Rejected ({$mgr_rejected_count})";
-                                        } else {
-                                            $mgr_status_class = 'bg-secondary';
-                                            $mgr_status_text = "Not Reviewed";
-                                        }
-                                        ?>
-                                        <span class="badge <?= $mgr_status_class ?> me-1">
-                                            <?= $mgr_status_text ?>
-                                        </span>
-                                        <?php if (!empty($expense['manager_reason'])): ?>
-                                            <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
-                                                    data-bs-toggle="modal" data-bs-target="#reasonModal" 
-                                                    data-title="Manager's Reason" 
-                                                    data-reason="<?= htmlspecialchars($expense['manager_reason']) ?>">
-                                                <i class="bi bi-info-circle"></i>
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
-
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <?php
-                                        // Calculate HR status counts
-                                        $hr_pending_count = 0;
-                                        $hr_approved_count = 0;
-                                        $hr_rejected_count = 0;
-                                        
-                                        foreach($user_expenses as $exp) {
-                                            $hr_status = strtolower($exp['hr_status'] ?? 'pending');
-                                            if ($hr_status == 'pending' || $hr_status == 'not_reviewed' || empty($hr_status)) {
-                                                $hr_pending_count++;
-                                            } elseif ($hr_status == 'approved') {
-                                                $hr_approved_count++;
-                                            } elseif ($hr_status == 'rejected') {
-                                                $hr_rejected_count++;
-                                            }
-                                        }
-                                        
-                                        // Determine HR status badge
-                                        $hr_status_text = '';
-                                        $hr_status_class = '';
-                                        
-                                        if ($hr_pending_count > 0) {
-                                            $hr_status_class = 'bg-warning text-dark';
-                                            $hr_status_text = "Pending ({$hr_pending_count})";
-                                        } elseif ($hr_approved_count > 0 && $hr_rejected_count > 0) {
-                                            $hr_status_class = 'bg-info';
-                                            $hr_status_text = "Mixed ({$hr_approved_count}/{$hr_rejected_count})";
-                                        } elseif ($hr_approved_count > 0) {
-                                            $hr_status_class = 'bg-success';
-                                            $hr_status_text = "Approved ({$hr_approved_count})";
-                                        } elseif ($hr_rejected_count > 0) {
-                                            $hr_status_class = 'bg-danger';
-                                            $hr_status_text = "Rejected ({$hr_rejected_count})";
-                                        } else {
-                                            $hr_status_class = 'bg-secondary';
-                                            $hr_status_text = "Not Reviewed";
-                                        }
-                                        ?>
-                                        <span class="badge <?= $hr_status_class ?> me-1">
-                                            <?= $hr_status_text ?>
-                                        </span>
-                                        <?php if (!empty($expense['hr_reason'])): ?>
-                                            <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
-                                                    data-bs-toggle="modal" data-bs-target="#reasonModal" 
-                                                    data-title="HR's Reason" 
-                                                    data-reason="<?= htmlspecialchars($expense['hr_reason']) ?>">
-                                                <i class="bi bi-info-circle"></i>
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
-
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group">
-                                        <button class="btn btn-sm btn-outline-primary" title="View Details" data-expense-id="<?= $expense['id'] ?>">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        
-                                        <button class="btn btn-sm btn-outline-info edit-expense-btn" title="Edit Expense" 
-                                                data-bs-toggle="modal" data-bs-target="#editExpenseModal" 
-                                                data-expense-id="<?= $expense['id'] ?>">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        
-                                        <?php if (strtolower($expense['status']) == 'pending'): ?>
-                                        <button class="btn btn-sm btn-outline-success" title="Approve" data-expense-id="<?= $expense['id'] ?>">
-                                            <i class="bi bi-check-lg"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger" title="Reject" data-expense-id="<?= $expense['id'] ?>">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                        <?php endif; ?>
-                                        
-                                        <?php if (!empty($expense['bill_file_path'])): ?>
-                                        <a href="<?= htmlspecialchars($expense['bill_file_path']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary" title="View Receipt">
-                                            <i class="bi bi-file-earmark-text"></i>
+                                <div class="col-12 mt-4">
+                                    <hr class="my-1">
+                                    <div class="d-flex justify-content-end gap-2 mt-3">
+                                        <a href="<?= htmlspecialchars($_SERVER['PHP_SELF']) ?>"
+                                            class="btn btn-outline-secondary">
+                                            <i class="bi bi-x-circle"></i> Clear All
                                         </a>
-                                        <?php endif; ?>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-search"></i> Apply Filters
+                                        </button>
                                     </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Expense Detail Modals for each grouped set -->
-                <?php 
-                foreach($grouped_expenses as $date => $users_expenses): 
-                    foreach($users_expenses as $user_id => $user_expenses):
-                        // Generate a unique modal ID using date and user_id for all expense groups
-                        $modal_id = "modal_" . str_replace(['-', ' '], '_', $date) . "_" . $user_id;
-                        $expense = $user_expenses[0]; // First expense for header info
-                        $formatted_date = date('d M Y', strtotime($date));
-                ?>
-                <div class="modal fade" id="<?= $modal_id ?>" tabindex="-1" aria-labelledby="<?= $modal_id ?>Label" aria-hidden="true">
-                    <div class="modal-dialog modal-fullscreen-md-down modal-xxl modal-dialog-centered modal-dialog-scrollable" style="max-width: 95%">
-                        <div class="modal-content border-0 shadow">
-                            <div class="modal-header bg-primary text-white border-0 sticky-top">
-                                <div>
-                                    <h5 class="modal-title" id="<?= $modal_id ?>Label">
-                                        <i class="bi bi-receipt me-2"></i> Travel Expenses for <?= htmlspecialchars($expense['username']) ?> on <?= $formatted_date ?>
-                                    </h5>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <button type="button" class="btn btn-icon-only me-2" id="timeline-btn-<?= $modal_id ?>" title="View Travel Timeline">
-                                        <i class="bi bi-clock-history"></i>
-                                    </button>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                             </div>
-                            <div class="modal-body p-0">
-                                <!-- User info header -->
-                                <div class="bg-light p-3 border-bottom">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-flex align-items-center">
-                                            <?php
-                                            // Generate profile picture URL (or use default if not available)
-                                            $profilePicture = !empty($expense['profile_picture']) ? 
-                                                'uploads/profile_pictures/' . $expense['profile_picture'] : 
-                                                'https://ui-avatars.com/api/?name=' . urlencode(substr($expense['username'], 0, 2)) . '&background=4361ee&color=fff&bold=true';
-                                            
-                                            // Calculate total amount
-                                            $totalAmount = array_sum(array_column($user_expenses, 'amount'));
-                                            
-                                            // Calculate total distance
-                                            $totalDistance = 0;
-                                            foreach($user_expenses as $exp) {
-                                                if (!empty($exp['distance']) && is_numeric($exp['distance'])) {
-                                                    $totalDistance += $exp['distance'];
-                                                }
-                                            }
-                                            
-                                            // Calculate pending count
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Overview Section -->
+            <?php include 'components/dashboard_widgets/travel_expenses_overview.php'; ?>
+
+            <!-- Status Legend -->
+            <div class="alert alert-info mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                    <div>
+                        <strong>Status Guide:</strong>
+                        <p class="mb-1 mt-1">
+                            <span class="badge bg-info me-1">Mixed (1/1)</span>
+                            indicates that some expenses have different statuses. The format shows
+                            <span class="badge bg-success me-1 badge-sm">Approved (1)</span> /
+                            <span class="badge bg-danger me-1 badge-sm">Rejected (1)</span> counts.
+                        </p>
+                        <p class="mb-0">
+                            <small>Click on any row to see all expenses for that employee on that date.</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Area -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title"><i class="bi bi-receipt me-2"></i>Travel Expenses</h5>
+                    <button class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-download"></i> Export
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <?php if (!empty($grouped_expenses)): ?>
+                        <!-- Table for travel expenses -->
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th><i class="bi bi-person-circle me-1"></i> Employee</th>
+                                        <th><i class="bi bi-card-text me-1"></i> Purpose</th>
+                                        <th><i class="bi bi-calendar-plus me-1"></i> Submitted Date</th>
+                                        <th><i class="bi bi-calendar-event me-1"></i> Travel Date</th>
+                                        <th><i class="bi bi-currency-rupee me-1"></i> Amount</th>
+                                        <th><i class="bi bi-tag me-1"></i> Status</th>
+                                        <th><i class="bi bi-calculator me-1"></i> Accountant</th>
+                                        <th><i class="bi bi-briefcase me-1"></i> Manager</th>
+                                        <th><i class="bi bi-people me-1"></i> HR</th>
+                                        <th class="text-center"><i class="bi bi-gear me-1"></i> Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php
+                                    $modal_id = 0;
+                                    foreach ($grouped_expenses as $date => $users_expenses):
+                                        foreach ($users_expenses as $user_id => $user_expenses):
+                                            // Show first expense for this user on this date
+                                            $expense = $user_expenses[0];
+                                            $additional_expenses = count($user_expenses) - 1;
+                                            // Generate a unique modal ID using date and user_id to ensure proper linking
+                                            $modal_id = "modal_" . str_replace(['-', ' '], '_', $date) . "_" . $user_id;
+
+                                            // Calculate aggregate status for all expenses on this date
                                             $pending_count = 0;
                                             $approved_count = 0;
                                             $rejected_count = 0;
-                                            foreach($user_expenses as $exp) {
-                                                if (strtolower($exp['status']) == 'pending') {
+
+                                            foreach ($user_expenses as $exp) {
+                                                $exp_status = strtolower($exp['status']);
+                                                if ($exp_status == 'pending') {
                                                     $pending_count++;
-                                                } elseif (strtolower($exp['status']) == 'approved') {
+                                                } elseif ($exp_status == 'approved') {
                                                     $approved_count++;
-                                                } elseif (strtolower($exp['status']) == 'rejected') {
+                                                } elseif ($exp_status == 'rejected') {
                                                     $rejected_count++;
                                                 }
                                             }
+
+                                            // Determine overall status class and text
+                                            $statusClass = '';
+                                            $statusText = '';
+
+                                            if ($pending_count > 0) {
+                                                // If any expense is pending, show pending
+                                                $statusClass = 'bg-warning text-dark';
+                                                $statusText = "Pending";
+                                            } elseif ($approved_count > 0 && $rejected_count > 0) {
+                                                // If mix of approved and rejected, show mixed
+                                                $statusClass = 'bg-info';
+                                                $statusText = "Mixed";
+                                            } elseif ($approved_count > 0) {
+                                                // If all approved
+                                                $statusClass = 'bg-success';
+                                                $statusText = "Approved";
+                                            } elseif ($rejected_count > 0) {
+                                                // If all rejected
+                                                $statusClass = 'bg-danger';
+                                                $statusText = "Rejected";
+                                            } else {
+                                                // Default case
+                                                $statusClass = 'bg-secondary';
+                                                $statusText = "Unknown";
+                                            }
+
+                                            $managerStatusClass = '';
+                                            switch (strtolower($expense['manager_status'] ?? 'not_reviewed')) {
+                                                case 'approved':
+                                                    $managerStatusClass = 'bg-success';
+                                                    break;
+                                                case 'pending':
+                                                    $managerStatusClass = 'bg-warning text-dark';
+                                                    break;
+                                                case 'rejected':
+                                                    $managerStatusClass = 'bg-danger';
+                                                    break;
+                                                default:
+                                                    $managerStatusClass = 'bg-secondary';
+                                                    break;
+                                            }
+
+                                            $accountantStatusClass = '';
+                                            switch (strtolower($expense['accountant_status'] ?? 'not_reviewed')) {
+                                                case 'approved':
+                                                    $accountantStatusClass = 'bg-success';
+                                                    break;
+                                                case 'pending':
+                                                    $accountantStatusClass = 'bg-warning text-dark';
+                                                    break;
+                                                case 'rejected':
+                                                    $accountantStatusClass = 'bg-danger';
+                                                    break;
+                                                default:
+                                                    $accountantStatusClass = 'bg-secondary';
+                                                    break;
+                                            }
+
+                                            $hrStatusClass = '';
+                                            switch (strtolower($expense['hr_status'] ?? 'not_reviewed')) {
+                                                case 'approved':
+                                                    $hrStatusClass = 'bg-success';
+                                                    break;
+                                                case 'pending':
+                                                    $hrStatusClass = 'bg-warning text-dark';
+                                                    break;
+                                                case 'rejected':
+                                                    $hrStatusClass = 'bg-danger';
+                                                    break;
+                                                default:
+                                                    $hrStatusClass = 'bg-secondary';
+                                                    break;
+                                            }
+
+                                            // Format the travel date
+                                            $travelDate = date('d M Y', strtotime($expense['travel_date']));
+
+                                            // Format the submission date (created_at)
+                                            $submittedDate = date('d M Y', strtotime($expense['created_at']));
+
+                                            // Calculate total amount for all expenses on this date for this user
+                                            $totalAmount = 0;
+                                            foreach ($user_expenses as $exp) {
+                                                $totalAmount += $exp['amount'];
+                                            }
+
+                                            // Generate profile picture URL (or use default if not available)
+                                            $profilePicture = !empty($expense['profile_picture']) ?
+                                                'uploads/profile_pictures/' . $expense['profile_picture'] :
+                                                'https://ui-avatars.com/api/?name=' . urlencode(substr($expense['username'], 0, 2)) . '&background=4361ee&color=fff&bold=true';
+
+                                            // Check if current time is within approval window
+                                            // Approval window: Thursday 00:01 to Tuesday 17:00
+                                            $currentDay = date('N'); // 1 (Monday) to 7 (Sunday)
+                                            $currentHour = date('H'); // 00 to 23
+                                            $currentMinute = date('i'); // 00 to 59
+                                
+                                            // Calculate if current time is within approval window
+                                            $isApprovalTime = false;
+
+                                            // Thursday (day 4) - approval starts at 00:01
+                                            if ($currentDay == 4 && ($currentHour > 0 || ($currentHour == 0 && $currentMinute >= 1))) {
+                                                $isApprovalTime = true;
+                                            }
+                                            // Friday (day 5), Saturday (day 6), Sunday (day 7)
+                                            elseif ($currentDay >= 5 && $currentDay <= 7) {
+                                                $isApprovalTime = true;
+                                            }
+                                            // Monday (day 1) - approval continues all day
+                                            elseif ($currentDay == 1) {
+                                                $isApprovalTime = true;
+                                            }
+                                            // Tuesday (day 2) - approval ends at 17:00
+                                            elseif ($currentDay == 2 && $currentHour < 17) {
+                                                $isApprovalTime = true;
+                                            }
+                                            // Wednesday (day 3) - unlocked per user request
+                                            elseif ($currentDay == 3) {
+                                                $isApprovalTime = true;
+                                            }
+
+                                            // Lock all expenses if outside approval window
+                                            $isLocked = !$isApprovalTime;
+                                            $rowClass = "group-row " . ($isLocked ? "locked-row" : "clickable-row");
+                                            $modalAttributes = $isLocked ? "" : "data-bs-toggle=\"modal\" data-bs-target=\"#$modal_id\"";
                                             ?>
-                                            <img src="<?= htmlspecialchars($profilePicture) ?>" 
-                                                 class="rounded-circle me-3" width="48" height="48" alt="Profile Picture">
-                                            <div>
-                                                <h5 class="mb-0 fw-medium"><?= htmlspecialchars($expense['username']) ?></h5>
-                                                <p class="text-muted mb-0 small"><?= htmlspecialchars($expense['designation'] ?? 'Employee') ?></p>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="text-end d-flex flex-column align-items-end">
-                                            <div class="d-flex align-items-baseline">
-                                                <h5 class="mb-0 fw-bold">₹<?= number_format($totalAmount, 2) ?></h5>
-                                                <?php if ($totalDistance > 0 && !empty($expense['confirmed_distance'])): ?>
-                                                <span class="text-muted ms-2">(<?= number_format($totalDistance, 0) ?> km)</span>
-                                                <?php elseif ($totalDistance > 0): ?>
-                                                <span class="text-muted ms-2" id="header-distance-hidden-<?= $modal_id ?>">(<i class="bi bi-eye-slash"></i> Hidden)</span>
-                                                <?php endif; ?>
-                                            </div>
-                                            <p class="text-muted mb-0 small">Total expenses</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Status summary -->
-                                <div class="px-3 py-2 border-bottom">
-                                    <div class="d-flex justify-content-between">
-                                        <div class="d-flex gap-3">
-                                            <div class="text-center px-2">
-                                                <span class="badge bg-warning text-dark mb-1"><?= $pending_count ?></span>
-                                                <div class="text-muted small">Pending</div>
-                                            </div>
-                                            <div class="text-center px-2">
-                                                <span class="badge bg-success mb-1"><?= $approved_count ?></span>
-                                                <div class="text-muted small">Checked</div>
-                                            </div>
-                                            <div class="text-center px-2">
-                                                <span class="badge bg-danger mb-1"><?= $rejected_count ?></span>
-                                                <div class="text-muted small">Rejected</div>
-                                            </div>
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="text-muted small">Travel Date</div>
-                                            <div class="fw-medium"><?= $formatted_date ?></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Confirmation section with total distance -->
-                                <div class="px-3 py-3 border-bottom bg-light">
-                                    <div class="d-flex align-items-center justify-content-between mb-2">
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-geo-alt-fill text-primary me-2 fs-5"></i>
-                                            <div>
-                                                <?php if (!empty($expense['confirmed_distance'])): ?>
-                                                <h6 class="mb-0 fw-bold">Total Distance Traveled</h6>
-                                                <p class="mb-0 text-muted small">Confirmed travel distance for this date</p>
-                                                <?php elseif (!empty($expense['hr_confirmed_distance'])): ?>
-                                                <h6 class="mb-0 fw-bold">HR Distance Verification</h6>
-                                                <p class="mb-0 text-muted small">Please verify the distance entered by HR</p>
-                                                <?php else: ?>
-                                                <h6 class="mb-0 fw-bold">Distance Verification Required</h6>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex align-items-baseline" id="total-distance-display-<?= $modal_id ?>" <?= empty($expense['confirmed_distance']) ? 'style="display:none !important;"' : '' ?>>
-                                            <h4 class="mb-0 fw-bold text-primary"><?= number_format($totalDistance, 0) ?></h4>
-                                            <span class="ms-1 text-muted">kilometers</span>
-                                        </div>
-                                        <!-- No hidden text placeholder -->
-                                    </div>
-                                    
-                                    <!-- Distance confirmation input -->
-                                    <form class="distance-confirmation-form" data-user-id="<?= $user_id ?>" data-date="<?= $date ?>" data-total-distance="<?= $totalDistance ?>">
-                                        <div class="row g-2 align-items-center">
-                                            <div class="col-md-7 col-lg-8">
-                                                <div class="input-group">
-                                                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-image"></i></span>
-                                                    <input type="number" class="form-control border-start-0 confirmed-distance-input" 
-                                                           placeholder="<?= !empty($expense['hr_confirmed_distance']) ? 'Enter distance to verify HR\'s ' . number_format($expense['hr_confirmed_distance'], 0) . ' km' : 'Enter distance to verify: ' . number_format($totalDistance, 0) . ' km' ?>" 
-                                                           step="any" min="0"
-                                                           value=""
-                                                           required>
-                                                    <span class="input-group-text">km</span>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-5 col-lg-4">
-                                                <button type="submit" class="btn btn-success w-100 confirm-distance-btn">
-                                                    <i class="bi bi-check-circle me-1"></i> I Checked
-                                                </button>
-                                            </div>
-                                        </div>
-                                        
-                                        <!-- Distance comparison options (initially hidden) -->
-                                        <div class="mt-3 distance-comparison-options" style="display: none;">
-                                            <div class="alert alert-warning d-flex align-items-center justify-content-between">
-                                                <div>
-                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                    <span class="comparison-message">The distance you entered is less than the claimed distance.</span>
-                                                </div>
-                                                <div class="btn-group btn-group-sm ms-3">
-                                                    <button type="button" class="btn btn-outline-primary edit-anyway-btn" title="Continue editing despite distance mismatch">
-                                                        <i class="bi bi-pencil"></i> Edit Anyway
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-danger reject-all-btn" title="Reject all expenses due to distance mismatch">
-                                                        <i class="bi bi-x-circle"></i> Reject All
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="mt-2 confirmation-status small">
-                                            <?php if (!empty($expense['confirmed_distance'])): ?>
-                                                <div class="text-success">
-                                                    <i class="bi bi-check-circle-fill"></i> 
-                                                    Distance Checked: <?= number_format($expense['confirmed_distance'], 0) ?> km
-                                                    <?php if (!empty($expense['distance_confirmed_by'])): ?>
-                                                        by <?= htmlspecialchars($expense['distance_confirmed_by']) ?>
+                                            <tr class="<?= $rowClass ?>" <?= $modalAttributes ?>>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="<?= htmlspecialchars($profilePicture) ?>"
+                                                            class="rounded-circle me-2" width="36" height="36"
+                                                            alt="Profile Picture">
+                                                        <div>
+                                                            <div class="fw-medium"><?= htmlspecialchars($expense['username']) ?>
+                                                            </div>
+                                                            <div class="text-muted small">
+                                                                <?= htmlspecialchars($expense['designation'] ?? 'Employee') ?></div>
+                                                            <?php if ($additional_expenses > 0): ?>
+                                                                <div class="mt-1">
+                                                                    <span class="more-expenses-badge">
+                                                                        <i class="bi bi-plus-circle"></i> <?= $additional_expenses ?>
+                                                                        more expense<?= $additional_expenses > 1 ? 's' : '' ?>
+                                                                    </span>
+                                                                </div>
+                                                            <?php endif; ?>
+
+                                                            <?php if ($isLocked): ?>
+                                                                <div class="d-flex flex-column gap-1 mt-1">
+                                                                    <?php
+                                                                    // Prepare awaiting text if locked
+                                                                    $awaitingText = "Locked (System locked outside Thu 00:01 - Tue 17:00)";
+                                                                    ?>
+                                                                    <div class="locked-indicator">
+                                                                        <i class="bi bi-lock-fill text-secondary me-1"></i>
+                                                                        <span class="awaiting-badge"><?= $awaitingText ?></span>
+                                                                    </div>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <?= htmlspecialchars($expense['purpose']) ?>
+                                                    <div class="text-muted small text-truncate" style="max-width: 250px;"
+                                                        title="<?= htmlspecialchars($expense['from_location'] . ' → ' . $expense['to_location']) ?>">
+                                                        <?= htmlspecialchars($expense['from_location']) ?> →
+                                                        <?= htmlspecialchars($expense['to_location']) ?>
+                                                    </div>
+                                                </td>
+                                                <td><?= $submittedDate ?></td>
+                                                <td><?= $travelDate ?></td>
+                                                <td>
+                                                    ₹<?= number_format($expense['amount'], 2) ?>
+                                                    <?php if ($additional_expenses > 0): ?>
+                                                        <div class="text-muted small">
+                                                            Total: ₹<?= number_format($totalAmount, 2) ?>
+                                                        </div>
                                                     <?php endif; ?>
-                                                    <?php if (!empty($expense['distance_confirmed_at'])): ?>
-                                                        on <?= date('d M Y H:i', strtotime($expense['distance_confirmed_at'])) ?>
-                                                    <?php endif; ?>
-                                                </div>
-                                                
-                                                <?php if (!empty($expense['hr_confirmed_distance'])): ?>
-                                                    <div class="text-info mt-1">
-                                                        <i class="bi bi-check-circle-fill"></i> 
-                                                        HR Verified: <?= number_format($expense['hr_confirmed_distance'], 0) ?> km
-                                                        <?php 
-                                                        // Get HR name if we have hr_id
-                                                        if (!empty($expense['hr_id'])) {
-                                                            $hrQuery = "SELECT username FROM users WHERE id = :hr_id";
-                                                            $hrStmt = $pdo->prepare($hrQuery);
-                                                            $hrStmt->bindParam(':hr_id', $expense['hr_id'], PDO::PARAM_INT);
-                                                            $hrStmt->execute();
-                                                            $hrName = $hrStmt->fetchColumn();
-                                                            if ($hrName) {
-                                                                echo " by " . htmlspecialchars($hrName);
+                                                </td>
+                                                <td><span
+                                                        class="badge <?= $statusClass ?>"><?= htmlspecialchars($statusText) ?></span>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <?php
+                                                        // Calculate accountant status counts
+                                                        $acc_pending_count = 0;
+                                                        $acc_approved_count = 0;
+                                                        $acc_rejected_count = 0;
+
+                                                        foreach ($user_expenses as $exp) {
+                                                            $acc_status = strtolower($exp['accountant_status'] ?? 'pending');
+                                                            if ($acc_status == 'pending' || $acc_status == 'not_reviewed' || empty($acc_status)) {
+                                                                $acc_pending_count++;
+                                                            } elseif ($acc_status == 'approved') {
+                                                                $acc_approved_count++;
+                                                            } elseif ($acc_status == 'rejected') {
+                                                                $acc_rejected_count++;
                                                             }
                                                         }
+
+                                                        // Determine accountant status badge
+                                                        $acc_status_text = '';
+                                                        $acc_status_class = '';
+
+                                                        if ($acc_pending_count > 0) {
+                                                            $acc_status_class = 'bg-warning text-dark';
+                                                            $acc_status_text = "Pending ({$acc_pending_count})";
+                                                        } elseif ($acc_approved_count > 0 && $acc_rejected_count > 0) {
+                                                            $acc_status_class = 'bg-info';
+                                                            $acc_status_text = "Mixed ({$acc_approved_count}/{$acc_rejected_count})";
+                                                        } elseif ($acc_approved_count > 0) {
+                                                            $acc_status_class = 'bg-success';
+                                                            $acc_status_text = "Approved ({$acc_approved_count})";
+                                                        } elseif ($acc_rejected_count > 0) {
+                                                            $acc_status_class = 'bg-danger';
+                                                            $acc_status_text = "Rejected ({$acc_rejected_count})";
+                                                        } else {
+                                                            $acc_status_class = 'bg-secondary';
+                                                            $acc_status_text = "Not Reviewed";
+                                                        }
                                                         ?>
-                                                        <?php if (!empty($expense['hr_confirmed_at'])): ?>
-                                                            on <?= date('d M Y H:i', strtotime($expense['hr_confirmed_at'])) ?>
+                                                        <span class="badge <?= $acc_status_class ?> me-1">
+                                                            <?= $acc_status_text ?>
+                                                        </span>
+                                                        <?php if (!empty($expense['accountant_reason'])): ?>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-link text-primary p-0 reason-info-btn"
+                                                                data-bs-toggle="modal" data-bs-target="#reasonModal"
+                                                                data-title="Accountant's Reason"
+                                                                data-reason="<?= htmlspecialchars($expense['accountant_reason']) ?>">
+                                                                <i class="bi bi-info-circle"></i>
+                                                            </button>
                                                         <?php endif; ?>
                                                     </div>
-                                                <?php endif; ?>
-                                                                                            <?php elseif (!empty($expense['hr_confirmed_distance'])): ?>
-                                                <!-- HR verification info is hidden until PM verifies -->
-                                                <div class="text-warning">
-                                                    <i class="bi bi-exclamation-triangle-fill"></i>
-                                                    Please verify the distance to view expense details
-                                                </div>
-                                            <?php else: ?>
-                                                <div class="text-warning">
-                                                    <i class="bi bi-exclamation-triangle-fill"></i>
-                                                    Please confirm the distance to view expense details
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                    </form>
-                                </div>
-                                
-                                <!-- Placeholder message when expenses table is hidden -->
-                                <div class="expenses-placeholder text-center py-3 border-bottom" id="expenses-placeholder-<?= $modal_id ?>" <?= !empty($expense['confirmed_distance']) ? 'style="display:none;"' : '' ?>>
-                                    <div class="py-2">
-                                        <div class="d-flex align-items-center justify-content-center">
-                                            <i class="bi bi-lock-fill text-warning fs-1 me-3"></i>
-                                            <div class="text-start">
-                                                <h5 class="fw-bold mb-1">Expense Details Locked</h5>
-                                                <?php if (!empty($expense['hr_confirmed_distance'])): ?>
-                                                    <p class="text-muted mb-0 small">Please verify the HR-confirmed distance to unlock</p>
-                                                <?php else: ?>
-                                                <p class="text-muted mb-0 small"><i class="bi bi-info-circle-fill"></i> Enter the exact distance to unlock expense details</p>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Photos Section -->
-                                <div class="p-3 border-bottom bg-light">
-                                    <h6 class="mb-3"><i class="bi bi-camera me-2"></i><span class="photos-section-title">Verification Photos</span></h6>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <div class="card h-100 border attendance-photo-card" id="punch-in-card-<?= $modal_id ?>">
-                                                <div class="card-header bg-primary text-white py-2">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <span class="card-header-title"><i class="bi bi-box-arrow-in-right me-1"></i> <span class="header-text">Punch In</span></span>
-                                                        <span class="badge bg-light text-dark punch-time">Loading...</span>
-                                                    </div>
-                                                </div>
-                                                <div class="card-body p-0 text-center">
-                                                    <div class="p-4 text-muted loading-state">
-                                                        <div class="spinner-border text-primary" role="status">
-                                                            <span class="visually-hidden">Loading...</span>
-                                                        </div>
-                                                        <p class="mt-2">Loading photo...</p>
-                                                    </div>
-                                                </div>
-                                                <div class="card-footer p-2 bg-light location-footer d-none">
-                                                    <small class="text-muted d-flex align-items-center">
-                                                        <i class="bi bi-geo-alt me-1"></i>
-                                                        <span class="location-text text-truncate">Loading location...</span>
-                                                        <a href="#" class="ms-auto map-link" target="_blank" title="View on map">
-                                                            <i class="bi bi-map"></i>
-                                                        </a>
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="card h-100 border attendance-photo-card" id="punch-out-card-<?= $modal_id ?>">
-                                                <div class="card-header bg-success text-white py-2">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <span class="card-header-title"><i class="bi bi-box-arrow-right me-1"></i> <span class="header-text">Punch Out</span></span>
-                                                        <span class="badge bg-light text-dark punch-time">Loading...</span>
-                                                    </div>
-                                                </div>
-                                                <div class="card-body p-0 text-center">
-                                                    <div class="p-4 text-muted loading-state">
-                                                        <div class="spinner-border text-success" role="status">
-                                                            <span class="visually-hidden">Loading...</span>
-                                                        </div>
-                                                        <p class="mt-2">Loading photo...</p>
-                                                    </div>
-                                                </div>
-                                                <div class="card-footer p-2 bg-light location-footer d-none">
-                                                    <small class="text-muted d-flex align-items-center">
-                                                        <i class="bi bi-geo-alt me-1"></i>
-                                                        <span class="location-text text-truncate">Loading location...</span>
-                                                        <a href="#" class="ms-auto map-link" target="_blank" title="View on map">
-                                                            <i class="bi bi-map"></i>
-                                                        </a>
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <script>
-                                // Function to fetch attendance photos
-                                function fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor = false) {
-                                    // First check user role
-                                    fetch('ajax_handlers/get_current_user_role.php')
-                                        .then(response => response.json())
-                                        .then(userData => {
-                                            if (userData.success && userData.role) {
-                                                const userRole = userData.role.toLowerCase();
-                                                
-                                                // If user is site supervisor or the employee is a site supervisor, show punch in/out photos
-                                                // Check for any supervisor role or designation
-                                                if (userRole.includes('supervisor') || userRole === 'site supervisor' || userRole === 'supervisor' || isSiteSupervisor) {
-                                                    // Update section title
-                                                    const sectionTitle = document.querySelector(`#${modalId} .photos-section-title`);
-                                                    if (sectionTitle) {
-                                                        sectionTitle.textContent = 'Attendance Photos';
-                                                    }
-                                                    
-                                                    // Fetch punch in photo
-                                                    fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
-                                                        .then(response => response.json())
-                                                        .then(data => {
-                                                            updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
-                                                        })
-                                                        .catch(error => {
-                                                            console.error('Error fetching punch in photo:', error);
-                                                            showPhotoError('punch-in-card-' + modalId, 'Failed to load punch in photo');
-                                                        });
-                                                    
-                                                    // Fetch punch out photo
-                                                    fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
-                                                        .then(response => response.json())
-                                                        .then(data => {
-                                                            updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
-                                                        })
-                                                        .catch(error => {
-                                                            console.error('Error fetching punch out photo:', error);
-                                                            showPhotoError('punch-out-card-' + modalId, 'Failed to load punch out photo');
-                                                        });
-                                                } else {
-                                                    // Update section title for other roles
-                                                    const sectionTitle = document.querySelector(`#${modalId} .photos-section-title`);
-                                                    if (sectionTitle) {
-                                                        sectionTitle.textContent = 'Meter Photos';
-                                                    }
-                                                    
-                                                    // For other roles, fetch meter start/end photos
-                                                    fetch(`ajax_handlers/get_meter_photos.php?user_id=${userId}&travel_date=${travelDate}`)
-                                                        .then(response => response.json())
-                                                        .then(data => {
-                                                            if (data.success) {
-                                                                // Update meter start photo
-                                                                const startData = {
-                                                                    success: true,
-                                                                    photo: data.meter_start_photo_path,
-                                                                    time: data.travel_date + ' (Start)',
-                                                                    formatted_address: data.from_location || 'N/A'
-                                                                };
-                                                                updateAttendanceCard('punch-in-card-' + modalId, startData, 'meter-start');
-                                                                
-                                                                // Update meter end photo
-                                                                const endData = {
-                                                                    success: true,
-                                                                    photo: data.meter_end_photo_path,
-                                                                    time: data.travel_date + ' (End)',
-                                                                    formatted_address: data.to_location || 'N/A'
-                                                                };
-                                                                updateAttendanceCard('punch-out-card-' + modalId, endData, 'meter-end');
-                                                            } else {
-                                                                showPhotoError('punch-in-card-' + modalId, 'No meter start photo available');
-                                                                showPhotoError('punch-out-card-' + modalId, 'No meter end photo available');
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <?php
+                                                        // Calculate manager status counts
+                                                        $mgr_pending_count = 0;
+                                                        $mgr_approved_count = 0;
+                                                        $mgr_rejected_count = 0;
+
+                                                        foreach ($user_expenses as $exp) {
+                                                            $mgr_status = strtolower($exp['manager_status'] ?? 'pending');
+                                                            if ($mgr_status == 'pending' || $mgr_status == 'not_reviewed' || empty($mgr_status)) {
+                                                                $mgr_pending_count++;
+                                                            } elseif ($mgr_status == 'approved') {
+                                                                $mgr_approved_count++;
+                                                            } elseif ($mgr_status == 'rejected') {
+                                                                $mgr_rejected_count++;
                                                             }
-                                                        })
-                                                        .catch(error => {
-                                                            console.error('Error fetching meter photos:', error);
-                                                            showPhotoError('punch-in-card-' + modalId, 'Failed to load meter start photo');
-                                                            showPhotoError('punch-out-card-' + modalId, 'Failed to load meter end photo');
-                                                        });
-                                                }
-                                            } else {
-                                                console.error('Error getting user role:', userData.message || 'Unknown error');
-                                                // Fallback to punch in/out photos
-                                                fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
-                                                    .then(response => response.json())
-                                                    .then(data => {
-                                                        updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
-                                                    })
-                                                    .catch(error => {
-                                                        showPhotoError('punch-in-card-' + modalId, 'Failed to load photo');
-                                                    });
-                                                
-                                                fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
-                                                    .then(response => response.json())
-                                                    .then(data => {
-                                                        updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
-                                                    })
-                                                    .catch(error => {
-                                                        showPhotoError('punch-out-card-' + modalId, 'Failed to load photo');
-                                                    });
-                                            }
-                                        })
-                                        .catch(error => {
-                                            console.error('Error getting user role:', error);
-                                            // Fallback to punch in/out photos
-                                            fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
-                                                })
-                                                .catch(error => {
-                                                    showPhotoError('punch-in-card-' + modalId, 'Failed to load photo');
-                                                });
-                                            
-                                            fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
-                                                })
-                                                .catch(error => {
-                                                    showPhotoError('punch-out-card-' + modalId, 'Failed to load photo');
-                                                });
-                                        });
-                                }
-                                
-                                // Function to update attendance card with fetched data
-                                function updateAttendanceCard(cardId, data, type) {
-                                    const card = document.getElementById(cardId);
-                                    if (!card) return;
-                                    
-                                    const loadingState = card.querySelector('.loading-state');
-                                    const timeDisplay = card.querySelector('.punch-time');
-                                    const locationFooter = card.querySelector('.location-footer');
-                                    const locationText = card.querySelector('.location-text');
-                                    const mapLink = card.querySelector('.map-link');
-                                    const headerText = card.querySelector('.header-text');
-                                    
-                                    // Update header text based on type
-                                    if (headerText) {
-                                        if (type === 'meter-start') {
-                                            headerText.textContent = 'Meter Start';
-                                        } else if (type === 'meter-end') {
-                                            headerText.textContent = 'Meter End';
-                                        } else if (type === 'punch-in') {
-                                            headerText.textContent = 'Punch In';
-                                        } else if (type === 'punch-out') {
-                                            headerText.textContent = 'Punch Out';
-                                        }
-                                    }
-                                    
-                                    // Update time display
-                                    timeDisplay.textContent = data.time || 'N/A';
-                                    
-                                    // Remove loading state
-                                    if (loadingState) {
-                                        loadingState.remove();
-                                    } else {
-                                        // If loading state is already removed, clear the card body content
-                                        const cardBody = card.querySelector('.card-body');
-                                        if (cardBody) {
-                                            cardBody.innerHTML = '';
-                                        }
-                                    }
-                                    
-                                    // Get card body reference
-                                    const cardBody = card.querySelector('.card-body');
-                                    if (!cardBody) return;
-                                    
-                                    if (data.success && data.photo) {
-                                        // Create image element
-                                        const imgContainer = document.createElement('a');
-                                        imgContainer.href = "javascript:void(0)";
-                                        imgContainer.classList.add('d-block');
-                                        imgContainer.onclick = function() {
-                                            // Open photo in modal
-                                            const photoModal = new bootstrap.Modal(document.getElementById('photoViewerModal'));
-                                            const imgElement = document.getElementById('photoViewerImage');
-                                            
-                                            // Try to load the image with fallback paths
-                                            // First try the primary path
-                                            imgElement.src = data.photo;
-                                            
-                                            // Set appropriate title based on type
-                                            let modalTitle = 'Photo';
-                                            if (type === 'punch-in') modalTitle = 'Punch In Photo';
-                                            else if (type === 'punch-out') modalTitle = 'Punch Out Photo';
-                                            else if (type === 'meter-start') modalTitle = 'Meter Start Photo';
-                                            else if (type === 'meter-end') modalTitle = 'Meter End Photo';
-                                            
-                                            document.getElementById('photoViewerModalLabel').textContent = modalTitle;
-                                            
-                                            // Add fallback mechanism for the photo viewer modal if fallback path is provided
-                                            if (data.photo_fallback) {
-                                                imgElement.onerror = function() {
-                                                    console.log('Primary image path failed in photo viewer, trying fallback path:', data.photo_fallback);
-                                                    imgElement.src = data.photo_fallback;
-                                                    
-                                                    // If fallback also fails, show a placeholder
-                                                    imgElement.onerror = function() {
-                                                        console.log('Both image paths failed in photo viewer, showing placeholder');
-                                                        imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
-                                                    };
-                                                };
-                                            }
-                                            
-                                            photoModal.show();
-                                        };
-                                        
-                                        const img = document.createElement('img');
-                                        // Try to load the image with fallback paths
-                                        // First try the primary path
-                                        img.src = data.photo;
-                                        
-                                        // If primary path fails, try the fallback path if provided
-                                        if (data.photo_fallback) {
-                                            img.onerror = function() {
-                                                console.log('Primary image path failed, trying fallback path:', data.photo_fallback);
-                                                img.src = data.photo_fallback;
-                                                
-                                                // If fallback also fails, show a placeholder
-                                                img.onerror = function() {
-                                                    console.log('Both image paths failed, showing placeholder');
-                                                    img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
-                                                };
-                                            };
-                                        }
-                                        
-                                        // Set appropriate alt text based on type
-                                        if (type === 'punch-in') img.alt = 'Punch In Photo';
-                                        else if (type === 'punch-out') img.alt = 'Punch Out Photo';
-                                        else if (type === 'meter-start') img.alt = 'Meter Start Photo';
-                                        else if (type === 'meter-end') img.alt = 'Meter End Photo';
-                                        else img.alt = 'Photo';
-                                        
-                                        img.classList.add('img-fluid', 'punch-photo');
-                                        
-                                        imgContainer.appendChild(img);
-                                        cardBody.appendChild(imgContainer);
-                                        
-                                        // Show location if available
-                                        if (data.formatted_address && data.formatted_address !== 'N/A') {
-                                            locationText.textContent = data.formatted_address;
-                                            locationFooter.classList.remove('d-none');
-                                            
-                                            // Add map link if coordinates are available
-                                            if (data.map_url) {
-                                                mapLink.href = data.map_url;
-                                            } else {
-                                                mapLink.classList.add('d-none');
-                                            }
-                                        }
-                                    } else {
-                                        // Show no photo available message
-                                        const noPhotoDiv = document.createElement('div');
-                                        noPhotoDiv.className = 'p-4 text-muted';
-                                        
-                                        // Set appropriate message based on type
-                                        let message = 'No photo available';
-                                        if (type === 'punch-in') message = 'No punch in photo available';
-                                        else if (type === 'punch-out') message = 'No punch out photo available';
-                                        else if (type === 'meter-start') message = 'No meter start photo available';
-                                        else if (type === 'meter-end') message = 'No meter end photo available';
-                                        
-                                        noPhotoDiv.innerHTML = `
+                                                        }
+
+                                                        // Determine manager status badge
+                                                        $mgr_status_text = '';
+                                                        $mgr_status_class = '';
+
+                                                        if ($mgr_pending_count > 0) {
+                                                            $mgr_status_class = 'bg-warning text-dark';
+                                                            $mgr_status_text = "Pending ({$mgr_pending_count})";
+                                                        } elseif ($mgr_approved_count > 0 && $mgr_rejected_count > 0) {
+                                                            $mgr_status_class = 'bg-info';
+                                                            $mgr_status_text = "Mixed ({$mgr_approved_count}/{$mgr_rejected_count})";
+                                                        } elseif ($mgr_approved_count > 0) {
+                                                            $mgr_status_class = 'bg-success';
+                                                            $mgr_status_text = "Approved ({$mgr_approved_count})";
+                                                        } elseif ($mgr_rejected_count > 0) {
+                                                            $mgr_status_class = 'bg-danger';
+                                                            $mgr_status_text = "Rejected ({$mgr_rejected_count})";
+                                                        } else {
+                                                            $mgr_status_class = 'bg-secondary';
+                                                            $mgr_status_text = "Not Reviewed";
+                                                        }
+                                                        ?>
+                                                        <span class="badge <?= $mgr_status_class ?> me-1">
+                                                            <?= $mgr_status_text ?>
+                                                        </span>
+                                                        <?php if (!empty($expense['manager_reason'])): ?>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-link text-primary p-0 reason-info-btn"
+                                                                data-bs-toggle="modal" data-bs-target="#reasonModal"
+                                                                data-title="Manager's Reason"
+                                                                data-reason="<?= htmlspecialchars($expense['manager_reason']) ?>">
+                                                                <i class="bi bi-info-circle"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    </div>
+
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <?php
+                                                        // Calculate HR status counts
+                                                        $hr_pending_count = 0;
+                                                        $hr_approved_count = 0;
+                                                        $hr_rejected_count = 0;
+
+                                                        foreach ($user_expenses as $exp) {
+                                                            $hr_status = strtolower($exp['hr_status'] ?? 'pending');
+                                                            if ($hr_status == 'pending' || $hr_status == 'not_reviewed' || empty($hr_status)) {
+                                                                $hr_pending_count++;
+                                                            } elseif ($hr_status == 'approved') {
+                                                                $hr_approved_count++;
+                                                            } elseif ($hr_status == 'rejected') {
+                                                                $hr_rejected_count++;
+                                                            }
+                                                        }
+
+                                                        // Determine HR status badge
+                                                        $hr_status_text = '';
+                                                        $hr_status_class = '';
+
+                                                        if ($hr_pending_count > 0) {
+                                                            $hr_status_class = 'bg-warning text-dark';
+                                                            $hr_status_text = "Pending ({$hr_pending_count})";
+                                                        } elseif ($hr_approved_count > 0 && $hr_rejected_count > 0) {
+                                                            $hr_status_class = 'bg-info';
+                                                            $hr_status_text = "Mixed ({$hr_approved_count}/{$hr_rejected_count})";
+                                                        } elseif ($hr_approved_count > 0) {
+                                                            $hr_status_class = 'bg-success';
+                                                            $hr_status_text = "Approved ({$hr_approved_count})";
+                                                        } elseif ($hr_rejected_count > 0) {
+                                                            $hr_status_class = 'bg-danger';
+                                                            $hr_status_text = "Rejected ({$hr_rejected_count})";
+                                                        } else {
+                                                            $hr_status_class = 'bg-secondary';
+                                                            $hr_status_text = "Not Reviewed";
+                                                        }
+                                                        ?>
+                                                        <span class="badge <?= $hr_status_class ?> me-1">
+                                                            <?= $hr_status_text ?>
+                                                        </span>
+                                                        <?php if (!empty($expense['hr_reason'])): ?>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-link text-primary p-0 reason-info-btn"
+                                                                data-bs-toggle="modal" data-bs-target="#reasonModal"
+                                                                data-title="HR's Reason"
+                                                                data-reason="<?= htmlspecialchars($expense['hr_reason']) ?>">
+                                                                <i class="bi bi-info-circle"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    </div>
+
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="btn-group">
+                                                        <button class="btn btn-sm btn-outline-primary" title="View Details"
+                                                            data-expense-id="<?= $expense['id'] ?>">
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+
+                                                        <button class="btn btn-sm btn-outline-info edit-expense-btn"
+                                                            title="Edit Expense" data-bs-toggle="modal"
+                                                            data-bs-target="#editExpenseModal"
+                                                            data-expense-id="<?= $expense['id'] ?>">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+
+                                                        <?php if (strtolower($expense['status']) == 'pending'): ?>
+                                                            <button class="btn btn-sm btn-outline-success" title="Approve"
+                                                                data-expense-id="<?= $expense['id'] ?>">
+                                                                <i class="bi bi-check-lg"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-outline-danger" title="Reject"
+                                                                data-expense-id="<?= $expense['id'] ?>">
+                                                                <i class="bi bi-x-lg"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+
+                                                        <?php if (!empty($expense['bill_file_path'])): ?>
+                                                            <a href="<?= htmlspecialchars($expense['bill_file_path']) ?>"
+                                                                target="_blank" class="btn btn-sm btn-outline-secondary"
+                                                                title="View Receipt">
+                                                                <i class="bi bi-file-earmark-text"></i>
+                                                            </a>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Expense Detail Modals for each grouped set -->
+                        <?php
+                        foreach ($grouped_expenses as $date => $users_expenses):
+                            foreach ($users_expenses as $user_id => $user_expenses):
+                                // Generate a unique modal ID using date and user_id for all expense groups
+                                $modal_id = "modal_" . str_replace(['-', ' '], '_', $date) . "_" . $user_id;
+                                $expense = $user_expenses[0]; // First expense for header info
+                                $formatted_date = date('d M Y', strtotime($date));
+                                ?>
+                                <div class="modal fade" id="<?= $modal_id ?>" tabindex="-1" aria-labelledby="<?= $modal_id ?>Label"
+                                    aria-hidden="true">
+                                    <div class="modal-dialog modal-fullscreen-md-down modal-xxl modal-dialog-centered modal-dialog-scrollable"
+                                        style="max-width: 95%">
+                                        <div class="modal-content border-0 shadow">
+                                            <div class="modal-header bg-primary text-white border-0 sticky-top">
+                                                <div>
+                                                    <h5 class="modal-title" id="<?= $modal_id ?>Label">
+                                                        <i class="bi bi-receipt me-2"></i> Travel Expenses for
+                                                        <?= htmlspecialchars($expense['username']) ?> on <?= $formatted_date ?>
+                                                    </h5>
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    <button type="button" class="btn btn-icon-only me-2"
+                                                        id="timeline-btn-<?= $modal_id ?>" title="View Travel Timeline">
+                                                        <i class="bi bi-clock-history"></i>
+                                                    </button>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                            </div>
+                                            <div class="modal-body p-0">
+                                                <!-- User info header -->
+                                                <div class="bg-light p-3 border-bottom">
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <div class="d-flex align-items-center">
+                                                            <?php
+                                                            // Generate profile picture URL (or use default if not available)
+                                                            $profilePicture = !empty($expense['profile_picture']) ?
+                                                                'uploads/profile_pictures/' . $expense['profile_picture'] :
+                                                                'https://ui-avatars.com/api/?name=' . urlencode(substr($expense['username'], 0, 2)) . '&background=4361ee&color=fff&bold=true';
+
+                                                            // Calculate total amount
+                                                            $totalAmount = array_sum(array_column($user_expenses, 'amount'));
+
+                                                            // Calculate total distance
+                                                            $totalDistance = 0;
+                                                            foreach ($user_expenses as $exp) {
+                                                                if (!empty($exp['distance']) && is_numeric($exp['distance'])) {
+                                                                    $totalDistance += $exp['distance'];
+                                                                }
+                                                            }
+
+                                                            // Calculate pending count
+                                                            $pending_count = 0;
+                                                            $approved_count = 0;
+                                                            $rejected_count = 0;
+                                                            foreach ($user_expenses as $exp) {
+                                                                if (strtolower($exp['status']) == 'pending') {
+                                                                    $pending_count++;
+                                                                } elseif (strtolower($exp['status']) == 'approved') {
+                                                                    $approved_count++;
+                                                                } elseif (strtolower($exp['status']) == 'rejected') {
+                                                                    $rejected_count++;
+                                                                }
+                                                            }
+                                                            ?>
+                                                            <img src="<?= htmlspecialchars($profilePicture) ?>"
+                                                                class="rounded-circle me-3" width="48" height="48"
+                                                                alt="Profile Picture">
+                                                            <div>
+                                                                <h5 class="mb-0 fw-medium">
+                                                                    <?= htmlspecialchars($expense['username']) ?></h5>
+                                                                <p class="text-muted mb-0 small">
+                                                                    <?= htmlspecialchars($expense['designation'] ?? 'Employee') ?>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="text-end d-flex flex-column align-items-end">
+                                                            <div class="d-flex align-items-baseline">
+                                                                <h5 class="mb-0 fw-bold">₹<?= number_format($totalAmount, 2) ?></h5>
+                                                                <?php if ($totalDistance > 0 && !empty($expense['confirmed_distance'])): ?>
+                                                                    <span
+                                                                        class="text-muted ms-2">(<?= number_format($totalDistance, 0) ?>
+                                                                        km)</span>
+                                                                <?php elseif ($totalDistance > 0): ?>
+                                                                    <span class="text-muted ms-2"
+                                                                        id="header-distance-hidden-<?= $modal_id ?>">(<i
+                                                                            class="bi bi-eye-slash"></i> Hidden)</span>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                            <p class="text-muted mb-0 small">Total expenses</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Status summary -->
+                                                <div class="px-3 py-2 border-bottom">
+                                                    <div class="d-flex justify-content-between">
+                                                        <div class="d-flex gap-3">
+                                                            <div class="text-center px-2">
+                                                                <span
+                                                                    class="badge bg-warning text-dark mb-1"><?= $pending_count ?></span>
+                                                                <div class="text-muted small">Pending</div>
+                                                            </div>
+                                                            <div class="text-center px-2">
+                                                                <span class="badge bg-success mb-1"><?= $approved_count ?></span>
+                                                                <div class="text-muted small">Checked</div>
+                                                            </div>
+                                                            <div class="text-center px-2">
+                                                                <span class="badge bg-danger mb-1"><?= $rejected_count ?></span>
+                                                                <div class="text-muted small">Rejected</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <div class="text-muted small">Travel Date</div>
+                                                            <div class="fw-medium"><?= $formatted_date ?></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Confirmation section with total distance -->
+                                                <div class="px-3 py-3 border-bottom bg-light">
+                                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                                        <div class="d-flex align-items-center">
+                                                            <i class="bi bi-geo-alt-fill text-primary me-2 fs-5"></i>
+                                                            <div>
+                                                                <?php if (!empty($expense['confirmed_distance'])): ?>
+                                                                    <h6 class="mb-0 fw-bold">Total Distance Traveled</h6>
+                                                                    <p class="mb-0 text-muted small">Confirmed travel distance for this
+                                                                        date</p>
+                                                                <?php elseif (!empty($expense['hr_confirmed_distance'])): ?>
+                                                                    <h6 class="mb-0 fw-bold">HR Distance Verification</h6>
+                                                                    <p class="mb-0 text-muted small">Please verify the distance entered
+                                                                        by HR</p>
+                                                                <?php else: ?>
+                                                                    <h6 class="mb-0 fw-bold">Distance Verification Required</h6>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </div>
+                                                        <div class="d-flex align-items-baseline"
+                                                            id="total-distance-display-<?= $modal_id ?>"
+                                                            <?= empty($expense['confirmed_distance']) ? 'style="display:none !important;"' : '' ?>>
+                                                            <h4 class="mb-0 fw-bold text-primary">
+                                                                <?= number_format($totalDistance, 0) ?></h4>
+                                                            <span class="ms-1 text-muted">kilometers</span>
+                                                        </div>
+                                                        <!-- No hidden text placeholder -->
+                                                    </div>
+
+                                                    <!-- Distance confirmation input -->
+                                                    <form class="distance-confirmation-form" data-user-id="<?= $user_id ?>"
+                                                        data-date="<?= $date ?>" data-total-distance="<?= $totalDistance ?>">
+                                                        <div class="row g-2 align-items-center">
+                                                            <div class="col-md-7 col-lg-8">
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text bg-white border-end-0"><i
+                                                                            class="bi bi-image"></i></span>
+                                                                    <input type="number"
+                                                                        class="form-control border-start-0 confirmed-distance-input"
+                                                                        placeholder="<?= !empty($expense['hr_confirmed_distance']) ? 'Enter distance to verify HR\'s ' . number_format($expense['hr_confirmed_distance'], 0) . ' km' : 'Enter distance to verify: ' . number_format($totalDistance, 0) . ' km' ?>"
+                                                                        step="any" min="0" value="" required>
+                                                                    <span class="input-group-text">km</span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-5 col-lg-4">
+                                                                <button type="submit"
+                                                                    class="btn btn-success w-100 confirm-distance-btn">
+                                                                    <i class="bi bi-check-circle me-1"></i> I Checked
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Distance comparison options (initially hidden) -->
+                                                        <div class="mt-3 distance-comparison-options" style="display: none;">
+                                                            <div
+                                                                class="alert alert-warning d-flex align-items-center justify-content-between">
+                                                                <div>
+                                                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                                    <span class="comparison-message">The distance you entered is
+                                                                        less than the claimed distance.</span>
+                                                                </div>
+                                                                <div class="btn-group btn-group-sm ms-3">
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-primary edit-anyway-btn"
+                                                                        title="Continue editing despite distance mismatch">
+                                                                        <i class="bi bi-pencil"></i> Edit Anyway
+                                                                    </button>
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-danger reject-all-btn"
+                                                                        title="Reject all expenses due to distance mismatch">
+                                                                        <i class="bi bi-x-circle"></i> Reject All
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="mt-2 confirmation-status small">
+                                                            <?php if (!empty($expense['confirmed_distance'])): ?>
+                                                                <div class="text-success">
+                                                                    <i class="bi bi-check-circle-fill"></i>
+                                                                    Distance Checked:
+                                                                    <?= number_format($expense['confirmed_distance'], 0) ?> km
+                                                                    <?php if (!empty($expense['distance_confirmed_by'])): ?>
+                                                                        by <?= htmlspecialchars($expense['distance_confirmed_by']) ?>
+                                                                    <?php endif; ?>
+                                                                    <?php if (!empty($expense['distance_confirmed_at'])): ?>
+                                                                        on
+                                                                        <?= date('d M Y H:i', strtotime($expense['distance_confirmed_at'])) ?>
+                                                                    <?php endif; ?>
+                                                                </div>
+
+                                                                <?php if (!empty($expense['hr_confirmed_distance'])): ?>
+                                                                    <div class="text-info mt-1">
+                                                                        <i class="bi bi-check-circle-fill"></i>
+                                                                        HR Verified:
+                                                                        <?= number_format($expense['hr_confirmed_distance'], 0) ?> km
+                                                                        <?php
+                                                                        // Get HR name if we have hr_id
+                                                                        if (!empty($expense['hr_id'])) {
+                                                                            $hrQuery = "SELECT username FROM users WHERE id = :hr_id";
+                                                                            $hrStmt = $pdo->prepare($hrQuery);
+                                                                            $hrStmt->bindParam(':hr_id', $expense['hr_id'], PDO::PARAM_INT);
+                                                                            $hrStmt->execute();
+                                                                            $hrName = $hrStmt->fetchColumn();
+                                                                            if ($hrName) {
+                                                                                echo " by " . htmlspecialchars($hrName);
+                                                                            }
+                                                                        }
+                                                                        ?>
+                                                                        <?php if (!empty($expense['hr_confirmed_at'])): ?>
+                                                                            on <?= date('d M Y H:i', strtotime($expense['hr_confirmed_at'])) ?>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                <?php endif; ?>
+                                                            <?php elseif (!empty($expense['hr_confirmed_distance'])): ?>
+                                                                <!-- HR verification info is hidden until PM verifies -->
+                                                                <div class="text-warning">
+                                                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                                                    Please verify the distance to view expense details
+                                                                </div>
+                                                            <?php else: ?>
+                                                                <div class="text-warning">
+                                                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                                                    Please confirm the distance to view expense details
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </form>
+                                                </div>
+
+                                                <!-- Placeholder message when expenses table is hidden -->
+                                                <div class="expenses-placeholder text-center py-3 border-bottom"
+                                                    id="expenses-placeholder-<?= $modal_id ?>"
+                                                    <?= !empty($expense['confirmed_distance']) ? 'style="display:none;"' : '' ?>>
+                                                    <div class="py-2">
+                                                        <div class="d-flex align-items-center justify-content-center">
+                                                            <i class="bi bi-lock-fill text-warning fs-1 me-3"></i>
+                                                            <div class="text-start">
+                                                                <h5 class="fw-bold mb-1">Expense Details Locked</h5>
+                                                                <?php if (!empty($expense['hr_confirmed_distance'])): ?>
+                                                                    <p class="text-muted mb-0 small">Please verify the HR-confirmed
+                                                                        distance to unlock</p>
+                                                                <?php else: ?>
+                                                                    <p class="text-muted mb-0 small"><i
+                                                                            class="bi bi-info-circle-fill"></i> Enter the exact distance
+                                                                        to unlock expense details</p>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Photos Section -->
+                                                <div class="p-3 border-bottom bg-light">
+                                                    <h6 class="mb-3"><i class="bi bi-camera me-2"></i><span
+                                                            class="photos-section-title">Verification Photos</span></h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100 border attendance-photo-card"
+                                                                id="punch-in-card-<?= $modal_id ?>">
+                                                                <div class="card-header bg-primary text-white py-2">
+                                                                    <div class="d-flex justify-content-between align-items-center">
+                                                                        <span class="card-header-title"><i
+                                                                                class="bi bi-box-arrow-in-right me-1"></i> <span
+                                                                                class="header-text">Punch In</span></span>
+                                                                        <span
+                                                                            class="badge bg-light text-dark punch-time">Loading...</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="card-body p-0 text-center">
+                                                                    <div class="p-4 text-muted loading-state">
+                                                                        <div class="spinner-border text-primary" role="status">
+                                                                            <span class="visually-hidden">Loading...</span>
+                                                                        </div>
+                                                                        <p class="mt-2">Loading photo...</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="card-footer p-2 bg-light location-footer d-none">
+                                                                    <small class="text-muted d-flex align-items-center">
+                                                                        <i class="bi bi-geo-alt me-1"></i>
+                                                                        <span class="location-text text-truncate">Loading
+                                                                            location...</span>
+                                                                        <a href="#" class="ms-auto map-link" target="_blank"
+                                                                            title="View on map">
+                                                                            <i class="bi bi-map"></i>
+                                                                        </a>
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="card h-100 border attendance-photo-card"
+                                                                id="punch-out-card-<?= $modal_id ?>">
+                                                                <div class="card-header bg-success text-white py-2">
+                                                                    <div class="d-flex justify-content-between align-items-center">
+                                                                        <span class="card-header-title"><i
+                                                                                class="bi bi-box-arrow-right me-1"></i> <span
+                                                                                class="header-text">Punch Out</span></span>
+                                                                        <span
+                                                                            class="badge bg-light text-dark punch-time">Loading...</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="card-body p-0 text-center">
+                                                                    <div class="p-4 text-muted loading-state">
+                                                                        <div class="spinner-border text-success" role="status">
+                                                                            <span class="visually-hidden">Loading...</span>
+                                                                        </div>
+                                                                        <p class="mt-2">Loading photo...</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="card-footer p-2 bg-light location-footer d-none">
+                                                                    <small class="text-muted d-flex align-items-center">
+                                                                        <i class="bi bi-geo-alt me-1"></i>
+                                                                        <span class="location-text text-truncate">Loading
+                                                                            location...</span>
+                                                                        <a href="#" class="ms-auto map-link" target="_blank"
+                                                                            title="View on map">
+                                                                            <i class="bi bi-map"></i>
+                                                                        </a>
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <script>
+                                                    // Function to fetch attendance photos
+                                                    function fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor = false) {
+                                                        // First check user role
+                                                        fetch('ajax_handlers/get_current_user_role.php')
+                                                            .then(response => response.json())
+                                                            .then(userData => {
+                                                                if (userData.success && userData.role) {
+                                                                    const userRole = userData.role.toLowerCase();
+
+                                                                    // If user is site supervisor or the employee is a site supervisor, show punch in/out photos
+                                                                    // Check for any supervisor role or designation
+                                                                    if (userRole.includes('supervisor') || userRole === 'site supervisor' || userRole === 'supervisor' || isSiteSupervisor) {
+                                                                        // Update section title
+                                                                        const sectionTitle = document.querySelector(`#${modalId} .photos-section-title`);
+                                                                        if (sectionTitle) {
+                                                                            sectionTitle.textContent = 'Attendance Photos';
+                                                                        }
+
+                                                                        // Fetch punch in photo
+                                                                        fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
+                                                                            .then(response => response.json())
+                                                                            .then(data => {
+                                                                                updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
+                                                                            })
+                                                                            .catch(error => {
+                                                                                console.error('Error fetching punch in photo:', error);
+                                                                                showPhotoError('punch-in-card-' + modalId, 'Failed to load punch in photo');
+                                                                            });
+
+                                                                        // Fetch punch out photo
+                                                                        fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
+                                                                            .then(response => response.json())
+                                                                            .then(data => {
+                                                                                updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
+                                                                            })
+                                                                            .catch(error => {
+                                                                                console.error('Error fetching punch out photo:', error);
+                                                                                showPhotoError('punch-out-card-' + modalId, 'Failed to load punch out photo');
+                                                                            });
+                                                                    } else {
+                                                                        // Update section title for other roles
+                                                                        const sectionTitle = document.querySelector(`#${modalId} .photos-section-title`);
+                                                                        if (sectionTitle) {
+                                                                            sectionTitle.textContent = 'Meter Photos';
+                                                                        }
+
+                                                                        // For other roles, fetch meter start/end photos
+                                                                        fetch(`ajax_handlers/get_meter_photos.php?user_id=${userId}&travel_date=${travelDate}`)
+                                                                            .then(response => response.json())
+                                                                            .then(data => {
+                                                                                if (data.success) {
+                                                                                    // Update meter start photo
+                                                                                    const startData = {
+                                                                                        success: true,
+                                                                                        photo: data.meter_start_photo_path,
+                                                                                        time: data.travel_date + ' (Start)',
+                                                                                        formatted_address: data.from_location || 'N/A'
+                                                                                    };
+                                                                                    updateAttendanceCard('punch-in-card-' + modalId, startData, 'meter-start');
+
+                                                                                    // Update meter end photo
+                                                                                    const endData = {
+                                                                                        success: true,
+                                                                                        photo: data.meter_end_photo_path,
+                                                                                        time: data.travel_date + ' (End)',
+                                                                                        formatted_address: data.to_location || 'N/A'
+                                                                                    };
+                                                                                    updateAttendanceCard('punch-out-card-' + modalId, endData, 'meter-end');
+                                                                                } else {
+                                                                                    showPhotoError('punch-in-card-' + modalId, 'No meter start photo available');
+                                                                                    showPhotoError('punch-out-card-' + modalId, 'No meter end photo available');
+                                                                                }
+                                                                            })
+                                                                            .catch(error => {
+                                                                                console.error('Error fetching meter photos:', error);
+                                                                                showPhotoError('punch-in-card-' + modalId, 'Failed to load meter start photo');
+                                                                                showPhotoError('punch-out-card-' + modalId, 'Failed to load meter end photo');
+                                                                            });
+                                                                    }
+                                                                } else {
+                                                                    console.error('Error getting user role:', userData.message || 'Unknown error');
+                                                                    // Fallback to punch in/out photos
+                                                                    fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
+                                                                        .then(response => response.json())
+                                                                        .then(data => {
+                                                                            updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
+                                                                        })
+                                                                        .catch(error => {
+                                                                            showPhotoError('punch-in-card-' + modalId, 'Failed to load photo');
+                                                                        });
+
+                                                                    fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
+                                                                        .then(response => response.json())
+                                                                        .then(data => {
+                                                                            updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
+                                                                        })
+                                                                        .catch(error => {
+                                                                            showPhotoError('punch-out-card-' + modalId, 'Failed to load photo');
+                                                                        });
+                                                                }
+                                                            })
+                                                            .catch(error => {
+                                                                console.error('Error getting user role:', error);
+                                                                // Fallback to punch in/out photos
+                                                                fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
+                                                                    .then(response => response.json())
+                                                                    .then(data => {
+                                                                        updateAttendanceCard('punch-in-card-' + modalId, data, 'punch-in');
+                                                                    })
+                                                                    .catch(error => {
+                                                                        showPhotoError('punch-in-card-' + modalId, 'Failed to load photo');
+                                                                    });
+
+                                                                fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=to`)
+                                                                    .then(response => response.json())
+                                                                    .then(data => {
+                                                                        updateAttendanceCard('punch-out-card-' + modalId, data, 'punch-out');
+                                                                    })
+                                                                    .catch(error => {
+                                                                        showPhotoError('punch-out-card-' + modalId, 'Failed to load photo');
+                                                                    });
+                                                            });
+                                                    }
+
+                                                    // Function to update attendance card with fetched data
+                                                    function updateAttendanceCard(cardId, data, type) {
+                                                        const card = document.getElementById(cardId);
+                                                        if (!card) return;
+
+                                                        const loadingState = card.querySelector('.loading-state');
+                                                        const timeDisplay = card.querySelector('.punch-time');
+                                                        const locationFooter = card.querySelector('.location-footer');
+                                                        const locationText = card.querySelector('.location-text');
+                                                        const mapLink = card.querySelector('.map-link');
+                                                        const headerText = card.querySelector('.header-text');
+
+                                                        // Update header text based on type
+                                                        if (headerText) {
+                                                            if (type === 'meter-start') {
+                                                                headerText.textContent = 'Meter Start';
+                                                            } else if (type === 'meter-end') {
+                                                                headerText.textContent = 'Meter End';
+                                                            } else if (type === 'punch-in') {
+                                                                headerText.textContent = 'Punch In';
+                                                            } else if (type === 'punch-out') {
+                                                                headerText.textContent = 'Punch Out';
+                                                            }
+                                                        }
+
+                                                        // Update time display
+                                                        timeDisplay.textContent = data.time || 'N/A';
+
+                                                        // Remove loading state
+                                                        if (loadingState) {
+                                                            loadingState.remove();
+                                                        } else {
+                                                            // If loading state is already removed, clear the card body content
+                                                            const cardBody = card.querySelector('.card-body');
+                                                            if (cardBody) {
+                                                                cardBody.innerHTML = '';
+                                                            }
+                                                        }
+
+                                                        // Get card body reference
+                                                        const cardBody = card.querySelector('.card-body');
+                                                        if (!cardBody) return;
+
+                                                        if (data.success && data.photo) {
+                                                            // Create image element
+                                                            const imgContainer = document.createElement('a');
+                                                            imgContainer.href = "javascript:void(0)";
+                                                            imgContainer.classList.add('d-block');
+                                                            imgContainer.onclick = function () {
+                                                                // Open photo in modal
+                                                                const photoModal = new bootstrap.Modal(document.getElementById('photoViewerModal'));
+                                                                const imgElement = document.getElementById('photoViewerImage');
+
+                                                                // Try to load the image with fallback paths
+                                                                // First try the primary path
+                                                                imgElement.src = data.photo;
+
+                                                                // Set appropriate title based on type
+                                                                let modalTitle = 'Photo';
+                                                                if (type === 'punch-in') modalTitle = 'Punch In Photo';
+                                                                else if (type === 'punch-out') modalTitle = 'Punch Out Photo';
+                                                                else if (type === 'meter-start') modalTitle = 'Meter Start Photo';
+                                                                else if (type === 'meter-end') modalTitle = 'Meter End Photo';
+
+                                                                document.getElementById('photoViewerModalLabel').textContent = modalTitle;
+
+                                                                // Add fallback mechanism for the photo viewer modal if fallback path is provided
+                                                                if (data.photo_fallback) {
+                                                                    imgElement.onerror = function () {
+                                                                        console.log('Primary image path failed in photo viewer, trying fallback path:', data.photo_fallback);
+                                                                        imgElement.src = data.photo_fallback;
+
+                                                                        // If fallback also fails, show a placeholder
+                                                                        imgElement.onerror = function () {
+                                                                            console.log('Both image paths failed in photo viewer, showing placeholder');
+                                                                            imgElement.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
+                                                                        };
+                                                                    };
+                                                                }
+
+                                                                photoModal.show();
+                                                            };
+
+                                                            const img = document.createElement('img');
+                                                            // Try to load the image with fallback paths
+                                                            // First try the primary path
+                                                            img.src = data.photo;
+
+                                                            // If primary path fails, try the fallback path if provided
+                                                            if (data.photo_fallback) {
+                                                                img.onerror = function () {
+                                                                    console.log('Primary image path failed, trying fallback path:', data.photo_fallback);
+                                                                    img.src = data.photo_fallback;
+
+                                                                    // If fallback also fails, show a placeholder
+                                                                    img.onerror = function () {
+                                                                        console.log('Both image paths failed, showing placeholder');
+                                                                        img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIE5vdCBGb3VuZDwvdGV4dD48L3N2Zz4=';
+                                                                    };
+                                                                };
+                                                            }
+
+                                                            // Set appropriate alt text based on type
+                                                            if (type === 'punch-in') img.alt = 'Punch In Photo';
+                                                            else if (type === 'punch-out') img.alt = 'Punch Out Photo';
+                                                            else if (type === 'meter-start') img.alt = 'Meter Start Photo';
+                                                            else if (type === 'meter-end') img.alt = 'Meter End Photo';
+                                                            else img.alt = 'Photo';
+
+                                                            img.classList.add('img-fluid', 'punch-photo');
+
+                                                            imgContainer.appendChild(img);
+                                                            cardBody.appendChild(imgContainer);
+
+                                                            // Show location if available
+                                                            if (data.formatted_address && data.formatted_address !== 'N/A') {
+                                                                locationText.textContent = data.formatted_address;
+                                                                locationFooter.classList.remove('d-none');
+
+                                                                // Add map link if coordinates are available
+                                                                if (data.map_url) {
+                                                                    mapLink.href = data.map_url;
+                                                                } else {
+                                                                    mapLink.classList.add('d-none');
+                                                                }
+                                                            }
+                                                        } else {
+                                                            // Show no photo available message
+                                                            const noPhotoDiv = document.createElement('div');
+                                                            noPhotoDiv.className = 'p-4 text-muted';
+
+                                                            // Set appropriate message based on type
+                                                            let message = 'No photo available';
+                                                            if (type === 'punch-in') message = 'No punch in photo available';
+                                                            else if (type === 'punch-out') message = 'No punch out photo available';
+                                                            else if (type === 'meter-start') message = 'No meter start photo available';
+                                                            else if (type === 'meter-end') message = 'No meter end photo available';
+
+                                                            noPhotoDiv.innerHTML = `
                                             <i class="bi bi-camera-slash display-4"></i>
                                             <p class="mt-2">${message}</p>
                                         `;
-                                        cardBody.appendChild(noPhotoDiv);
-                                    }
-                                }
-                                
-                                // Function to show error message
-                                function showPhotoError(cardId, errorMessage) {
-                                    const card = document.getElementById(cardId);
-                                    if (!card) return;
-                                    
-                                    const loadingState = card.querySelector('.loading-state');
-                                    const timeDisplay = card.querySelector('.punch-time');
-                                    
-                                    // Update time display
-                                    timeDisplay.textContent = 'Error';
-                                    
-                                    // Remove loading state
-                                    if (loadingState) {
-                                        loadingState.remove();
-                                    }
-                                    
-                                    // Get card body reference
-                                    const cardBody = card.querySelector('.card-body');
-                                    if (!cardBody) return;
-                                    
-                                    // Clear any existing content
-                                    cardBody.innerHTML = '';
-                                    
-                                    // Show error message
-                                    const errorDiv = document.createElement('div');
-                                    errorDiv.className = 'p-4 text-danger';
-                                    errorDiv.innerHTML = `
+                                                            cardBody.appendChild(noPhotoDiv);
+                                                        }
+                                                    }
+
+                                                    // Function to show error message
+                                                    function showPhotoError(cardId, errorMessage) {
+                                                        const card = document.getElementById(cardId);
+                                                        if (!card) return;
+
+                                                        const loadingState = card.querySelector('.loading-state');
+                                                        const timeDisplay = card.querySelector('.punch-time');
+
+                                                        // Update time display
+                                                        timeDisplay.textContent = 'Error';
+
+                                                        // Remove loading state
+                                                        if (loadingState) {
+                                                            loadingState.remove();
+                                                        }
+
+                                                        // Get card body reference
+                                                        const cardBody = card.querySelector('.card-body');
+                                                        if (!cardBody) return;
+
+                                                        // Clear any existing content
+                                                        cardBody.innerHTML = '';
+
+                                                        // Show error message
+                                                        const errorDiv = document.createElement('div');
+                                                        errorDiv.className = 'p-4 text-danger';
+                                                        errorDiv.innerHTML = `
                                         <i class="bi bi-exclamation-triangle display-4"></i>
                                         <p class="mt-2">${errorMessage}</p>
                                     `;
-                                    cardBody.appendChild(errorDiv);
-                                }
-                                
-                                // Initialize fetch when modal is shown
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    // Add event listeners to all modals
-                                    document.querySelectorAll('.modal').forEach(modal => {
-                                        modal.addEventListener('shown.bs.modal', function() {
-                                            const modalId = this.id;
-                                            // Extract user_id and date from the modal ID
-                                            // Format: modal_YYYY_MM_DD_userId
-                                            const parts = modalId.split('_');
-                                            if (parts.length >= 5) {
-                                                const userId = parts[parts.length - 1];
-                                                // Reconstruct the date (YYYY-MM-DD)
-                                                const year = parts[1];
-                                                const month = parts[2];
-                                                const day = parts[3];
-                                                const travelDate = `${year}-${month}-${day}`;
-                                                
-                                                // Get the employee designation from the modal
-                                                const expenseUserDesignation = document.querySelector(`#${modalId} .fw-medium + .text-muted.small`);
-                                                const isSiteSupervisor = expenseUserDesignation && expenseUserDesignation.textContent.toLowerCase().includes('site supervisor');
-                                                
-                                                // Pass the employee designation to the fetch function
-                                                fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor);
-                                                
-                                                // Fetch the confirmed distance from the database
-                                                fetch(`ajax_handlers/check_confirmed_distance.php?user_id=${userId}&travel_date=${travelDate}`)
-                                                .then(response => response.json())
-                                                .then(data => {
-                                                    const distanceInput = this.querySelector('.confirmed-distance-input');
-                                                    const confirmationStatus = this.querySelector('.confirmation-status');
-                                                    const headingContainer = this.querySelector('.px-3.py-3.border-bottom.bg-light .d-flex.align-items-center .d-flex.align-items-center div');
-                                                    
-                                                    // Check if there's already a verification from this user (Purchase Manager)
-                                                    const pmHasVerified = (data.success && data.confirmed_distance);
-                                                    const hrHasVerified = (data.success && data.hr_confirmed_distance);
-                                                    
-                                                    // Check if all expenses in this modal are approved
-                                                    const allExpensesApproved = Array.from(
-                                                        document.querySelectorAll(`#${modalId} .expenses-table-container tbody tr`)
-                                                    ).every(row => {
-                                                        const statusBadge = row.querySelector('td:nth-child(7) .badge');
-                                                        return statusBadge && (
-                                                            statusBadge.textContent.toLowerCase() === 'checked' ||
-                                                            statusBadge.textContent.toLowerCase() === 'approved' ||
-                                                            statusBadge.textContent.toLowerCase() === 'rejected'
-                                                        );
-                                                    });
-                                                    
-                                                    // Only show expenses table if Purchase Manager has verified
-                                                    if (pmHasVerified) {
-                                                        // Show the expenses table
-                                                        const expensesTable = document.getElementById('expenses-table-' + modalId);
-                                                        const expensesPlaceholder = document.getElementById('expenses-placeholder-' + modalId);
-                                                        
-                                                        if (expensesTable) {
-                                                            expensesTable.style.display = 'block';
-                                                        }
-                                                        
-                                                        if (expensesPlaceholder) {
-                                                            expensesPlaceholder.style.display = 'none';
-                                                        }
-                                                        
-                                                        // Update the submit button - only disable if all expenses are approved
-                                                        const submitButton = this.querySelector('.confirm-distance-btn');
-                                                        if (submitButton) {
-                                                            if (allExpensesApproved) {
-                                                                submitButton.disabled = true;
-                                                                submitButton.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Confirmed';
-                                                            } else {
-                                                                submitButton.disabled = false;
-                                                                submitButton.innerHTML = '<i class="bi bi-check-circle me-1"></i> I Checked';
-                                                            }
-                                                        }
-                                                    } else if (hrHasVerified) {
-                                                        // HR has verified but PM hasn't - keep button enabled
-                                                        const submitButton = this.querySelector('.confirm-distance-btn');
-                                                        if (submitButton) {
-                                                            submitButton.disabled = false;
-                                                            submitButton.innerHTML = '<i class="bi bi-check-circle me-1"></i> I Checked';
-                                                        }
+                                                        cardBody.appendChild(errorDiv);
                                                     }
+
+                                                    // Initialize fetch when modal is shown
+                                                    document.addEventListener('DOMContentLoaded', function () {
+                                                        // Add event listeners to all modals
+                                                        document.querySelectorAll('.modal').forEach(modal => {
+                                                            modal.addEventListener('shown.bs.modal', function () {
+                                                                const modalId = this.id;
+                                                                // Extract user_id and date from the modal ID
+                                                                // Format: modal_YYYY_MM_DD_userId
+                                                                const parts = modalId.split('_');
+                                                                if (parts.length >= 5) {
+                                                                    const userId = parts[parts.length - 1];
+                                                                    // Reconstruct the date (YYYY-MM-DD)
+                                                                    const year = parts[1];
+                                                                    const month = parts[2];
+                                                                    const day = parts[3];
+                                                                    const travelDate = `${year}-${month}-${day}`;
+
+                                                                    // Get the employee designation from the modal
+                                                                    // Get the employee designation from the modal
+                                                            const expenseUserDesignation = document.querySelector(`#${modalId} .fw-medium + .text-muted.small`);
+                                                            // Check if user is Site Supervisor or Purchase Manager - both show punch in/out photos instead of meter
+                                                            const designationText = expenseUserDesignation ? expenseUserDesignation.textContent.toLowerCase() : '';
+                                                            const showPunchPhotos = designationText.includes('site supervisor') || designationText.includes('purchase manager');
+                                                
+                                                            // Pass the employee designation to the fetch function
+                                                            fetchAttendancePhotos(userId, travelDate, modalId, showPunchPhotos);
+                                                
+                                                            // Fetch the confirmed distance from the database
+                                                            fetch(`ajax_handlers/check_confirmed_distance.php?user_id=${userId}&travel_date=${travelDate}`)
+                                                            .then(response => response.json())
+                                                            .then(data => {
+                                                                const distanceInput = this.querySelector('.confirmed-distance-input');
+                                                                const confirmationStatus = this.querySelector('.confirmation-status');
+                                                                const headingContainer = this.querySelector('.px-3.py-3.border-bottom.bg-light .d-flex.align-items-center .d-flex.align-items-center div');
                                                     
-                                                    // Update the heading text if any verification exists
-                                                    if (pmHasVerified || hrHasVerified) {
-                                                        if (headingContainer) {
-                                                            const displayDistance = data.confirmed_distance || data.hr_confirmed_distance;
-                                                            headingContainer.innerHTML = `
+                                                                // Check if there's already a verification from this user (Purchase Manager)
+                                                                const pmHasVerified = (data.success && data.confirmed_distance);
+                                                                const hrHasVerified = (data.success && data.hr_confirmed_distance);
+                                                    
+                                                                // Check if all expenses in this modal are approved
+                                                                const allExpensesApproved = Array.from(
+                                                                    document.querySelectorAll(`#${modalId} .expenses-table-container tbody tr`)
+                                                                ).every(row => {
+                                                                    const statusBadge = row.querySelector('td:nth-child(7) .badge');
+                                                                    return statusBadge && (
+                                                                        statusBadge.textContent.toLowerCase() === 'checked' ||
+                                                                        statusBadge.textContent.toLowerCase() === 'approved' ||
+                                                                        statusBadge.textContent.toLowerCase() === 'rejected'
+                                                                    );
+                                                                });
+                                                    
+                                                                // Only show expenses table if Purchase Manager has verified
+                                                                if (pmHasVerified) {
+                                                                    // Show the expenses table
+                                                                    const expensesTable = document.getElementById('expenses-table-' + modalId);
+                                                                    const expensesPlaceholder = document.getElementById('expenses-placeholder-' + modalId);
+                                                        
+                                                                    if (expensesTable) {
+                                                                        expensesTable.style.display = 'block';
+                                                                    }
+                                                        
+                                                                    if (expensesPlaceholder) {
+                                                                        expensesPlaceholder.style.display = 'none';
+                                                                    }
+                                                        
+                                                                    // Update the submit button - only disable if all expenses are approved
+                                                                    const submitButton = this.querySelector('.confirm-distance-btn');
+                                                                    if (submitButton) {
+                                                                        if (allExpensesApproved) {
+                                                                            submitButton.disabled = true;
+                                                                            submitButton.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Confirmed';
+                                                                        } else {
+                                                                            submitButton.disabled = false;
+                                                                            submitButton.innerHTML = '<i class="bi bi-check-circle me-1"></i> I Checked';
+                                                                        }
+                                                                    }
+                                                                } else if (hrHasVerified) {
+                                                                    // HR has verified but PM hasn't - keep button enabled
+                                                                    const submitButton = this.querySelector('.confirm-distance-btn');
+                                                                    if (submitButton) {
+                                                                        submitButton.disabled = false;
+                                                                        submitButton.innerHTML = '<i class="bi bi-check-circle me-1"></i> I Checked';
+                                                                    }
+                                                                }
+                                                    
+                                                                // Update the heading text if any verification exists
+                                                                if (pmHasVerified || hrHasVerified) {
+                                                                    if (headingContainer) {
+                                                                        const displayDistance = data.confirmed_distance || data.hr_confirmed_distance;
+                                                                        headingContainer.innerHTML = `
                                                                 <h6 class="mb-0 fw-bold">Total Distance Traveled</h6>
                                                             `;
-                                                        }
-                                                    }
+                                                                    }
+                                                                }
                                                     
-                                                    // Handle the input field value
-                                                    if (distanceInput) {
-                                                        if (pmHasVerified) {
-                                                            // Show the verified value
-                                                            distanceInput.value = data.confirmed_distance;
-                                                            // Only disable if all expenses are approved
-                                                            distanceInput.disabled = allExpensesApproved;
-                                                        } else {
-                                                            // Always keep the input empty if PM hasn't verified yet,
-                                                            // regardless of whether HR has verified or not
-                                                            distanceInput.value = '';
-                                                            distanceInput.disabled = false;
+                                                                // Handle the input field value
+                                                                if (distanceInput) {
+                                                                    if (pmHasVerified) {
+                                                                        // Show the verified value
+                                                                        distanceInput.value = data.confirmed_distance;
+                                                                        // Only disable if all expenses are approved
+                                                                        distanceInput.disabled = allExpensesApproved;
+                                                                    } else {
+                                                                        // Always keep the input empty if PM hasn't verified yet,
+                                                                        // regardless of whether HR has verified or not
+                                                                        distanceInput.value = '';
+                                                                        distanceInput.disabled = false;
                                                             
-                                                            // Update placeholder text based on verification status
-                                                            if (hrHasVerified && data.hr_confirmed_distance) {
-                                                                distanceInput.placeholder = `Enter distance to verify HR's distance`;
-                                                            } else if (data.total_distance) {
-                                                                distanceInput.placeholder = `Enter distance to verify: ${data.total_distance} km`;
-                                                            } else {
-                                                                distanceInput.placeholder = 'Enter distance shown in image';
-                                                            }
+                                                                        // Update placeholder text based on verification status
+                                                                        if (hrHasVerified && data.hr_confirmed_distance) {
+                                                                            distanceInput.placeholder = `Enter distance to verify HR's distance`;
+                                                                        } else if (data.total_distance) {
+                                                                            distanceInput.placeholder = `Enter distance to verify: ${data.total_distance} km`;
+                                                                        } else {
+                                                                            distanceInput.placeholder = 'Enter distance shown in image';
+                                                                        }
+                                                                    }
+                                                                }
+                                                            })
+                                                            .catch(error => {
+                                                                console.error('Error fetching confirmed distance:', error);
+                                                            });
                                                         }
-                                                    }
-                                                })
-                                                .catch(error => {
-                                                    console.error('Error fetching confirmed distance:', error);
+                                                    });
                                                 });
-                                            }
-                                        });
-                                    });
-                                });
-                                </script>
+                                            });
+                                            </script>
                                 
-                                <!-- Expenses table with clean design -->
-                                <div class="table-responsive expenses-table-container" id="expenses-table-<?= $modal_id ?>" <?= empty($expense['confirmed_distance']) ? 'style="display:none;"' : '' ?>>
-                                    <table class="table table-hover align-middle mb-0">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th class="ps-3 text-center" width="40">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input select-all-expenses" type="checkbox" id="selectAll-<?= $modal_id ?>">
-                                                        <label class="form-check-label" for="selectAll-<?= $modal_id ?>"></label>
-                                                    </div>
-                                                </th>
-                                                <th class="ps-3 col-purpose"><i class="bi bi-card-text me-1"></i> Purpose</th>
-                                                <th class="col-route"><i class="bi bi-signpost-split me-1"></i> Route</th>
-                                                <th class="col-mode"><i class="bi bi-truck me-1"></i> Mode</th>
-                                                <th class="col-amount"><i class="bi bi-currency-rupee me-1"></i> Amount</th>
-                                                <th class="col-date"><i class="bi bi-calendar-plus me-1"></i> Submitted</th>
-                                                <th class="col-status"><i class="bi bi-tag me-1"></i> Status</th>
-                                                <th class="col-status"><i class="bi bi-briefcase me-1"></i> Manager</th>
-                                                <th class="col-status"><i class="bi bi-calculator me-1"></i> Accountant</th>
-                                                <th class="col-status"><i class="bi bi-people me-1"></i> HR</th>
-                                                <th class="text-end pe-3 col-actions"><i class="bi bi-gear me-1"></i> Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php foreach($user_expenses as $expense): 
-                                                // Get status class
-                                                $statusClass = '';
-                                                switch(strtolower($expense['status'])) {
-                                                    case 'approved': $statusClass = 'bg-success'; break;
-                                                    case 'pending': $statusClass = 'bg-warning text-dark'; break;
-                                                    case 'rejected': $statusClass = 'bg-danger'; break;
-                                                    default: $statusClass = 'bg-secondary'; break;
-                                                }
-                                                
-                                                // Get manager status class
-                                                $managerStatusClass = '';
-                                                switch(strtolower($expense['manager_status'] ?? 'not_reviewed')) {
-                                                    case 'approved': $managerStatusClass = 'bg-success'; break;
-                                                    case 'pending': $managerStatusClass = 'bg-warning text-dark'; break;
-                                                    case 'rejected': $managerStatusClass = 'bg-danger'; break;
-                                                    default: $managerStatusClass = 'bg-secondary'; break;
-                                                }
-                                                
-                                                // Get accountant status class
-                                                $accountantStatusClass = '';
-                                                switch(strtolower($expense['accountant_status'] ?? 'not_reviewed')) {
-                                                    case 'approved': $accountantStatusClass = 'bg-success'; break;
-                                                    case 'pending': $accountantStatusClass = 'bg-warning text-dark'; break;
-                                                    case 'rejected': $accountantStatusClass = 'bg-danger'; break;
-                                                    default: $accountantStatusClass = 'bg-secondary'; break;
-                                                }
-                                                
-                                                // Get HR status class
-                                                $hrStatusClass = '';
-                                                switch(strtolower($expense['hr_status'] ?? 'not_reviewed')) {
-                                                    case 'approved': $hrStatusClass = 'bg-success'; break;
-                                                    case 'pending': $hrStatusClass = 'bg-warning text-dark'; break;
-                                                    case 'rejected': $hrStatusClass = 'bg-danger'; break;
-                                                    default: $hrStatusClass = 'bg-secondary'; break;
-                                                }
-                                                
-                                                // Format dates
-                                                $submittedDate = date('d M Y', strtotime($expense['created_at']));
-                                            ?>
-                                            <tr>
-                                                <td class="ps-3 text-center">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input expense-checkbox" type="checkbox" value="<?= $expense['id'] ?>" id="expense-<?= $expense['id'] ?>" <?= strtolower($expense['status']) !== 'pending' ? 'disabled' : '' ?>>
-                                                        <label class="form-check-label" for="expense-<?= $expense['id'] ?>"></label>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="fw-medium"><?= htmlspecialchars($expense['purpose']) ?></div>
-                                                    <?php if (!empty($expense['notes'])): ?>
-                                                    <div class="text-muted small text-truncate" style="max-width: 200px;" title="<?= htmlspecialchars($expense['notes']) ?>">
-                                                        <?= htmlspecialchars(substr($expense['notes'], 0, 60)) ?><?= strlen($expense['notes']) > 60 ? '...' : '' ?>
-                                                    </div>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="badge bg-light text-dark border me-2">From</span>
-                                                        <span class="text-truncate route-text" style="max-width: 180px;" title="<?= htmlspecialchars($expense['from_location']) ?>">
-                                                            <?= htmlspecialchars($expense['from_location']) ?>
-                                                        </span>
-                                                    </div>
-                                                    <div class="d-flex align-items-center mt-1">
-                                                        <span class="badge bg-light text-dark border me-2">To</span>
-                                                        <span class="text-truncate route-text" style="max-width: 180px;" title="<?= htmlspecialchars($expense['to_location']) ?>">
-                                                            <?= htmlspecialchars($expense['to_location']) ?>
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <?php 
-                                                        $transportIcon = 'car-front';
-                                                        $mode = strtolower($expense['mode_of_transport']);
-                                                        if (strpos($mode, 'train') !== false || strpos($mode, 'rail') !== false) {
-                                                            $transportIcon = 'train-front';
-                                                        } elseif (strpos($mode, 'plane') !== false || strpos($mode, 'flight') !== false || strpos($mode, 'air') !== false) {
-                                                            $transportIcon = 'airplane';
-                                                        } elseif (strpos($mode, 'bus') !== false) {
-                                                            $transportIcon = 'bus-front';
-                                                        } elseif (strpos($mode, 'taxi') !== false || strpos($mode, 'cab') !== false) {
-                                                            $transportIcon = 'taxi';
-                                                        } elseif (strpos($mode, 'bike') !== false || strpos($mode, 'bicycle') !== false || strpos($mode, 'cycle') !== false) {
-                                                            $transportIcon = 'bicycle';
-                                                        } elseif (strpos($mode, 'motorcycle') !== false || strpos($mode, 'scooter') !== false) {
-                                                            $transportIcon = 'scooter';
-                                                        } elseif (strpos($mode, 'walk') !== false || strpos($mode, 'foot') !== false) {
-                                                            $transportIcon = 'person-walking';
-                                                        }
-                                                        ?>
-                                                        <i class="bi bi-<?= $transportIcon ?> me-2 text-primary"></i>
-                                                        <?= htmlspecialchars($expense['mode_of_transport']) ?>
-                                                    </div>
-                                                    <?php if ($expense['distance']): ?>
-                                                    <div class="text-muted small">
-                                                        <i class="bi bi-rulers me-1"></i> <?= $expense['distance'] ?> km
-                                                    </div>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td>
-                                                    <div class="fw-medium">₹<?= number_format($expense['amount'], 2) ?></div>
-                                                </td>
-                                                <td>
-                                                    <div><?= $submittedDate ?></div>
-                                                    <div class="text-muted small">ID: <?= $expense['id'] ?></div>
-                                                </td>
-                                                <td>
-                                                    <span class="badge <?= $statusClass ?>"><?= ucfirst(htmlspecialchars($expense['status'])) ?></span>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="badge <?= $managerStatusClass ?> me-1">
-                                                            <?= !empty($expense['manager_status']) ? ucfirst(htmlspecialchars($expense['manager_status'])) : 'Not Reviewed' ?>
-                                                        </span>
-                                                        <?php if (!empty($expense['rejection_cascade']) && $expense['rejection_cascade'] !== 'MANAGER_REJECTED' && strtolower($expense['manager_status']) === 'rejected'): ?>
-                                                            <span class="badge bg-secondary auto-rejected-badge" title="Auto-rejected due to rejection by another role">
-                                                                <i class="bi bi-arrow-repeat"></i>
-                                                            </span>
-                                                        <?php endif; ?>
-                                                        <?php if (!empty($expense['manager_reason'])): ?>
-                                                            <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
-                                                                    data-bs-toggle="modal" data-bs-target="#reasonModal" 
-                                                                    data-title="Manager's Reason" 
-                                                                    data-reason="<?= htmlspecialchars($expense['manager_reason']) ?>">
-                                                                <i class="bi bi-info-circle"></i>
-                                                            </button>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="badge <?= $accountantStatusClass ?> me-1">
-                                                            <?= !empty($expense['accountant_status']) ? ucfirst(htmlspecialchars($expense['accountant_status'])) : 'Not Reviewed' ?>
-                                                        </span>
-                                                        <?php if (!empty($expense['rejection_cascade']) && $expense['rejection_cascade'] !== 'ACCOUNTANT_REJECTED' && strtolower($expense['accountant_status']) === 'rejected'): ?>
-                                                            <span class="badge bg-secondary auto-rejected-badge" title="Auto-rejected due to rejection by another role">
-                                                                <i class="bi bi-arrow-repeat"></i>
-                                                            </span>
-                                                        <?php endif; ?>
-                                                        <?php if (!empty($expense['accountant_reason'])): ?>
-                                                            <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
-                                                                    data-bs-toggle="modal" data-bs-target="#reasonModal" 
-                                                                    data-title="Accountant's Reason" 
-                                                                    data-reason="<?= htmlspecialchars($expense['accountant_reason']) ?>">
-                                                                <i class="bi bi-info-circle"></i>
-                                                            </button>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <span class="badge <?= $hrStatusClass ?> me-1">
-                                                            <?= !empty($expense['hr_status']) ? ucfirst(htmlspecialchars($expense['hr_status'])) : 'Not Reviewed' ?>
-                                                        </span>
-                                                        <?php if (!empty($expense['rejection_cascade']) && $expense['rejection_cascade'] !== 'HR_REJECTED' && strtolower($expense['hr_status']) === 'rejected'): ?>
-                                                            <span class="badge bg-secondary auto-rejected-badge" title="Auto-rejected due to rejection by another role">
-                                                                <i class="bi bi-arrow-repeat"></i>
-                                                            </span>
-                                                        <?php endif; ?>
-                                                        <?php if (!empty($expense['hr_reason'])): ?>
-                                                            <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
-                                                                    data-bs-toggle="modal" data-bs-target="#reasonModal" 
-                                                                    data-title="HR's Reason" 
-                                                                    data-reason="<?= htmlspecialchars($expense['hr_reason']) ?>">
-                                                                <i class="bi bi-info-circle"></i>
-                                                            </button>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </td>
-                                                <td class="text-end pe-3">
-                                                    <div class="btn-group">
-                                                        <button class="btn btn-sm btn-outline-primary" title="View Details" data-expense-id="<?= $expense['id'] ?>">
-                                                            <i class="bi bi-eye"></i>
-                                                        </button>
+                                            <!-- Expenses table with clean design -->
+                                            <div class="table-responsive expenses-table-container" id="expenses-table-<?= $modal_id ?>" <?= empty($expense['confirmed_distance']) ? 'style="display:none;"' : '' ?>>
+                                                <table class="table table-hover align-middle mb-0">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th class="ps-3 text-center" width="40">
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input select-all-expenses" type="checkbox" id="selectAll-<?= $modal_id ?>">
+                                                                    <label class="form-check-label" for="selectAll-<?= $modal_id ?>"></label>
+                                                                </div>
+                                                            </th>
+                                                            <th class="ps-3 col-purpose"><i class="bi bi-card-text me-1"></i> Purpose</th>
+                                                            <th class="col-route"><i class="bi bi-signpost-split me-1"></i> Route</th>
+                                                            <th class="col-mode"><i class="bi bi-truck me-1"></i> Mode</th>
+                                                            <th class="col-amount"><i class="bi bi-currency-rupee me-1"></i> Amount</th>
+                                                            <th class="col-date"><i class="bi bi-calendar-plus me-1"></i> Submitted</th>
+                                                            <th class="col-status"><i class="bi bi-tag me-1"></i> Status</th>
+                                                            <th class="col-status"><i class="bi bi-briefcase me-1"></i> Manager</th>
+                                                            <th class="col-status"><i class="bi bi-calculator me-1"></i> Accountant</th>
+                                                            <th class="col-status"><i class="bi bi-people me-1"></i> HR</th>
+                                                            <th class="text-end pe-3 col-actions"><i class="bi bi-gear me-1"></i> Actions</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <?php foreach ($user_expenses as $expense):
+                                                            // Get status class
+                                                            $statusClass = '';
+                                                            switch (strtolower($expense['status'])) {
+                                                                case 'approved':
+                                                                    $statusClass = 'bg-success';
+                                                                    break;
+                                                                case 'pending':
+                                                                    $statusClass = 'bg-warning text-dark';
+                                                                    break;
+                                                                case 'rejected':
+                                                                    $statusClass = 'bg-danger';
+                                                                    break;
+                                                                default:
+                                                                    $statusClass = 'bg-secondary';
+                                                                    break;
+                                                            }
+
+                                                            // Get manager status class
+                                                            $managerStatusClass = '';
+                                                            switch (strtolower($expense['manager_status'] ?? 'not_reviewed')) {
+                                                                case 'approved':
+                                                                    $managerStatusClass = 'bg-success';
+                                                                    break;
+                                                                case 'pending':
+                                                                    $managerStatusClass = 'bg-warning text-dark';
+                                                                    break;
+                                                                case 'rejected':
+                                                                    $managerStatusClass = 'bg-danger';
+                                                                    break;
+                                                                default:
+                                                                    $managerStatusClass = 'bg-secondary';
+                                                                    break;
+                                                            }
+
+                                                            // Get accountant status class
+                                                            $accountantStatusClass = '';
+                                                            switch (strtolower($expense['accountant_status'] ?? 'not_reviewed')) {
+                                                                case 'approved':
+                                                                    $accountantStatusClass = 'bg-success';
+                                                                    break;
+                                                                case 'pending':
+                                                                    $accountantStatusClass = 'bg-warning text-dark';
+                                                                    break;
+                                                                case 'rejected':
+                                                                    $accountantStatusClass = 'bg-danger';
+                                                                    break;
+                                                                default:
+                                                                    $accountantStatusClass = 'bg-secondary';
+                                                                    break;
+                                                            }
+
+                                                            // Get HR status class
+                                                            $hrStatusClass = '';
+                                                            switch (strtolower($expense['hr_status'] ?? 'not_reviewed')) {
+                                                                case 'approved':
+                                                                    $hrStatusClass = 'bg-success';
+                                                                    break;
+                                                                case 'pending':
+                                                                    $hrStatusClass = 'bg-warning text-dark';
+                                                                    break;
+                                                                case 'rejected':
+                                                                    $hrStatusClass = 'bg-danger';
+                                                                    break;
+                                                                default:
+                                                                    $hrStatusClass = 'bg-secondary';
+                                                                    break;
+                                                            }
+
+                                                            // Format dates
+                                                            $submittedDate = date('d M Y', strtotime($expense['created_at']));
+                                                            ?>
+                                                            <tr>
+                                                                <td class="ps-3 text-center">
+                                                                    <div class="form-check">
+                                                                        <input class="form-check-input expense-checkbox" type="checkbox" value="<?= $expense['id'] ?>" id="expense-<?= $expense['id'] ?>" <?= strtolower($expense['status']) !== 'pending' ? 'disabled' : '' ?>>
+                                                                        <label class="form-check-label" for="expense-<?= $expense['id'] ?>"></label>
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="fw-medium"><?= htmlspecialchars($expense['purpose']) ?></div>
+                                                                    <?php if (!empty($expense['notes'])): ?>
+                                                                        <div class="text-muted small text-truncate" style="max-width: 200px;" title="<?= htmlspecialchars($expense['notes']) ?>">
+                                                                            <?= htmlspecialchars(substr($expense['notes'], 0, 60)) ?>                    <?= strlen($expense['notes']) > 60 ? '...' : '' ?>
+                                                                        </div>
+                                                                    <?php endif; ?>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="d-flex align-items-center">
+                                                                        <span class="badge bg-light text-dark border me-2">From</span>
+                                                                        <span class="text-truncate route-text" style="max-width: 180px;" title="<?= htmlspecialchars($expense['from_location']) ?>">
+                                                                            <?= htmlspecialchars($expense['from_location']) ?>
+                                                                        </span>
+                                                                    </div>
+                                                                    <div class="d-flex align-items-center mt-1">
+                                                                        <span class="badge bg-light text-dark border me-2">To</span>
+                                                                        <span class="text-truncate route-text" style="max-width: 180px;" title="<?= htmlspecialchars($expense['to_location']) ?>">
+                                                                            <?= htmlspecialchars($expense['to_location']) ?>
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="d-flex align-items-center">
+                                                                        <?php
+                                                                        $transportIcon = 'car-front';
+                                                                        $mode = strtolower($expense['mode_of_transport']);
+                                                                        if (strpos($mode, 'train') !== false || strpos($mode, 'rail') !== false) {
+                                                                            $transportIcon = 'train-front';
+                                                                        } elseif (strpos($mode, 'plane') !== false || strpos($mode, 'flight') !== false || strpos($mode, 'air') !== false) {
+                                                                            $transportIcon = 'airplane';
+                                                                        } elseif (strpos($mode, 'bus') !== false) {
+                                                                            $transportIcon = 'bus-front';
+                                                                        } elseif (strpos($mode, 'taxi') !== false || strpos($mode, 'cab') !== false) {
+                                                                            $transportIcon = 'taxi';
+                                                                        } elseif (strpos($mode, 'bike') !== false || strpos($mode, 'bicycle') !== false || strpos($mode, 'cycle') !== false) {
+                                                                            $transportIcon = 'bicycle';
+                                                                        } elseif (strpos($mode, 'motorcycle') !== false || strpos($mode, 'scooter') !== false) {
+                                                                            $transportIcon = 'scooter';
+                                                                        } elseif (strpos($mode, 'walk') !== false || strpos($mode, 'foot') !== false) {
+                                                                            $transportIcon = 'person-walking';
+                                                                        }
+                                                                        ?>
+                                                                        <i class="bi bi-<?= $transportIcon ?> me-2 text-primary"></i>
+                                                                        <?= htmlspecialchars($expense['mode_of_transport']) ?>
+                                                                    </div>
+                                                                    <?php if ($expense['distance']): ?>
+                                                                        <div class="text-muted small">
+                                                                            <i class="bi bi-rulers me-1"></i> <?= $expense['distance'] ?> km
+                                                                        </div>
+                                                                    <?php endif; ?>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="fw-medium">₹<?= number_format($expense['amount'], 2) ?></div>
+                                                                </td>
+                                                                <td>
+                                                                    <div><?= $submittedDate ?></div>
+                                                                    <div class="text-muted small">ID: <?= $expense['id'] ?></div>
+                                                                </td>
+                                                                <td>
+                                                                    <span class="badge <?= $statusClass ?>"><?= ucfirst(htmlspecialchars($expense['status'])) ?></span>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="d-flex align-items-center">
+                                                                        <span class="badge <?= $managerStatusClass ?> me-1">
+                                                                            <?= !empty($expense['manager_status']) ? ucfirst(htmlspecialchars($expense['manager_status'])) : 'Not Reviewed' ?>
+                                                                        </span>
+                                                                        <?php if (!empty($expense['rejection_cascade']) && $expense['rejection_cascade'] !== 'MANAGER_REJECTED' && strtolower($expense['manager_status']) === 'rejected'): ?>
+                                                                                <span class="badge bg-secondary auto-rejected-badge" title="Auto-rejected due to rejection by another role">
+                                                                                    <i class="bi bi-arrow-repeat"></i>
+                                                                                </span>
+                                                                        <?php endif; ?>
+                                                                        <?php if (!empty($expense['manager_reason'])): ?>
+                                                                                <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
+                                                                                        data-bs-toggle="modal" data-bs-target="#reasonModal" 
+                                                                                        data-title="Manager's Reason" 
+                                                                                        data-reason="<?= htmlspecialchars($expense['manager_reason']) ?>">
+                                                                                    <i class="bi bi-info-circle"></i>
+                                                                                </button>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="d-flex align-items-center">
+                                                                        <span class="badge <?= $accountantStatusClass ?> me-1">
+                                                                            <?= !empty($expense['accountant_status']) ? ucfirst(htmlspecialchars($expense['accountant_status'])) : 'Not Reviewed' ?>
+                                                                        </span>
+                                                                        <?php if (!empty($expense['rejection_cascade']) && $expense['rejection_cascade'] !== 'ACCOUNTANT_REJECTED' && strtolower($expense['accountant_status']) === 'rejected'): ?>
+                                                                                <span class="badge bg-secondary auto-rejected-badge" title="Auto-rejected due to rejection by another role">
+                                                                                    <i class="bi bi-arrow-repeat"></i>
+                                                                                </span>
+                                                                        <?php endif; ?>
+                                                                        <?php if (!empty($expense['accountant_reason'])): ?>
+                                                                                <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
+                                                                                        data-bs-toggle="modal" data-bs-target="#reasonModal" 
+                                                                                        data-title="Accountant's Reason" 
+                                                                                        data-reason="<?= htmlspecialchars($expense['accountant_reason']) ?>">
+                                                                                    <i class="bi bi-info-circle"></i>
+                                                                                </button>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </td>
+                                                                <td>
+                                                                    <div class="d-flex align-items-center">
+                                                                        <span class="badge <?= $hrStatusClass ?> me-1">
+                                                                            <?= !empty($expense['hr_status']) ? ucfirst(htmlspecialchars($expense['hr_status'])) : 'Not Reviewed' ?>
+                                                                        </span>
+                                                                        <?php if (!empty($expense['rejection_cascade']) && $expense['rejection_cascade'] !== 'HR_REJECTED' && strtolower($expense['hr_status']) === 'rejected'): ?>
+                                                                                <span class="badge bg-secondary auto-rejected-badge" title="Auto-rejected due to rejection by another role">
+                                                                                    <i class="bi bi-arrow-repeat"></i>
+                                                                                </span>
+                                                                        <?php endif; ?>
+                                                                        <?php if (!empty($expense['hr_reason'])): ?>
+                                                                                <button type="button" class="btn btn-sm btn-link text-primary p-0 reason-info-btn" 
+                                                                                        data-bs-toggle="modal" data-bs-target="#reasonModal" 
+                                                                                        data-title="HR's Reason" 
+                                                                                        data-reason="<?= htmlspecialchars($expense['hr_reason']) ?>">
+                                                                                    <i class="bi bi-info-circle"></i>
+                                                                                </button>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="text-end pe-3">
+                                                                    <div class="btn-group">
+                                                                        <button class="btn btn-sm btn-outline-primary" title="View Details" data-expense-id="<?= $expense['id'] ?>">
+                                                                            <i class="bi bi-eye"></i>
+                                                                        </button>
                                                         
-                                                        <button class="btn btn-sm btn-outline-info edit-expense-btn" title="Edit Expense" 
-                                                                data-bs-toggle="modal" data-bs-target="#editExpenseModal" 
-                                                                data-expense-id="<?= $expense['id'] ?>">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </button>
+                                                                        <button class="btn btn-sm btn-outline-info edit-expense-btn" title="Edit Expense" 
+                                                                                data-bs-toggle="modal" data-bs-target="#editExpenseModal" 
+                                                                                data-expense-id="<?= $expense['id'] ?>">
+                                                                            <i class="bi bi-pencil"></i>
+                                                                        </button>
                                                         
-                                                        <?php if (strtolower($expense['status']) == 'pending'): ?>
-                                                        <button class="btn btn-sm btn-outline-success" title="Check" data-expense-id="<?= $expense['id'] ?>">
-                                                            <i class="bi bi-check-lg"></i>
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-danger" title="Reject" data-expense-id="<?= $expense['id'] ?>">
-                                                            <i class="bi bi-x-lg"></i>
-                                                        </button>
-                                                        <?php endif; ?>
+                                                                        <?php if (strtolower($expense['status']) == 'pending'): ?>
+                                                                            <button class="btn btn-sm btn-outline-success" title="Check" data-expense-id="<?= $expense['id'] ?>">
+                                                                                <i class="bi bi-check-lg"></i>
+                                                                            </button>
+                                                                            <button class="btn btn-sm btn-outline-danger" title="Reject" data-expense-id="<?= $expense['id'] ?>">
+                                                                                <i class="bi bi-x-lg"></i>
+                                                                            </button>
+                                                                        <?php endif; ?>
                                                         
-                                                        <?php if (!empty($expense['bill_file_path'])): ?>
-                                                        <a href="<?= htmlspecialchars($expense['bill_file_path']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary" title="View Receipt">
-                                                            <i class="bi bi-file-earmark-text"></i>
-                                                        </a>
-                                                        <?php endif; ?>
+                                                                        <?php if (!empty($expense['bill_file_path'])): ?>
+                                                                            <a href="<?= htmlspecialchars($expense['bill_file_path']) ?>" target="_blank" class="btn btn-sm btn-outline-secondary" title="View Receipt">
+                                                                                <i class="bi bi-file-earmark-text"></i>
+                                                                            </a>
+                                                                        <?php endif; ?>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-0 bg-light sticky-bottom">
+                                            <div class="me-auto">
+                                                <div class="btn-group btn-group-sm flex-wrap" id="selected-actions-<?= $modal_id ?>" style="display: none;">
+                                                    <span class="me-2 align-self-center selected-count">0 items selected</span>
+                                                    <button class="btn btn-success bulk-selected-action" data-action="approve-selected">
+                                                                        <i class="bi bi-check-lg"></i> Check Selected
+                                                                    </button>
+                                                    <button class="btn btn-danger bulk-selected-action" data-action="reject-selected">
+                                                        <i class="bi bi-x-lg"></i> Reject Selected
+                                                    </button>
+                                                </div>
+                                    
+                                                <?php if ($pending_count > 0): ?>
+                                                    <div class="btn-group btn-group-sm flex-wrap" id="all-actions-<?= $modal_id ?>" <?= empty($expense['confirmed_distance']) ? 'style="display: none;"' : '' ?>>
+                                                        <button class="btn btn-success bulk-action" data-action="approve-all" data-user-id="<?= $user_id ?>" data-date="<?= $date ?>">
+                                                                            <i class="bi bi-check-all"></i> Check All (<?= $pending_count ?>)
+                                                                        </button>
+                                                        <button class="btn btn-danger bulk-action" data-action="reject-all" data-user-id="<?= $user_id ?>" data-date="<?= $date ?>">
+                                                            <i class="bi bi-x-circle"></i> Reject All (<?= $pending_count ?>)
+                                                        </button>
                                                     </div>
-                                                </td>
-                                            </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
+                                                <?php endif; ?>
+                                    
+                                                <!-- Message when distance not confirmed -->
+                                                <?php if (empty($expense['confirmed_distance'])): ?>
+                                                    <div class="text-warning" id="footer-message-<?= $modal_id ?>">
+                                                        <i class="bi bi-info-circle"></i> Confirm distance to enable approval actions
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="modal-footer border-0 bg-light sticky-bottom">
-                                <div class="me-auto">
-                                    <div class="btn-group btn-group-sm flex-wrap" id="selected-actions-<?= $modal_id ?>" style="display: none;">
-                                        <span class="me-2 align-self-center selected-count">0 items selected</span>
-                                        <button class="btn btn-success bulk-selected-action" data-action="approve-selected">
-                                                            <i class="bi bi-check-lg"></i> Check Selected
-                                                        </button>
-                                        <button class="btn btn-danger bulk-selected-action" data-action="reject-selected">
-                                            <i class="bi bi-x-lg"></i> Reject Selected
-                                        </button>
-                                    </div>
-                                    
-                                    <?php if ($pending_count > 0): ?>
-                                    <div class="btn-group btn-group-sm flex-wrap" id="all-actions-<?= $modal_id ?>" <?= empty($expense['confirmed_distance']) ? 'style="display: none;"' : '' ?>>
-                                        <button class="btn btn-success bulk-action" data-action="approve-all" data-user-id="<?= $user_id ?>" data-date="<?= $date ?>">
-                                                            <i class="bi bi-check-all"></i> Check All (<?= $pending_count ?>)
-                                                        </button>
-                                        <button class="btn btn-danger bulk-action" data-action="reject-all" data-user-id="<?= $user_id ?>" data-date="<?= $date ?>">
-                                            <i class="bi bi-x-circle"></i> Reject All (<?= $pending_count ?>)
-                                        </button>
-                                    </div>
-                                    <?php endif; ?>
-                                    
-                                    <!-- Message when distance not confirmed -->
-                                    <?php if (empty($expense['confirmed_distance'])): ?>
-                                    <div class="text-warning" id="footer-message-<?= $modal_id ?>">
-                                        <i class="bi bi-info-circle"></i> Confirm distance to enable approval actions
-                                    </div>
-                                    <?php endif; ?>
-                                </div>
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            </div>
+                            <?php
+                            endforeach;
+                        endforeach;
+                        ?>
+                
+                    <!-- Add CSS for grouped rows -->
+                    <style>
+                        tr.group-row {
+                            border-top: 2px solid #e5e7eb;
+                        }
+                        .btn-more-expenses {
+                            font-size: 0.75rem;
+                            padding: 0.15rem 0.5rem;
+                        }
+                        .clickable-row {
+                            cursor: pointer;
+                        }
+                    
+                        /* Attendance photo styles */
+                        .punch-photo {
+                            width: 100%;
+                            height: 200px;
+                            object-fit: cover;
+                            transition: all 0.3s ease;
+                        }
+                    
+                        .punch-photo:hover {
+                            transform: scale(1.02);
+                        }
+                    
+                        .card-header.bg-primary, .card-header.bg-success {
+                            font-weight: 500;
+                        }
+                    
+                        /* Add a subtle zoom effect when hovering over the photo links */
+                        a:hover .punch-photo {
+                            opacity: 0.9;
+                        }
+                    
+                        /* Style for the photo placeholder */
+                        .p-4.text-muted {
+                            height: 200px;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            align-items: center;
+                            background-color: #f8f9fa;
+                        }
+                    </style>
+                
+                    <!-- Pagination controls -->
+                    <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                        <div class="text-muted small">
+                            Showing <strong><?= $offset + 1 ?>-<?= min($offset + count($travel_expenses), $totalRecords) ?></strong> of <strong><?= $totalRecords ?></strong> expenses
                         </div>
-                    </div>
-                </div>
-                <?php
-                    endforeach;
-                endforeach;
-                ?>
-                
-                <!-- Add CSS for grouped rows -->
-                <style>
-                    tr.group-row {
-                        border-top: 2px solid #e5e7eb;
-                    }
-                    .btn-more-expenses {
-                        font-size: 0.75rem;
-                        padding: 0.15rem 0.5rem;
-                    }
-                    .clickable-row {
-                        cursor: pointer;
-                    }
-                    
-                    /* Attendance photo styles */
-                    .punch-photo {
-                        width: 100%;
-                        height: 200px;
-                        object-fit: cover;
-                        transition: all 0.3s ease;
-                    }
-                    
-                    .punch-photo:hover {
-                        transform: scale(1.02);
-                    }
-                    
-                    .card-header.bg-primary, .card-header.bg-success {
-                        font-weight: 500;
-                    }
-                    
-                    /* Add a subtle zoom effect when hovering over the photo links */
-                    a:hover .punch-photo {
-                        opacity: 0.9;
-                    }
-                    
-                    /* Style for the photo placeholder */
-                    .p-4.text-muted {
-                        height: 200px;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-                        background-color: #f8f9fa;
-                    }
-                </style>
-                
-                <!-- Pagination controls -->
-                <div class="d-flex justify-content-between align-items-center p-3 border-top">
-                    <div class="text-muted small">
-                        Showing <strong><?= $offset + 1 ?>-<?= min($offset + count($travel_expenses), $totalRecords) ?></strong> of <strong><?= $totalRecords ?></strong> expenses
-                    </div>
-                    <?php if ($totalPages > 1): ?>
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination mb-0">
-                            <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
+                        <?php if ($totalPages > 1): ?>
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination mb-0">
+                                    <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                                        <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $page - 1])) ?>" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
                             
-                            <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
-                            <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-                                <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>">
-                                    <?= $i ?>
-                                </a>
-                            </li>
-                            <?php endfor; ?>
+                                    <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
+                                        <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                                            <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $i])) ?>">
+                                                <?= $i ?>
+                                            </a>
+                                        </li>
+                                    <?php endfor; ?>
                             
-                            <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
-                                <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                    <?php endif; ?>
-                </div>
+                                    <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+                                        <a class="page-link" href="?<?= http_build_query(array_merge($_GET, ['page' => $page + 1])) ?>" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        <?php endif; ?>
+                    </div>
                 
                 <?php else: ?>
-                <!-- Empty state - shown when no expenses match the filters -->
-                <div class="empty-state">
-                    <div class="empty-state-icon">
-                        <i class="bi bi-receipt"></i>
+                    <!-- Empty state - shown when no expenses match the filters -->
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="bi bi-receipt"></i>
+                        </div>
+                        <h4 class="empty-state-title">No expense records found</h4>
+                        <p class="empty-state-description">
+                            <?php if (!empty($search)): ?>
+                                    No results found for "<?= htmlspecialchars($search) ?>". Try adjusting your search terms.
+                            <?php else: ?>
+                                    Adjust your filter criteria or check back later for new expenses to approve.
+                            <?php endif; ?>
+                        </p>
                     </div>
-                    <h4 class="empty-state-title">No expense records found</h4>
-                    <p class="empty-state-description">
-                        <?php if (!empty($search)): ?>
-                            No results found for "<?= htmlspecialchars($search) ?>". Try adjusting your search terms.
-                        <?php else: ?>
-                            Adjust your filter criteria or check back later for new expenses to approve.
-                        <?php endif; ?>
-                    </p>
-                </div>
                 <?php endif; ?>
             </div>
         </div>

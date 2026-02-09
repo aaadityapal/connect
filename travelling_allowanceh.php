@@ -2330,9 +2330,9 @@ $pmConfirmedAt = !empty($expense['distance_confirmed_at']) ? date('d M Y H:i', s
 
                                 <script>
                                 // Function to fetch attendance photos
-function fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor = false) {
-                                    // If user is site supervisor, show punch in/out photos
-                                    if (isSiteSupervisor) {
+function fetchAttendancePhotos(userId, travelDate, modalId, employeeRole = '') {
+                                    // Show punch in/out photos for Site Supervisor and Purchase Manager roles
+                                    if (employeeRole === 'Site Supervisor' || employeeRole === 'Purchase Manager') {
                                         // Fetch punch in photo
                                         fetch(`get_attendance_photo.php?user_id=${userId}&travel_date=${travelDate}&type=from`)
                                             .then(response => response.json())
@@ -2579,10 +2579,10 @@ function fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor = f
                         
                         // Get the employee designation from the modal
                         const expenseUserDesignation = document.querySelector(`#${modalId} .fw-medium + .text-muted.small`);
-                        const isSiteSupervisor = expenseUserDesignation && expenseUserDesignation.textContent.toLowerCase().includes('site supervisor');
+                        const employeeRole = expenseUserDesignation ? expenseUserDesignation.textContent.trim() : '';
                         
                         // Pass the employee designation to the fetch function
-                        fetchAttendancePhotos(userId, travelDate, modalId, isSiteSupervisor);
+                        fetchAttendancePhotos(userId, travelDate, modalId, employeeRole);
                         
                         // Check if HR verification data exists and show expenses table
                         const distanceInput = modal.querySelector('.confirmed-distance-input');

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ArchitectsHive</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Dashboard specific inline overrides or additions */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .stat-card {
+            background: white;
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .stat-content h3 {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .stat-content .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            background: var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: 1.25rem;
+        }
+
+        .projects-table-container {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: var(--spacing-lg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 1rem var(--spacing-lg);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        th {
+            background: var(--bg-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        td {
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--gray-400);
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: color 0.2s;
+        }
+
+        .action-btn:hover {
+            color: var(--primary-color);
+        }
+
+        /* Timeline Reminder Modal Styles */
+        .stage-timeline-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.65rem;
+            border: none;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        .stage-timeline-icon:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: scale(1.15);
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .reminder-modal {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: var(--spacing-xl);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .modal-close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: var(--spacing-xl);
+        }
+
+        .reminder-history-item {
+            display: flex;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .reminder-history-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .reminder-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .reminder-icon-wrapper.sent {
+            background: var(--success-color);
+        }
+
+        .reminder-icon-wrapper.pending {
+            background: var(--warning-color);
+        }
+
+        .reminder-content h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .reminder-content p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .reminder-content .reminder-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .reminder-stats-modal {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-color);
+            margin-top: var(--spacing-md);
+        }
+
+        .reminder-stat {
+            text-align: center;
+            padding: var(--spacing-md);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+        }
+
+        .reminder-stat .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .reminder-stat .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Unique Send Reminder Button Styling */
+        .btn-send-reminder-history-modal {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-send-reminder-history-modal:hover {
+            background: var(--primary-dark);
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-send-reminder-history-modal:active {
+            transform: translateY(0);
+        }
+
+        .btn-send-reminder-history-modal i {
+            font-size: 0.9rem;
+        }
+
+        /* Stage Status Dropdown Styling */
+        .stage-status-dropdown-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stage-status-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stage-status-dropdown {
+            padding: 0.4rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: white;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .stage-status-dropdown:hover {
+            border-color: var(--primary-color);
+            background: var(--bg-secondary);
+        }
+
+        .stage-status-dropdown:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+
+        .stage-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-fully-paid {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-partially-paid {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-pending {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-overdue {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-not-started {
+            background: #f3f4f6;
+            color: #374151;
+        }
+    </style>
+</head>
+
+<body>
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="layout-wrapper">
+        <!-- Side Panel (Left) - Loaded via JS -->
+        <aside class="side-panel" id="sidePanel"></aside>
+
+        <!-- Main Content (Dashboard) -->
+        <main class="main-content">
+            <div class="container" style="max-width: 1200px;"> <!-- Wider container for dashboard -->
+                <header class="form-header">
+                    <h1>Project Dashboard</h1>
+                    <p class="subtitle">Overview of all active projects and payment status</p>
+                </header>
+
+                <!-- Summary Cards -->
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <h3>Total Projects</h3>
+                            <div class="value" id="totalProjects">0</div>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-folder"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <h3>Total Revenue</h3>
+                            <div class="value" id="totalRevenue">₹0</div>
+                        </div>
+                        <div class="stat-icon">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <h3>Pending Payments</h3>
+                            <div class="value" id="pendingPayments">0</div>
+                        </div>
+                        <div class="stat-icon" style="color: var(--warning-color); background: #fff7ed;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-content">
+                            <h3>Next Due</h3>
+                            <div class="value" id="nextDueDate">-</div>
+                        </div>
+                        <div class="stat-icon" style="color: var(--primary-color); background: #eff6ff;">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projects Table -->
+                <div class="projects-table-container">
+                    <div class="table-header">
+                        <h2>Active Projects</h2>
+
+                        <div class="header-actions" style="display: flex; gap: 10px; align-items: center;">
+                            <!-- Filters -->
+                            <div class="filter-group" style="display: flex; gap: 0.5rem;">
+                                <select id="monthFilter" class="filter-select">
+                                    <option value="all">All Months</option>
+                                    <option value="0">January</option>
+                                    <option value="1">February</option>
+                                    <option value="2">March</option>
+                                    <option value="3">April</option>
+                                    <option value="4">May</option>
+                                    <option value="5">June</option>
+                                    <option value="6">July</option>
+                                    <option value="7">August</option>
+                                    <option value="8">September</option>
+                                    <option value="9">October</option>
+                                    <option value="10">November</option>
+                                    <option value="11">December</option>
+                                </select>
+                                <select id="yearFilter" class="filter-select" style="min-width: 100px;">
+                                    <option value="all">All Years</option>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                    <option value="2027">2027</option>
+                                </select>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="window.location.href='index.html'">
+                                <i class="fas fa-plus"></i> New Project
+                            </button>
+                        </div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Project Name</th>
+                                <th>Client Name</th>
+                                <th>Current Stage</th>
+                                <th>Total Value</th>
+                                <th>Received</th>
+                                <th>Last Payment Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectsTableBody">
+                            <!-- Rows will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Panel - Payment Reminders -->
+        <aside class="right-panel" id="rightPanel">
+            <div class="right-panel-content">
+                <div class="panel-header">
+                    <h2><i class="fas fa-bell"></i> Payment Reminders</h2>
+                    <p>Upcoming stage payments</p>
+                </div>
+
+                <!-- Filters -->
+                <div class="reminder-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="overdue">Overdue</button>
+                    <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+                </div>
+
+                <!-- Payment Reminders List -->
+                <div class="reminders-list" id="remindersList">
+                    <!-- Sample reminder items -->
+                    <div class="reminder-item overdue">
+                        <div class="reminder-header">
+                            <span class="project-ref">PRJ-2026-001</span>
+                            <span class="reminder-badge overdue">Overdue</span>
+                        </div>
+                        <h4 class="project-name">Luxury Villa - Gurgaon</h4>
+                        <div class="reminder-details">
+                            <div class="detail-row">
+                                <i class="fas fa-layer-group"></i>
+                                <span>Foundation Stage</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-rupee-sign"></i>
+                                <span>₹5,00,000</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-calendar"></i>
+                                <span>Due: Jan 28, 2026</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-user"></i>
+                                <span>Rajesh Kumar</span>
+                            </div>
+                        </div>
+                        <button class="btn-send-reminder">
+                            <i class="fab fa-whatsapp"></i>
+                            Send Reminder
+                        </button>
+                    </div>
+
+                    <div class="reminder-item upcoming">
+                        <div class="reminder-header">
+                            <span class="project-ref">PRJ-2026-015</span>
+                            <span class="reminder-badge upcoming">Due Soon</span>
+                        </div>
+                        <h4 class="project-name">Commercial Complex - Noida</h4>
+                        <div class="reminder-details">
+                            <div class="detail-row">
+                                <i class="fas fa-layer-group"></i>
+                                <span>Structural Work</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-rupee-sign"></i>
+                                <span>₹12,50,000</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-calendar"></i>
+                                <span>Due: Feb 10, 2026</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-user"></i>
+                                <span>Priya Sharma</span>
+                            </div>
+                        </div>
+                        <button class="btn-send-reminder">
+                            <i class="fab fa-whatsapp"></i>
+                            Send Reminder
+                        </button>
+                    </div>
+
+                    <div class="reminder-item upcoming">
+                        <div class="reminder-header">
+                            <span class="project-ref">PRJ-2026-008</span>
+                            <span class="reminder-badge upcoming">Due Soon</span>
+                        </div>
+                        <h4 class="project-name">Interior Design - Delhi</h4>
+                        <div class="reminder-details">
+                            <div class="detail-row">
+                                <i class="fas fa-layer-group"></i>
+                                <span>Final Payment</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-rupee-sign"></i>
+                                <span>₹3,75,000</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-calendar"></i>
+                                <span>Due: Feb 15, 2026</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-user"></i>
+                                <span>Amit Verma</span>
+                            </div>
+                        </div>
+                        <button class="btn-send-reminder">
+                            <i class="fab fa-whatsapp"></i>
+                            Send Reminder
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="reminder-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">1</div>
+                        <div class="stat-label">Overdue</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">2</div>
+                        <div class="stat-label">Upcoming</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">₹21.25L</div>
+                        <div class="stat-label">Total Due</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Reminder History Modal -->
+    <div class="modal-overlay" id="reminderModal">
+        <div class="reminder-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modalStageTitle">Stage 1 - Reminders</h2>
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;" id="modalStageAmount"></p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: flex-start;">
+                    <button class="btn-send-reminder-history-modal" onclick="sendReminderAgain()">
+                        <i class="fab fa-whatsapp"></i> Send Reminder Again
+                    </button>
+                    <button class="modal-close-btn" onclick="closeReminderModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="reminder-history-list" id="reminderHistoryList">
+                    <!-- Reminder history items will be populated here -->
+                </div>
+                <div class="reminder-stats-modal">
+                    <div class="reminder-stat">
+                        <div class="stat-value" id="totalReminders">0</div>
+                        <div class="stat-label">Total Sent</div>
+                    </div>
+                    <div class="reminder-stat">
+                        <div class="stat-value" id="lastReminderDate">-</div>
+                        <div class="stat-label">Last Sent</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="common-sidebar.js"></script>
+    <script>
+        // Initialize Sidebar
+        renderSidebar('dashboard');
+    </script>
+    <script src="dashboard.js"></script>
+    <script>
+        // Inline script to handle mobile toggle since we're reusing layout
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        // Note: sidePanel is created by renderSidebar, so we might need to query it again or rely on ID
+        // However, renderSidebar runs synchronously above, so document.getElementById('sidePanel') should work now.
+        const sidePanel = document.getElementById('sidePanel');
+        if (mobileMenuToggle && sidePanel) {
+            mobileMenuToggle.addEventListener('click', () => {
+                sidePanel.classList.toggle('active');
+            });
+        }
+
+        // ===================================
+        // Reminder History Modal Functions
+        // ===================================
+        
+        // Sample data structure for reminders (this would come from backend in real scenario)
+        const stageReminderData = {
+            'stage-1': {
+                stageName: 'Stage 1',
+                stageDesc: 'Booking Amount',
+                amount: '₹5,00,000',
+                reminders: [
+                    { date: 'Jan 10, 2026', type: 'sent', method: 'WhatsApp', message: 'Reminder sent' },
+                    { date: 'Jan 5, 2026', type: 'sent', method: 'Email', message: 'Payment reminder' },
+                ]
+            },
+            'stage-2': {
+                stageName: 'Stage 2',
+                stageDesc: 'Structure',
+                amount: '₹12,50,000',
+                reminders: [
+                    { date: 'Feb 3, 2026', type: 'sent', method: 'WhatsApp', message: 'Reminder sent' },
+                    { date: 'Jan 28, 2026', type: 'sent', method: 'Email', message: 'First reminder' },
+                    { date: 'Jan 25, 2026', type: 'pending', method: 'SMS', message: 'Pending delivery' },
+                ]
+            },
+            'stage-3': {
+                stageName: 'Stage 3',
+                stageDesc: 'Completion',
+                amount: '₹3,75,000',
+                reminders: [
+                    { date: 'Estimated Mar 15, 2026', type: 'pending', method: 'Scheduled', message: 'Scheduled reminder' },
+                ]
+            }
+        };
+
+        function openReminderModal(stageId) {
+            const modal = document.getElementById('reminderModal');
+            const data = stageReminderData[stageId];
+
+            if (!data) return;
+
+            // Update modal header
+            document.getElementById('modalStageTitle').textContent = `${data.stageName} - Reminders`;
+            document.getElementById('modalStageAmount').textContent = `${data.stageDesc} • ${data.amount}`;
+
+            // Populate reminder history
+            const historyList = document.getElementById('reminderHistoryList');
+            historyList.innerHTML = '';
+
+            data.reminders.forEach(reminder => {
+                const item = document.createElement('div');
+                item.className = 'reminder-history-item';
+                item.innerHTML = `
+                    <div class="reminder-icon-wrapper ${reminder.type}">
+                        <i class="fas fa-${reminder.type === 'sent' ? 'check' : 'hourglass-half'}"></i>
+                    </div>
+                    <div class="reminder-content" style="flex: 1;">
+                        <h4>${reminder.type === 'sent' ? 'Reminder Sent' : 'Pending'}</h4>
+                        <p>${reminder.message}</p>
+                        <div class="reminder-meta">
+                            <i class="fas fa-clock"></i> ${reminder.date} • ${reminder.method}
+                        </div>
+                    </div>
+                `;
+                historyList.appendChild(item);
+            });
+
+            // Update stats
+            const sentCount = data.reminders.filter(r => r.type === 'sent').length;
+            const lastReminder = data.reminders[0];
+            
+            document.getElementById('totalReminders').textContent = sentCount;
+            document.getElementById('lastReminderDate').textContent = lastReminder.type === 'sent' ? 
+                lastReminder.date.split(',')[0] : '-';
+
+            // Show modal
+            modal.classList.add('active');
+        }
+
+        function closeReminderModal() {
+            const modal = document.getElementById('reminderModal');
+            modal.classList.remove('active');
+        }
+
+        function sendReminderAgain() {
+            const stageTitle = document.getElementById('modalStageTitle').textContent;
+            alert(`Reminder sent again for ${stageTitle}!\n\nThe client will receive a WhatsApp notification shortly.`);
+            // Here you would typically call an API to send the reminder
+            // Example: fetch('/api/send-reminder', { method: 'POST', body: JSON.stringify({...}) })
+        }
+
+        function changeStageStatus(stageId, newStatus) {
+            console.log(`Stage ${stageId} status changed to: ${newStatus}`);
+            // Here you would typically call an API to update the status
+            // Example: fetch('/api/update-stage-status', { method: 'POST', body: JSON.stringify({stageId, status: newStatus}) })
+            alert(`Stage status updated to: ${newStatus}`);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('reminderModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeReminderModal();
+            }
+        });
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeReminderModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

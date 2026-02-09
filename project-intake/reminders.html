@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Reminders - ArchitectsHive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="layout-wrapper">
+        <!-- Side Panel (Left) - Loaded via JS -->
+        <aside class="side-panel" id="sidePanel"></aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="section-title" style="margin-bottom: 2rem;">
+                <h1>Payment Reminders</h1>
+                <p>Track statuses and send automated reminders for pending payments.</p>
+            </header>
+
+            <!-- Filters (Optional, but good for "Overdue" vs "All") -->
+            <div class="filter-group" style="margin-bottom: 2rem; display: flex; gap: 1rem;">
+                <button class="filter-btn active" data-filter="all" onclick="filterReminders('all', this)">All
+                    Projects</button>
+                <button class="filter-btn" data-filter="overdue" onclick="filterReminders('overdue', this)">Overdue
+                    Only</button>
+            </div>
+
+            <div id="remindersContainer" class="reminders-cards-container">
+                <!-- Cards injected here -->
+                <div class="loading-state">Loading reminders...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="common-sidebar.js"></script>
+    <script src="reminders.js"></script>
+    <script>
+        // Initialize Sidebar
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSidebar('reminders');
+        });
+    </script>
+</body>
+
+</html>

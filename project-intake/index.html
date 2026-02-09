@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Intake Form - ArchitectsHive</title>
+    <meta name="description" content="Submit your project details and manage payment reminders">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="layout-wrapper">
+        <!-- Side Panel (Left) - Loaded via JS -->
+        <aside class="side-panel" id="sidePanel"></aside>
+
+        <!-- Main Content (Center - Form) -->
+        <main class="main-content">
+            <div class="container">
+                <!-- Header Section -->
+                <header class="form-header">
+                    <h1>Project Intake Form</h1>
+                    <p class="subtitle">Please fill in all the required information to get started with your project</p>
+
+                    <!-- Progress Bar -->
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </header>
+
+                <!-- Main Form -->
+                <form id="projectIntakeForm" class="intake-form">
+
+                    <!-- Project Information Section (Combined with Client Info) -->
+                    <section class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-folder-open"></i>
+                            </div>
+                            <div class="section-title">
+                                <h2>Project Information</h2>
+                                <p>Basic details about your project</p>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="referenceNumber">
+                                    Reference Number <span class="required">*</span>
+                                </label>
+                                <input type="text" id="referenceNumber" name="referenceNumber"
+                                    placeholder="e.g., AH/2026/02/001" required>
+                                <button type="button" class="btn-auto-generate" onclick="autoGenerateReferenceNumber()">
+                                    <i class="fas fa-sync-alt"></i> Auto-Generate
+                                </button>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="projectType">
+                                    Project Type <span class="required">*</span>
+                                </label>
+                                <select id="projectType" name="projectType" required>
+                                    <option value="">Select Project Type</option>
+                                    <option value="architecture">Architecture</option>
+                                    <option value="interior">Interior</option>
+                                    <option value="construction">Construction</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="projectName">
+                                    Project Name <span class="required">*</span>
+                                </label>
+                                <input type="text" id="projectName" name="projectName" placeholder="Enter project name"
+                                    required>
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label for="siteAddress">
+                                    Site Address <span class="required">*</span>
+                                </label>
+                                <textarea id="siteAddress" name="siteAddress" rows="2"
+                                    placeholder="Enter complete site address" required></textarea>
+                            </div>
+
+                            <!-- Client Information -->
+                            <div class="form-group">
+                                <label for="clientEmail">
+                                    Client Email <span class="required">*</span>
+                                </label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" id="clientEmail" name="clientEmail"
+                                        placeholder="client@example.com" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="clientWhatsapp">
+                                    Client WhatsApp Number <span class="required">*</span>
+                                </label>
+                                <div class="input-with-icon">
+                                    <i class="fab fa-whatsapp"></i>
+                                    <input type="tel" id="clientWhatsapp" name="clientWhatsapp"
+                                        placeholder="+91 98765 43210" required>
+                                </div>
+                            </div>
+
+                            <!-- Alternative Numbers -->
+                            <div class="form-group full-width">
+                                <label>Alternative Contact Numbers (Optional)</label>
+                                <div id="alternativeNumbersContainer" style="margin-top: 0.5rem;">
+                                    <!-- Alternative numbers will be added here dynamically -->
+                                </div>
+                                <button type="button" class="btn-add" id="addAlternativeNumber"
+                                    style="margin-top: 0.75rem;">
+                                    <i class="fas fa-plus-circle"></i>
+                                    Add Alternative Number
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Site Visit Details Section -->
+                    <section class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="section-title">
+                                <h2>Site Visits</h2>
+                                <p>Record details of each site visit</p>
+                            </div>
+                        </div>
+
+                        <!-- Site Visit Summary Stats -->
+                        <div class="site-visit-stats">
+                            <div class="stat-box">
+                                <label for="totalSiteVisits">Total Site Visits</label>
+                                <input type="number" id="totalSiteVisits" name="totalSiteVisits"
+                                    placeholder="e.g., 5" min="0" required>
+                            </div>
+
+                            <div class="stat-box">
+                                <label for="siteVisitCompleted">Completed</label>
+                                <input type="number" id="siteVisitCompleted" name="siteVisitCompleted"
+                                    placeholder="Auto-calculated" min="0" readonly>
+                            </div>
+
+                            <div class="stat-box">
+                                <label for="siteVisitRemains">Remaining</label>
+                                <input type="number" id="siteVisitRemains" name="siteVisitRemains"
+                                    placeholder="Auto-calculated" min="0" readonly>
+                            </div>
+                        </div>
+
+                        <div id="siteVisitsContainer">
+                            <!-- Site visit entries will be added here dynamically -->
+                        </div>
+
+                        <button type="button" class="btn-add" id="addSiteVisit">
+                            <i class="fas fa-plus-circle"></i>
+                            Add Site Visit
+                        </button>
+                    </section>
+
+                    <!-- Payment Stages Section -->
+                    <section class="form-section">
+                        <div class="section-header">
+                            <div class="section-icon">
+                                <i class="fas fa-rupee-sign"></i>
+                            </div>
+                            <div class="section-title">
+                                <h2>Payment Stages</h2>
+                                <p>Define payment milestones for this project</p>
+                            </div>
+                        </div>
+
+                        <div id="paymentStagesContainer">
+                            <!-- Payment stages will be added here dynamically -->
+                        </div>
+
+                        <button type="button" class="btn-add" id="addPaymentStage">
+                            <i class="fas fa-plus-circle"></i>
+                            Add Payment Stage
+                        </button>
+                    </section>
+
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="reset" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i>
+                            Reset Form
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            Submit Project
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+
+        <!-- Right Panel - Payment Reminders -->
+        <aside class="right-panel" id="rightPanel">
+            <div class="right-panel-content">
+                <div class="panel-header">
+                    <h2><i class="fas fa-bell"></i> Payment Reminders</h2>
+                    <p>Upcoming stage payments</p>
+                </div>
+
+                <!-- Filters -->
+                <div class="reminder-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="overdue">Overdue</button>
+                    <button class="filter-btn" data-filter="upcoming">Upcoming</button>
+                </div>
+
+                <!-- Payment Reminders List -->
+                <div class="reminders-list" id="remindersList">
+                    <!-- Sample reminder items -->
+                    <div class="reminder-item overdue">
+                        <div class="reminder-header">
+                            <span class="project-ref">PRJ-2026-001</span>
+                            <span class="reminder-badge overdue">Overdue</span>
+                        </div>
+                        <h4 class="project-name">Luxury Villa - Gurgaon</h4>
+                        <div class="reminder-details">
+                            <div class="detail-row">
+                                <i class="fas fa-layer-group"></i>
+                                <span>Foundation Stage</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-rupee-sign"></i>
+                                <span>₹5,00,000</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-calendar"></i>
+                                <span>Due: Jan 28, 2026</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-user"></i>
+                                <span>Rajesh Kumar</span>
+                            </div>
+                        </div>
+                        <button class="btn-send-reminder">
+                            <i class="fab fa-whatsapp"></i>
+                            Send Reminder
+                        </button>
+                    </div>
+
+                    <div class="reminder-item upcoming">
+                        <div class="reminder-header">
+                            <span class="project-ref">PRJ-2026-015</span>
+                            <span class="reminder-badge upcoming">Due Soon</span>
+                        </div>
+                        <h4 class="project-name">Commercial Complex - Noida</h4>
+                        <div class="reminder-details">
+                            <div class="detail-row">
+                                <i class="fas fa-layer-group"></i>
+                                <span>Structural Work</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-rupee-sign"></i>
+                                <span>₹12,50,000</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-calendar"></i>
+                                <span>Due: Feb 10, 2026</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-user"></i>
+                                <span>Priya Sharma</span>
+                            </div>
+                        </div>
+                        <button class="btn-send-reminder">
+                            <i class="fab fa-whatsapp"></i>
+                            Send Reminder
+                        </button>
+                    </div>
+
+                    <div class="reminder-item upcoming">
+                        <div class="reminder-header">
+                            <span class="project-ref">PRJ-2026-008</span>
+                            <span class="reminder-badge upcoming">Due Soon</span>
+                        </div>
+                        <h4 class="project-name">Interior Design - Delhi</h4>
+                        <div class="reminder-details">
+                            <div class="detail-row">
+                                <i class="fas fa-layer-group"></i>
+                                <span>Final Payment</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-rupee-sign"></i>
+                                <span>₹3,75,000</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-calendar"></i>
+                                <span>Due: Feb 15, 2026</span>
+                            </div>
+                            <div class="detail-row">
+                                <i class="fas fa-user"></i>
+                                <span>Amit Verma</span>
+                            </div>
+                        </div>
+                        <button class="btn-send-reminder">
+                            <i class="fab fa-whatsapp"></i>
+                            Send Reminder
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Stats -->
+                <div class="reminder-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">1</div>
+                        <div class="stat-label">Overdue</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">2</div>
+                        <div class="stat-label">Upcoming</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">₹21.25L</div>
+                        <div class="stat-label">Total Due</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Success Message (Hidden by default) -->
+    <div id="successMessage" class="success-message hidden">
+        <div class="success-content">
+            <i class="fas fa-check-circle"></i>
+            <h3>Project Submitted Successfully!</h3>
+            <p>Your project intake form has been submitted. We'll get back to you soon.</p>
+            <button class="btn btn-primary" onclick="location.reload()">
+                Submit Another Project
+            </button>
+        </div>
+    </div>
+
+    <script src="common-sidebar.js"></script>
+    <script>
+        // Initialize Sidebar and Inject Progress Widget
+        renderSidebar('new-project');
+
+        const progressWidgetHTML = `
+            <div class="progress-summary" style="margin-top: 2rem;">
+                <h3>Form Progress</h3>
+                <div class="progress-circle" id="progressCircle">
+                    <svg width="100" height="100">
+                        <circle cx="50" cy="50" r="45" class="progress-circle-bg"></circle>
+                        <circle cx="50" cy="50" r="45" class="progress-circle-fill" id="progressCircleFill"></circle>
+                    </svg>
+                    <div class="progress-percentage" id="progressPercentage">0%</div>
+                </div>
+                <p class="progress-text">Complete all required fields</p>
+            </div>
+        `;
+        document.getElementById('sidebar-extras').innerHTML = progressWidgetHTML;
+    </script>
+    <!-- Quill Rich Text Editor Library -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="scripts.js"></script>
+</body>
+
+</html>

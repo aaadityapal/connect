@@ -93,6 +93,21 @@ try {
             continue;
         }
 
+        // Check if user is on approved leave today
+        $leaveStmt = $pdo->prepare(
+            "SELECT id FROM leave_request 
+             WHERE user_id = ? 
+               AND start_date <= ? AND end_date >= ? 
+               AND LOWER(status) = 'approved'"
+        );
+        $leaveStmt->execute([$userId, $currentDate, $currentDate]);
+        $isOnApprovedLeave = $leaveStmt->fetch() !== false;
+
+        if ($isOnApprovedLeave) {
+            logMessage("User {$userName} is on an approved leave today. Skipping missing punch alerts.");
+            continue;
+        }
+
         // Parse Weekly Offs
         $weeklyOffs = array_map('trim', explode(',', $weeklyOffsStr));
         $isWeeklyOff = in_array($currentDayName, $weeklyOffs);

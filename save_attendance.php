@@ -225,6 +225,7 @@ try {
                 punch_out_accuracy = ?,
                 punch_out_outside_reason = ?,
                 work_report = ?,
+                punch_out_address = ?,
                 ip_address = ?,
                 device_info = ?,
                 within_geofence = ?,
@@ -241,6 +242,7 @@ try {
                 $data['accuracy'] ?? null,
                 $punch_out_outside_reason,
                 $work_report,
+                $data['address'] ?? null,
                 $ip_address,
                 $device_info,
                 $within_geofence,
@@ -253,9 +255,9 @@ try {
             $stmt = $pdo->prepare("INSERT INTO attendance (
                 user_id, date, punch_out, punch_out_photo, punch_out_latitude, 
                 punch_out_longitude, punch_out_accuracy, punch_out_outside_reason,
-                work_report, ip_address, device_info, within_geofence, geofence_id, 
+                work_report, punch_out_address, ip_address, device_info, within_geofence, geofence_id, 
                 distance_from_geofence
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             $stmt->execute([
                 $user_id,
@@ -267,6 +269,7 @@ try {
                 $data['accuracy'] ?? null,
                 $punch_out_outside_reason,
                 $work_report,
+                $data['address'] ?? null,
                 $ip_address,
                 $device_info,
                 $within_geofence,

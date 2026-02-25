@@ -4833,36 +4833,36 @@ if ($currentHour < 12) {
         }
     </style>
 
-<!-- Add this before the closing body tag of site_manager_dashboard.php -->
-<script src="js/manager/event-details-modal.js"></script>
+    <!-- Add this before the closing body tag of site_manager_dashboard.php -->
+    <script src="js/manager/event-details-modal.js"></script>
 
-<!-- Add this right before the closing body tag -->
-<script>
-    // Additional event listeners for closing the event details modal
-    document.addEventListener('DOMContentLoaded', function () {
-        // Get close buttons
-        const closeEventDetailsBtn = document.getElementById('closeEventDetailsModal');
-        const closeEventDetailsModalBtn = document.getElementById('closeEventDetailsModalBtn');
+    <!-- Add this right before the closing body tag -->
+    <script>
+        // Additional event listeners for closing the event details modal
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get close buttons
+            const closeEventDetailsBtn = document.getElementById('closeEventDetailsModal');
+            const closeEventDetailsModalBtn = document.getElementById('closeEventDetailsModalBtn');
 
-        // Add click handlers
-        if (closeEventDetailsBtn) {
-            closeEventDetailsBtn.onclick = function () {
-                const modal = document.getElementById('eventDetailsModal');
-                if (modal) modal.classList.remove('show');
-            };
-        }
+            // Add click handlers
+            if (closeEventDetailsBtn) {
+                closeEventDetailsBtn.onclick = function () {
+                    const modal = document.getElementById('eventDetailsModal');
+                    if (modal) modal.classList.remove('show');
+                };
+            }
 
-        if (closeEventDetailsModalBtn) {
-            closeEventDetailsModalBtn.onclick = function () {
-                const modal = document.getElementById('eventDetailsModal');
-                if (modal) modal.classList.remove('show');
-            };
-        }
-    });
-</script>
+            if (closeEventDetailsModalBtn) {
+                closeEventDetailsModalBtn.onclick = function () {
+                    const modal = document.getElementById('eventDetailsModal');
+                    if (modal) modal.classList.remove('show');
+                };
+            }
+        });
+    </script>
 
-<!-- Add SheetJS library for Excel export -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Add SheetJS library for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 </body>
 

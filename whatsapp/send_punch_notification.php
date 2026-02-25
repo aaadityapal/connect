@@ -3,7 +3,18 @@ require_once __DIR__ . '/WhatsAppService.php';
 
 /**
  * Send Punch In Notification via WhatsApp
- * 
+ *
+ * Template: attendance_punchin_summary
+ * {{1}} Name
+ * {{2}} Punch-In Time
+ * {{3}} Late Status
+ * {{4}} Location (from attendance.address)
+ * {{5}} Day
+ * {{6}} Working Days (total in month)
+ * {{7}} Present Days (this month)
+ * {{8}} Absent Days (elapsed - present)
+ * {{9}} Late Entries (this month)
+ *
  * @param int $userId The ID of the user
  * @param PDO $pdo proper PDO database connection
  * @return bool
@@ -26,112 +37,217 @@ function sendPunchNotification($userId, $pdo)
         $currentDate = date('Y-m-d');
         $currentTime = date('H:i:s');
         $currentDay = date('l'); // Monday, Tuesday...
-
-        // 2. Calculate Month Statistics
         $currentMonth = date('m');
         $currentYear = date('Y');
+        $currentDayNum = (int) date('d');
 
-        // Present Days (Count attendance records for this month)
-        // We count records where punch_in is not null
-        $statsStmt = $pdo->prepare("SELECT COUNT(*) as present_count FROM attendance 
-                                   WHERE user_id = ? 
-                                   AND MONTH(date) = ? 
-                                   AND YEAR(date) = ? 
-                                   AND punch_in IS NOT NULL");
-        $statsStmt->execute([$userId, $currentMonth, $currentYear]);
-        $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
-        $presentDays = $stats['present_count'] ?? 0;
+        // 2. Fetch today's punch-in time and location (address) from attendance table
+        $attStmt = $pdo->prepare(
+            "SELECT punch_in, address FROM attendance
+             WHERE user_id = ? AND date = ?
+             LIMIT 1"
+        );
+        $attStmt->execute([$userId, $currentDate]);
+        $todayAtt = $attStmt->fetch(PDO::FETCH_ASSOC);
+        $punchInTime = $todayAtt['punch_in'] ?? $currentTime;
+        $location = (!empty($todayAtt['address'])) ? $todayAtt['address'] : 'Not Available';
 
-        // Working Days Calculation (Advanced)
-        $msgWorkingDays = 0;    // Total working days in the month (for display)
-        $elapsedWorkingDays = 0; // Working days passed so far (for absent calc)
-
-        $daysInMonth = (int) date('t'); // Total days in current month (e.g., 31)
-        $currentDayNum = (int) date('d'); // Current day number (e.g., 27)
-
-        // 1. Fetch Holidays for this month
-        $holidays = [];
-        $holidayStmt = $pdo->prepare("SELECT holiday_date FROM office_holidays 
-                                     WHERE MONTH(holiday_date) = ? AND YEAR(holiday_date) = ?");
-        $holidayStmt->execute([$currentMonth, $currentYear]);
-        $holidaysRaw = $holidayStmt->fetchAll(PDO::FETCH_COLUMN);
-        // Normalize holidays to just the day number or full Y-m-d comparison
-        $holidays = $holidaysRaw ? $holidaysRaw : [];
-
-        // 2. Fetch User's Shift & Weekly Offs
-        // We look for an active shift for the current period
-        $shiftStmt = $pdo->prepare("SELECT weekly_offs FROM user_shifts 
-                                   WHERE user_id = ? 
-                                   AND effective_from <= ? 
-                                   AND (effective_to IS NULL OR effective_to >= ?) 
-                                   ORDER BY effective_from DESC LIMIT 1");
+        // 3. Fetch user's current shift (start_time, end_time, weekly_offs)
+        //    by joining user_shifts and shifts tables
+        $shiftStmt = $pdo->prepare(
+            "SELECT s.start_time, s.end_time, us.weekly_offs
+             FROM user_shifts us
+             JOIN shifts s ON us.shift_id = s.id
+             WHERE us.user_id = ?
+               AND us.effective_from <= ?
+               AND (us.effective_to IS NULL OR us.effective_to >= ?)
+             ORDER BY us.effective_from DESC
+             LIMIT 1"
+        );
         $shiftStmt->execute([$userId, $currentDate, $currentDate]);
         $shiftData = $shiftStmt->fetch(PDO::FETCH_ASSOC);
 
-        // Parse Weekly Offs (e.g., "Saturday, Sunday" or "Monday")
+        // 4. Parse Weekly Offs for this user's shift
         $weeklyOffsArr = [];
         if ($shiftData && !empty($shiftData['weekly_offs'])) {
-            // Convert "Monday, Tuesday" -> ['Monday', 'Tuesday']
-            $weeklyOffsRaw = explode(',', $shiftData['weekly_offs']);
-            $weeklyOffsArr = array_map('trim', $weeklyOffsRaw);
+            $weeklyOffsArr = array_map('trim', explode(',', $shiftData['weekly_offs']));
         }
 
-        // 3. Iterate Full Month Days
+        // 5. Fetch office holidays for this month
+        $holidays = [];
+        $holidayStmt = $pdo->prepare(
+            "SELECT holiday_date FROM office_holidays
+             WHERE MONTH(holiday_date) = ? AND YEAR(holiday_date) = ?"
+        );
+        $holidayStmt->execute([$currentMonth, $currentYear]);
+        $holidays = $holidayStmt->fetchAll(PDO::FETCH_COLUMN) ?: [];
+
+        // 6. Calculate Working Days (total in month) and Elapsed Working Days
+        $msgWorkingDays = 0;
+        $elapsedWorkingDays = 0;
+        $daysInMonth = (int) date('t');
+
         for ($i = 1; $i <= $daysInMonth; $i++) {
-            // Create timestamp for this specific day of the month
             $loopDateStr = sprintf("%04d-%02d-%02d", $currentYear, $currentMonth, $i);
-            $loopTimestamp = strtotime($loopDateStr);
-            $loopDayName = date('l', $loopTimestamp); // e.g. "Monday"
+            $loopDayName = date('l', strtotime($loopDateStr));
 
-            // Check if it's a Holiday
-            if (in_array($loopDateStr, $holidays)) {
-                continue; // It's a holiday, don't count as working day
-            }
+            if (in_array($loopDateStr, $holidays))
+                continue; // Holiday
+            if (in_array($loopDayName, $weeklyOffsArr))
+                continue; // Weekly off
 
-            // Check if it's a Weekly Off
-            if (in_array($loopDayName, $weeklyOffsArr)) {
-                continue; // It's a weekly off, don't count as working day
-            }
-
-            // If we passed checks, it's a working day
-            $msgWorkingDays++; // Increment total for the month
-
-            // If this day has already passed or is today, increment elapsed counter
+            $msgWorkingDays++;
             if ($i <= $currentDayNum) {
                 $elapsedWorkingDays++;
             }
         }
 
-        // Absent Days Calculation (Based on ELAPSED time, not future)
-        // We only mark them absent for days that have already happened
+        // 7. Calculate Present Days, Absent Days, Late Status and Late Entries
+        $presentDays = 0;
+        $lateCount = 0;
+        $lateStatus = 'On Time ✅';
+
+        if ($shiftData && !empty($shiftData['start_time'])) {
+            // Get all attendances for the current month
+            $attMonthStmt = $pdo->prepare(
+                "SELECT date, punch_in FROM attendance 
+                 WHERE user_id = ? AND MONTH(date) = ? AND YEAR(date) = ? AND punch_in IS NOT NULL"
+            );
+            $attMonthStmt->execute([$userId, $currentMonth, $currentYear]);
+            $monthAttendances = $attMonthStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Fetch all approved leaves overlapping the current month
+            $leaveStartStr = "$currentYear-$currentMonth-01";
+            $leaveEndStr = date('Y-m-t', strtotime($leaveStartStr));
+            $leaveMonthStmt = $pdo->prepare(
+                "SELECT lr.start_date, lr.end_date, lr.time_from, lr.time_to, lr.day_type, lt.name as lt_name 
+                 FROM leave_request lr 
+                 JOIN leave_types lt ON lr.leave_type = lt.id 
+                 WHERE lr.user_id = ? 
+                   AND lr.start_date <= ? AND lr.end_date >= ?
+                   AND LOWER(lr.status) = 'approved'"
+            );
+            $leaveMonthStmt->execute([$userId, $leaveEndStr, $leaveStartStr]);
+            $monthLeaves = $leaveMonthStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $shiftStartStr = $shiftData['start_time'];
+            $shiftEndStr = $shiftData['end_time'] ?? null;
+            $gracePeriodSeconds = 15 * 60; // exactly 15 minutes
+
+            // Ensure today's punch-in is evaluated if not returned in $monthAttendances
+            $todayInRecords = false;
+            foreach ($monthAttendances as $att) {
+                if ($att['date'] === $currentDate) {
+                    $todayInRecords = true;
+                    break;
+                }
+            }
+            if (!$todayInRecords && $punchInTime) {
+                $monthAttendances[] = ['date' => $currentDate, 'punch_in' => $punchInTime];
+            }
+
+            // Calculate present days
+            $presentDays = count($monthAttendances);
+
+            foreach ($monthAttendances as $att) {
+                $aDate = $att['date'];
+                $aPunchIn = $att['punch_in'];
+
+                $shiftStartTs = strtotime($aDate . ' ' . $shiftStartStr);
+                $expectedStartTs = $shiftStartTs;
+
+                // Check for overlapping approved leave for this date
+                $dailyLeave = null;
+                foreach ($monthLeaves as $leave) {
+                    if ($aDate >= $leave['start_date'] && $aDate <= $leave['end_date']) {
+                        $dailyLeave = $leave;
+                        break;
+                    }
+                }
+
+                if ($dailyLeave) {
+                    $ltName = strtolower($dailyLeave['lt_name']);
+                    // Is it Half Day or Short Leave?
+                    if (strpos($ltName, 'half day') !== false || strpos($ltName, 'short') !== false) {
+                        $isMorningLeave = false;
+                        if (!empty($dailyLeave['time_from'])) {
+                            // Leave starts in the morning (within 2 hours of shift start)
+                            $leaveStartTs = strtotime($aDate . ' ' . $dailyLeave['time_from']);
+                            if ($leaveStartTs <= ($shiftStartTs + 2 * 3600)) {
+                                $isMorningLeave = true;
+                            }
+                        } else if ($dailyLeave['day_type'] === 'first_half') {
+                            $isMorningLeave = true;
+                        }
+
+                        if ($isMorningLeave) {
+                            if (!empty($dailyLeave['time_to'])) {
+                                $expectedStartTs = strtotime($aDate . ' ' . $dailyLeave['time_to']);
+                            } else if (!empty($shiftEndStr)) {
+                                // Default to half of the shift duration
+                                $shiftEndTs = strtotime($aDate . ' ' . $shiftEndStr);
+                                if ($shiftEndTs < $shiftStartTs)
+                                    $shiftEndTs += 86400; // Overnight shift
+                                $expectedStartTs = $shiftStartTs + (($shiftEndTs - $shiftStartTs) / 2);
+                            }
+                        }
+                    }
+                }
+
+                $punchInTs = strtotime($aDate . ' ' . $aPunchIn);
+
+                if ($punchInTs > ($expectedStartTs + $gracePeriodSeconds)) {
+                    $lateCount++;
+
+                    if ($aDate === $currentDate) {
+                        $minutesLate = (int) ceil(($punchInTs - $expectedStartTs) / 60);
+                        $lateStatus = "Late ⚠️ ({$minutesLate} min late)";
+                    }
+                }
+            }
+        } else {
+            // Fallback for present days if no shift data
+            $presentStmt = $pdo->prepare(
+                "SELECT COUNT(*) as present_count FROM attendance
+                 WHERE user_id = ? AND MONTH(date) = ? AND YEAR(date) = ? AND punch_in IS NOT NULL"
+            );
+            $presentStmt->execute([$userId, $currentMonth, $currentYear]);
+            $presentRow = $presentStmt->fetch(PDO::FETCH_ASSOC);
+            $presentDays = $presentRow['present_count'] ?? 0;
+        }
+
+        // 8. Absent Days (elapsed working days - present days, minimum 0)
         $absentDays = max(0, $elapsedWorkingDays - $presentDays);
 
-        // 3. Prepare Template Parameters
-        // Template: employee_punchin_attendance_update
-        // Variables:
+        // 11. Prepare Template Parameters
+        // Template: attendance_punchin_summary
         // {{1}} Name
-        // {{2}} Time
-        // {{3}} Date
-        // {{4}} Day
-        // {{5}} Present Days
-        // {{6}} Absent Days
-        // {{7}} Working Days
-
-        $templateName = 'employee_punchin_attendance_update';
+        // {{2}} Punch-In Time
+        // {{3}} Late Status
+        // {{4}} Location
+        // {{5}} Day
+        // {{6}} Working Days (total in month)
+        // {{7}} Present Days
+        // {{8}} Absent Days
+        // {{9}} Late Entries
+        $templateName = 'attendance_punchin_summary';
         $params = [
-            $username,      // {{1}}
-            $currentTime,   // {{2}}
-            $currentDate,   // {{3}}
-            $currentDay,    // {{4}}
-            $presentDays,   // {{5}}
-            $absentDays,    // {{6}}
-            $msgWorkingDays // {{7}} - Showing Total Working Days in Month
+            $username,                                  // {{1}} Name
+            date('h:i A', strtotime($punchInTime)),     // {{2}} Punch-In Time (12-hr)
+            $lateStatus,                                // {{3}} Late Status
+            $location,                                  // {{4}} Location
+            $currentDay . ', ' . date('d M Y'),         // {{5}} Day + Date (e.g. Monday, 23 Feb 2026)
+            (string) $msgWorkingDays,                   // {{6}} Working Days
+            (string) $presentDays,                      // {{7}} Present Days
+            (string) $absentDays,                       // {{8}} Absent Days
+            (string) $lateCount,                        // {{9}} Late Entries
         ];
 
-        // 4. Send Template Message
+        // 12. Send Template Message
         $waService = new WhatsAppService();
         $waService->sendTemplateMessage($phone, $templateName, 'en_US', $params);
 
+        error_log("WhatsApp punch-in notification sent for user ID: $userId | Status: $lateStatus");
         return true;
 
     } catch (Exception $e) {
@@ -142,6 +258,16 @@ function sendPunchNotification($userId, $pdo)
 
 /**
  * Send Punch Out Notification via WhatsApp
+ * 
+ * Template: employee_punch_out_detais
+ * {{1}} Name
+ * {{2}} Punch-Out Time
+ * {{3}} Total Working Hours
+ * {{4}} Location (punch_out_address)
+ * {{5}} Day
+ * {{6}} Punch-In Time
+ * {{7}} Overtime
+ * {{8}} Work Report
  * 
  * @param int $userId The ID of the user
  * @param PDO $pdo proper PDO database connection
@@ -165,9 +291,11 @@ function sendPunchOutNotification($userId, $pdo)
         $currentTime = date('H:i:s');
         $currentDay = date('l');
 
-        // 2. Fetch Attendance Details (Punch In, Punch Out, Work Report)
-        $attStmt = $pdo->prepare("SELECT punch_in, punch_out, work_report FROM attendance 
-                                 WHERE user_id = ? AND date = ?");
+        // 2. Fetch Attendance Details (Punch In, Punch Out, Work Report, Address)
+        $attStmt = $pdo->prepare(
+            "SELECT punch_in, punch_out, work_report, punch_out_address FROM attendance 
+             WHERE user_id = ? AND date = ?"
+        );
         $attStmt->execute([$userId, $currentDate]);
         $attendance = $attStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -179,31 +307,34 @@ function sendPunchOutNotification($userId, $pdo)
         $punchInTime = strtotime($attendance['punch_in']);
         $punchOutTime = strtotime($attendance['punch_out']);
         $workReport = $attendance['work_report'] ?? 'No report submitted';
+        $location = (!empty($attendance['punch_out_address'])) ? $attendance['punch_out_address'] : 'Not Available';
 
         // 3. Calculate Total Working Hours
         $secondsWorked = $punchOutTime - $punchInTime;
         $hoursWorked = floor($secondsWorked / 3600);
         $minutesWorked = floor(($secondsWorked % 3600) / 60);
-        $totalWorkingTimeStr = sprintf("%02d:%02d", $hoursWorked, $minutesWorked);
+        // Format e.g., "09 hrs 30 mins" or "09:30" - template implies a clear format
+        $totalWorkingTimeStr = sprintf("%02d:%02d hrs", $hoursWorked, $minutesWorked);
 
         // 4. Calculate Overtime
-        // Fetch Shift Duration
-        $overtimeStr = "00:00";
+        $overtimeStr = "00:00 hrs";
 
         // Get User's Shift
-        $shiftStmt = $pdo->prepare("SELECT s.start_time, s.end_time 
-                                   FROM user_shifts us 
-                                   JOIN shifts s ON us.shift_id = s.id 
-                                   WHERE us.user_id = ? 
-                                   AND us.effective_from <= ? 
-                                   AND (us.effective_to IS NULL OR us.effective_to >= ?) 
-                                   ORDER BY us.effective_from DESC LIMIT 1");
+        $shiftStmt = $pdo->prepare(
+            "SELECT s.start_time, s.end_time 
+             FROM user_shifts us 
+             JOIN shifts s ON us.shift_id = s.id 
+             WHERE us.user_id = ? 
+               AND us.effective_from <= ? 
+               AND (us.effective_to IS NULL OR us.effective_to >= ?) 
+             ORDER BY us.effective_from DESC LIMIT 1"
+        );
         $shiftStmt->execute([$userId, $currentDate, $currentDate]);
         $shift = $shiftStmt->fetch(PDO::FETCH_ASSOC);
 
         if ($shift) {
-            $shiftStart = strtotime($shift['start_time']);
-            $shiftEnd = strtotime($shift['end_time']);
+            $shiftStart = strtotime($currentDate . ' ' . $shift['start_time']);
+            $shiftEnd = strtotime($currentDate . ' ' . $shift['end_time']);
 
             // Handle overnight shifts if end < start, add 24 hours
             if ($shiftEnd < $shiftStart) {
@@ -217,35 +348,38 @@ function sendPunchOutNotification($userId, $pdo)
                 $otSeconds = $secondsWorked - $shiftDurationSeconds;
                 $otHours = floor($otSeconds / 3600);
                 $otMinutes = floor(($otSeconds % 3600) / 60);
-                $overtimeStr = sprintf("%02d:%02d", $otHours, $otMinutes);
+                $overtimeStr = sprintf("%02d:%02d hrs", $otHours, $otMinutes);
             }
         }
 
         // 5. Prepare Template Parameters
-        // Template: employee_punchout_recorded
+        // Template: employee_punch_out_detais
         // {{1}} Name
-        // {{2}} Time
-        // {{3}} Date
-        // {{4}} Day
-        // {{5}} Total Working Hours
-        // {{6}} Overtime Hours
-        // {{7}} Work Report
+        // {{2}} Punch-Out Time
+        // {{3}} Total Working Hours
+        // {{4}} Location
+        // {{5}} Day
+        // {{6}} Punch-In Time
+        // {{7}} Overtime
+        // {{8}} Work Report
 
-        $templateName = 'employee_punchout_recorded';
+        $templateName = 'employee_punch_out_detais';
         $params = [
-            $username,              // {{1}}
-            $currentTime,           // {{2}}
-            $currentDate,           // {{3}}
-            $currentDay,            // {{4}}
-            $totalWorkingTimeStr,   // {{5}}
-            $overtimeStr,           // {{6}}
-            $workReport             // {{7}}
+            $username,                                  // {{1}} Name
+            date('h:i A', $punchOutTime),               // {{2}} Punch-Out Time (12-hr)
+            $totalWorkingTimeStr,                       // {{3}} Total Working Hours
+            $location,                                  // {{4}} Location
+            $currentDay . ', ' . date('d M Y'),         // {{5}} Day + Date
+            date('h:i A', $punchInTime),                // {{6}} Punch-In Time (12-hr)
+            $overtimeStr,                               // {{7}} Overtime
+            $workReport                                 // {{8}} Work Report
         ];
 
         // 6. Send Message
         $waService = new WhatsAppService();
         $waService->sendTemplateMessage($phone, $templateName, 'en_US', $params);
 
+        error_log("WhatsApp punch-out notification sent for user ID: $userId");
         return true;
 
     } catch (Exception $e) {

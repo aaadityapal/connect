@@ -1,0 +1,70 @@
+<!--
+    =====================================================
+    MY SCHEDULE — components/my-schedule.html
+    HTML fragment loaded by schedule-loader.js
+    =====================================================
+-->
+<div class="stat-card el-505" id="myScheduleSection">
+
+    <!-- Header row -->
+    <div class="el-101">
+        <h2 class="el-102">My Schedule</h2>
+        <div class="el-103" style="align-items: center; gap: 0.75rem;">
+
+            <!-- Day / Week / Month Zoom Control -->
+            <div style="display: flex; align-items: center; gap: 0.25rem;
+                        background: #f1f5f9; padding: 0.2rem 0.3rem;
+                        border-radius: 0.5rem; border: 1px solid #e2e8f0;">
+                <button id="myZoomOutBtn" title="Zoom Out"
+                    style="padding: 0.3rem 0.55rem; background: transparent; border: none;
+                           font-size: 0.8rem; cursor: pointer; color: #64748b;
+                           border-radius: 0.3rem; transition: background 0.15s, color 0.15s;">
+                    <i class="fa-solid fa-magnifying-glass-minus"></i>
+                </button>
+                <span id="myZoomLevelText"
+                    style="font-size: 0.8rem; font-weight: 700; padding: 0 0.5rem;
+                           min-width: 48px; text-align: center; color: #1e293b;
+                           font-family: 'Outfit', sans-serif;">Day</span>
+                <button id="myZoomInBtn" title="Zoom In"
+                    style="padding: 0.3rem 0.55rem; background: transparent; border: none;
+                           font-size: 0.8rem; cursor: pointer; color: #64748b;
+                           border-radius: 0.3rem; transition: background 0.15s, color 0.15s;">
+                    <i class="fa-solid fa-magnifying-glass-plus"></i>
+                </button>
+            </div>
+
+            <!-- Period Navigation -->
+            <div style="display:flex; align-items:center; background:#f1f5f9; border-radius:0.5rem; border:1px solid #e2e8f0; padding:0.15rem;">
+                <button id="myPrevPeriodBtn" class="period-nav-btn" title="Previous">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button id="myTodayBtn" class="period-today-btn">
+                    Today
+                </button>
+                <span id="myPeriodLabel" class="period-label">
+                    Today
+                </span>
+                <button id="myNextPeriodBtn" class="period-nav-btn" title="Next">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline scroll wrapper -->
+    <div id="scheduleScrollWrapper"
+        class="schedule-scroll-wrapper"
+        style="overflow-x: auto; overflow-y: hidden; width: 100%; margin-top: 0.5rem;
+               border: 1px solid #f1f5f9; border-radius: 0.75rem;">
+        <div class="schedule-timeline-container el-508"
+            style="position: relative; min-width: max-content;">
+            <div id="timelineHeaders" style="position: relative;"></div>
+            <div id="timelineGrid"></div>
+            <div id="timelineEvents"></div>
+            <div id="currentTimeIndicator"></div>
+        </div>
+    </div>
+    
+    <div id="myScheduleLegendContainer" style="margin-top: 1rem; border-top: 1px solid #f1f5f9; padding-top: 0.5rem;"></div>
+
+</div>

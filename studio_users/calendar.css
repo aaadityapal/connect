@@ -1,0 +1,212 @@
+/* Calendar */
+/* Calendar Container - Professional & Spacious */
+.calendar-view-container {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    min-height: 36rem;
+    font-family: 'Outfit', sans-serif;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    gap: 1.5rem;
+}
+
+.calendar-view-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.12);
+}
+
+/* Header - More Prominent */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 0 0.5rem;
+}
+
+.calendar-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.calendar-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: -0.01em;
+    min-width: 140px;
+    /* Locks text width to prevent arrow jumping */
+    text-align: right;
+    /* Aligns text cleanly against the edge */
+    margin: 0;
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.calendar-nav button {
+    width: 2.5rem;
+    height: 2.5rem;
+    /* Larger buttons */
+    border-radius: 50%;
+    border: 1px solid #f3f4f6;
+    background: transparent;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-nav button:hover {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    row-gap: 1.5rem;
+    /* Adjusted for better spacing */
+    column-gap: 0.5rem;
+    /* Adjusted for better spacing */
+    text-align: center;
+    margin-top: 1rem;
+    flex-grow: 1;
+    /* Take up space */
+    align-content: space-between;
+}
+
+.day-header {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+}
+
+/* Calendar Days - Elegant & Large */
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    font-size: 1.15rem;
+    /* Slightly smaller */
+    font-weight: 400;
+    /* Lighter weight for elegance */
+    color: #333;
+    transition: all 0.2s ease;
+    position: relative;
+    margin: 0 auto;
+    width: 2.75rem;
+    /* Reduced width */
+    height: 2.75rem;
+    /* Reduced height */
+}
+
+.calendar-day:hover:not(.empty):not(.today) {
+    background: #f3f4f6;
+    color: #111;
+}
+
+.calendar-day.today {
+    background: #000 !important;
+    color: #fff !important;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+    border: 2px solid #000 !important;
+}
+
+/* Today + Task Indicator */
+.calendar-day.today.has-task {
+    box-shadow: 0 0 0 2px #fff, 0 0 0 4px #4f46e5 !important;
+    /* Indigo ring outside black circle */
+    border-color: #000 !important;
+}
+
+/* Holiday Style */
+.calendar-day.has-holiday {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+/* Event Indicartors */
+.calendar-day::after {
+    content: '';
+    display: none;
+    width: 0.25rem;
+    height: 0.25rem;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 0.25rem;
+    transform: translateX(-50%);
+    left: 50%;
+}
+
+/* Holiday Dot */
+.calendar-day.has-holiday::after {
+    display: block;
+    background-color: var(--primary-color);
+}
+
+.calendar-day.has-holiday .holiday-dot {
+    display: none;
+    /* Hide old method if present */
+}
+
+/* Meeting Dot */
+.calendar-day.has-meeting::after {
+    display: block;
+    background-color: #2563eb;
+}
+
+/* Combined Dot Logic (If needed via JS classes, but CSS override here handles simple case) */
+
+/* Task Indicator */
+.calendar-day.has-task {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+    /* Light Blue to Violet */
+    border-color: rgba(99, 102, 241, 0.3) !important;
+    /* Indigo border */
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.calendar-day.has-task:not(.today) {
+    color: #4338ca;
+    /* Deep Indigo text */
+    font-weight: 600;
+}
+
+.calendar-day.has-task.has-holiday:not(.today) {
+    color: var(--primary-color);
+    /* Holiday red wins text color */
+}
+
+/* Empty Helper */
+.calendar-day.empty {
+    cursor: default;
+}
+
+
+/* Calendar Mobile Fixes */
+.calendar-view-container {
+    padding: 0.75rem !important;
+}

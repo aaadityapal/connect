@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overtime Modal Test Lab v2</title>
+    <!-- Include CSS and Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', system-ui, sans-serif; background: #e2e8f0; padding: 40px; margin: 0; }
+        h2 { text-align: center; color: #1e293b; margin-top: 0; margin-bottom: 20px; }
+        .control-panel { background: #fff; padding: 25px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 600px; margin: 0 auto 30px; border-top: 4px solid #3b82f6; }
+        .control-panel h3 { margin-top: 0; color: #334155; }
+        .control-panel button { padding: 8px 16px; margin-right: 10px; margin-bottom: 10px; border-radius: 6px; border: none; background: #e2e8f0; color: #1e293b; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+        .control-panel button:hover { background: #cbd5e1; }
+        .control-panel button.active-sim { background: #3b82f6; color: white; }
+        
+        .modal-sim { position: relative; width: 450px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; margin: 0 auto; }
+        .lm-header { background: #f8fafc; padding: 20px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+        .lm-header h3 { margin: 0 0 10px 0; color: #0f172a; }
+        .lm-header p { margin: 0; color: #64748b; font-size: 0.9rem; }
+        
+        .lm-body { padding: 25px; }
+        .conditions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .condition-check { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: #334155; }
+        .condition-check input[type="checkbox"] { width: 18px; height: 18px; accent-color: #10b981; cursor: pointer; }
+        
+        .lm-footer { background: #f8fafc; padding: 15px 20px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #e2e8f0; }
+        .lm-btn { padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; transition: all 0.2s; }
+        .lm-btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+        .lm-btn-danger { background: #ef4444; color: white; }
+        .lm-btn-danger:hover:not(:disabled) { background: #dc2626; }
+        .lm-btn-warning { background: #f59e0b; color: white; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); }
+        .lm-btn-warning:hover:not(:disabled) { background: #d97706; transform: translateY(-1px); }
+        .lm-btn-outline { background: transparent; border: 1px solid #cbd5e1; color: #475569; }
+        .lm-btn-outline:hover { background: #f1f5f9; color: #1e293b; }
+        
+        .status-box { background: #f1f5f9; padding: 15px; border-radius: 8px; font-size: 0.95rem; margin-top: 15px; border-left: 4px solid #94a3b8; }
+        .status-box.ot-yes { background: #fef3c7; border-left-color: #f59e0b; }
+        .status-box.ot-no { background: #dcfce7; border-left-color: #10b981; }
+
+        /* Overtime Modal UI matching implementation */
+        #overtimePromptModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15,23,42,0.6); backdrop-filter: blur(4px);
+            z-index: 2500; display: none; align-items: center; justify-content: center;
+        }
+        .light-modal { position: relative; width: 450px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; margin: 0 auto; margin-top: 50px;}
+        .lm-icon-wrapper { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5rem; }
+        .lm-close { position: absolute; right: 20px; top: 20px; background: none; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer; transition: color 0.2s; }
+        .lm-close:hover { color: #dc2626; }
+
+    </style>
+</head>
+<body>
+
+<h2>Overtime Trapdoor Test Lab</h2>
+
+<div class="control-panel">
+    <h3>Simulate Shift Completion & Submission</h3>
+    <p style="font-size: 0.9rem; color: #64748b;">(Shift ends at 6:00 PM. Simulating the exact moment the user clicks "Submit Punch Out")</p>
+    
+    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 20px;">
+        <button id="btnTime0" class="active-sim" onclick="setSimulatedTime(0, this)">Within Regular Shift</button>
+        <button id="btnTime30" onclick="setSimulatedTime(30 * 60, this)">30 Mins Overtime</button>
+        <button id="btnTime89" onclick="setSimulatedTime(89 * 60, this)">1 Hr 29 Mins Overtime</button>
+        <button id="btnTime90" style="background: #fef3c7; color: #b45309;" onclick="setSimulatedTime(90 * 60, this)">Exactly 1.5 Hrs Overtime</button>
+        <button id="btnTime150" style="background: #fef3c7; color: #b45309;" onclick="setSimulatedTime(150 * 60, this)">2 Hrs 30 Mins Overtime</button>
+    </div>
+
+    <div id="statusBox" class="status-box">
+        <div style="margin-bottom: 8px;"><strong>Simulated Current Time:</strong> <span id="currentTimeSim" style="font-family: monospace; font-size: 1.1rem;">18:00:00</span></div>
+        <div style="margin-bottom: 8px;"><strong>Calculated Overtime:</strong> <span id="otDisplay">0 min</span></div>
+        <div style="margin-bottom: 8px;"><strong>Is Overtime Trigger Met? (>=1.5 Hrs):</strong> <span id="otEligibleBoolean">No</span></div>
+    </div>
+</div>
+
+<!-- Dummy Main Punch Out Modal to trigger the action -->
+<div class="modal-sim">
+    <div class="lm-header">
+        <i class="fa-solid fa-right-from-bracket" style="font-size: 2rem; color: #64748b; margin-bottom: 10px;"></i>
+        <h3>End Your Shift</h3>
+        <p>Complete your work summary and authenticate your exit location.</p>
+    </div>
+    <div class="lm-body">
+        <p style="text-align: center; color: #64748b; margin-top: 10px;">(Assume Photo Taken, >20 Word Report Typed, Location Valid)</p>
+    </div>
+    <div class="lm-footer">
+        <button id="submitPunchOutBtn" class="lm-btn lm-btn-danger">
+            <i class="fa-solid fa-check-circle"></i> Submit Punch Out
+        </button>
+    </div>
+</div>
+
+<!-- The Real Overtime Prompt Modal Implementation -->
+<div id="overtimePromptModal" class="modal-overlay">
+    <div class="light-modal" style="max-width: 450px;">
+
+        <button class="lm-close" id="closeOvertimePromptModal" onclick="closeOTModal()"><i class="fa-solid fa-xmark"></i></button>
+
+        <div class="lm-header" style="background: #fffbeb; border-bottom: 1px solid #fef3c7;">
+            <div class="lm-icon-wrapper" style="background: #fef08a; color: #b45309;">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <h3 style="color: #b45309;">Overtime Detected</h3>
+            <p>You have clocked <strong id="otDurationText">0 hr 0 min</strong> of overtime today.</p>
+        </div>
+
+        <div class="lm-body">
+            <div id="otPromptSection" style="text-align: center; padding: 10px 0;">
+                <h4 style="margin-bottom: 20px; color: #334155; font-size: 1.05rem;">Would you like to submit your overtime report now?</h4>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button id="otSkipBtn" class="lm-btn lm-btn-outline" style="flex: 1;" onclick="submitFinalPayload('SkippedOT')">No, Just Punch Out</button>
+                    <button id="otProceedBtn" class="lm-btn" style="flex: 1; background-color: #f59e0b; color: white; border: none;">Yes, Submit Overtime</button>
+                </div>
+            </div>
+
+            <div id="otReportSection" style="display: none;">
+                <label style="font-weight: 600; color: #1e293b; display: block; margin-bottom: 8px; font-size: 0.9rem;">
+                    Tasks completed during overtime (Min 15 Words)
+                </label>
+                <textarea id="punchOutOvertimeReason" 
+                    style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: vertical; box-sizing: border-box;" 
+                    rows="4" placeholder="Describe the specific work you accomplished during this overtime..."></textarea>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.8rem; color: #64748b;">
+                    <span>Reason Required</span>
+                    <span style="font-weight: 600; background: #e2e8f0; padding: 2px 8px; border-radius: 4px; color: #334155;"><span id="wordCountOT">0</span>/15</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lm-footer" id="otFooterSubmit" style="display: none;">
+            <button id="submitOtAndPunchOutBtn" class="lm-btn lm-btn-warning" disabled style="width: 100%; justify-content: center;">
+                <i class="fa-solid fa-paper-plane"></i> Submit Overtime & Punch Out
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let simulatedNowOffset = 0; // seconds from actual shift end
+    let isOvertimeEligible = false;
+    let otStr = "";
+
+    function setSimulatedTime(offsetSeconds, btnEl) {
+        simulatedNowOffset = offsetSeconds;
+        
+        // UI updates for buttons
+        document.querySelectorAll('.control-panel button').forEach(b => b.classList.remove('active-sim'));
+        btnEl.classList.add('active-sim');
+        
+        checkTimeAndTrigger();
+    }
+
+    function checkTimeAndTrigger() {
+        const otDisplay = document.getElementById('otDisplay');
+        const statusBox = document.getElementById('statusBox');
+        
+        // 18:00:00 shift end
+        const shiftEndStr = "18:00:00";
+        const timeParts = shiftEndStr.split(':');
+        
+        const endOfShift = new Date();
+        endOfShift.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]), parseInt(timeParts[2]), 0);
+        
+        // Simulate Current Time:
+        const simulatedNow = new Date(endOfShift.getTime() + (simulatedNowOffset * 1000));
+        document.getElementById('currentTimeSim').innerText = simulatedNow.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+
+        let diffSeconds = Math.floor((simulatedNow - endOfShift) / 1000);
+        statusBox.className = 'status-box';
+        
+        if (diffSeconds > 0) {
+            let h = Math.floor(diffSeconds / 3600);
+            let m = Math.floor((diffSeconds % 3600) / 60);
+            otStr = `${h} hr ${m} min`;
+            otDisplay.innerHTML = `<strong>${otStr}</strong>`;
+        } else {
+             otDisplay.innerHTML = `No overtime (Regular shift)`;
+             statusBox.classList.add('ot-no');
+        }
+
+        if (diffSeconds >= 5400) { // 1 hour 30 mins (5400 seconds)
+             isOvertimeEligible = true;
+             document.getElementById('otEligibleBoolean').innerText = "Yes ✅";
+             statusBox.classList.add('ot-yes');
+        } else {
+             isOvertimeEligible = false;
+             document.getElementById('otEligibleBoolean').innerText = "No ❌";
+        }
+    }
+
+    /* ---------------- THE NEW SCRIPT BEHAVIOR ---------------- */
+    const submitPunchOutBtn = document.getElementById('submitPunchOutBtn');
+    submitPunchOutBtn.addEventListener('click', () => {
+        if (isOvertimeEligible) {
+            // Trigger trapdoor!
+            const otModal = document.getElementById('overtimePromptModal');
+            otModal.style.display = 'flex';
+            
+            document.getElementById('otDurationText').textContent = otStr;
+            
+            // Revert Modal UI back to stage 1
+            document.getElementById('otPromptSection').style.display = 'block';
+            document.getElementById('otReportSection').style.display = 'none';
+            document.getElementById('otFooterSubmit').style.display = 'none';
+            document.getElementById('punchOutOvertimeReason').value = '';
+            document.getElementById('wordCountOT').textContent = '0';
+            document.getElementById('submitOtAndPunchOutBtn').disabled = true;
+
+        } else {
+            // No OT -> Normal submit directly
+            submitFinalPayload('Normal');
+        }
+    });
+
+    const otProceedBtn = document.getElementById('otProceedBtn');
+    otProceedBtn.addEventListener('click', () => {
+        document.getElementById('otPromptSection').style.display = 'none';
+        document.getElementById('otReportSection').style.display = 'block';
+        document.getElementById('otFooterSubmit').style.display = 'flex';
+    });
+
+    const otTA = document.getElementById('punchOutOvertimeReason');
+    const otSubmit = document.getElementById('submitOtAndPunchOutBtn');
+    const otWC = document.getElementById('wordCountOT');
+
+    otTA.addEventListener('input', () => {
+        let text = otTA.value.trim();
+        let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
+        let count = text === '' ? 0 : words.length;
+        otWC.textContent = count;
+
+        if (count >= 15) {
+            otSubmit.disabled = false;
+        } else {
+            otSubmit.disabled = true;
+        }
+    });
+
+    otSubmit.addEventListener('click', () => {
+        submitFinalPayload('WithOvertimeReport: ' + otTA.value.trim());
+    });
+
+    function closeOTModal() {
+        document.getElementById('overtimePromptModal').style.display = 'none';
+    }
+
+    function submitFinalPayload(type) {
+        closeOTModal();
+        alert(`SUCCESS!\nPayload Submitted to punch.php!\n\nSubmission Type: ${type}`);
+    }
+
+    // Init
+    checkTimeAndTrigger();
+</script>
+
+</body>
+</html>

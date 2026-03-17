@@ -1,0 +1,524 @@
+/* Custom Header */
+.dh-nav-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #050505;
+    background-image: radial-gradient(circle at 60% 0%, #1a0505 0%, transparent 40%),
+        radial-gradient(circle at 20% 100%, #110005 0%, transparent 50%);
+    border-radius: 1rem;
+    padding: 1rem 1.5rem;
+    position: relative;
+    overflow: visible;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    z-index: 1;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Base aurora glowing mesh */
+.dh-nav-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -2;
+    background:
+        radial-gradient(circle at 10% 20%, rgba(215, 0, 24, 0.2), transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(215, 0, 24, 0.3), transparent 50%),
+        radial-gradient(circle at 40% 50%, rgba(100, 0, 20, 0.1), transparent 60%);
+    background-size: 200% 200%;
+    animation: luxuriousGlow 12s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+/* Glassy sweeping grid overlay */
+.dh-nav-header::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -1;
+    background-image:
+        linear-gradient(50deg, transparent 40%, rgba(255, 255, 255, 0.04) 48%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.04) 52%, transparent 60%),
+        repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255, 255, 255, 0.02) 20px, rgba(255, 255, 255, 0.02) 21px),
+        repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255, 255, 255, 0.02) 20px, rgba(255, 255, 255, 0.02) 21px);
+    background-size: 300% 100%, 100% 100%, 100% 100%;
+    animation: glassSweep 7s infinite linear;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+}
+
+@keyframes luxuriousGlow {
+    0% {
+        background-position: 0% 0%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+        opacity: 0.8;
+        filter: hue-rotate(15deg);
+    }
+
+    100% {
+        background-position: 50% 100%;
+        opacity: 1;
+        filter: hue-rotate(0deg);
+    }
+}
+
+@keyframes glassSweep {
+    0% {
+        background-position: 200% 0, 0 0, 0 0;
+    }
+
+    100% {
+        background-position: -100% 0, 0 0, 0 0;
+    }
+}
+
+/* Theme Animations */
+@keyframes skyMovement {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes floatOrb {
+
+    0%,
+    100% {
+        transform: translateY(0px) scale(1);
+        opacity: 0.6;
+    }
+
+    50% {
+        transform: translateY(-10px) scale(1.05);
+        opacity: 0.8;
+    }
+}
+
+@keyframes twinkle {
+
+    0%,
+    100% {
+        opacity: 0.3;
+        transform: scale(0.9);
+    }
+
+    50% {
+        opacity: 0.9;
+        transform: scale(1.1);
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+    }
+}
+
+@keyframes snowFall {
+    0% {
+        background-position: 0px 0px, 0px 0px, 0px 0px;
+    }
+
+    100% {
+        background-position: 400px 500px, 300px 400px, 200px 300px;
+    }
+}
+
+@keyframes spinChakra {
+    0% {
+        transform: translateX(-50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translateX(-50%) rotate(360deg);
+    }
+}
+
+/* Timeline Themes */
+.dh-nav-header.dh-theme-morning {
+    background: linear-gradient(120deg, #27272a, #3f3f46);
+    background-size: 200% 200%;
+    animation: skyMovement 10s ease infinite;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);
+}
+
+.dh-nav-header.dh-theme-morning::after {
+    content: '\f185';
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 2rem;
+    top: -1rem;
+    font-size: 6rem;
+    color: rgba(255, 255, 255, 0.04);
+    animation: floatOrb 6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.dh-nav-header.dh-theme-afternoon {
+    background: linear-gradient(120deg, #1e293b, #334155);
+    background-size: 200% 200%;
+    animation: skyMovement 12s ease infinite;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.1);
+}
+
+.dh-nav-header.dh-theme-afternoon::after {
+    content: '\f0c2';
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 3rem;
+    top: 0.5rem;
+    font-size: 5rem;
+    color: rgba(255, 255, 255, 0.04);
+    animation: floatOrb 8s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.dh-nav-header.dh-theme-evening {
+    background: linear-gradient(120deg, #3f2c27, #2d201d);
+    background-size: 200% 200%;
+    animation: skyMovement 15s ease infinite;
+    box-shadow: 0 4px 15px rgba(249, 115, 22, 0.1);
+}
+
+.dh-nav-header.dh-theme-evening::after {
+    content: '';
+    position: absolute;
+    right: 1rem;
+    top: -1rem;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(253, 224, 71, 0.05), transparent 70%);
+    animation: floatOrb 5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.dh-nav-header.dh-theme-night {
+    background: linear-gradient(120deg, #111827, #1f2937);
+    background-size: 200% 200%;
+    animation: skyMovement 15s ease infinite;
+    box-shadow: 0 4px 15px rgba(30, 27, 75, 0.2);
+}
+
+.dh-nav-header.dh-theme-night::after {
+    content: '\f186';
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 2.5rem;
+    top: 0.5rem;
+    font-size: 5rem;
+    color: rgba(255, 255, 255, 0.03);
+    animation: floatOrb 8s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.dh-nav-header.dh-theme-night::before {
+    background-image:
+        radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.3) 2px, transparent 3px),
+        radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.2) 1.5px, transparent 2px),
+        radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.4) 2.5px, transparent 3.5px);
+    animation: twinkle 4s ease-in-out infinite alternate;
+}
+
+.dh-nav-left,
+.dh-nav-middle,
+.dh-nav-right {
+    position: relative;
+    z-index: 1;
+}
+
+.dh-nav-left {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dh-user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dh-icon-orange {
+    width: 2rem;
+    height: 2rem;
+    background: #ef4444;
+    /* Red */
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.dh-greeting {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.dh-greeting-text {
+    color: #ffffff;
+    /* White */
+}
+
+.dh-greeting-name {
+    color: #ef4444;
+    /* Red */
+}
+
+.dh-nav-datetime {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #d1d5db;
+    /* Light gray */
+    padding-left: 2.75rem;
+    /* Align under text */
+}
+
+.dh-datetime-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.dh-datetime-sep {
+    color: #9ca3af;
+    font-weight: 400;
+}
+
+.dh-timezone {
+    color: #9ca3af;
+    font-size: 0.65rem;
+}
+
+.dh-nav-middle {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 2rem;
+}
+
+/* Google Font for 8-bit display */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+.dh-shift-timer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    color: #a1a1aa;
+    font-size: 0.7rem;
+    padding: 0.35rem 0.8rem;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+#shiftTimer {
+    font-family: 'VT323', 'Courier New', monospace;
+    font-size: 1.3rem;
+    color: #10b981; /* Flat retro green, no glow */
+    letter-spacing: 1px;
+    line-height: 1;
+    display: inline-block;
+    padding-top: 0.15rem;
+    font-weight: normal;
+    text-shadow: none;
+}
+
+#shiftTextLabel {
+    font-family: var(--font-family);
+    font-weight: 500;
+}
+
+.dh-shift-timer.dh-overtime-active {
+    background: rgba(40, 0, 0, 0.6);
+    border-color: rgba(239, 68, 68, 0.2);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.dh-shift-timer.dh-overtime-active #shiftTextLabel {
+    color: #ef4444; 
+}
+
+.dh-shift-timer.dh-overtime-active #shiftTimer {
+    color: #ef4444; /* Flat alert red */
+    text-shadow: none;
+    animation: digitalBlink 2s steps(2, start) infinite;
+}
+
+@keyframes digitalBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.dh-shift-timer i {
+    color: #52525b;
+    font-size: 0.8rem;
+}
+
+.dh-shift-timer.dh-overtime-active i {
+    color: #ef4444;
+}
+
+.dh-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dh-punch-btn {
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+}
+
+.dh-punch-btn:hover {
+    transform: translateY(-2px);
+}
+
+.dh-punch-out-state {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.dh-punch-out-state:hover {
+    box-shadow: 0 6px 15px rgba(220, 38, 38, 0.5);
+}
+
+.dh-punch-in-state {
+    background: linear-gradient(135deg, #10b981, #047857);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.dh-punch-in-state:hover {
+    box-shadow: 0 6px 15px rgba(16, 185, 129, 0.5);
+}
+
+.dh-notif-btn {
+    background: #1a1a1a;
+    color: white;
+    border: 1px solid #333;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.dh-profile-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.dh-profile-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: #000000;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    border: 2px solid #ef4444;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
+    cursor: pointer;
+}
+
+
+/* Profile Dropdown Menu */
+.dh-profile-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 200px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border: 1px solid #efefef;
+    padding: 0.5rem 0;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dh-profile-dropdown.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dh-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    color: #4b5563;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s;
+}
+
+.dh-dropdown-item i {
+    font-size: 1.1rem;
+    color: #9ca3af;
+    transition: color 0.2s;
+}
+
+.dh-dropdown-item:hover {
+    background: #eff6ff;
+    color: #1e3a8a;
+}
+
+.dh-dropdown-item:hover i {
+    color: #3b82f6;
+}
+
+.dh-dropdown-divider {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 0.5rem 0;
+}
+
+.dh-logout-btn,
+.dh-logout-btn i {
+    color: #ef4444 !important;
+}
+
+.dh-logout-btn:hover {
+    background: #fef2f2;
+    color: #b91c1c !important;
+}
+
+.dh-logout-btn:hover i {
+    color: #b91c1c !important;
+}

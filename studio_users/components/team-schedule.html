@@ -1,0 +1,320 @@
+<!--
+    =====================================================
+    TEAM SCHEDULE — components/team-schedule.html
+    HTML fragment loaded by schedule-loader.js
+    =====================================================
+-->
+<div class="stat-card el-505" id="teamScheduleSection" style="margin-top: 1rem;">
+
+    <!-- Header row -->
+    <div class="el-101" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <h2 class="el-102" style="margin:0;">Team Schedule</h2>
+
+        <div class="el-103" style="display:flex; align-items:center; gap:0.75rem;">
+            <!-- Day / Week / Month Zoom Control -->
+            <div style="display:flex; align-items:center; gap:0.25rem;
+                        background:#f1f5f9; padding:0.2rem 0.3rem;
+                        border-radius:0.5rem; border:1px solid #e2e8f0;">
+                <button id="teamZoomOutBtn" title="Zoom Out"
+                    style="padding:0.3rem 0.55rem; background:transparent; border:none;
+                           font-size:0.8rem; cursor:pointer; color:#64748b;
+                           border-radius:0.3rem; transition:background .15s, color .15s;">
+                    <i class="fa-solid fa-magnifying-glass-minus"></i>
+                </button>
+                <span id="teamZoomLevelText"
+                    style="font-size:0.8rem; font-weight:700; padding:0 0.5rem;
+                           min-width:48px; text-align:center; color:#1e293b;
+                           font-family:'Outfit',sans-serif;">Day</span>
+                <button id="teamZoomInBtn" title="Zoom In"
+                    style="padding:0.3rem 0.55rem; background:transparent; border:none;
+                           font-size:0.8rem; cursor:pointer; color:#64748b;
+                           border-radius:0.3rem; transition:background .15s, color .15s;">
+                    <i class="fa-solid fa-magnifying-glass-plus"></i>
+                </button>
+            </div>
+
+            <!-- Period Navigation -->
+            <div style="display:flex; align-items:center; background:#f1f5f9; border-radius:0.5rem; border:1px solid #e2e8f0; padding:0.15rem;">
+                <button id="teamPrevPeriodBtn" class="period-nav-btn" title="Previous">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button id="teamTodayBtn" class="period-today-btn">
+                    Today
+                </button>
+                <span id="teamPeriodLabel" class="period-label">
+                    Today
+                </span>
+                <button id="teamNextPeriodBtn" class="period-nav-btn" title="Next">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout + Hierarchy Styles -->
+    <style>
+        /* ── Layout ─────────────────────────────────────── */
+        .ts-layout {
+            display: flex;
+            gap: 1.2rem;
+            margin-top: 1rem;
+            align-items: flex-start;
+            overflow: hidden;
+        }
+        .ts-timeline { flex: 1; min-width: 0; overflow: hidden; }
+        .ts-hierarchy { width: 300px; flex-shrink: 0; overflow: hidden; }
+        @media (max-width: 850px) {
+            .ts-layout   { flex-direction: column; }
+            .ts-timeline { width: 100%; }
+            .ts-hierarchy{ width: 100%; }
+        }
+
+        /* ── Panel card ──────────────────────────────────── */
+        .hier-panel {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.8rem;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .hier-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .hier-title i { color: var(--primary-color, #d70018); font-size: 0.8rem; }
+
+        /* ── YOU row ─────────────────────────────────────── */
+        .hier-you-row {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.38rem 0.45rem;
+            border-radius: 0.45rem;
+            background: linear-gradient(135deg, #eef2ff, #e8effe);
+            border: 1px solid #dde5f8;
+            margin-bottom: 0.5rem;
+            box-sizing: border-box;
+            overflow: hidden;
+            width: 100%;
+        }
+        .hier-you-avatar {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.58rem; font-weight: 800; color: #fff; flex-shrink: 0;
+        }
+        .hier-you-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .hier-you-name {
+            font-size: 0.76rem; font-weight: 700; color: #0f172a;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .hier-you-pos {
+            font-size: 0.60rem; color: #64748b;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .hier-you-badge {
+            font-size: 0.52rem; font-weight: 800;
+            background: var(--primary-color, #d70018);
+            color: #fff; border-radius: 20px;
+            padding: 2px 5px; letter-spacing: 0.04em; flex-shrink: 0;
+        }
+
+        /* ── Scrollable tree container ───────────────────── */
+        .hier-scroll {
+            max-height: 260px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #e2e8f0 transparent;
+        }
+        .hier-scroll::-webkit-scrollbar { width: 3px; }
+        .hier-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 3px; }
+
+        /* ── Tree ul ─────────────────────────────────────── */
+        ul.hier-tree {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        /* nested levels indented + dashed line */
+        ul.hier-tree ul.hier-tree {
+            padding-left: 0.9rem;
+            margin-left: 0.55rem;
+            border-left: 1.5px dashed #d1d9e6;
+        }
+
+        /* ── Each tree node ──────────────────────────────── */
+        li.hier-node {
+            list-style: none;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .hier-node-row {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.24rem 0.3rem;
+            border-radius: 0.35rem;
+            cursor: default;
+            transition: background 0.14s;
+            box-sizing: border-box;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        .hier-node-row:hover { background: #f1f5f9; }
+
+        /* horizontal tick from dashed border */
+        ul.hier-tree ul.hier-tree .hier-node-row::before {
+            content: '';
+            position: absolute;
+            left: -0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0.55rem;
+            height: 1.5px;
+            background: #d1d9e6;
+        }
+
+        /* avatar */
+        .hier-node-av {
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; color: #fff; flex-shrink: 0;
+        }
+
+        /* name/role */
+        .hier-node-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .hier-node-name {
+            font-size: 0.73rem; font-weight: 600; color: #1e293b;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .hier-node-role {
+            font-size: 0.58rem; color: #94a3b8;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* chevron */
+        .hier-chev {
+            font-size: 0.52rem; color: #94a3b8;
+            cursor: pointer; flex-shrink: 0;
+            width: 12px; text-align: center;
+            transition: transform 0.2s;
+        }
+        .hier-chev.hem-closed { transform: rotate(-90deg); }
+
+        /* hidden child list */
+        ul.hier-tree[style*="display:none"] { display: none !important; }
+
+        /* ── Empty / error state ─────────────────────────── */
+        .hier-empty {
+            padding: 0.8rem 0.4rem;
+            text-align: center; color: #94a3b8;
+            font-size: 0.75rem;
+            display: flex; flex-direction: column;
+            align-items: center; gap: 0.3rem;
+        }
+        .hier-empty i { font-size: 1.25rem; opacity: 0.35; }
+
+        /* ── Skeleton shimmer ────────────────────────────── */
+        @keyframes hierShimmer {
+            0%   { background-position: -400px 0; }
+            100% { background-position:  400px 0; }
+        }
+        .hier-skel {
+            height: 22px; border-radius: 5px;
+            background: linear-gradient(90deg, #f1f5f9 25%, #e8ecf2 50%, #f1f5f9 75%);
+            background-size: 800px 100%;
+            animation: hierShimmer 1.4s infinite linear;
+            margin-bottom: 0.4rem;
+        }
+        .hier-skel.wide  { width: 100%; }
+        .hier-skel.short { width: 68%; height: 17px; margin-left: 0.9rem; }
+    </style>
+
+    <div class="ts-layout">
+
+        <!-- 70% Timeline Area -->
+        <div class="ts-timeline">
+            <div id="teamScheduleScrollWrapper"
+                class="schedule-scroll-wrapper"
+                style="overflow-x:auto; overflow-y:hidden;
+                       background:#ffffff; border:1px solid #e2e8f0;
+                       border-radius:0.75rem;">
+                <div class="schedule-timeline-container el-508"
+                    style="position:relative; min-width:max-content;">
+                    <div id="teamTimelineHeaders" style="position:relative;"></div>
+                    <div id="teamTimelineGrid"></div>
+                    <div id="teamTimelineEvents"></div>
+                    <div id="teamCurrentTimeIndicator"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 30% Hierarchy Panel — rendered by schedule-timeline.js -->
+        <div class="ts-hierarchy">
+            <div class="hier-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.6rem;">
+                    <h3 class="hier-title" style="margin:0;">
+                        <i class="fa-solid fa-sitemap"></i>
+                        Team Hierarchy
+                    </h3>
+                    <button id="openHierModalBtn" style="background:#fff; border:1px solid #e2e8f0; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#64748b; transition:all 0.2s; box-shadow:0 1px 2px rgba(0,0,0,0.05);" title="Expand Full Hierarchy" onmouseover="this.style.borderColor='#cbd5e1';this.style.color='#0f172a'" onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#64748b'">
+                        <i class="fa-solid fa-expand" style="font-size:0.7rem;"></i>
+                    </button>
+                </div>
+
+                <!-- Skeleton while loading -->
+                <div id="hierarchyLoadingState">
+                    <div class="hier-skel wide"></div>
+                    <div class="hier-skel short"></div>
+                    <div class="hier-skel short"></div>
+                    <div class="hier-skel short" style="width:50%;"></div>
+                </div>
+
+                <!-- Real content injected by JS -->
+                <div id="hierarchyContent" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div id="teamScheduleLegendContainer" class="team-schedule-legend"
+        style="margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(0,0,0,0.05);">
+    </div>
+
+    <!-- Hierarchy Expand Modal -->
+    <div id="hierFullModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999; background:rgba(15,23,42,0.4); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:1.5rem; box-sizing:border-box;">
+        <div style="background:#fff; border-radius:1rem; width:100%; max-width:650px; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); overflow:hidden; animation:tlFadeIn 0.3s ease;">
+            
+            <!-- Modal Header -->
+            <div style="padding:1.25rem 1.5rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,rgba(99,102,241,0.1),rgba(168,85,247,0.1)); display:flex; align-items:center; justify-content:center; color:#6366f1; font-size:1.1rem;">
+                        <i class="fa-solid fa-users-viewfinder"></i>
+                    </div>
+                    <div>
+                        <h2 style="margin:0; font-size:1.15rem; font-weight:700; color:#0f172a;">Full Team Hierarchy</h2>
+                        <p style="margin:0.2rem 0 0; font-size:0.8rem; color:#64748b;">Complete reporting structure</p>
+                    </div>
+                </div>
+                <button id="closeHierModalBtn" style="background:#f1f5f9; border:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#64748b; font-size:1rem; transition:all 0.2s;" onmouseover="this.style.background='#e2e8f0';this.style.color='#0f172a'" onmouseout="this.style.background='#f1f5f9';this.style.color='#64748b'">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <div id="hierModalBody" style="padding:1.5rem; overflow-y:auto; flex:1; background:#fff;">
+                <!-- Content will be injected by JS -->
+            </div>
+        </div>
+    </div></div>

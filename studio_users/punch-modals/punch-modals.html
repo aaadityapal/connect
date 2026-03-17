@@ -1,0 +1,529 @@
+<!-- Punch In Modal -->
+<style>
+    /* Clean Light Modal Theme */
+    .light-modal {
+        background: #ffffff !important;
+        border-radius: 24px !important;
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 0 20px rgba(0, 0, 0, 0.05) !important;
+        width: 520px !important;
+        max-width: 95vw !important;
+        max-height: 90vh !important;
+        overflow: hidden !important;
+        font-family: 'Outfit', 'Inter', sans-serif !important;
+        color: #1e293b !important;
+        border: 1px solid #e2e8f0 !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .lm-header {
+        background: #f8fafc !important;
+        padding: 24px 32px 20px !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        position: relative;
+        text-align: center;
+        flex-shrink: 0;
+    }
+
+    .lm-icon-wrapper {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin: 0 auto 16px auto;
+    }
+
+    .lm-icon-in {
+        background: #ecfdf5;
+        color: #10b981;
+        border: 4px solid #d1fae5;
+    }
+
+    .lm-icon-out {
+        background: #fef2f2;
+        color: #ef4444;
+        border: 4px solid #fee2e2;
+    }
+
+    .lm-header h3 {
+        margin: 0 !important;
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+    }
+
+    .lm-header p {
+        margin: 8px 0 0 0 !important;
+        font-size: 0.9rem !important;
+        color: #64748b !important;
+        line-height: 1.5;
+    }
+
+    .lm-close {
+        position: absolute !important;
+        top: 20px !important;
+        right: 20px !important;
+        background: transparent !important;
+        color: #94a3b8 !important;
+        border: none !important;
+        width: 36px !important;
+        height: 36px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        font-size: 1.2rem;
+        z-index: 10;
+    }
+
+    .lm-close:hover {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+    }
+
+    .lm-body {
+        padding: 24px 32px !important;
+        overflow-y: auto;
+        flex: 1;
+        min-height: 0;
+    }
+
+    .lm-camera {
+        border-radius: 16px !important;
+        background: #f1f5f9 !important;
+        border: 2px dashed #cbd5e1 !important;
+        position: relative !important;
+        height: 220px !important;
+        min-height: 220px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-bottom: 20px !important;
+        overflow: hidden !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .lm-camera-text {
+        color: #64748b;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        z-index: 1;
+    }
+
+    .lm-camera video,
+    .lm-camera canvas {
+        position: absolute !important;
+        inset: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        min-width: 100% !important;
+        min-height: 100% !important;
+        object-fit: cover !important;
+        z-index: 2 !important;
+        border-radius: 14px !important;
+        overflow: hidden !important;
+    }
+
+    .lm-card {
+        background: #f8fafc !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+        border: 1px solid #f1f5f9 !important;
+        margin-bottom: 20px !important;
+    }
+
+    .lm-row {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        font-size: 0.85rem !important;
+        color: #475569 !important;
+        margin-bottom: 12px !important;
+        line-height: 1.4;
+    }
+
+    .lm-row:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    .lm-row-icon {
+        margin-top: 2px !important;
+        color: #3b82f6 !important;
+        font-size: 1rem;
+    }
+
+    .lm-status,
+    .c-pi-status {
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .lm-footer {
+        padding: 0 32px 24px !important;
+        display: flex !important;
+        flex-direction: column;
+        gap: 12px !important;
+        flex-shrink: 0;
+    }
+
+    .lm-btn {
+        width: 100% !important;
+        border: none !important;
+        padding: 14px !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .lm-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed !important;
+        transform: none !important;
+    }
+
+    .lm-btn-primary {
+        background: #3b82f6 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25) !important;
+    }
+
+    .lm-btn-primary:hover:not(:disabled) {
+        background: #2563eb !important;
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .lm-btn-success,
+    .lm-btn.active {
+        background: #10b981 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+    }
+
+    .lm-btn-success:hover:not(:disabled),
+    .lm-btn.active:hover {
+        background: #059669 !important;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .lm-btn-danger {
+        background: #ef4444 !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+    }
+
+    .lm-btn-danger:hover:not(:disabled) {
+        background: #dc2626 !important;
+        box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35) !important;
+        transform: translateY(-1px) !important;
+    }
+
+    .lm-btn-outline {
+        background: #ffffff !important;
+        color: #475569 !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+
+    .lm-btn-outline:hover:not(:disabled) {
+        background: #f8fafc !important;
+        border-color: #94a3b8 !important;
+        color: #1e293b !important;
+    }
+
+    @keyframes pulseCam {
+        0% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.4;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+    }
+
+    .lm-camera-text i {
+        animation: pulseCam 3s infinite;
+    }
+
+    #takePhotoBtnClick[style*="display: block"] {
+        display: flex !important;
+    }
+</style>
+
+<div id="punchInModal" class="modal-overlay"
+    style="z-index: 2000; align-items: center; justify-content: center; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px);">
+    <div class="light-modal">
+
+        <button class="lm-close hidden" id="closePunchInModal" style="display:none;"><i
+                class="fa-solid fa-xmark"></i></button>
+        <button class="lm-close" id="actualClosePunchInBtn"><i class="fa-solid fa-xmark"></i></button>
+
+        <div class="lm-header">
+            <div class="lm-icon-wrapper lm-icon-in">
+                <i class="fa-solid fa-right-to-bracket"></i>
+            </div>
+            <h3>Start Your Shift</h3>
+            <p>Please authenticate your geolocation and identity to successfully punch in.</p>
+        </div>
+
+        <div class="lm-body">
+            <div class="lm-camera" id="cameraContainer">
+                <div id="cameraPlaceholder" class="lm-camera-text">
+                    <i class="fa-solid fa-camera-viewfinder" style="font-size: 2.5rem;"></i>
+                    <span>Camera Offline</span>
+                </div>
+                <video id="cameraPreview" autoplay playsinline
+                    style="display:none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; margin: 0; padding: 0;"></video>
+                <canvas id="cameraCanvas"
+                    style="display:none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; margin: 0; padding: 0;"></canvas>
+            </div>
+
+            <div id="cameraControlsGrp" style="display: flex; gap: 12px; margin-bottom: 20px;">
+                <button id="switchCameraBtn" class="lm-btn lm-btn-outline" style="padding: 10px;">
+                    <i class="fa-solid fa-rotate"></i> Rotate
+                </button>
+                <button id="takePhotoBtnClick" class="lm-btn lm-btn-success" style="display:none; padding: 10px;">
+                    <i class="fa-solid fa-camera"></i> Capture
+                </button>
+            </div>
+
+            <div class="lm-card">
+                <div class="lm-row">
+                    <i class="fa-solid fa-location-dot lm-row-icon"></i>
+                    <div>
+                        <div style="font-weight: 600; color: #1e293b; margin-bottom: 2px;">Coordinates</div>
+                        <div id="geoCoordsText">Fetching exact location...</div>
+                    </div>
+                </div>
+                <div class="lm-row">
+                    <i class="fa-solid fa-map lm-row-icon"></i>
+                    <div>
+                        <div style="font-weight: 600; color: #1e293b; margin-bottom: 2px;">Address</div>
+                        <div id="geoAddressText">Fetching address data...</div>
+                    </div>
+                </div>
+
+                <div id="geoStatusBanner" class="lm-status" style="display:none;">
+                    <i id="geoStatusIcon" class="fa-solid fa-circle-check"></i>
+                    <span id="geoStatusText">Checking permitted area...</span>
+                </div>
+
+                <div id="outOfRangeReasonInDiv" style="display:none; margin-top: 15px;">
+                    <label style="font-weight: 600; color: #1e293b; display: block; margin-bottom: 8px; font-size: 0.9rem;">Out of Geofence Reason (Min 10 Words)</label>
+                    <textarea id="punchInReason" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: vertical; box-sizing: border-box;" rows="2" placeholder="Why are you punching in from outside the allowed area?"></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.8rem; color: #64748b;">
+                        <span>Reason Required</span>
+                        <span style="font-weight: 600; background: #e2e8f0; padding: 2px 8px; border-radius: 4px; color: #334155;"><span id="wordCountInReason">0</span>/10</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lm-footer">
+            <button id="grantAccessBtn" class="lm-btn lm-btn-primary">
+                <i class="fa-solid fa-shield-halved"></i> Allow Camera & Location
+            </button>
+            <button id="clickPicBtn" class="lm-btn lm-btn-success" style="display:none;" disabled>
+                <i class="fa-solid fa-check-circle"></i> Submit Punch In
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- Punch Out Modal -->
+<div id="punchOutModal" class="modal-overlay"
+    style="z-index: 2000; align-items: center; justify-content: center; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px);">
+    <div class="light-modal">
+
+        <button class="lm-close" id="closePunchOutModal"><i class="fa-solid fa-xmark"></i></button>
+
+        <div class="lm-header">
+            <div class="lm-icon-wrapper lm-icon-out">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </div>
+            <h3>End Your Shift</h3>
+            <p>Complete your work summary and authenticate your exit location.</p>
+        </div>
+
+        <div class="lm-body">
+            <div class="lm-camera" id="cameraContainerOut">
+                <div id="cameraPlaceholderOut" class="lm-camera-text">
+                    <i class="fa-solid fa-camera-viewfinder" style="font-size: 2.5rem;"></i>
+                    <span>Camera Offline</span>
+                </div>
+                <video id="cameraPreviewOut" autoplay playsinline
+                    style="display:none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; margin: 0; padding: 0;"></video>
+                <canvas id="cameraCanvasOut"
+                    style="display:none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; margin: 0; padding: 0;"></canvas>
+            </div>
+
+            <div id="retakeWrapperOut" style="display:none; margin-bottom: 20px;">
+                <button id="retakePicBtnOut" class="lm-btn lm-btn-outline" style="padding: 10px;">
+                    <i class="fa-solid fa-rotate-left"></i> Retake Photo
+                </button>
+            </div>
+
+            <div class="lm-card">
+                <div class="lm-row">
+                    <i class="fa-solid fa-location-dot lm-row-icon"></i>
+                    <div>
+                        <div style="font-weight: 600; color: #1e293b; margin-bottom: 2px;">Coordinates</div>
+                        <span id="geoCoordsTextOut">Fetching exact location...</span>
+                    </div>
+                </div>
+                <div class="lm-row">
+                    <i class="fa-solid fa-map lm-row-icon"></i>
+                    <div>
+                        <div style="font-weight: 600; color: #1e293b; margin-bottom: 2px;">Address</div>
+                        <span id="geoAddressTextOut">Fetching address data...</span>
+                    </div>
+                </div>
+
+                <div id="geoStatusBannerOut" class="lm-status" style="display:none;">
+                    <i id="geoStatusIconOut" class="fa-solid fa-circle-check"></i>
+                    <span id="geoStatusTextOut">Checking permitted area...</span>
+                </div>
+
+                <div id="outOfRangeReasonOutDiv" style="display:none; margin-top: 15px;">
+                    <label style="font-weight: 600; color: #1e293b; display: block; margin-bottom: 8px; font-size: 0.9rem;">Out of Geofence Reason (Min 10 Words)</label>
+                    <textarea id="punchOutReason" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: vertical; box-sizing: border-box;" rows="2" placeholder="Why are you punching out from outside the allowed area?"></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.8rem; color: #64748b;">
+                        <span>Reason Required</span>
+                        <span style="font-weight: 600; background: #e2e8f0; padding: 2px 8px; border-radius: 4px; color: #334155;"><span id="wordCountOutReason">0</span>/10</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lm-card" style="padding: 12px 16px;">
+                <label
+                    style="font-weight: 600; color: #1e293b; display: block; margin-bottom: 8px; font-size: 0.9rem;">Work
+                    Summary (Min 20 Words)</label>
+                <textarea id="punchOutSummary"
+                    style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: vertical; box-sizing: border-box;"
+                    rows="3" placeholder="Describe your tasks completed today..."></textarea>
+
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.8rem; color: #64748b;">
+                    <span>No special chars alone</span>
+                    <span
+                        style="font-weight: 600; background: #e2e8f0; padding: 2px 8px; border-radius: 4px; color: #334155;"><span
+                            id="wordCount">0</span>/20</span>
+                </div>
+
+                <!-- Work Report Suggestions (auto-generated from completed tasks) -->
+                <div id="workReportSuggestionsPanel" style="display:none; margin-top: 14px;">
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                        <i class="fa-solid fa-wand-magic-sparkles" style="color: #6366f1; font-size: 0.8rem;"></i>
+                        <span
+                            style="font-size: 0.78rem; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.5px;">Smart
+                            Suggestions By A.I.</span>
+                    </div>
+                    <div id="workReportSuggestionsList" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Suggestions injected by JS -->
+                    </div>
+                    <div id="workReportNoSuggestions"
+                        style="display:none; font-size: 0.82rem; color: #94a3b8; text-align: center; padding: 8px 0;">
+                        <i class="fa-solid fa-circle-info" style="margin-right: 4px;"></i> No completed tasks found.
+                        Write your summary manually.
+                    </div>
+                </div>
+            </div>
+
+            <div id="punchOutStatus" class="lm-status" style="display:none; text-align:center;"></div>
+        </div>
+
+        <div class="lm-footer">
+            <button id="grantAccessBtnOut" class="lm-btn lm-btn-primary">
+                <i class="fa-solid fa-shield-halved"></i> Allow Camera & Location
+            </button>
+            <button id="capturePicBtnOut" class="lm-btn lm-btn-danger" style="display:none;">
+                <i class="fa-solid fa-camera"></i> Capture Image
+            </button>
+
+            <button id="submitPunchOutBtn" class="lm-btn lm-btn-danger" style="display:none;" disabled>
+                <i class="fa-solid fa-check-circle"></i> Submit Punch Out
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<!-- Overtime Prompt Modal -->
+<div id="overtimePromptModal" class="modal-overlay" style="z-index: 2500; align-items: center; justify-content: center; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px);">
+    <div class="light-modal" style="max-width: 450px;">
+
+        <button class="lm-close" id="closeOvertimePromptModal"><i class="fa-solid fa-xmark"></i></button>
+
+        <div class="lm-header" style="background: #fffbeb; border-bottom: 1px solid #fef3c7;">
+            <div class="lm-icon-wrapper" style="background: #fef08a; color: #b45309;">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <h3 style="color: #b45309;">Overtime Detected</h3>
+            <p>You have clocked <strong id="otDurationText">0 hr 0 min</strong> of overtime today.</p>
+        </div>
+
+        <div class="lm-body">
+            <div id="otPromptSection" style="text-align: center; padding: 10px 0;">
+                <h4 style="margin-bottom: 20px; color: #334155; font-size: 1.05rem;">Would you like to submit your overtime report now?</h4>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button id="otSkipBtn" class="lm-btn lm-btn-outline" style="flex: 1;">No, Just Punch Out</button>
+                    <button id="otProceedBtn" class="lm-btn" style="flex: 1; background-color: #f59e0b; color: white; border: none;">Yes, Submit Overtime</button>
+                </div>
+            </div>
+
+            <div id="otReportSection" style="display: none;">
+                <label style="font-weight: 600; color: #1e293b; display: block; margin-bottom: 8px; font-size: 0.9rem;">
+                    Tasks completed during overtime (Min 15 Words)
+                </label>
+                <textarea id="punchOutOvertimeReason" 
+                    style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: vertical; box-sizing: border-box;" 
+                    rows="4" placeholder="Describe the specific work you accomplished during this overtime..."></textarea>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.8rem; color: #64748b;">
+                    <span>Reason Required</span>
+                    <span style="font-weight: 600; background: #e2e8f0; padding: 2px 8px; border-radius: 4px; color: #334155;"><span id="wordCountOT">0</span>/15</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="lm-footer" id="otFooterSubmit" style="display: none;">
+            <button id="submitOtAndPunchOutBtn" class="lm-btn lm-btn-warning" disabled style="width: 100%; justify-content: center;">
+                <i class="fa-solid fa-paper-plane"></i> Submit Overtime & Punch Out
+            </button>
+        </div>
+
+    </div>
+</div>

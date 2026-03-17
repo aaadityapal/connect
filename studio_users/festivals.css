@@ -1,0 +1,129 @@
+/* Festival Themes */
+.dh-nav-header.dh-theme-diwali {
+    background: linear-gradient(120deg, #7c2d12, #9a3412, #ca8a04);
+    background-size: 200% 200%;
+    animation: skyMovement 8s ease infinite;
+    box-shadow: 0 4px 20px rgba(202, 138, 4, 0.5);
+}
+
+.dh-nav-header.dh-theme-diwali::after {
+    content: '\f06d';
+    /* Flame icon approximating diya */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 3rem;
+    top: 1rem;
+    font-size: 4rem;
+    color: rgba(253, 224, 71, 0.85);
+    animation: floatOrb 3s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+.dh-nav-header.dh-theme-diwali::before {
+    background-image:
+        radial-gradient(circle at 20% 30%, rgba(253, 224, 71, 1) 3px, transparent 6px),
+        radial-gradient(circle at 80% 60%, rgba(250, 204, 21, 0.9) 4px, transparent 7px),
+        radial-gradient(circle at 50% 50%, rgba(255, 237, 74, 0.8) 2px, transparent 5px);
+    animation: twinkle 1.5s ease-in-out infinite alternate;
+}
+
+.dh-nav-header.dh-theme-holi {
+    background: linear-gradient(120deg, #18181b, #27272a, #1f2937);
+    background-size: 200% 200%;
+    animation: skyMovement 15s ease infinite;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.dh-nav-header.dh-theme-holi::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.3;
+    background:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40 10 C55 5 75 15 80 30 C85 45 80 65 65 80 C50 95 25 90 10 75 C-5 60 0 35 15 20 C25 10 30 15 40 10 Z' fill='%23ec4899' /%3E%3Ccircle cx='5' cy='50' r='6' fill='%23ec4899' /%3E%3Ccircle cx='85' cy='85' r='7' fill='%23ec4899' /%3E%3Ccircle cx='95' cy='30' r='5' fill='%23ec4899' /%3E%3Ccircle cx='50' cy='95' r='4' fill='%23ec4899' /%3E%3C/svg%3E") 15% 40% / 60px 60px no-repeat,
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='rotate(45 50 50)'%3E%3Cpath d='M40 10 C55 5 75 15 80 30 C85 45 80 65 65 80 C50 95 25 90 10 75 C-5 60 0 35 15 20 C25 10 30 15 40 10 Z' fill='%233b82f6' /%3E%3Ccircle cx='5' cy='50' r='6' fill='%233b82f6' /%3E%3Ccircle cx='85' cy='85' r='7' fill='%233b82f6' /%3E%3Ccircle cx='95' cy='30' r='5' fill='%233b82f6' /%3E%3Ccircle cx='50' cy='95' r='4' fill='%233b82f6' /%3E%3C/g%3E%3C/svg%3E") 85% 60% / 70px 70px no-repeat,
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='rotate(120 50 50)'%3E%3Cpath d='M40 10 C55 5 75 15 80 30 C85 45 80 65 65 80 C50 95 25 90 10 75 C-5 60 0 35 15 20 C25 10 30 15 40 10 Z' fill='%2310b981' /%3E%3Ccircle cx='5' cy='50' r='6' fill='%2310b981' /%3E%3Ccircle cx='85' cy='85' r='7' fill='%2310b981' /%3E%3Ccircle cx='95' cy='30' r='5' fill='%2310b981' /%3E%3Ccircle cx='50' cy='95' r='4' fill='%2310b981' /%3E%3C/g%3E%3C/svg%3E") 50% 20% / 50px 50px no-repeat,
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='rotate(200 50 50)'%3E%3Cpath d='M40 10 C55 5 75 15 80 30 C85 45 80 65 65 80 C50 95 25 90 10 75 C-5 60 0 35 15 20 C25 10 30 15 40 10 Z' fill='%23f59e0b' /%3E%3Ccircle cx='5' cy='50' r='6' fill='%23f59e0b' /%3E%3Ccircle cx='85' cy='85' r='7' fill='%23f59e0b' /%3E%3Ccircle cx='95' cy='30' r='5' fill='%23f59e0b' /%3E%3Ccircle cx='50' cy='95' r='4' fill='%23f59e0b' /%3E%3C/g%3E%3C/svg%3E") 30% 80% / 65px 65px no-repeat,
+        radial-gradient(circle at 15% 40%, rgba(236, 72, 153, 0.1) 30px, transparent 70px),
+        radial-gradient(circle at 85% 60%, rgba(59, 130, 246, 0.1) 40px, transparent 80px),
+        radial-gradient(circle at 50% 20%, rgba(16, 185, 129, 0.1) 25px, transparent 60px),
+        radial-gradient(circle at 30% 80%, rgba(245, 158, 11, 0.1) 35px, transparent 75px);
+    animation: floatOrb 8s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+.dh-nav-header.dh-theme-holi::before {
+    content: '🎈';
+    position: absolute;
+    left: 5%;
+    top: 20%;
+    font-size: 1.5rem;
+    opacity: 0.2;
+    text-shadow:
+        100px -10px 0 rgba(255, 255, 255, 0.5),
+        250px 20px 0 rgba(255, 255, 255, 0.5),
+        400px -30px 0 rgba(255, 255, 255, 0.5),
+        600px 10px 0 rgba(255, 255, 255, 0.5),
+        800px -20px 0 rgba(255, 255, 255, 0.5);
+    animation: floatOrb 6s ease-in-out infinite alternate-reverse;
+    pointer-events: none;
+}
+
+.dh-nav-header.dh-theme-christmas {
+    background: linear-gradient(120deg, #991b1b, #7f1d1d, #14532d, #064e3b);
+    background-size: 200% 200%;
+    animation: skyMovement 10s ease infinite;
+}
+
+.dh-nav-header.dh-theme-christmas::before {
+    background-image:
+        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.9) 2px, transparent 3px),
+        radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.8) 3px, transparent 4px),
+        radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.7) 1px, transparent 2px);
+    background-size: 150px 150px;
+    animation: snowFall 8s linear infinite;
+    opacity: 0.9;
+}
+
+.dh-nav-header.dh-theme-christmas::after {
+    content: '\f2dc';
+    /* Snowflake */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 2rem;
+    top: 0.5rem;
+    font-size: 5rem;
+    color: rgba(255, 255, 255, 0.04);
+    animation: floatOrb 6s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.dh-nav-header.dh-theme-republic {
+    background: linear-gradient(135deg, #ea580c, #ffffff, #16a34a);
+    background-size: 200% 200%;
+    animation: skyMovement 8s ease infinite;
+    box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+}
+
+.dh-nav-header.dh-theme-republic::after {
+    content: '\f1ce';
+    /* Circle notch acting as ashoka chakra */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    left: 50%;
+    top: -1.5rem;
+    font-size: 8rem;
+    color: rgba(29, 78, 216, 0.15);
+    /* Deep blue */
+    animation: spinChakra 20s linear infinite;
+    pointer-events: none;
+}
+
+.dh-nav-header.dh-theme-republic .dh-greeting-text,
+.dh-nav-header.dh-theme-republic .dh-nav-datetime {
+    color: #0f172a;
+    text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.8);
+}

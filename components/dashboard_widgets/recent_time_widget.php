@@ -19,55 +19,58 @@ $current_year = date("Y"); // Full year
 $current_time_24h = date("H:i"); // 24-hour format for time
 
 // Get greeting based on IST hour
-$hour = (int) date('H');
+$hour = (int)date('H');
 if ($hour >= 5 && $hour < 12) {
     $greeting = "Good Morning";
     // Choose one of the morning-appropriate icons
     $morning_icons = [
-        "fas fa-mug-hot",      // Coffee mug
-        "fas fa-sun",          // Rising sun
-        "fas fa-coffee",       // Coffee cup
-        "far fa-lightbulb",    // Light bulb (idea/awakening)
-        "fas fa-cloud-sun",    // Sun with cloud
+        "fas fa-mug-hot", // Coffee mug
+        "fas fa-sun", // Rising sun
+        "fas fa-coffee", // Coffee cup
+        "far fa-lightbulb", // Light bulb (idea/awakening)
+        "fas fa-cloud-sun", // Sun with cloud
     ];
     // Select a random icon for variety
     $greeting_icon = $morning_icons[array_rand($morning_icons)];
     $greeting_class = "morning";
-} elseif ($hour >= 12 && $hour < 16) {
+}
+elseif ($hour >= 12 && $hour < 16) {
     $greeting = "Good Afternoon";
     // Choose one of the afternoon-appropriate icons
     $afternoon_icons = [
-        "fas fa-sun",          // Bright sun
+        "fas fa-sun", // Bright sun
         "fas fa-umbrella-beach", // Beach umbrella
         "fas fa-temperature-high", // High temperature
         "fas fa-business-time", // Business time
-        "fas fa-briefcase",    // Briefcase (work time)
+        "fas fa-briefcase", // Briefcase (work time)
     ];
     // Select a random icon for variety
     $greeting_icon = $afternoon_icons[array_rand($afternoon_icons)];
     $greeting_class = "afternoon";
-} elseif ($hour >= 16 && $hour < 20) {
+}
+elseif ($hour >= 16 && $hour < 20) {
     $greeting = "Good Evening";
     // Choose one of the evening-appropriate icons
     $evening_icons = [
-        "fas fa-cloud-sun",    // Cloud with sun (sunset)
-        "fas fa-home",         // Home (return home time)
-        "fas fa-utensils",     // Utensils (dinner time)
+        "fas fa-cloud-sun", // Cloud with sun (sunset)
+        "fas fa-home", // Home (return home time)
+        "fas fa-utensils", // Utensils (dinner time)
         "fas fa-wine-glass-alt", // Wine glass
-        "fas fa-bell",         // Bell (end of day)
+        "fas fa-bell", // Bell (end of day)
     ];
     // Select a random icon for variety
     $greeting_icon = $evening_icons[array_rand($evening_icons)];
     $greeting_class = "evening";
-} else {
+}
+else {
     $greeting = "Good Night";
     // Choose one of the night-appropriate icons
     $night_icons = [
-        "fas fa-moon",         // Moon
-        "fas fa-bed",          // Bed
-        "fas fa-star",         // Star
-        "fas fa-cloud-moon",   // Moon with cloud
-        "far fa-clock",        // Clock (late hour)
+        "fas fa-moon", // Moon
+        "fas fa-bed", // Bed
+        "fas fa-star", // Star
+        "fas fa-cloud-moon", // Moon with cloud
+        "far fa-clock", // Clock (late hour)
     ];
     // Select a random icon for variety
     $greeting_icon = $night_icons[array_rand($night_icons)];
@@ -123,7 +126,8 @@ if (isset($_SESSION['user_id'])) {
 
         if ($completed_result->num_rows > 0) {
             $attendance_completed = true;
-        } else {
+        }
+        else {
             // Check if user has punched in but not punched out today
             $query = "SELECT id FROM attendance WHERE user_id = ? AND date = ? AND punch_in IS NOT NULL AND punch_out IS NULL";
 
@@ -175,7 +179,8 @@ if (isset($_SESSION['user_id'])) {
 
             if (!empty($status_row['punch_in']) && empty($status_row['punch_out'])) {
                 $attendance_status = 'punched_in';
-            } elseif (!empty($status_row['punch_in']) && !empty($status_row['punch_out'])) {
+            }
+            elseif (!empty($status_row['punch_in']) && !empty($status_row['punch_out'])) {
                 $attendance_status = 'completed';
             }
         }
@@ -237,7 +242,8 @@ if ($shift_end_time) {
     if ($time_diff < 0) {
         $is_overtime = true;
         $time_diff_seconds = abs($time_diff);
-    } else {
+    }
+    else {
         $time_diff_seconds = $time_diff;
     }
 
@@ -373,7 +379,8 @@ if (isset($_SESSION['user_id'])) {
             <span class="greeting-text"><?php echo $greeting; ?></span>
             <?php if (!empty($username)): ?>
                 <span class="username-text">, <?php echo htmlspecialchars($username); ?></span>
-            <?php endif; ?>
+            <?php
+endif; ?>
             <!-- Add this inside the time-greeting div, after the username-text span -->
             <?php if ($shift_end_time && !$attendance_completed): ?>
                 <div class="shift-timer <?php echo $is_overtime ? 'overtime' : ''; ?>" id="shiftTimer"
@@ -392,7 +399,8 @@ if (isset($_SESSION['user_id'])) {
                         </div>
                     </div>
                 </div>
-            <?php endif; ?>
+            <?php
+endif; ?>
         </div>
 
         <div class="datetime-row">
@@ -418,25 +426,30 @@ if (isset($_SESSION['user_id'])) {
             data-approval="<?php echo $approval_status; ?>" <?php echo $attendance_completed ? 'disabled' : ''; ?>>
             <?php if ($approval_status == 'pending'): ?>
                 <span class="approval-badge">Attendance Pending</span>
-            <?php endif; ?>
+            <?php
+endif; ?>
             <i class="<?php
-            if ($is_punched_in) {
-                echo 'fas fa-sign-out-alt';
-            } else if ($attendance_completed) {
-                echo 'fas fa-check-circle';
-            } else {
-                echo 'fas fa-fingerprint';
-            }
-            ?>"></i>
+if ($is_punched_in) {
+    echo 'fas fa-sign-out-alt';
+}
+else if ($attendance_completed) {
+    echo 'fas fa-check-circle';
+}
+else {
+    echo 'fas fa-fingerprint';
+}
+?>"></i>
             <span><?php
-            if ($is_punched_in) {
-                echo 'Punch Out';
-            } else if ($attendance_completed) {
-                echo 'Completed';
-            } else {
-                echo 'Punch In';
-            }
-            ?></span>
+if ($is_punched_in) {
+    echo 'Punch Out';
+}
+else if ($attendance_completed) {
+    echo 'Completed';
+}
+else {
+    echo 'Punch In';
+}
+?></span>
         </button>
 
         <!-- Notification Bell Icon -->
@@ -463,9 +476,11 @@ if (isset($_SESSION['user_id'])) {
             <div class="user-avatar" id="timeWidgetAvatar">
                 <?php if (!empty($profile_picture)): ?>
                     <img src="<?php echo htmlspecialchars($profile_picture); ?>" alt="Profile Picture">
-                <?php else: ?>
+                <?php
+else: ?>
                     <i class="fas fa-user-circle"></i>
-                <?php endif; ?>
+                <?php
+endif; ?>
             </div>
 
             <!-- User Dropdown Menu -->
@@ -475,7 +490,8 @@ if (isset($_SESSION['user_id'])) {
                         <span class="dropdown-username"><?php echo htmlspecialchars($username); ?></span>
                         <?php if (!empty($user_role)): ?>
                             <span class="dropdown-role"><?php echo htmlspecialchars($user_role); ?></span>
-                        <?php endif; ?>
+                        <?php
+endif; ?>
                     </div>
                 </div>
                 <div class="dropdown-divider"></div>
@@ -5144,9 +5160,9 @@ if (isset($_SESSION['user_id'])) {
             
             // Use server timezone (IST) directly from PHP
             // No need to add 5.5 hours if server is already in IST
-            const serverHour = <?php echo (int) date('H'); ?>;
-            const serverMinute = <?php echo (int) date('i'); ?>;
-            const serverSecond = <?php echo (int) date('s'); ?>;
+            const serverHour = <?php echo (int)date('H'); ?>;
+            const serverMinute = <?php echo (int)date('i'); ?>;
+            const serverSecond = <?php echo (int)date('s'); ?>;
             
             // For client-side display, calculate current time based on server time
             // and elapsed seconds since page load

@@ -1,0 +1,563 @@
+Array
+(
+    [0] => Array
+        (
+            [Field] => id
+            [Type] => int(11)
+            [Null] => NO
+            [Key] => PRI
+            [Default] => 
+            [Extra] => auto_increment
+        )
+
+    [1] => Array
+        (
+            [Field] => user_id
+            [Type] => int(11)
+            [Null] => NO
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [2] => Array
+        (
+            [Field] => date
+            [Type] => date
+            [Null] => NO
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [3] => Array
+        (
+            [Field] => punch_in
+            [Type] => time
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [4] => Array
+        (
+            [Field] => missing_punch_in_reason
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [5] => Array
+        (
+            [Field] => punch_out
+            [Type] => time
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [6] => Array
+        (
+            [Field] => missing_punch_out_reason
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [7] => Array
+        (
+            [Field] => approval_status
+            [Type] => enum('pending','approved','rejected')
+            [Null] => YES
+            [Key] => MUL
+            [Default] => approved
+            [Extra] => 
+        )
+
+    [8] => Array
+        (
+            [Field] => manager_id
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [9] => Array
+        (
+            [Field] => approval_timestamp
+            [Type] => datetime
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [10] => Array
+        (
+            [Field] => manager_comments
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [11] => Array
+        (
+            [Field] => work_report
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [12] => Array
+        (
+            [Field] => overtime_status
+            [Type] => enum('pending','approved','rejected','submitted','expired','resubmitted','paid')
+            [Null] => YES
+            [Key] => 
+            [Default] => pending
+            [Extra] => 
+        )
+
+    [13] => Array
+        (
+            [Field] => overtime_approved_by
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [14] => Array
+        (
+            [Field] => overtime_actioned_at
+            [Type] => datetime
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [15] => Array
+        (
+            [Field] => auto_punch_out
+            [Type] => tinyint(1)
+            [Null] => YES
+            [Key] => 
+            [Default] => 0
+            [Extra] => 
+        )
+
+    [16] => Array
+        (
+            [Field] => location
+            [Type] => varchar(255)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [17] => Array
+        (
+            [Field] => within_geofence
+            [Type] => tinyint(1)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [18] => Array
+        (
+            [Field] => distance_from_geofence
+            [Type] => decimal(10,2)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [19] => Array
+        (
+            [Field] => geofence_id
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [20] => Array
+        (
+            [Field] => ip_address
+            [Type] => varchar(45)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [21] => Array
+        (
+            [Field] => device_info
+            [Type] => varchar(255)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [22] => Array
+        (
+            [Field] => image_data
+            [Type] => longblob
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [23] => Array
+        (
+            [Field] => latitude
+            [Type] => decimal(10,8)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [24] => Array
+        (
+            [Field] => longitude
+            [Type] => decimal(11,8)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [25] => Array
+        (
+            [Field] => accuracy
+            [Type] => float
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [26] => Array
+        (
+            [Field] => address
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [27] => Array
+        (
+            [Field] => overtime
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => 
+            [Default] => 0
+            [Extra] => 
+        )
+
+    [28] => Array
+        (
+            [Field] => status
+            [Type] => enum('present','absent','half_day','leave','holiday')
+            [Null] => YES
+            [Key] => MUL
+            [Default] => present
+            [Extra] => 
+        )
+
+    [29] => Array
+        (
+            [Field] => remarks
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [30] => Array
+        (
+            [Field] => modified_by
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [31] => Array
+        (
+            [Field] => created_at
+            [Type] => timestamp
+            [Null] => NO
+            [Key] => 
+            [Default] => current_timestamp()
+            [Extra] => 
+        )
+
+    [32] => Array
+        (
+            [Field] => modified_at
+            [Type] => timestamp
+            [Null] => NO
+            [Key] => 
+            [Default] => current_timestamp()
+            [Extra] => on update current_timestamp()
+        )
+
+    [33] => Array
+        (
+            [Field] => working_hours
+            [Type] => time
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [34] => Array
+        (
+            [Field] => overtime_hours
+            [Type] => time
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [35] => Array
+        (
+            [Field] => shift_time
+            [Type] => time
+            [Null] => YES
+            [Key] => 
+            [Default] => 09:00:00
+            [Extra] => 
+        )
+
+    [36] => Array
+        (
+            [Field] => weekly_offs
+            [Type] => varchar(255)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [37] => Array
+        (
+            [Field] => is_weekly_off
+            [Type] => tinyint(1)
+            [Null] => YES
+            [Key] => 
+            [Default] => 0
+            [Extra] => 
+        )
+
+    [38] => Array
+        (
+            [Field] => punch_in_photo
+            [Type] => varchar(255)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [39] => Array
+        (
+            [Field] => punch_in_latitude
+            [Type] => decimal(10,8)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [40] => Array
+        (
+            [Field] => punch_in_longitude
+            [Type] => decimal(11,8)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [41] => Array
+        (
+            [Field] => punch_in_accuracy
+            [Type] => float
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [42] => Array
+        (
+            [Field] => punch_out_photo
+            [Type] => varchar(255)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [43] => Array
+        (
+            [Field] => punch_out_latitude
+            [Type] => decimal(10,8)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [44] => Array
+        (
+            [Field] => punch_out_longitude
+            [Type] => decimal(11,8)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [45] => Array
+        (
+            [Field] => punch_out_accuracy
+            [Type] => float
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [46] => Array
+        (
+            [Field] => shifts_id
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [47] => Array
+        (
+            [Field] => punch_out_address
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [48] => Array
+        (
+            [Field] => overtime_reason
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [49] => Array
+        (
+            [Field] => punch_in_outside_reason
+            [Type] => varchar(255)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [50] => Array
+        (
+            [Field] => punch_out_outside_reason
+            [Type] => varchar(255)
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [51] => Array
+        (
+            [Field] => missing_punch_in_id
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [52] => Array
+        (
+            [Field] => missing_punch_out_id
+            [Type] => int(11)
+            [Null] => YES
+            [Key] => MUL
+            [Default] => 
+            [Extra] => 
+        )
+
+    [53] => Array
+        (
+            [Field] => missing_punch_reason
+            [Type] => text
+            [Null] => YES
+            [Key] => 
+            [Default] => 
+            [Extra] => 
+        )
+
+    [54] => Array
+        (
+            [Field] => missing_punch_approval_status
+            [Type] => enum('pending','approved','rejected')
+            [Null] => YES
+            [Key] => MUL
+            [Default] => pending
+            [Extra] => 
+        )
+
+    [55] => Array
+        (
+            [Field] => waved_off
+            [Type] => tinyint(1)
+            [Null] => YES
+            [Key] => MUL
+            [Default] => 0
+            [Extra] => 
+        )
+
+)

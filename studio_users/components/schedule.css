@@ -1,0 +1,223 @@
+/**
+ * =====================================================
+ * SCHEDULE COMPONENT STYLES — components/schedule.css
+ * =====================================================
+ * Loaded automatically by components/schedule-loader.js
+ * Covers: My Schedule + Team Schedule sections
+ * =====================================================
+ */
+
+/* ─── Section Header Row ──────────────────────────── */
+.el-101 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+/* Section Title */
+.el-102 {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Button Group wrapper */
+.el-103 {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Left Scroll Button */
+.el-104 {
+    background: #f4f4f4;
+    border: none;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #555;
+}
+
+/* Right Scroll Button */
+.el-106 {
+    background: #f4f4f4;
+    border: none;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #555;
+}
+
+/* ─── Scroll Wrapper ──────────────────────────────── */
+.schedule-scroll-wrapper {
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    scroll-behavior: smooth;
+}
+
+/* Hide scrollbars (Firefox) */
+#scheduleScrollWrapper,
+#teamScheduleScrollWrapper {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Hide scrollbars (Chrome / Safari / Opera) */
+#scheduleScrollWrapper::-webkit-scrollbar,
+#teamScheduleScrollWrapper::-webkit-scrollbar {
+    display: none;
+}
+
+/* ─── Timeline Container ─────────────────────────── */
+.schedule-timeline-container {
+    position: relative;
+    min-width: max-content;
+}
+
+/* Override stat-card overflow so timeline blocks don't clip */
+.stat-card.el-505 {
+    overflow: visible;
+}
+
+/* ─── Scroll Nav Buttons ─────────────────────────── */
+#scrollScheduleLeft,
+#scrollScheduleRight,
+#teamScrollScheduleLeft,
+#teamScrollScheduleRight {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.4rem;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #475569;
+    font-size: 0.85rem;
+    transition: all 0.18s ease;
+}
+
+#scrollScheduleLeft:hover,
+#scrollScheduleRight:hover,
+#teamScrollScheduleLeft:hover,
+#teamScrollScheduleRight:hover {
+    background: #e2e8f0;
+    color: #111;
+    transform: scale(1.08);
+}
+
+/* ─── Zoom Control Buttons ──────────────────────── */
+#teamZoomInBtn,
+#teamZoomOutBtn {
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+#teamZoomInBtn:hover,
+#teamZoomOutBtn:hover {
+    background: #e2e8f0 !important;
+    color: #1e293b !important;
+    border-radius: 0.3rem;
+}
+
+/* ─── Legend Row ────────────────────────────────── */
+.team-schedule-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* Legend items — also set via JS (tl-legend-row / tl-legend-item) */
+.tl-legend-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem 1.25rem;
+    padding: 0.75rem 0.25rem 0.35rem;
+    animation: tlRowIn 0.4s ease both;
+}
+
+.tl-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: default;
+    transition: opacity 0.2s;
+}
+
+.tl-legend-item:hover {
+    opacity: 0.75;
+}
+
+.tl-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* ─── Timeline Animations ───────────────────────── */
+@keyframes tlBlockIn {
+    from {
+        opacity: 0;
+        transform: translateX(-14px) scaleX(0.88);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scaleX(1);
+    }
+}
+
+@keyframes tlIndicatorPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.55; }
+}
+
+@keyframes tlDotRipple {
+    0%   { box-shadow: 0 0 0 0   rgba(239, 68, 68, 0.55); }
+    70%  { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0   rgba(239, 68, 68, 0); }
+}
+
+@keyframes tlRowIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ─── Responsive ────────────────────────────────── */
+@media (max-width: 768px) {
+    /* Stack team timeline and hierarchy vertically */
+    #teamScheduleSection > div[style*="display: flex"] {
+        flex-direction: column !important;
+    }
+
+    #teamScheduleSection > div[style*="display: flex"] > div[style*="width: 70%"],
+    #teamScheduleSection > div[style*="display: flex"] > div[style*="width: 30%"] {
+        width: 100% !important;
+    }
+
+    .el-101 {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+}

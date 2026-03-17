@@ -1,0 +1,76 @@
+<!-- Minimalistic Task Modal -->
+<div id="taskModalOverlay" class="task-modal-overlay">
+    <div class="task-modal-content">
+        <button id="taskModalClose" class="task-modal-close"><i class="fa-solid fa-xmark"></i></button>
+        
+        <div class="task-modal-header">
+            <span class="task-modal-dot" id="tModalDot"></span>
+            <div class="task-modal-person">
+                <span style="color: #94a3b8; font-weight: 500; font-size: 0.75rem; margin-right: 4px;">Assigned to</span>
+                <span id="tModalPerson" style="color: #475569;">Alex Johnson</span>
+            </div>
+            <span class="task-modal-assigned-by">Assigned by <b id="tModalAssignedBy">Manager John</b></span>
+        </div>
+        
+        <h2 class="task-modal-title" id="tModalTitle">Sprint Planning</h2>
+        
+        <div class="task-modal-dates">
+            <div class="date-box">
+                <span class="date-label">From</span>
+                <span class="date-value" id="tModalDateFrom">Mar 11, 2026 - 08:00 AM</span>
+            </div>
+            <div class="date-divider"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="date-box">
+                <span class="date-label">To</span>
+                <span class="date-value" id="tModalDateTo">Mar 11, 2026 - 09:30 AM</span>
+            </div>
+        </div>
+
+        <div class="task-modal-meta">
+            <div class="task-meta-item">
+                <i class="fa-solid fa-stopwatch"></i>
+                <span id="tModalDuration">90 mins</span>
+            </div>
+            <div class="task-meta-item">
+                <i class="fa-solid fa-circle-info"></i>
+                <span id="tModalStatus" class="status-badge">Scheduled</span>
+            </div>
+            <!-- Extension History toggle — hidden until extension_count > 0 -->
+            <button id="tModalHistoryToggle" class="tl-history-toggle" style="display:none;" title="View extension history">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span id="tModalHistoryCount">0</span> Extension<span id="tModalHistoryPlural">s</span>
+            </button>
+        </div>
+
+        <!-- ── Extension History Panel (collapsed by default) ──────────── -->
+        <div id="tModalHistoryPanel" class="tl-history-panel" style="display:none;">
+            <div class="tl-history-header">
+                <i class="fa-solid fa-timeline"></i>
+                Deadline Extension History
+            </div>
+            <div id="tModalHistoryList" class="tl-history-list"></div>
+        </div>
+
+        <div class="task-modal-body" id="tModalAssigneesArea" style="display: none; padding-bottom: 12px;">
+            <h4>Assignee Statuses</h4>
+            <div id="tModalAssigneesList" style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;"></div>
+        </div>
+
+        <div class="task-modal-body">
+            <h4>Description</h4>
+            <p id="tModalDesc">This task is currently scheduled. Please check related documents for more information.</p>
+        </div>
+        
+        <div class="task-modal-footer">
+            <div style="position: relative;">
+                <button class="task-btn-snooze" id="taskModalExtend"><i class="fa-regular fa-calendar-plus"></i> Extend</button>
+            </div>
+
+            <div style="position: relative; margin-right: auto;">
+                <button class="task-btn-status" id="taskModalMarkDone"><i class="fa-solid fa-check"></i> Mark as Done</button>
+            </div>
+
+
+        </div>
+    </div>
+</div>

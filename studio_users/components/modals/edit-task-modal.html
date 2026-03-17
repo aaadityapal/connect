@@ -1,0 +1,93 @@
+<!-- Edit Assigned Task Modal -->
+<div id="editTaskModal" class="modal-overlay">
+    <div class="modal-content edit-task-modal-content"
+        style="padding: 0; position: relative; border: none; background: #ffffff; max-width: 600px; width: 95%; border-radius: 16px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+
+        <!-- Floating Close Button -->
+        <button class="close-modal" id="closeEditTaskModal"><i class="fa-solid fa-xmark"></i></button>
+
+        <!-- Modal Header — premium horizontal bar -->
+        <div
+            style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); padding: 1.5rem 2rem; border-bottom: 1px solid rgba(234, 88, 12, 0.12); display: flex; align-items: center; gap: 1rem; flex-shrink: 0; border-top-left-radius: 16px; border-top-right-radius: 16px;">
+            <div
+                style="width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #f97316, #ea580c); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; box-shadow: 0 4px 14px rgba(249,115,22,0.35); flex-shrink: 0;">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <h3 id="editTaskModalTitle"
+                    style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0; line-height: 1.2;">Edit
+                    Assigned Task</h3>
+                <p style="font-size: 0.85rem; color: #64748b; margin: 0; margin-top: 4px;">Update task details below
+                </p>
+            </div>
+        </div>
+
+        <!-- Modal Body (Mobile Scrollable) -->
+        <div class="modal-body" style="padding: 1.25rem; background: #ffffff; overflow-y: auto; margin-bottom: 0;">
+            <div class="edit-task-form-grid" style="gap: 0.85rem;">
+                <!-- Project Name (search autocomplete) -->
+                <div class="edit-form-group full-width">
+                    <label class="edit-form-label"><i class="fa-solid fa-folder-open" style="color:#f97316;"></i> Project Name</label>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <input type="text" id="editProjectSearchInput" placeholder="Search for a project..." class="edit-form-input" autocomplete="off" style="padding-right: 2.5rem; width: 100%;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; right: 1rem; color: #3b82f6; font-size: 1rem; pointer-events: none;"></i>
+                        <div id="editProjectSearchMenu" style="display:none; position:fixed; background:#ffffff; border:1px solid #e2e8f0; border-radius:0.5rem; box-shadow:0 10px 25px -5px rgba(0,0,0,0.15); z-index:99999; max-height:220px; overflow-y:auto; padding:0.4rem 0;"></div>
+                    </div>
+                </div>
+
+                <!-- Project Stage (hidden until project selected) -->
+                <div class="edit-form-group full-width" id="editStageContainer" style="display:none;">
+                    <label class="edit-form-label"><i class="fa-solid fa-layer-group" style="color:#8b5cf6;"></i> Project Stage</label>
+                    <div style="position: relative;">
+                        <select id="editStageSelect" class="edit-form-input" style="width:100%; appearance:none; -webkit-appearance:none; padding-right:2.5rem; background:#ffffff;">
+                            <option value="">Select a stage...</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down" style="position:absolute; right:1rem; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:0.8rem; pointer-events:none;"></i>
+                    </div>
+                </div>
+
+                <div class="edit-form-group full-width">
+                    <label class="edit-form-label"><i class="fa-solid fa-align-left" style="color:#6366f1;"></i>
+                        Description</label>
+                    <textarea id="editTaskDescription" class="edit-form-input"
+                        placeholder="Enter task description..." rows="3" style="resize: vertical;"></textarea>
+                </div>
+
+                <!-- Date & Time -->
+                <div class="edit-form-group">
+                    <label class="edit-form-label"><i class="fa-regular fa-calendar" style="color:#ec4899;"></i> Due
+                        Date</label>
+                    <input type="date" id="editTaskDate" class="edit-form-input">
+                </div>
+                <div class="edit-form-group">
+                    <label class="edit-form-label"><i class="fa-regular fa-clock" style="color:#3b82f6;"></i>
+                        Time</label>
+                    <input type="time" id="editTaskTime" class="edit-form-input">
+                </div>
+
+                <!-- Assignees — @mention chip input -->
+                <div class="edit-form-group full-width">
+                    <label class="edit-form-label"><i class="fa-solid fa-users" style="color:#6366f1;"></i> Assign To</label>
+                    <div style="position: relative;">
+                        <div id="editMentionWrapper" style="border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.4rem 0.65rem; min-height: 48px; display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; background: #ffffff; cursor: text; transition: border-color 0.2s, box-shadow 0.2s;">
+                            <i class="fa-solid fa-user" style="color: #94a3b8; font-size: 0.85rem; flex-shrink: 0; padding-right: 2px;"></i>
+                            <input type="text" id="editMentionInput" placeholder="Type @name to mention..." autocomplete="off"
+                                style="border: none; outline: none; background: transparent; font-family: inherit; font-size: 0.9rem; color: #1e293b; flex: 1; min-width: 120px; padding: 0.2rem 0;" />
+                        </div>
+                        <div id="editMentionMenu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 300; max-height: 220px; overflow-y: auto; padding: 0.4rem 0;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div
+            style="padding: 0.85rem 1.25rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.6rem; flex-shrink: 0;">
+            <button id="cancelEditTask"
+                style="padding: 0.5rem 1.2rem; font-size: 0.85rem; border-radius: 8px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-weight: 600; cursor: pointer; transition: all 0.2s;">Cancel</button>
+            <button id="saveEditTask"
+                style="padding: 0.5rem 1.25rem; font-size: 0.85rem; border-radius: 8px; background: linear-gradient(135deg, #f97316, #ea580c); color: white; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.45rem; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3); transition: transform 0.2s, box-shadow 0.2s;"><i
+                    class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+        </div>
+    </div>
+</div>

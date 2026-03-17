@@ -153,9 +153,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     $current_date = date('Y-m-d');
 
     try {
-        // Check if user has punched in today
-        $query = "SELECT punch_in FROM attendance 
-                 WHERE user_id = ? AND date = ? AND punch_out IS NULL";
+        // Fetch user shift details to know when their shift ends
+        $user_shift = getUserShiftDetails($conn, $user_id);
+        $shift_end_time_str = $user_shift['end_time'];
+
+        // Check if user has punched in/out today
+        $query = "SELECT punch_in, punch_out FROM attendance 
+                 WHERE user_id = ? AND date = ? ORDER BY id DESC LIMIT 1";
         $stmt = $conn->prepare($query);
         $stmt->bind_param("is", $user_id, $current_date);
         $stmt->execute();
@@ -163,14 +167,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
 
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            echo json_encode([
-                'is_punched_in' => true,
-                'punch_time' => $row['punch_in']
-            ]);
+            if ($row['punch_out'] === null) {
+                // Currently punched in
+                echo json_encode([
+                    'is_punched_in' => true,
+                    'already_punched_out' => false,
+                    'punch_time' => $row['punch_in'],
+                    'shift_end_time' => $shift_end_time_str
+                ]);
+            } else {
+                // Already punched out for today
+                echo json_encode([
+                    'is_punched_in' => false,
+                    'already_punched_out' => true,
+                    'punch_time' => null,
+                    'shift_end_time' => $shift_end_time_str
+                ]);
+            }
         } else {
+            // Not punched in yet today
             echo json_encode([
                 'is_punched_in' => false,
-                'punch_time' => null
+                'already_punched_out' => false,
+                'punch_time' => null,
+                'shift_end_time' => $shift_end_time_str
             ]);
         }
     } catch (Exception $e) {
@@ -313,72 +333,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $device_info = $data['device_info'];
             }
 
+            // Extract outside-geofence reason (if user was outside allowed area)
+            $punch_in_outside_reason = isset($data['out_of_geofence_reason']) && !empty(trim($data['out_of_geofence_reason']))
+                ? trim($data['out_of_geofence_reason'])
+                : null;
+
+            // Extract geofence tracking fields sent by frontend
+            $geofence_id          = isset($data['geofence_id'])           ? (int)$data['geofence_id']           : null;
+            $within_geofence      = isset($data['within_geofence'])       ? (int)$data['within_geofence']       : 0;
+            $distance_from_geofence = isset($data['distance_from_geofence']) ? (float)$data['distance_from_geofence'] : null;
+
             // Insert new attendance record
             $query = "INSERT INTO attendance (
-                user_id, 
-                date, 
-                punch_in, 
-                location, 
-                ip_address, 
-                device_info, 
-                status, 
-                created_at, 
-                shift_time, 
-                weekly_offs, 
-                auto_punch_out,
-                is_weekly_off,
-                punch_in_photo,
-                latitude,
-                longitude,
-                accuracy,
-                address
+                user_id, date, punch_in, location, ip_address, device_info, status, created_at,
+                shift_time, weekly_offs, auto_punch_out, is_weekly_off,
+                punch_in_photo, latitude, longitude, accuracy, address,
+                punch_in_outside_reason, geofence_id, within_geofence, distance_from_geofence
             ) VALUES (
-                ?, 
-                ?, 
-                ?, 
-                ?, 
-                ?, 
-                ?, 
-                ?, 
-                ?, 
-                ?, 
-                ?, 
-                ?,
-                ?,
-                ?,
-                ?,
-                ?,
-                ?,
-                ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )";
 
             $stmt = $conn->prepare($query);
-            $shift_time = $shift_details['start_time'] . '-' . $shift_details['end_time'];
-            $weekly_offs = $shift_details['weekly_offs'];
-            $auto_punch_out = $shift_details['end_time'];
+            // shift_time is a TIME column — store shift start time only
+            $shift_time      = $shift_details['start_time'];
+            $weekly_offs     = $shift_details['weekly_offs'];
+            $shift_end_time  = $shift_details['end_time'];   // kept for response message only
+            // auto_punch_out is a TINYINT boolean flag (0 = not auto punched, 1 = auto punched by system)
+            // Set to 0 on manual punch-in
+            $auto_punch_out  = 0;
 
             // Log the punch in time to debug the issue
             error_log("Punch In Debug - Current Time: " . $current_time);
+            error_log("Punch In Debug - Shift: " . $shift_details['shift_name'] . " (" . $shift_time . " - " . $shift_end_time . ")");
+            error_log("Punch In Debug - Outside Reason: " . ($punch_in_outside_reason ?? 'None'));
 
             $stmt->bind_param(
-                "issssssssssisddds",
-                $user_id,
-                $current_date,
-                $current_time,
-                $location,
-                $ip_address,
-                $device_info,
-                $status,
-                $created_at,
-                $shift_time,
-                $weekly_offs,
-                $auto_punch_out,
-                $is_weekly_off,
-                $image_file_path,
-                $latitude,
-                $longitude,
-                $accuracy,
-                $address
+                "isssssssssiisdddssidi",
+                $user_id,                   // i  user_id
+                $current_date,              // s  date
+                $current_time,              // s  punch_in
+                $location,                  // s  location
+                $ip_address,                // s  ip_address
+                $device_info,               // s  device_info
+                $status,                    // s  status
+                $created_at,                // s  created_at
+                $shift_time,                // s  shift_time
+                $weekly_offs,               // s  weekly_offs
+                $auto_punch_out,            // i  auto_punch_out  (TINYINT)
+                $is_weekly_off,             // i  is_weekly_off   (TINYINT)
+                $image_file_path,           // s  punch_in_photo
+                $latitude,                  // d  latitude
+                $longitude,                 // d  longitude
+                $accuracy,                  // d  accuracy
+                $address,                   // s  address
+                $punch_in_outside_reason,   // s  punch_in_outside_reason
+                $geofence_id,               // i  geofence_id
+                $distance_from_geofence,    // d  distance_from_geofence
+                $within_geofence            // i  within_geofence (TINYINT)
             );
 
             try {
@@ -394,6 +405,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 // Send WhatsApp notification after successful punch in
+                try {
+                    // Log to global activity feed
+                    $attendance_id = $conn->insert_id;
+                    $log_desc = "User punched in at " . date('h:i A', strtotime($current_time));
+                    $log_meta_data = ['address' => $address, 'geofence_id' => $geofence_id];
+                    
+                    if (!empty($punch_in_outside_reason)) {
+                        $log_desc .= " (Outside Geofence. Reason: " . $punch_in_outside_reason . ")";
+                        $log_meta_data['outside_geofence_reason'] = $punch_in_outside_reason;
+                    }
+                    
+                    $log_meta = json_encode($log_meta_data);
+                    $log_stmt = $conn->prepare("INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata) VALUES (?, 'punch_in', 'attendance', ?, ?, ?)");
+                    $log_stmt->bind_param("iiss", $user_id, $attendance_id, $log_desc, $log_meta);
+                    $log_stmt->execute();
+                } catch(Exception $logError) {
+                    error_log("Activity log error (Punch In): " . $logError->getMessage());
+                }
+
                 try {
                     global $pdo; // Use the PDO connection from db_connect.php
                     if ($pdo) {
@@ -591,25 +621,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Calculate working hours and overtime
             $time_details = calculateWorkingHours($punch_in_time, $current_time, $shift_end_time);
 
-            // Update attendance record with punch out time, working hours, overtime and work report
-            $query = "UPDATE attendance SET punch_out = ?, working_hours = ?, overtime_hours = ?, work_report = ?, modified_at = ?, modified_by = ?, punch_out_photo = ?, punch_out_latitude = ?, punch_out_longitude = ?, punch_out_accuracy = ?, punch_out_address = ? WHERE user_id = ? AND date = ? AND punch_out IS NULL";
+            // Extract outside-geofence reason for punch-out
+            $punch_out_outside_reason = isset($data['out_of_geofence_reason']) && !empty(trim($data['out_of_geofence_reason']))
+                ? trim($data['out_of_geofence_reason'])
+                : null;
+
+            // Update attendance record with punch out details
+            $query = "UPDATE attendance SET
+                punch_out = ?,
+                working_hours = ?,
+                overtime_hours = ?,
+                work_report = ?,
+                modified_at = ?,
+                modified_by = ?,
+                punch_out_photo = ?,
+                punch_out_latitude = ?,
+                punch_out_longitude = ?,
+                punch_out_accuracy = ?,
+                punch_out_address = ?,
+                punch_out_outside_reason = ?,
+                geofence_id = ?,
+                within_geofence = ?,
+                distance_from_geofence = ?
+                WHERE user_id = ? AND date = ? AND punch_out IS NULL";
 
             $stmt = $conn->prepare($query);
             $modified_at = $current_datetime;
             $work_report = trim($data['work_report']);
 
             // Get location data if provided
-            $punch_out_latitude = isset($data['latitude']) ? $data['latitude'] : null;
+            $punch_out_latitude  = isset($data['latitude'])  ? $data['latitude']  : null;
             $punch_out_longitude = isset($data['longitude']) ? $data['longitude'] : null;
-            $punch_out_accuracy = isset($data['accuracy']) ? $data['accuracy'] : null;
+            $punch_out_accuracy  = isset($data['accuracy'])  ? $data['accuracy']  : null;
+
+            // Geofence fields from frontend
+            $geofence_id_out          = isset($data['geofence_id'])           ? (int)$data['geofence_id']           : null;
+            $within_geofence_out      = isset($data['within_geofence'])       ? (int)$data['within_geofence']       : 0;
+            $distance_from_geofence_out = isset($data['distance_from_geofence']) ? (float)$data['distance_from_geofence'] : null;
 
             // Add debugging information
             error_log("Punch Out Debug - Query: " . $query);
             error_log("Punch Out Debug - Current Time: " . $current_time);
-            error_log("Punch Out Debug - Work Report: " . substr($work_report, 0, 50) . "...");
-            error_log("Punch Out Debug - Photo Path: " . ($punch_out_photo ? $punch_out_photo : "None"));
-            error_log("Punch Out Debug - Location: Lat: " . ($punch_out_latitude ?? 'NULL') . ", Long: " . ($punch_out_longitude ?? 'NULL') . ", Accuracy: " . ($punch_out_accuracy ?? 'NULL'));
-            error_log("Punch Out Debug - Address: " . ($punch_out_address ?? 'NULL'));
+            error_log("Punch Out Debug - Outside Reason: " . ($punch_out_outside_reason ?? 'None'));
             error_log("Punch Out Debug - Values: current_time=" . $current_time .
                 ", total_time=" . $time_details['total_time'] .
                 ", overtime=" . $time_details['overtime'] .
@@ -626,23 +679,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $photo_path = $punch_out_photo ?: null;
 
             // Make sure we have correct parameter types for bind_param
-            // s=string, i=integer, d=double, b=blob
+            // s=string, i=integer, d=double
+            // Params: punch_out(s), working_hours(s), overtime(s), work_report(s), modified_at(s),
+            //         modified_by(i), punch_out_photo(s), lat(d), lon(d), accuracy(d),
+            //         punch_out_address(s), punch_out_outside_reason(s),
+            //         geofence_id(i), within_geofence(i), distance_from_geofence(d), user_id(i), date(s)
             try {
                 $stmt->bind_param(
-                    "sssssisdddsis",
-                    $current_time,
-                    $total_time,
-                    $overtime,
-                    $work_report,
-                    $modified_at,
-                    $modified_by,
-                    $photo_path,
-                    $punch_out_latitude,
-                    $punch_out_longitude,
-                    $punch_out_accuracy,
-                    $punch_out_address,
-                    $user_id,
-                    $current_date
+                    "sssssisdddssiidis",
+                    $current_time,              // s  punch_out
+                    $total_time,                // s  working_hours
+                    $overtime,                  // s  overtime_hours
+                    $work_report,               // s  work_report
+                    $modified_at,               // s  modified_at
+                    $modified_by,               // i  modified_by
+                    $photo_path,                // s  punch_out_photo
+                    $punch_out_latitude,        // d  punch_out_latitude
+                    $punch_out_longitude,       // d  punch_out_longitude
+                    $punch_out_accuracy,        // d  punch_out_accuracy
+                    $punch_out_address,         // s  punch_out_address
+                    $punch_out_outside_reason,  // s  punch_out_outside_reason
+                    $geofence_id_out,           // i  geofence_id
+                    $within_geofence_out,       // i  within_geofence (TINYINT)
+                    $distance_from_geofence_out,// d  distance_from_geofence
+                    $user_id,                   // i  WHERE user_id
+                    $current_date               // s  WHERE date
                 );
 
                 error_log("Punch Out Debug - After bind_param setup");
@@ -668,6 +729,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'query' => $query
                     ]);
                     exit;
+                }
+
+                // Log to global activity feed
+                try {
+                    $attendance_id = $attendance['id'];
+                    $log_desc = "User punched out at " . date('h:i A', strtotime($current_time));
+                    $log_meta_data = [
+                        'address' => $punch_out_address, 
+                        'geofence_id' => $geofence_id_out, 
+                        'working_hours' => $time_details['total_time']
+                    ];
+                    
+                    if (!empty($punch_out_outside_reason)) {
+                        $log_desc .= " (Outside Geofence. Reason: " . $punch_out_outside_reason . ")";
+                        $log_meta_data['outside_geofence_reason'] = $punch_out_outside_reason;
+                    }
+                    
+                    $log_meta = json_encode($log_meta_data);
+                    $log_stmt = $conn->prepare("INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata) VALUES (?, 'punch_out', 'attendance', ?, ?, ?)");
+                    $log_stmt->bind_param("iiss", $user_id, $attendance_id, $log_desc, $log_meta);
+                    $log_stmt->execute();
+                } catch(Exception $logError) {
+                    error_log("Activity log error (Punch Out): " . $logError->getMessage());
                 }
 
                 // Check if punch-out location differs significantly from punch-in location

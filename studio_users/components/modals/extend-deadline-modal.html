@@ -1,0 +1,122 @@
+<!-- ================================================
+     EXTEND TASK DEADLINE MODAL
+     File: components/modals/extend-deadline-modal.html
+     ================================================ -->
+<div id="extendDeadlineModal" class="edm-overlay" role="dialog" aria-modal="true" aria-labelledby="extendDeadlineTitle">
+    <div class="edm-card">
+
+        <!-- Header -->
+        <div class="edm-header">
+            <div class="edm-header-icon">
+                <i class="fa-regular fa-calendar-plus"></i>
+            </div>
+            <div>
+                <h2 class="edm-title" id="extendDeadlineTitle">Extend Deadline</h2>
+                <p class="edm-subtitle" id="extendDeadlineTaskName">Select how much time to add</p>
+            </div>
+            <button class="edm-close-btn" id="extendDeadlineCloseBtn" title="Close" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="edm-body">
+            
+            <!-- Current Deadline Info -->
+            <div class="edm-current-task-info" id="extendCurrentTaskInfoRow">
+                <i class="fa-regular fa-clock"></i>
+                <div class="edm-cti-content">
+                    <span class="edm-cti-label">Current Deadline</span>
+                    <span class="edm-cti-value" id="extendCurrentDeadlineValue">No Deadline</span>
+                </div>
+            </div>
+            
+            <!-- History Info -->
+            <div id="extendHistoryRow" class="edm-history-info" style="display:none;">
+                <div class="edm-hi-left">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span id="extendHistoryText"></span>
+                </div>
+                <button class="edm-view-history-btn" id="extendViewHistoryBtn">View All</button>
+            </div>
+
+            <!-- History View (Hidden by default) -->
+            <div id="extendHistoryListView" class="edm-history-list-view" style="display:none;">
+                <div class="edm-hlv-header">
+                    <button id="extendBackToFormBtn" class="edm-back-btn">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Extend
+                    </button>
+                    <span class="edm-hlv-title">Extension History</span>
+                </div>
+                <div id="extendHistoryItems" class="edm-history-items">
+                    <!-- History items will be injected here -->
+                </div>
+            </div>
+
+            <div id="extendFormContainer">
+                <p class="edm-section-label">Quick extend</p>
+            <div class="edm-quick-grid">
+                <button class="edm-quick-btn" data-hours="3">
+                    <i class="fa-regular fa-clock"></i>
+                    <span class="edm-qb-value">3</span>
+                    <span class="edm-qb-unit">Hours</span>
+                </button>
+                <button class="edm-quick-btn" data-hours="6">
+                    <i class="fa-regular fa-clock"></i>
+                    <span class="edm-qb-value">6</span>
+                    <span class="edm-qb-unit">Hours</span>
+                </button>
+                <button class="edm-quick-btn" data-hours="24">
+                    <i class="fa-regular fa-sun"></i>
+                    <span class="edm-qb-value">1</span>
+                    <span class="edm-qb-unit">Day</span>
+                </button>
+                <button class="edm-quick-btn" data-hours="48">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span class="edm-qb-value">2</span>
+                    <span class="edm-qb-unit">Days</span>
+                </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="edm-divider">
+                <span>or set a specific date &amp; time</span>
+            </div>
+
+            <!-- Custom picker -->
+            <div class="edm-custom-row">
+                <div class="edm-field">
+                    <label for="extendNewDate" class="edm-field-label">
+                        <i class="fa-regular fa-calendar"></i> New Date
+                    </label>
+                    <input type="date" id="extendNewDate" class="edm-input">
+                </div>
+                <div class="edm-field">
+                    <label for="extendNewTime" class="edm-field-label">
+                        <i class="fa-regular fa-clock"></i> New Time
+                    </label>
+                    <input type="time" id="extendNewTime" class="edm-input">
+                </div>
+            </div>
+
+            <!-- Current deadline preview -->
+            <div class="edm-current-deadline" id="extendCurrentDeadlineRow" style="display:none;">
+                <i class="fa-solid fa-arrow-right-long edm-arrow"></i>
+                <div>
+                    <span class="edm-current-label">New deadline</span>
+                    <span class="edm-current-value" id="extendPreviewValue">—</span>
+                </div>
+            </div>
+            </div> <!-- End extendFormContainer -->
+        </div>
+
+        <!-- Footer -->
+        <div class="edm-footer">
+            <button class="edm-btn-cancel" id="extendDeadlineCancelBtn">Cancel</button>
+            <button class="edm-btn-apply" id="extendDeadlineApplyBtn" disabled>
+                <i class="fa-solid fa-check"></i> Apply Extension
+            </button>
+        </div>
+
+    </div>
+</div>

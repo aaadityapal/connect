@@ -1,0 +1,164 @@
+/* =================================================
+   TASK TABLE — Actions Column & Edit Button
+   ================================================= */
+.tl-actions-col {
+    text-align: center;
+    white-space: nowrap;
+    width: 80px;
+}
+
+/* Edit Button in task table rows */
+.tl-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1.5px solid #f97316;
+    background: #fff7ed;
+    color: #ea580c;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Outfit', sans-serif;
+    box-shadow: 0 1px 3px rgba(249, 115, 22, 0.12);
+    white-space: nowrap;
+}
+
+.tl-edit-btn:hover {
+    background: linear-gradient(135deg, #f97316, #ea580c);
+    color: #ffffff;
+    border-color: transparent;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.tl-edit-btn:active {
+    transform: translateY(0);
+}
+
+/* =================================================
+   EDIT TASK MODAL — Form Styles
+   ================================================= */
+.edit-task-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+}
+
+.edit-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.edit-form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.edit-form-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.edit-form-input,
+.edit-form-select {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.6rem;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 0.85rem;
+    font-family: 'Outfit', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    box-sizing: border-box;
+    appearance: none;
+    min-height: 38px;
+}
+
+.edit-form-input:focus,
+.edit-form-select:focus {
+    border-color: #f97316;
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+}
+
+.edit-form-input::placeholder {
+    color: #94a3b8;
+}
+
+.edit-form-select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.85rem center;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+}
+
+/* Assignee checkboxes row */
+.edit-assignee-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.6rem;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 0.6rem;
+}
+
+.edit-assignee-option {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #374151;
+    background: #ffffff;
+    border: 1.5px solid #e2e8f0;
+    transition: all 0.18s ease;
+    user-select: none;
+}
+
+.edit-assignee-option:hover {
+    border-color: #f97316;
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.edit-assignee-option input[type="checkbox"] {
+    accent-color: #f97316;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+/* Checked pill highlight */
+.edit-assignee-option:has(input:checked) {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    border-color: #f97316;
+    color: #ea580c;
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    .edit-task-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tl-actions-col {
+        width: auto;
+    }
+}

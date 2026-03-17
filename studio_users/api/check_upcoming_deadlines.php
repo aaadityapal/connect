@@ -1,0 +1,157 @@
+<?php
+/**
+ * check_upcoming_deadlines.php
+ * Polls the DB for tasks assigned to the user that are within a 30-minute due window.
+ * Returns full task objects compatible with TaskModal and ExtendModal.
+ */
+session_start();
+require_once '../../config/db_connect.php';
+header('Content-Type: application/json');
+
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['success' => false, 'error' => 'Unauthorized']);
+    exit();
+}
+
+$userId = (int)$_SESSION['user_id'];
+date_default_timezone_set('Asia/Kolkata');
+
+$now = time();
+
+try {
+    // Select active tasks where user is assignee and not completed
+    $query = "
+        SELECT sat.*, u.username as assigned_by_name
+        FROM studio_assigned_tasks sat
+        LEFT JOIN users u ON sat.created_by = u.id
+        WHERE sat.deleted_at IS NULL
+          AND sat.status NOT IN ('Completed', 'Cancelled')
+          AND FIND_IN_SET(:uid, sat.assigned_to) > 0
+          AND NOT FIND_IN_SET(:uid_comp, IFNULL(sat.completed_by, ''))
+          AND sat.due_date IS NOT NULL
+          AND sat.due_time IS NOT NULL
+    ";
+
+    $stmt = $pdo->prepare($query);
+    $stmt->execute(['uid' => $userId, 'uid_comp' => $userId]);
+    $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $upcoming = [];
+
+    foreach ($tasks as $task) {
+        $dueTimestamp = strtotime($task['due_date'] . ' ' . $task['due_time']);
+        $diffSeconds = $dueTimestamp - $now;
+
+        // Condition: 
+        // 1. Due in the future within 30 minutes (0 to 1800s)
+        // 2. OR Due in the past (Overdue)
+        $isUpcoming = ($diffSeconds >= 0 && $diffSeconds <= 1800);
+        $isOverdue  = ($diffSeconds < 0);
+
+        if ($isUpcoming || $isOverdue) {
+            if ($isOverdue) {
+                $absDiff = abs($diffSeconds);
+                $d = floor($absDiff / 86400);
+                $h = floor(($absDiff % 86400) / 3600);
+                $m = floor(($absDiff % 3600) / 60);
+                
+                if ($d > 0) $timeLabel = "Overdue by $d day" . ($d > 1 ? "s" : "");
+                else if ($h > 0) $timeLabel = "Overdue by $h hr " . ($m > 0 ? "$m m" : "");
+                else $timeLabel = "Overdue by $m minute" . ($m == 1 ? "" : "s");
+                
+                $color = '#991b1b'; // Darker red for overdue
+                $bgColor = '#fee2e2';
+                $titlePrefix = "Missed Deadline! ⚠️";
+            } else {
+                $minutes = ceil($diffSeconds / 60);
+                $timeLabel = "Due in " . $minutes . ($minutes == 1 ? ' minute' : ' minutes');
+                $color = '#e11d48';
+                $bgColor = '#fff1f2';
+                $titlePrefix = "Deadline Approaching ⏱️";
+            }
+
+            // ── Format object for TaskModal/ExtendModal ──
+            $persons = array_filter(array_map('trim', explode(',', $task['assigned_names'] ?? '')));
+            $personsMap = array_values($persons);
+            $assignedIds = array_filter(array_map('trim', explode(',', $task['assigned_to'] ?? '')));
+            $completedIds = array_filter(array_map('trim', explode(',', $task['completed_by'] ?? '')));
+            
+            $history = isset($task['extension_history']) ? json_decode($task['extension_history'], true) : [];
+            if (!is_array($history)) $history = [];
+
+            $assigneeStatuses = [];
+            $myAssignedName = null;
+            for ($i = 0; $i < count($assignedIds); $i++) {
+                $cId = $assignedIds[$i];
+                $cName = $personsMap[$i] ?? "User $cId";
+                if ($cId == $userId) $myAssignedName = $cName;
+
+                $userExtCount = 0;
+                foreach ($history as $h) {
+                    if (isset($h['user_id']) && $h['user_id'] == $cId) $userExtCount++;
+                }
+                $assigneeStatuses[] = [
+                    'name' => $cName,
+                    'status' => in_array($cId, $completedIds) ? 'Completed' : 'Pending',
+                    'extended' => $userExtCount > 0,
+                    'extension_count' => $userExtCount
+                ];
+            }
+
+            $timeStr = $task['due_time'] ? date('H:i', strtotime($task['due_time'])) : '09:00';
+            $timeStrRaw = $task['due_time'] ? date('g:i A', strtotime($task['due_time'])) : '11:59 PM';
+            $projectStageTitle = trim(($task['project_name'] ?? '') . ($task['stage_number'] ? ' - Stage ' . $task['stage_number'] : ''));
+            if (!$projectStageTitle) $projectStageTitle = 'Untitled Product';
+
+            $createdTime = $task['created_at'] ? strtotime($task['created_at']) : time();
+            $created = $task['created_at'] ? date('M j, Y - g:i A', $createdTime) : 'Unknown';
+            $due = $dueTimestamp ? date('M j, Y', strtotime($task['due_date'])) . ' - ' . $timeStrRaw : 'No Deadline';
+
+            $durationStr = 'N/A';
+            if ($dueTimestamp && $dueTimestamp > $createdTime) {
+                $diff = $dueTimestamp - $createdTime;
+                $d = floor($diff / 86400);
+                $h = floor(($diff % 86400) / 3600);
+                $m = floor(($diff % 3600) / 60);
+                $parts = [];
+                if ($d > 0) $parts[] = $d . ($d == 1 ? ' Day' : ' Days');
+                if ($h > 0) $parts[] = $h . ' hr';
+                if ($m > 0 || empty($parts)) $parts[] = $m . ' mins';
+                $durationStr = implode(' ', $parts);
+            }
+
+            $taskData = [
+                'id' => $task['id'],
+                'title' => $task['task_description'],
+                'projectStage' => $projectStageTitle,
+                'desc' => $task['task_description'],
+                'due_date' => $task['due_date'],
+                'due_time_24' => $task['due_time'] ? date('H:i', strtotime($task['due_time'])) : null,
+                'extension_count' => $task['extension_count'] ?? 0,
+                'extension_history' => $history,
+                'previous_due_date' => $task['previous_due_date'] ?? null,
+                'previous_due_time' => $task['previous_due_time'] ?? null,
+                'time' => $timeStr,
+                'durationStr' => $durationStr,
+                'status' => 'Pending',
+                'person' => $myAssignedName ?? (count($personsMap) > 0 ? $personsMap[0] : 'Unassigned'),
+                'assignedBy' => $task['assigned_by_name'] ?? 'System Admin',
+                'persons' => $personsMap,
+                'assignee_statuses' => $assigneeStatuses,
+                'modalDateFrom' => $created,
+                'modalDateTo' => $due,
+                'dotColor' => $color, 
+                'bgColor' => $bgColor,
+                'titlePrefix' => $titlePrefix,
+                'time_remaining_label' => $timeLabel
+            ];
+
+            $upcoming[] = $taskData;
+        }
+    }
+
+    echo json_encode(['success' => true, 'tasks' => $upcoming]);
+
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+}

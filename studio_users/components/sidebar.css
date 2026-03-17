@@ -1,0 +1,722 @@
+/*
+ * =====================================================
+ *  SIDEBAR — Clean Light Theme
+ *  components/sidebar.css
+ *  Auto-loaded by components/sidebar-loader.js
+ * =====================================================
+ */
+
+/* ─── Design Tokens ─────────────────────────────────── */
+:root {
+    /* Surface */
+    --sb-bg: #ffffff;
+    --sb-border: #e5e7eb;
+    /* gray-200 */
+    --sb-shadow: rgba(0, 0, 0, 0.08);
+
+    /* Text */
+    --sb-text-main: #111827;
+    /* gray-900 — near black */
+    --sb-text-muted: #4b5563;
+    /* gray-600 — readable secondary */
+    --sb-text-dim: #9ca3af;
+    /* gray-400 — labels */
+
+    /* States */
+    --sb-hover-bg: #f3f4f6;
+    /* gray-100 */
+    --sb-active-bg: #ede9fe;
+    /* indigo-100 (very soft) */
+    --sb-active-text: #4f46e5;
+    /* indigo-600 */
+    --sb-active-bar: #6366f1;
+    /* indigo-500 */
+
+    /* Icon */
+    --sb-icon: #9ca3af;
+    /* gray-400 */
+    --sb-icon-active: #6366f1;
+    /* indigo-500 */
+
+    /* Accent */
+    --ac: #6366f1;
+
+    /* Transitions */
+    --ease: cubic-bezier(0.25, 1, 0.5, 1);
+    --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --dur: 0.20s;
+}
+
+/* ──────────────────────────────────────────────────────
+   KEYFRAMES — minimal
+────────────────────────────────────────────────────── */
+
+@keyframes liquidFill {
+    from {
+        transform: scaleX(0.80);
+        opacity: 0;
+    }
+
+    to {
+        transform: scaleX(1);
+        opacity: 1;
+    }
+}
+
+@keyframes barSlideIn {
+    from {
+        transform: scaleY(0.3);
+    }
+
+    to {
+        transform: scaleY(1);
+    }
+}
+
+/* ──────────────────────────────────────────────────────
+   SIDEBAR SHELL — Clean White Card
+────────────────────────────────────────────────────── */
+.sidebar {
+    width: 260px;
+    height: calc(100vh - 32px);
+    margin: 16px 0 16px 16px;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    flex-shrink: 0;
+    z-index: 100;
+
+    background: var(--sb-bg);
+    border-radius: 16px;
+    border: 1px solid var(--sb-border);
+
+    box-shadow:
+        0 2px 8px var(--sb-shadow),
+        0 8px 24px rgba(0, 0, 0, 0.05);
+
+    display: flex;
+    flex-direction: column;
+
+    transition: width var(--dur) var(--ease),
+        box-shadow 0.3s ease;
+}
+
+.sidebar.collapsed {
+    width: 76px;
+}
+
+/* ──────────────────────────────────────────────────────
+   TOGGLE BUTTON — Clean circle
+────────────────────────────────────────────────────── */
+.toggle-btn {
+    position: absolute;
+    top: 28px;
+    /* aligns visually with brand logo vertical center */
+    right: -13px;
+    width: 26px;
+    height: 26px;
+    z-index: 200;
+
+    background: #ffffff;
+    border: 1.5px solid var(--sb-border);
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sb-text-dim);
+    cursor: pointer;
+
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12),
+        0 2px 8px rgba(0, 0, 0, 0.06);
+
+    transition: all 0.22s var(--spring);
+}
+
+.toggle-btn:hover {
+    background: var(--ac);
+    border-color: var(--ac);
+    color: #ffffff;
+    transform: scale(1.10);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15),
+        0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.toggle-icon {
+    display: flex;
+    transition: transform 0.30s var(--ease);
+}
+
+.sidebar.collapsed .toggle-icon {
+    transform: rotate(180deg);
+}
+
+/* ──────────────────────────────────────────────────────
+   BRAND HEADER
+────────────────────────────────────────────────────── */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 18px 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    border-bottom: 1px solid var(--sb-border);
+    margin-bottom: 6px;
+}
+
+.brand-logo {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;        /* perfect circle */
+    flex-shrink: 0;
+    overflow: hidden;          /* clips image to the circle */
+    padding: 0;                /* no padding — image fills fully */
+    background: #f3f4f6;
+    border: 1px solid var(--sb-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+    transition: all 0.20s var(--spring);
+}
+
+.brand-logo:hover {
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.brand-logo img {
+    width: 100%;               /* fill the full circle */
+    height: 100%;
+    object-fit: cover;         /* cover keeps aspect ratio */
+    border-radius: 0;          /* parent overflow:hidden handles clipping */
+    display: block;
+}
+
+.header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: opacity 0.20s ease, transform 0.25s var(--ease);
+}
+
+.sidebar.collapsed .header-text {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-6px);
+}
+
+.header-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--sb-text-main);
+    letter-spacing: -0.01em;
+}
+
+.header-subtitle {
+    font-size: 0.68rem;
+    color: var(--sb-text-dim);
+    font-weight: 400;
+}
+
+/* ──────────────────────────────────────────────────────
+   ACTION BUTTON
+────────────────────────────────────────────────────── */
+.action-container {
+    padding: 6px 12px 10px;
+}
+
+.action-btn {
+    width: 100%;
+    padding: 8px 14px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.83rem;
+    font-weight: 500;
+    color: var(--sb-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer;
+    font-family: inherit;
+    background: #f9fafb;
+    border: 1px solid var(--sb-border);
+    transition: all 0.18s var(--ease);
+}
+
+.action-btn:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: var(--sb-text-main);
+}
+
+.sidebar.collapsed .action-container {
+    padding: 6px 15px 10px;
+}
+
+.sidebar.collapsed .action-btn {
+    width: 40px;
+    padding: 8px;
+    margin: 0 auto;
+}
+
+.sidebar.collapsed .btn-text {
+    display: none;
+}
+
+/* ──────────────────────────────────────────────────────
+   NAVIGATION
+────────────────────────────────────────────────────── */
+.sidebar-nav {
+    flex: 1;
+    padding: 0 8px 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+    width: 0;
+}
+
+/* ─── Section Labels ─── */
+.menu-title {
+    font-size: 0.60rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--sb-text-dim);
+    padding: 14px 10px 4px;
+    white-space: nowrap;
+    transition: opacity 0.20s, height 0.25s, padding 0.25s;
+}
+
+.sidebar.collapsed .menu-title {
+    opacity: 0;
+    /* Keep the same padding as spacer — icons stay in their exact positions */
+    padding: 14px 10px 4px;
+    pointer-events: none;
+    font-size: 0;
+    /* hide text without changing height */
+    letter-spacing: 0;
+}
+
+/* ─── Menu Item ─── */
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--sb-text-muted);
+    font-weight: 400;
+    font-size: 0.875rem;
+    position: relative;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer;
+    margin-bottom: 1px;
+
+    transition:
+        color var(--dur) var(--ease),
+        background var(--dur) var(--ease),
+        transform 0.15s var(--ease);
+}
+
+/* Hover */
+.menu-item:hover {
+    color: var(--sb-text-main);
+    background: var(--sb-hover-bg);
+    transform: translateX(1px);
+}
+
+/* Active */
+.menu-item.active {
+    color: var(--sb-active-text);
+    background: var(--sb-active-bg);
+    font-weight: 500;
+}
+
+/* Active glass border */
+.menu-item.active::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid rgba(99, 102, 241, 0.20);
+    pointer-events: none;
+    animation: liquidFill 0.25s var(--spring) both;
+}
+
+/* ─── Active Left Bar ─── */
+.active-bar {
+    position: absolute;
+    left: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 2.5px;
+    border-radius: 0 3px 3px 0;
+    background: var(--sb-active-bar);
+    opacity: 0;
+    transform: scaleY(0.3);
+    transition: opacity 0.20s ease, transform 0.25s var(--spring);
+}
+
+.menu-item.active .active-bar {
+    opacity: 1;
+    transform: scaleY(1);
+    animation: barSlideIn 0.25s var(--spring) both;
+}
+
+.menu-item:not(.active):hover .active-bar {
+    opacity: 0.20;
+    transform: scaleY(1);
+}
+
+/* ─── Icon Base ─── */
+.menu-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    /* circle */
+    color: var(--sb-icon);
+    background: transparent;
+    transition: color 0.18s ease,
+        background 0.18s ease,
+        transform 0.18s var(--spring);
+    position: relative;
+    z-index: 1;
+}
+
+.menu-item:hover .menu-icon {
+    transform: scale(1.06);
+}
+
+/* ─── Per-icon colours (data-page attribute) ─── */
+
+/* Dashboard — Indigo */
+.menu-item[data-page="index"] .menu-icon {
+    color: #6366f1;
+    background: #eef2ff;
+}
+
+/* My Profile — Amber */
+.menu-item[data-page="profile"] .menu-icon {
+    color: #d97706;
+    background: #fffbeb;
+}
+
+/* Apply Leave — Emerald */
+.menu-item[data-page="apply-leave"] .menu-icon {
+    color: #059669;
+    background: #ecfdf5;
+}
+
+/* Travel Expenses — Blue */
+.menu-item[data-page="travel-expenses"] .menu-icon {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+/* Overtime — Orange */
+.menu-item[data-page="overtime"] .menu-icon {
+    color: #ea580c;
+    background: #fff7ed;
+}
+
+/* Projects — Purple */
+.menu-item[data-page="projects"] .menu-icon {
+    color: #7c3aed;
+    background: #f5f3ff;
+}
+
+/* Site Updates — Pink */
+.menu-item[data-page="site-updates"] .menu-icon {
+    color: #db2777;
+    background: #fdf2f8;
+}
+
+/* My Tasks — Teal */
+.menu-item[data-page="my-tasks"] .menu-icon {
+    color: #0d9488;
+    background: #f0fdfa;
+}
+
+/* Work Sheet — Violet */
+.menu-item[data-page="worksheet"] .menu-icon {
+    color: #5b21b6;
+    background: #f5f3ff;
+}
+
+/* Analytics — Cyan */
+.menu-item[data-page="analytics"] .menu-icon {
+    color: #0891b2;
+    background: #ecfeff;
+}
+
+/* Settings — Slate */
+.menu-item[data-page="settings"] .menu-icon {
+    color: #475569;
+    background: #f1f5f9;
+}
+
+/* Help — Sky */
+.menu-item[data-page="help"] .menu-icon {
+    color: #0284c7;
+    background: #f0f9ff;
+}
+
+/* Logout — Red */
+.menu-item[data-page="logout"] .menu-icon {
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+/* Active state — keep icon color, slightly intensify bg */
+.menu-item.active .menu-icon {
+    filter: brightness(0.90);
+    transform: scale(1.04);
+}
+
+/* Collapsed: icons stay circles */
+.sidebar.collapsed .menu-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+/* ─── Text Label ─── */
+.menu-text {
+    margin-left: 11px;
+    position: relative;
+    z-index: 1;
+    transition: opacity 0.20s ease, transform 0.25s var(--ease);
+}
+
+.sidebar.collapsed .menu-text {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-4px);
+    display: none;
+}
+
+/* ─── Notification dot ─── */
+.notif-dot {
+    position: absolute;
+    top: 9px;
+    left: 24px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 0 4px rgba(16, 185, 129, 0.40);
+}
+
+/* ─── Badge ─── */
+.badge {
+    margin-left: auto;
+    border: 1px solid #e0e7ff;
+    color: #6366f1;
+    padding: 1px 7px;
+    font-size: 0.60rem;
+    font-weight: 600;
+    border-radius: 4px;
+    background: #eef2ff;
+    transition: opacity 0.20s;
+    position: relative;
+    z-index: 1;
+}
+
+.sidebar.collapsed .badge {
+    opacity: 0;
+    display: none;
+}
+
+/* ─── Collapsed centering ─── */
+.sidebar.collapsed .menu-item {
+    justify-content: center;
+    padding: 8px 0;
+    width: 42px;
+    margin: 0 auto 1px;
+}
+
+/* ──────────────────────────────────────────────────────
+   TOOLTIP — clean (collapsed state)
+────────────────────────────────────────────────────── */
+.tooltip {
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%) translateX(-8px);
+    background: #1f2937;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #f9fafb;
+    padding: 5px 11px;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    z-index: 300;
+}
+
+.tooltip::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    width: 7px;
+    height: 7px;
+    background: #1f2937;
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sidebar.collapsed .menu-item:hover .tooltip,
+.sidebar.collapsed .action-btn:hover .tooltip {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
+/* ──────────────────────────────────────────────────────
+   LOGOUT
+────────────────────────────────────────────────────── */
+.menu-item-logout {
+    margin-top: auto;
+    color: #ef4444;
+    font-weight: 400;
+}
+
+.menu-item-logout .menu-icon {
+    color: #f87171;
+}
+
+.menu-item-logout:hover {
+    color: #dc2626;
+    background: #fef2f2;
+    transform: translateX(1px);
+}
+
+.menu-item-logout:hover .menu-icon {
+    color: #dc2626;
+}
+
+.menu-item-logout .active-bar {
+    background: #ef4444;
+}
+
+/* ─── Divider ─── */
+.divider {
+    height: 1px;
+    background: var(--sb-border);
+    margin: 8px 12px;
+}
+
+.sidebar.collapsed .divider {
+    margin: 8px 10px;
+}
+
+/* ──────────────────────────────────────────────────────
+   MOBILE HAMBURGER
+────────────────────────────────────────────────────── */
+.mobile-hamburger-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.20);
+    color: #fff;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.18s;
+}
+
+.mobile-hamburger-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* ──────────────────────────────────────────────────────
+   MOBILE OVERLAY
+────────────────────────────────────────────────────── */
+.mobile-sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.40);
+    z-index: 1005;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.30s ease;
+}
+
+.mobile-sidebar-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ──────────────────────────────────────────────────────
+   RESPONSIVE
+────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+    .sidebar {
+        width: 76px;
+    }
+
+    .sidebar:not(.collapsed) {
+        position: fixed;
+        height: calc(100vh - 32px);
+        margin: 16px;
+        width: 260px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -290px;
+        top: 0;
+        margin: 12px 0 12px 12px;
+        width: 258px;
+        height: calc(100vh - 24px);
+        border-radius: 14px;
+        transition: left 0.34s var(--ease), box-shadow 0.34s ease;
+        z-index: 1010;
+    }
+
+    .sidebar.mobile-open {
+        left: 0;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.20);
+    }
+
+    .toggle-btn {
+        display: none;
+    }
+
+    .mobile-hamburger-btn {
+        display: flex !important;
+    }
+
+    .mobile-sidebar-overlay {
+        display: block;
+    }
+
+    .dh-nav-header {
+        padding-left: 0.75rem;
+    }
+}

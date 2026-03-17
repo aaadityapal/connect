@@ -1,0 +1,123 @@
+/* ================================================
+   CUSTOM ALERT MODAL — Styles
+   File: components/modals/custom-alert-modal.css
+   ================================================ */
+
+.cam-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: camFadeIn 0.2s ease;
+}
+.cam-overlay.cam-open {
+    display: flex;
+}
+
+@keyframes camFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.cam-card {
+    background: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.05);
+    width: 100%;
+    max-width: 480px;
+    overflow: hidden;
+    animation: camPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes camPop {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.cam-body {
+    display: flex;
+    padding: 1.5rem;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.cam-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    background: #fee2e2;
+    color: #ef4444; /* Default Red for alerts */
+}
+
+/* Dynamic themes based on alert type */
+.cam-icon.theme-warning { background: #fef9c3; color: #eab308; }
+.cam-icon.theme-success { background: #dcfce7; color: #22c55e; }
+.cam-icon.theme-info    { background: #e0f2fe; color: #3b82f6; }
+
+.cam-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.2rem;
+}
+
+.cam-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.2;
+}
+
+.cam-message {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.cam-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 1rem 1.5rem;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+}
+
+.cam-btn {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+.cam-btn:hover { background: #2563eb; }
+.cam-btn:active { transform: scale(0.97); }
+
+/* Dynamic ok button colors based on type */
+.cam-btn.theme-error   { background: #ef4444; }
+.cam-btn.theme-error:hover { background: #dc2626; }
+
+.cam-btn.theme-warning { background: #eab308; }
+.cam-btn.theme-warning:hover { background: #ca8a04; }
+
+.cam-btn.theme-success { background: #22c55e; }
+.cam-btn.theme-success:hover { background: #16a34a; }

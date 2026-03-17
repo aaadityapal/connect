@@ -1,0 +1,21 @@
+<div class="udm-overlay" id="upcomingDeadlineModalOverlay" style="display: none;">
+    <div class="udm-box">
+        <div class="udm-header">
+            <h3 class="udm-title">Deadline Approaching <span>⏱️</span></h3>
+            <button id="closeUpcomingDeadlineModal" class="udm-close-btn" title="Close Modal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="udm-body">
+            <div id="udmTaskList" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+                <!-- Tasks dynamically injected here -->
+            </div>
+            
+            <div class="udm-footer" style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 16px; display: flex; justify-content: center;">
+                <button id="udmSnoozeBtn" class="udm-snooze-btn" style="background:none; border:none; color:#64748b; font-size:0.8rem; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; opacity:0.8; transition:opacity 0.2s;">
+                    <i class="fa-regular fa-bell-slash"></i> Don't show for 2 hours
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

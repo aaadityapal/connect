@@ -323,6 +323,9 @@
                             const overlay = document.getElementById('taskModalOverlay');
                             overlay.classList.remove('open');
                             setTimeout(() => { overlay.style.display = 'none'; }, 200);
+
+                            // Trigger global event for other components (like Action Required modal)
+                            window.dispatchEvent(new Event('taskUpdate'));
                             
                             // Rehydrate timelines if ScheduleTimeline object exists
                             if (window.ScheduleTimeline && typeof window.ScheduleTimeline.init === 'function') {

@@ -99,7 +99,22 @@
             }
         }
 
-        // Pre-fill custom inputs with existing deadline or current time
+        // Calculate 'Running Week Sunday 8 PM' Limit
+        const nowLimit = new Date();
+        const dayIdx   = nowLimit.getDay(); // 0=Sun
+        const daysToSun = (7 - dayIdx) % 7;
+        const sundayLimit = new Date(nowLimit);
+        sundayLimit.setDate(nowLimit.getDate() + daysToSun);
+        sundayLimit.setHours(20, 0, 0, 0); // Hard limit: Sunday 8 PM
+        
+        const yyyyL = sundayLimit.getFullYear();
+        const mmL   = String(sundayLimit.getMonth() + 1).padStart(2, '0');
+        const ddL   = String(sundayLimit.getDate()).padStart(2, '0');
+        const maxDateStr = `${yyyyL}-${mmL}-${ddL}`;
+        
+        dateInput.max = maxDateStr;
+
+        // Pre-fill custom inputs
         if (task.due_date) {
             dateInput.value = task.due_date;
             dateInput.min   = task.due_date;
@@ -156,6 +171,29 @@
             _newDeadline = null;
             return;
         }
+
+        // Hard Limit Check: Cannot exceed this week's Sunday 8 PM
+        const dayIdx      = new Date().getDay();
+        const daysToSun   = (7 - dayIdx) % 7;
+        const sundayLimit = new Date();
+        sundayLimit.setDate(new Date().getDate() + daysToSun);
+        sundayLimit.setHours(20, 0, 0, 0);
+
+        if (date > sundayLimit) {
+            const msg = "Task extensions are limited to Sunday 8:00 PM of the current week.";
+            if (window.showCustomAlert) {
+                window.showCustomAlert(msg, "Policy Limit", "info");
+            } else {
+                alert(msg);
+            }
+            
+            // Hide preview and disable apply button
+            previewRow.style.display = 'none';
+            applyBtn.disabled = true;
+            _newDeadline = null;
+            return; // Terminate early so we don't enable the button
+        }
+
         _newDeadline = date;
         previewVal.textContent = date.toLocaleDateString('en-US', {
             weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
@@ -236,6 +274,9 @@
         .then(r => r.json())
         .then(data => {
             if (data.success) {
+                // Trigger global event for other components (like Action Required modal)
+                window.dispatchEvent(new Event('taskUpdate'));
+                
                 // Re-render My Tasks list ONLY after DB sync is confirmed
                 if (typeof window.renderTasks === 'function') {
                     window.renderTasks(_period || window.currentFilter || 'daily');

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile (v3)</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CSS - Cache Busted -->
+    <link rel="stylesheet" href="css/desktop.css?v=2">
+    <link rel="stylesheet" href="css/mobile.css?v=2" media="screen and (max-width: 768px)">
+    <!-- Global Sidebar CSS -->
+    <link rel="stylesheet" href="../style.css?v=2">
+    <link rel="stylesheet" href="../header.css?v=2">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <script>
+        window.SIDEBAR_BASE_PATH = '../';
+    </script>
+    <script src="../components/sidebar-loader.js" defer></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Mount Point -->
+        <div id="sidebar-mount"></div>
+
+        <main class="main-content">
+            <header class="dh-nav-header">
+                <div class="dh-nav-left" style="display:flex;align-items:center;gap:0.75rem;">
+                    <button class="mobile-hamburger-btn" id="mobileMenuBtn" aria-label="Open sidebar">
+                        <i data-lucide="menu" style="width:18px;height:18px;"></i>
+                    </button>
+                    <div class="dh-user-info">
+                        <div class="dh-greeting">
+                            <span class="dh-greeting-text">My Profile</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-container">
+                <header class="section-header">
+                    <nav class="profile-tabs">
+                        <button class="tab-btn active" data-target="personal-info">Personal Info</button>
+                        <button class="tab-btn" data-target="security">Security</button>
+                        <button class="tab-btn" data-target="notifications">Notifications</button>
+                        <button class="tab-btn" data-target="activity-log">Activity Log</button>
+                        <button class="tab-btn" data-target="hr-documents">HR Documents</button>
+                    </nav>
+                </header>
+
+                <main class="profile-content">
+                    <div class="tab-page active" id="personal-info"></div>
+                    <div class="tab-page" id="security"></div>
+                    <div class="tab-page" id="notifications"></div>
+                    <div class="tab-page" id="activity-log"></div>
+                    <div class="tab-page" id="hr-documents"></div>
+                </main>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODALS MOUNT POINT -->
+    <div id="modal-mount"></div>
+
+    <!-- AG-UPLOAD MODAL (Embedded for absolute reliability) -->
+    <div class="ag-modal-overlay" id="ag-upload-modal">
+        <div class="ag-modal-card">
+            <div class="ag-modal-header">
+                <h3 class="ag-modal-title">Upload Profile Photo</h3>
+                <button class="ag-modal-close" id="ag-close-upload">&times;</button>
+            </div>
+            <div class="ag-modal-body">
+                <div class="ag-upload-container" id="ag-drop-zone">
+                    <input type="file" class="ag-file-input" id="ag-avatar-input" accept="image/*">
+                    <div class="ag-upload-content">
+                        <svg class="ag-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        <p class="ag-upload-text" id="ag-file-name">Click to select or drag & drop</p>
+                        <p class="ag-upload-hint">Supported formats: JPG, PNG (Max 5MB)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="ag-modal-footer">
+                <button class="ag-btn-submit" id="ag-save-photo">Upload Image</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Main Logic - Cache Busted -->
+    <script src="js/script.js?v=2"></script>
+</body>
+</html>

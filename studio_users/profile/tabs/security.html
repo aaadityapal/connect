@@ -1,0 +1,24 @@
+            <section class="card section-security">
+                <h2 class="section-title">Security Settings</h2>
+                <p class="text-muted">Use this section to change your password. If you have forgotten your password, use the <a href="/connect/login.php?reset_password=1" class="link">Reset Password</a> link on the login page.</p>
+
+                <form id="changePasswordForm" class="form-grid grid-3">
+                    <div class="form-group">
+                        <label>Current Password</label>
+                        <input type="password" id="currentPassword" placeholder="Enter current password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>New Password</label>
+                        <input type="password" id="newPassword" placeholder="Enter new password" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirm new password" required>
+                    </div>
+                    <div class="form-actions mt-4 text-right" style="grid-column: 1 / -1;">
+                        <button type="submit" class="btn btn-primary" id="changePasswordBtn">Update Password</button>
+                    </div>
+                </form>
+
+                <div id="changePasswordAlert" class="mt-3" style="display: none;"></div>
+            </section>

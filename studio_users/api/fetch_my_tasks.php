@@ -6,6 +6,10 @@
 // =====================================================
 session_start();
 require_once '../../config/db_connect.php';
+require_once 'recurrence_helper.php';
+
+// Force IST timezone for consistent timestamp handling
+date_default_timezone_set('Asia/Kolkata');
 
 header('Content-Type: application/json');
 
@@ -17,8 +21,12 @@ if (!isset($_SESSION['user_id'])) {
 $userId = intval($_SESSION['user_id']);
 $dateParam = isset($_GET['date']) ? trim($_GET['date']) : date('Y-m-d');
 
-// ── Date window ─────────────────────────────────────────────
-$dateWhere = "AND (sat.due_date = :queryDate1 OR (sat.due_date IS NULL AND :queryDate2 = :today))";
+// ── Date window: Fetch exact date matches OR recurring tasks starting before/on this date ─────
+$dateWhere = "AND (
+    sat.due_date = :queryDate1 
+    OR (sat.due_date IS NULL AND :queryDate2 = :today)
+    OR (sat.is_recurring = 1 AND sat.due_date <= :queryDate3)
+)";
 
 try {
     // Match user ID inside comma-separated assigned_to column
@@ -43,6 +51,7 @@ try {
             sat.previous_due_time,
             sat.status as global_status,
             sat.is_recurring,
+            sat.recurrence_parent_id,
             sat.recurrence_freq,
             sat.created_at,
             sat.completed_at as global_completed_at,
@@ -62,9 +71,13 @@ try {
     $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
     $stmt->bindValue(':queryDate1', $dateParam, PDO::PARAM_STR);
     $stmt->bindValue(':queryDate2', $dateParam, PDO::PARAM_STR);
+    $stmt->bindValue(':queryDate3', $dateParam, PDO::PARAM_STR);
     $stmt->bindValue(':today', date('Y-m-d'), PDO::PARAM_STR);
     $stmt->execute();
-    $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rawTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // ── Expand recurring tasks for the specific query day ──
+    $tasks = expandRecurringTasks($rawTasks, $dateParam, $dateParam);
 
     // ── Format for JS consumption ─────────────────────────────────────────────
     $formatted = [];
@@ -122,7 +135,10 @@ try {
         $myTs = $compHist[$userId] ?? null;
         $isoCompAt = null;
         if ($myTs) {
-            try { $isoCompAt = (new DateTime($myTs, new DateTimeZone('Asia/Kolkata')))->format('c'); } catch(Exception $e) {}
+            try {
+                // The stored timestamp is IST — parse it explicitly as IST
+                $isoCompAt = (new DateTime($myTs, new DateTimeZone('Asia/Kolkata')))->format('c');
+            } catch(Exception $e) {}
         }
 
         // Badge: map DB enum to JS badge tokens
@@ -146,6 +162,8 @@ try {
             'assignedBy'        => $task['created_by_name'] ?? 'System Admin',
             'modalDateFrom'     => $modalDateFrom,
             'modalDateTo'       => $modalDateTo,
+            'dateFrom'          => $modalDateFrom,
+            'dateTo'            => $modalDateTo,
             'project_id'        => $task['project_id'],
             'project_name'      => $task['project_name'],
             'stage_id'          => $task['stage_id'],

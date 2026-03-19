@@ -187,22 +187,11 @@
     function getColorForPerson(name) {
         if (!name) return '#94a3b8';
         name = name.trim();
-        
-        // Single deterministic Session Cache
-        if (!window._personColorCache) {
-            window._personColorCache = {};
-            window._colorIndex = 0;
+        let sum = 0;
+        for (let i = 0; i < name.length; i++) {
+            sum += name.charCodeAt(i);
         }
-        
-        if (window._personColorCache[name]) {
-            return window._personColorCache[name];
-        }
-        
-        const c = PALETTE[window._colorIndex % PALETTE.length];
-        window._colorIndex++;
-        
-        window._personColorCache[name] = c;
-        return c;
+        return PALETTE[sum % PALETTE.length];
     }
 
     // ─── Shared helpers ───────────────────────────────────────
@@ -255,7 +244,6 @@
 
         // Dark time/label badge
         const badge = document.createElement('span');
-        badge.textContent = label;
         Object.assign(badge.style, {
             display:       'inline-flex',
             alignItems:    'center',
@@ -269,7 +257,24 @@
             flexShrink:    '0',
             borderRadius:  '16px 0 0 16px',
             whiteSpace:    'nowrap',
+            gap:           '6px'
         });
+
+        if (assignedBy) {
+            const assignedByColor = getColorForPerson(assignedBy);
+            const aDot = document.createElement('div');
+            Object.assign(aDot.style, {
+                width: '8px', height: '8px', borderRadius: '50%',
+                background: assignedByColor, flexShrink: '0',
+                boxShadow: '0 1px 3px rgba(0,0,0,.3)'
+            });
+            aDot.title = 'Assigned by: ' + assignedBy;
+            badge.appendChild(aDot);
+        }
+
+        const timeLblSpan = document.createElement('span');
+        timeLblSpan.textContent = label;
+        badge.appendChild(timeLblSpan);
 
         // White right section
         const right = document.createElement('span');
@@ -284,14 +289,14 @@
             overflow:   'hidden',
         });
 
-        // Assigned person dots container (left side of title)
+        // Assigned person dots container (right side of title)
         const dotsContainer = document.createElement('div');
         Object.assign(dotsContainer.style, {
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
             flexShrink: '0',
-            paddingRight: '2px' // small separation before text
+            paddingLeft: '4px' // separation after text
         });
 
         if (!hideAssignedTo) {
@@ -316,8 +321,6 @@
             });
             dotsContainer.appendChild(d);
         }
-        right.appendChild(dotsContainer);
-
         const titleEl = document.createElement('span');
         titleEl.textContent = title;
         Object.assign(titleEl.style, {
@@ -332,6 +335,7 @@
         });
 
         right.appendChild(titleEl); // ← task title (middle)
+        right.appendChild(dotsContainer); // ← assigned users (right side)
         block.appendChild(badge);
         block.appendChild(right);
 

@@ -1,0 +1,90 @@
+/* Mobile Media Queries -> Max Width 768px */
+
+@media screen and (max-width: 768px) {
+    .page-container {
+        padding: 16px 12px;
+    }
+
+    .card {
+        padding: 20px 16px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+
+    /* Change Grids to single column */
+    .grid-4, .grid-3, .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .form-grid {
+        gap: 16px;
+    }
+
+    /* Tabs adjusting for mobile view */
+    .profile-tabs {
+        padding: 8px;
+        flex-wrap: nowrap;
+        margin-bottom: 16px;
+    }
+    .tab-btn {
+        font-size: 13px;
+        padding: 10px 16px;
+        flex: 1 0 auto;
+    }
+
+    /* Breadcrumbs slightly smaller */
+    .breadcrumb {
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+
+    /* Typography */
+    .section-title {
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+
+    /* Profile Upload Container */
+    .profile-upload-container {
+        flex-direction: column;
+        text-align: center;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    /* Global Bottom actions Stack Elements */
+    .bottom-actions {
+        flex-direction: column-reverse;
+        gap: 12px;
+        margin-top: 24px;
+        padding-top: 16px;
+    }
+    
+    .bottom-actions .btn {
+        width: 100%;
+        padding: 14px;
+    }
+
+    /* Modifying Table behaviour for small mobile screens */
+    .table-container {
+        border-radius: 8px;
+        margin-top: 16px;
+    }
+    
+    th, td {
+        padding: 12px;
+        font-size: 13px;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-top: 16px;
+    }
+    
+    /* Do not stretch inline buttons in table */
+    .action-btn, .icon-btn {
+        width: auto;
+        margin-top: 0;
+    }
+}

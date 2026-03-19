@@ -764,6 +764,72 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Delegate to openEditModal — it handles all pre-filling including project+stage
                 openEditModal(syntheticRow);
             });
+
+            // ── Delegate: Delete buttons inside #assignedTasksList ──
+            assignedList2.addEventListener('click', async function (e) {
+                const deleteBtn = e.target.closest('.unique-delete-assigned-btn');
+                if (!deleteBtn) return;
+                e.stopPropagation();
+
+                const card = deleteBtn.closest('.assigned-task-item');
+                if (!card) return;
+
+                const taskId = card.dataset.taskId;
+                if (!taskId) return;
+
+                // Simple confirmation
+                if (!confirm("Are you sure you want to delete this assigned task? This action cannot be undone.")) {
+                    return;
+                }
+
+                // Show loading state on button
+                const originalHTML = deleteBtn.innerHTML;
+                deleteBtn.disabled = true;
+                deleteBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> deleting...';
+
+                try {
+                    const response = await fetch('api/delete_assigned_task.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ task_id: taskId })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Success toast if available
+                        if (typeof showToast === 'function') {
+                            showToast("Task deleted successfully");
+                        } else {
+                            alert("Task deleted successfully");
+                        }
+
+                        // Remove from UI with a small fade animation
+                        card.style.transition = 'all 0.35s ease';
+                        card.style.opacity = '0';
+                        card.style.transform = 'translateX(20px)';
+                        
+                        setTimeout(() => {
+                            card.remove();
+                            // Update count badge
+                            const assignedCount = document.getElementById('assignedTasksCount');
+                            const assignedList = document.getElementById('assignedTasksList');
+                            if (assignedCount && assignedList) {
+                                const count = assignedList.querySelectorAll('.assigned-task-item').length;
+                                assignedCount.textContent = count + (count === 1 ? ' task' : ' tasks');
+                            }
+                        }, 350);
+
+                    } else {
+                        throw new Error(data.error || "Failed to delete task");
+                    }
+                } catch (error) {
+                    console.error("Deletion error:", error);
+                    alert("Error: " + error.message);
+                    // Reset button
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = originalHTML;
+                }
+            });
         }
     })();
 });

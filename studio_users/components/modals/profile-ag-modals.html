@@ -1,0 +1,24 @@
+<!-- NEW AG-MODAL SYSTEM FOR PROFILE PICTURE UPLOAD -->
+<div class="ag-modal-overlay" id="ag-upload-modal">
+    <div class="ag-modal-card">
+        <div class="ag-modal-header">
+            <h3 class="ag-modal-title">Upload Profile Photo</h3>
+            <button class="ag-modal-close" id="ag-close-upload">&times;</button>
+        </div>
+        <div class="ag-modal-body">
+            <div class="ag-upload-container" id="ag-drop-zone">
+                <input type="file" class="ag-file-input" id="ag-avatar-input" accept="image/*">
+                <div class="ag-upload-content">
+                    <svg class="ag-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    <p class="ag-upload-text" id="ag-file-name">Click to select or drag & drop</p>
+                    <p class="ag-upload-hint">Supported formats: JPG, PNG (Max 5MB)</p>
+                </div>
+            </div>
+        </div>
+        <div class="ag-modal-footer">
+            <button class="ag-btn-submit" id="ag-save-photo">Upload Image</button>
+        </div>
+    </div>
+</div>

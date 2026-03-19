@@ -30,6 +30,10 @@
         }
         let currentPage = currentFile.replace(/\.html$|\.php$/, '');
 
+        if (window.location.pathname.includes('/profile/')) {
+            currentPage = 'profile';
+        }
+        
         if (window.location.pathname.includes('attendance_recrds')) {
             currentPage = 'worksheet';
         }

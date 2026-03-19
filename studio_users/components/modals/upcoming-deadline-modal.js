@@ -8,25 +8,23 @@
         // Check every 60 seconds
         setInterval(checkUpcomingDeadlines, 60000);
 
-        const closeBtn = document.getElementById('closeUpcomingDeadlineModal');
-        if (closeBtn) {
-            closeBtn.onclick = closeUpcomingModal;
-        }
+        // Listen for task updates from other modals for immediate refresh
+        window.addEventListener('taskUpdate', () => {
+            console.log('[Upcoming Deadline] Task update event received, checking...');
+            checkUpcomingDeadlines();
+        });
     });
 
     function checkUpcomingDeadlines() {
-        // Check if user has snoozed alerts
-        const snoozeUntil = localStorage.getItem('udmAlertSnoozeUntil');
-        if (snoozeUntil && Date.now() < parseInt(snoozeUntil)) {
-            return; 
-        }
-
         fetch('api/check_upcoming_deadlines.php')
             .then(res => res.json())
             .then(data => {
                 if (data.success && data.tasks && data.tasks.length > 0) {
                     // Show modal with all current tasks
                     showUpcomingWarning(data.tasks);
+                } else {
+                    // Automatically close if no tasks require action
+                    closeUpcomingModal();
                 }
             })
             .catch(err => console.warn('[Upcoming Deadline Check] failed:', err));
@@ -72,14 +70,14 @@
             
             // Wire clicks
             item.querySelector('[data-action="extend"]').onclick = () => {
-                closeUpcomingModal();
+                // Modal stays open in background to ensure accountability
                 if (typeof window.openExtendDeadlineModal === 'function') {
                     window.openExtendDeadlineModal(task, 'schedule');
                 }
             };
             
             item.querySelector('[data-action="finish"]').onclick = () => {
-                closeUpcomingModal();
+                // Modal stays open in background to ensure accountability
                 if (window.TaskModal && typeof window.TaskModal.open === 'function') {
                     window.TaskModal.open(task);
                 }
@@ -88,23 +86,6 @@
             listContainer.appendChild(item);
         });
 
-        // Snooze footer 
-        const snoozeBtn = document.getElementById('udmSnoozeBtn');
-        if (snoozeBtn) {
-            snoozeBtn.onclick = () => {
-                const twoHours = 2 * 60 * 60 * 1000;
-                const snoozeUntil = Date.now() + twoHours;
-                
-                // Save locally
-                localStorage.setItem('udmAlertSnoozeUntil', snoozeUntil.toString());
-                
-                // Log to backend
-                fetch('api/log_deadline_snooze.php', { method: 'POST' })
-                    .catch(err => console.warn('[Log Snooze] failed:', err));
-
-                closeUpcomingModal();
-            };
-        }
         
         overlay.style.display = 'flex';
         
@@ -125,6 +106,7 @@
         if(overlay) overlay.style.display = 'none';
     }
 
-    // Export close to global just in case
+    // Export to global for direct calling if needed
+    window.checkUpcomingDeadlines = checkUpcomingDeadlines;
     window.closeUpcomingDeadlineModal = closeUpcomingModal;
 })();

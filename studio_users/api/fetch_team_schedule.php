@@ -1,6 +1,11 @@
 <?php
 session_start();
 require_once '../../config/db_connect.php';
+require_once 'recurrence_helper.php';
+
+// Force IST timezone for consistent timestamp handling
+date_default_timezone_set('Asia/Kolkata');
+
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
@@ -59,7 +64,12 @@ try {
     
     $stmt = $pdo->prepare($query);
     $stmt->execute();
-    $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rawTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // ── Expand recurring tasks ─────────────────────────────────────────
+    $expandStart = date('Y-m-d', strtotime('-30 days'));
+    $expandEnd   = date('Y-m-d', strtotime('+120 days'));
+    $tasks = expandRecurringTasks($rawTasks, $expandStart, $expandEnd);
 
     $formatted = [];
     foreach ($tasks as $task) {

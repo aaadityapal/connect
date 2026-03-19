@@ -7,6 +7,9 @@
 session_start();
 require_once '../../config/db_connect.php';
 
+// ── Force IST timezone so all timestamps are consistent ──
+date_default_timezone_set('Asia/Kolkata');
+
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
@@ -18,17 +21,85 @@ $userId = intval($_SESSION['user_id']);
 
 // Accept JSON body
 $input  = json_decode(file_get_contents('php://input'), true);
-$taskId = isset($input['task_id']) ? intval($input['task_id']) : 0;
-$status = isset($input['status'])  ? trim($input['status'])    : '';
+$rawTaskId = isset($input['task_id']) ? $input['task_id'] : 0;
+$status    = isset($input['status'])  ? trim($input['status'])    : '';
 
-// Validate
-$allowed = ['Pending', 'In Progress', 'Completed', 'Cancelled'];
+// Detect virtual ID (Recurring expansion) — Format: "ID_YYYYMMDD"
+$allowed   = ['Pending', 'In Progress', 'Completed', 'Cancelled'];
+$isVirtual = false;
+$virtualDate = null;
+if (is_string($rawTaskId) && strpos($rawTaskId, '_') !== false) {
+    list($taskId, $dateTimeStr) = explode('_', $rawTaskId);
+    $taskId = intval($taskId);
+    $isVirtual = true;
+    
+    // Attempt YmdHi first (Hourly), fallback to Ymd (Daily+)
+    $dt = DateTime::createFromFormat('YmdHi', $dateTimeStr);
+    if (!$dt) $dt = DateTime::createFromFormat('Ymd', $dateTimeStr);
+    
+    if ($dt) {
+        $virtualDate = $dt->format('Y-m-d');
+        $virtualTime = $dt->format('H:i:s');
+    } else {
+        echo json_encode(['success' => false, 'error' => 'Invalid virtual date format']);
+        exit();
+    }
+} else {
+    $taskId = intval($rawTaskId);
+}
+
 if (!$taskId || !in_array($status, $allowed)) {
     echo json_encode(['success' => false, 'error' => 'Invalid input']);
     exit();
 }
 
 try {
+    // ── Handle Virtual Task Materialisation ──────────────────────────
+    if ($isVirtual) {
+        // First, check if a REAL task for this date already exists to avoid duplicates
+        // (This happens if someone else already completed this recurring instance)
+        $checkExisting = $pdo->prepare("
+            SELECT id FROM studio_assigned_tasks 
+            WHERE recurrence_parent_id = ? 
+              AND due_date = ? 
+              AND (due_time = ? OR (due_time IS NULL AND ? = '00:00:00'))
+              AND deleted_at IS NULL
+        ");
+        $checkExisting->execute([$taskId, $virtualDate, $virtualTime, $virtualTime]);
+        $existingId = $checkExisting->fetchColumn();
+
+        if ($existingId) {
+            $taskId = $existingId; // Switch to the real task ID
+        } else {
+            // Materialize: Copy the original task into a new real entry for this date
+            $getOrig = $pdo->prepare("SELECT * FROM studio_assigned_tasks WHERE id = ?");
+            $getOrig->execute([$taskId]);
+            $orig = $getOrig->fetch(PDO::FETCH_ASSOC);
+
+            if ($orig) {
+                unset($orig['id']);
+                $orig['due_date']             = $virtualDate;
+                $orig['due_time']             = $virtualTime;
+                $orig['is_recurring']         = 0; // The instance itself isn't a master template
+                $orig['recurrence_parent_id'] = $taskId; // Link to master
+                $orig['created_at']           = date('Y-m-d H:i:s');
+                $orig['status']               = 'Pending'; // Start as pending
+                $orig['completed_by']         = null;
+                $orig['completed_at']         = null;
+                $orig['completion_history']   = null;
+
+                $cols = implode(',', array_keys($orig));
+                $vals = ':' . implode(',:', array_keys($orig));
+                $ins = $pdo->prepare("INSERT INTO studio_assigned_tasks ($cols) VALUES ($vals)");
+                $ins->execute($orig);
+                $taskId = $pdo->lastInsertId();
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Original recurring task not found']);
+                exit();
+            }
+        }
+    }
+    // ─────────────────────────────────────────────────────────────────
     // Make sure the task is actually assigned to this user before updating
     $check = $pdo->prepare("
         SELECT id, project_name, stage_number, assigned_to, completed_by, completion_history, status 
@@ -53,7 +124,8 @@ try {
     if ($status === 'Completed') {
         if (!in_array($userId, $completedByArr)) {
             $completedByArr[] = $userId;
-            $history[$userId] = date('Y-m-d H:i:s'); // Track individual time
+            // Store IST timestamp so undo timer is correct for Indian users
+            $history[$userId] = (new DateTime('now', new DateTimeZone('Asia/Kolkata')))->format('Y-m-d H:i:s');
         }
     } else {
         // Otherwise, they want to undo/Pending
@@ -74,7 +146,9 @@ try {
     // Compute the global state
     $newGlobalStatus = $allCompleted ? 'Completed' : (count($completedByArr) > 0 ? 'In Progress' : 'Pending');
     $completedStr = implode(',', $completedByArr);
-    $completedAtUpdate = $allCompleted ? "completed_at = NOW()," : "completed_at = NULL,";
+    // Use IST-aware timestamp for completed_at
+    $nowIst = (new DateTime('now', new DateTimeZone('Asia/Kolkata')))->format('Y-m-d H:i:s');
+    $completedAtUpdate = $allCompleted ? "completed_at = '{$nowIst}'," : "completed_at = NULL,";
 
     $stmt = $pdo->prepare("
         UPDATE studio_assigned_tasks

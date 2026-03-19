@@ -60,41 +60,42 @@ if (isset($_SESSION['user_id'])) {
         </a>
 
         <div class="menu-title">Personal</div>
-        <a href="profile.html" class="menu-item" data-page="profile">
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'profile/index.php'; return false;"
+            class="menu-item" data-page="profile">
             <i data-lucide="user-round" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">My Profile</span>
             <div class="tooltip">My Profile</div>
         </a>
 
         <div class="menu-title">Leave &amp; Expenses</div>
-        <a href="apply-leave.html" class="menu-item" data-page="apply-leave">
+        <a href="apply-leave.php" class="menu-item" data-page="apply-leave">
             <i data-lucide="calendar-check" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Apply Leave</span>
             <div class="tooltip">Apply Leave</div>
         </a>
-        <a href="travel-expenses.html" class="menu-item" data-page="travel-expenses">
+        <a href="travel-expenses.php" class="menu-item" data-page="travel-expenses">
             <i data-lucide="receipt" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Travel Expenses</span>
             <div class="tooltip">Travel Expenses</div>
         </a>
-        <a href="overtime.html" class="menu-item" data-page="overtime">
+        <a href="overtime.php" class="menu-item" data-page="overtime">
             <i data-lucide="alarm-clock" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Overtime</span>
             <div class="tooltip">Overtime</div>
         </a>
 
         <div class="menu-title">Work</div>
-        <a href="projects.html" class="menu-item" data-page="projects">
+        <a href="projects.php" class="menu-item" data-page="projects">
             <i data-lucide="folder-kanban" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Projects</span>
             <div class="tooltip">Projects</div>
         </a>
-        <a href="site-updates.html" class="menu-item" data-page="site-updates">
+        <a href="site-updates.php" class="menu-item" data-page="site-updates">
             <i data-lucide="megaphone" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Site Updates</span>
             <div class="tooltip">Site Updates</div>
         </a>
-        <a href="my-tasks.html" class="menu-item" data-page="my-tasks">
+        <a href="my-tasks.php" class="menu-item" data-page="my-tasks">
             <i data-lucide="circle-check-big" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">My Tasks</span>
             <div class="tooltip">My Tasks</div>
@@ -106,7 +107,7 @@ if (isset($_SESSION['user_id'])) {
             <span class="menu-text">Work Sheet &amp; Attendance</span>
             <div class="tooltip">Work Sheet</div>
         </a>
-        <a href="analytics.html" class="menu-item" data-page="analytics">
+        <a href="analytics.php" class="menu-item" data-page="analytics">
             <i data-lucide="trending-up" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Performance Analytics</span>
             <div class="tooltip">Analytics</div>
@@ -124,12 +125,12 @@ if (isset($_SESSION['user_id'])) {
 endif; ?>
 
         <div class="menu-title">System</div>
-        <a href="settings.html" class="menu-item" data-page="settings">
+        <a href="settings.php" class="menu-item" data-page="settings">
             <i data-lucide="settings-2" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Settings</span>
             <div class="tooltip">Settings</div>
         </a>
-        <a href="help.html" class="menu-item" data-page="help">
+        <a href="help.php" class="menu-item" data-page="help">
             <i data-lucide="help-circle" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Help &amp; Support</span>
             <div class="tooltip">Help &amp; Support</div>

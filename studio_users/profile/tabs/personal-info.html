@@ -1,0 +1,354 @@
+            <!-- SECTION 1: Profile Picture -->
+            <section class="card section-profile-picture" id="section-profile-picture">
+                <div class="section-header-inner">
+                    <h2 class="section-title">Profile Picture</h2>
+                </div>
+                <div class="profile-upload-container">
+                    <div class="avatar-wrapper">
+                        <svg class="profile-progress-ring" width="110" height="110">
+                            <circle class="ring-bg" cx="55" cy="55" r="48"></circle>
+                            <circle class="ring-fill" cx="55" cy="55" r="48"></circle>
+                        </svg>
+                        <div class="avatar-preview">
+                            <svg class="avatar-icon" viewBox="0 0 24 24" fill="#9ca3af" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v2h20v-2c0-3.33-6.67-5-10-5z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="upload-info">
+                        <div class="completion-badge mb-2" id="profile-completion-badge">Profile 0% Complete</div>
+                        <p class="info-text mt-2">Maximum file size: 5MB</p>
+                        <p class="sub-text">Supported formats: JPG, PNG</p>
+                        <button class="btn btn-secondary mt-2" id="ag-trigger-upload">Upload New Photo</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: Basic Information -->
+            <section class="card section-basic-info" id="section-basic-info">
+                <h2 class="section-title">Basic Information</h2>
+                <div class="form-grid grid-4">
+                    <div class="form-group">
+                        <label>Full Name / Username*</label>
+                        <input type="text" id="pi-username" placeholder="Full name" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address*</label>
+                        <input type="email" id="pi-email" placeholder="Email address" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="pi-phone" placeholder="e.g. +91 99999 00000">
+                    </div>
+                    <div class="form-group">
+                        <label>Employee ID</label>
+                        <input type="text" id="pi-employee-id" placeholder="Employee ID" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Designation</label>
+                        <input type="text" id="pi-designation" placeholder="e.g. Senior Designer" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Role</label>
+                        <input type="text" id="pi-role" placeholder="Role" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" id="pi-dob">
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="pi-gender">
+                            <option value="">Select Gender</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Joining Date</label>
+                        <input type="date" id="pi-joining-date" readonly>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: About Me -->
+            <section class="card section-about-me" id="section-about-me">
+                <h2 class="section-title">About Me</h2>
+                <div class="form-group full-width">
+                    <label>Bio</label>
+                    <textarea id="pi-bio" rows="4" placeholder="Write something about yourself..."></textarea>
+                </div>
+            </section>
+
+            <!-- SECTION 4: Personal Details -->
+            <section class="card section-personal-details" id="section-personal-details">
+                <h2 class="section-title">Personal Details</h2>
+                <div class="form-grid grid-4">
+                    <div class="form-group">
+                        <label>Marital Status</label>
+                        <select id="pi-marital-status">
+                            <option value="">Select Status</option>
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                            <option value="Divorced">Divorced</option>
+                            <option value="Widowed">Widowed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Blood Group</label>
+                        <select id="pi-blood-group">
+                            <option value="">Select Blood Group</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Nationality</label>
+                        <input type="text" id="pi-nationality" placeholder="e.g. Indian">
+                    </div>
+                    <div class="form-group">
+                        <label>Languages</label>
+                        <input type="text" id="pi-languages" placeholder="e.g., English, Hindi">
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 5: Contact & Address -->
+            <section class="card section-contact-address" id="section-contact-address">
+                <h2 class="section-title">Contact &amp; Address</h2>
+                <div class="form-grid grid-3">
+                    <div class="form-group full-width">
+                        <label>Full Address</label>
+                        <textarea id="pi-address" rows="2" placeholder="Enter your full address"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="pi-city" placeholder="City">
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <input type="text" id="pi-state" placeholder="State">
+                    </div>
+                    <div class="form-group">
+                        <label>Country</label>
+                        <input type="text" id="pi-country" placeholder="Country">
+                    </div>
+                    <div class="form-group">
+                        <label>Postal Code</label>
+                        <input type="text" id="pi-postal-code" placeholder="Postal / ZIP Code">
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 6: Emergency Contact -->
+            <section class="card section-emergency-contact" id="section-emergency-contact">
+                <div class="section-header-inner" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+                    <h2 class="section-title" style="margin:0;">Emergency Contact</h2>
+                    <button type="button" class="btn btn-secondary" id="btn-add-emergency-contact" style="display:flex;align-items:center;gap:6px;font-size:0.82rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add Contact
+                    </button>
+                </div>
+
+                <!-- Dynamic contact rows injected here -->
+                <div id="emergency-contacts-list"></div>
+
+                <!-- Empty state shown when no contacts -->
+                <div id="emergency-contacts-empty" style="display:none; text-align:center; padding:1.5rem 0; color:#94a3b8;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom:8px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.8 19.8 0 0 1 1.63 3.4 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 5.49 5.49l.97-.97a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.35v.57Z"/></svg>
+                    <p style="font-size:0.85rem;">No emergency contacts added yet. Click "+ Add Contact" to get started.</p>
+                </div>
+            </section>
+
+
+            <!-- SECTION 7: Skills & Interests -->
+            <section class="card section-skills-interests" id="section-skills-interests">
+                <h2 class="section-title">Skills &amp; Interests</h2>
+                <div class="form-grid grid-2">
+
+                    <!-- Professional Skills -->
+                    <div class="form-group">
+                        <label>Professional Skills</label>
+                        <div class="tag-input-wrapper" id="skills-tag-wrapper">
+                            <div class="tag-list" id="skills-tag-list"></div>
+                            <input type="text" class="tag-input" id="skills-tag-input"
+                                   placeholder="Type a skill and press Enter or comma…">
+                        </div>
+                        <p class="sub-text mt-1" style="font-size:0.72rem; color:#94a3b8;">
+                            Press <kbd style="border:1px solid #e2e8f0;padding:1px 5px;border-radius:4px;font-size:0.7rem;">Enter</kbd>
+                            or <kbd style="border:1px solid #e2e8f0;padding:1px 5px;border-radius:4px;font-size:0.7rem;">,</kbd>
+                            to add a skill
+                        </p>
+                    </div>
+
+                    <!-- Interests & Hobbies -->
+                    <div class="form-group">
+                        <label>Interests &amp; Hobbies</label>
+                        <div class="tag-input-wrapper" id="interests-tag-wrapper">
+                            <div class="tag-list" id="interests-tag-list"></div>
+                            <input type="text" class="tag-input" id="interests-tag-input"
+                                   placeholder="Type an interest and press Enter or comma…">
+                        </div>
+                        <p class="sub-text mt-1" style="font-size:0.72rem; color:#94a3b8;">
+                            Press <kbd style="border:1px solid #e2e8f0;padding:1px 5px;border-radius:4px;font-size:0.7rem;">Enter</kbd>
+                            or <kbd style="border:1px solid #e2e8f0;padding:1px 5px;border-radius:4px;font-size:0.7rem;">,</kbd>
+                            to add an interest
+                        </p>
+                    </div>
+
+                </div>
+            </section>
+
+
+            <!-- SECTION 8: Social Media -->
+            <section class="card section-social-media" id="section-social-media">
+                <h2 class="section-title">Social Media</h2>
+                <div class="form-grid grid-3">
+                    <div class="form-group">
+                        <label>LinkedIn</label>
+                        <input type="url" id="pi-linkedin" placeholder="LinkedIn Profile URL">
+                    </div>
+                    <div class="form-group">
+                        <label>Twitter / X</label>
+                        <input type="url" id="pi-twitter" placeholder="Twitter Profile URL">
+                    </div>
+                    <div class="form-group">
+                        <label>Facebook</label>
+                        <input type="url" id="pi-facebook" placeholder="Facebook Profile URL">
+                    </div>
+                    <div class="form-group">
+                        <label>Instagram</label>
+                        <input type="url" id="pi-instagram" placeholder="Instagram Profile URL">
+                    </div>
+                    <div class="form-group">
+                        <label>GitHub</label>
+                        <input type="url" id="pi-github" placeholder="GitHub Profile URL">
+                    </div>
+                    <div class="form-group">
+                        <label>YouTube</label>
+                        <input type="url" id="pi-youtube" placeholder="YouTube Channel URL">
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 9: Education Background -->
+            <section class="card section-education" id="section-education">
+                <h2 class="section-title">Education Background</h2>
+                <button class="btn btn-secondary mt-2" id="ag-trigger-education">+ Add Education History</button>
+                <div class="table-container mt-4">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Sr. No.</th>
+                                <th>Degree Level</th>
+                                <th>Institution</th>
+                                <th>Field of Study</th>
+                                <th>Graduation Year</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="education-table-body">
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">🎓</div>
+                                        <p>No education history added yet.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECTION 10: Work Experience -->
+            <section class="card section-work-experience" id="section-work-experience">
+                <h2 class="section-title">Work Experience</h2>
+                <button class="btn btn-secondary mt-2" id="ag-trigger-experience">+ Add Work Experience</button>
+                <div class="table-container mt-4">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Sr. No.</th>
+                                <th>Company</th>
+                                <th>Job Title</th>
+                                <th>Experience</th>
+                                <th>Responsibilities</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="experience-table-body">
+                            <tr>
+                                <td colspan="6">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">💼</div>
+                                        <p>No work experience added yet.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SECTION 11: Bank Account Details -->
+            <section class="card section-bank-details" id="section-bank-details">
+                <h2 class="section-title">Bank Account Details</h2>
+                <div class="form-grid grid-4">
+                    <div class="form-group">
+                        <label>Bank Name</label>
+                        <input type="text" id="pi-bank-name" placeholder="Enter bank name">
+                    </div>
+                    <div class="form-group">
+                        <label>Account Holder Name</label>
+                        <input type="text" id="pi-account-holder" placeholder="Enter account holder name">
+                    </div>
+                    <div class="form-group">
+                        <label>Account Number</label>
+                        <input type="text" id="pi-account-number" placeholder="Enter account number">
+                    </div>
+                    <div class="form-group">
+                        <label>IFSC Code</label>
+                        <input type="text" id="pi-ifsc" placeholder="Enter IFSC code">
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 12: My Documents -->
+            <section class="card section-documents mt-4" id="section-documents">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem;">
+                    <h2 class="section-title" style="margin:0;">My Documents</h2>
+                    <button type="button" class="btn btn-secondary" id="ag-trigger-document" style="display:flex;align-items:center;gap:6px;padding:8px 16px;font-size:0.82rem;font-weight:600;">
+                        <span style="font-size:1.1rem;line-height:1;">+</span>
+                        Add New Document
+                    </button>
+                </div>
+
+                <div id="ag-documents-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                    <!-- Dynamic document cards go here -->
+                </div>
+
+                <!-- Empty state shown when no docs -->
+                <div id="ag-documents-empty" style="display:block; text-align:center; padding:3rem 0; background:#f8fafc; border:2px dashed #e2e8f0; border-radius:12px; color:#64748b;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem; opacity: 0.6;">📂</div>
+                    <p style="font-size:0.9rem; font-weight:500;">No documents uploaded yet.</p>
+                    <p style="font-size:0.8rem; margin-top:0.25rem;">Keep your IDs, certificates, and slips organized here.</p>
+                </div>
+            </section>
+
+
+            <!-- Fixed Bottom Actions -->
+            <div class="form-actions bottom-actions">
+                <button class="btn btn-secondary btn-large" id="btn-reset-profile">Reset</button>
+                <button class="btn btn-primary btn-large" id="btn-save-profile">Save Changes</button>
+            </div>
+        </div>

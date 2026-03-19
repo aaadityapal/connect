@@ -6806,6 +6806,32 @@ button {
     box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
 }
 
+/* Delete button Red */
+.atl-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.38rem 0.85rem;
+    border-radius: 0.55rem;
+    border: 1.5px solid #ef4444;
+    background: #fef2f2;
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Outfit', sans-serif;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(239, 68, 68, 0.12);
+}
+
+.atl-delete-btn:hover {
+    background: #ef4444;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
 .atl-edit-btn:active {
     transform: translateY(0);
 }

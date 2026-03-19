@@ -1,11 +1,12 @@
 <?php
 /**
  * check_upcoming_deadlines.php
- * Polls the DB for tasks assigned to the user that are within a 30-minute due window.
+ * Polls the DB for tasks assigned to the user that are within a 2-minute due window.
  * Returns full task objects compatible with TaskModal and ExtendModal.
  */
 session_start();
 require_once '../../config/db_connect.php';
+require_once 'recurrence_helper.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
@@ -34,7 +35,13 @@ try {
 
     $stmt = $pdo->prepare($query);
     $stmt->execute(['uid' => $userId, 'uid_comp' => $userId]);
-    $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $rawTasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // ── Expand recurring tasks ─────────────────────────────────────────
+    // We check from 2 days ago to 2 mins from now.
+    $expandStart = date('Y-m-d', strtotime('-2 days'));
+    $expandEnd   = date('Y-m-d H:i:s', $now + 120); // Now + 2 mins
+    $tasks = expandRecurringTasks($rawTasks, $expandStart, $expandEnd);
 
     $upcoming = [];
 
@@ -43,9 +50,9 @@ try {
         $diffSeconds = $dueTimestamp - $now;
 
         // Condition: 
-        // 1. Due in the future within 30 minutes (0 to 1800s)
+        // 1. Due in the future within 2 minutes (0 to 120s)
         // 2. OR Due in the past (Overdue)
-        $isUpcoming = ($diffSeconds >= 0 && $diffSeconds <= 1800);
+        $isUpcoming = ($diffSeconds >= 0 && $diffSeconds <= 120);
         $isOverdue  = ($diffSeconds < 0);
 
         if ($isUpcoming || $isOverdue) {
@@ -138,8 +145,10 @@ try {
                 'assignedBy' => $task['assigned_by_name'] ?? 'System Admin',
                 'persons' => $personsMap,
                 'assignee_statuses' => $assigneeStatuses,
-                'modalDateFrom' => $created,
-                'modalDateTo' => $due,
+                'modalDateFrom'     => $created,
+                'modalDateTo'       => $due,
+                'dateFrom'          => $created,
+                'dateTo'            => $due,
                 'dotColor' => $color, 
                 'bgColor' => $bgColor,
                 'titlePrefix' => $titlePrefix,

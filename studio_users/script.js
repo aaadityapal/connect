@@ -6,8 +6,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function playTaskSound() {
         try {
             _taskSound.currentTime = 0;
-            _taskSound.play().catch(function () {}); // suppress autoplay policy errors
-        } catch (e) {}
+            _taskSound.play().catch(function () { }); // suppress autoplay policy errors
+        } catch (e) { }
     }
     window.playTaskSound = playTaskSound; // expose to other script files
     // ─────────────────────────────────────────────────────────────────
@@ -16,16 +16,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Load Recently Assigned Tasks (filtered by date)
     // ══════════════════════════════════════════════════════
     function loadRecentTasks(dateStr) {
-        const list    = document.getElementById('assignedTasksList');
+        const list = document.getElementById('assignedTasksList');
         const counter = document.getElementById('assignedTasksCount');
-        const picker  = document.getElementById('assignedTasksDateFilter');
+        const picker = document.getElementById('assignedTasksDateFilter');
         if (!list) return;
 
         // Use supplied date, or fall back to the picker's value, or today (local)
         const _d = new Date();
         const todayLocal = _d.getFullYear() + '-'
-                         + String(_d.getMonth() + 1).padStart(2, '0') + '-'
-                         + String(_d.getDate()).padStart(2, '0');
+            + String(_d.getMonth() + 1).padStart(2, '0') + '-'
+            + String(_d.getDate()).padStart(2, '0');
         const date = dateStr || (picker ? picker.value : '') || todayLocal;
 
         // Show loading state
@@ -54,29 +54,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 // Render each task card
                 data.tasks.forEach(task => {
-                    const title    = (task.project_name || 'General Task') + (task.stage_number ? ' — Stage ' + task.stage_number : '');
-                    const desc     = task.task_description || '';
+                    const title = (task.project_name || 'General Task') + (task.stage_number ? ' — Stage ' + task.stage_number : '');
+                    const desc = task.task_description || '';
                     const assignees = task.assigned_names || 'Unassigned';
-                    const date     = task.due_date_formatted || 'No Deadline';
-                    const time     = task.due_time_formatted || '';
-                    const status   = task.status || 'Pending';
+                    const date = task.due_date_formatted || 'No Deadline';
+                    const time = task.due_time_formatted || '';
+                    const status = task.status || 'Pending';
                     const priority = task.priority || 'Low';
 
                     const card = document.createElement('div');
                     card.className = 'assigned-task-item';
-                    card.dataset.taskId          = task.id;
-                    card.dataset.taskName        = title;
-                    card.dataset.taskProjectId   = task.project_id   || '';
+                    card.dataset.taskId = task.id;
+                    card.dataset.taskName = title;
+                    card.dataset.taskProjectId = task.project_id || '';
                     card.dataset.taskProjectName = task.project_name || '';
-                    card.dataset.taskStageId     = task.stage_id     || '';
+                    card.dataset.taskStageId = task.stage_id || '';
                     card.dataset.taskStageNumber = task.stage_number || '';
-                    card.dataset.taskPriority    = priority;
+                    card.dataset.taskPriority = priority;
                     card.dataset.taskDescription = desc;
-                    card.dataset.taskDate        = task.due_date || '';
-                    card.dataset.taskTime        = time;
-                    card.dataset.taskStatus      = status;
+                    card.dataset.taskDate = task.due_date || '';
+                    card.dataset.taskTime = time;
+                    card.dataset.taskStatus = status;
                     card.dataset.taskCompletedBy = task.completed_by || '';
-                    card.dataset.taskAssignedTo  = task.assigned_to || '';
+                    card.dataset.taskAssignedTo = task.assigned_to || '';
                     card.dataset.taskCompletionHistory = task.completion_history || '{}';
                     card.dataset.taskAssigneeNames = task.assigned_names || '';
 
@@ -94,6 +94,10 @@ document.addEventListener("DOMContentLoaded", () => {
                             <button class="atl-edit-btn assigned-edit-btn unique-edit-assigned-btn" title="Edit Task">
                                 <i class="fa-solid fa-pen-to-square"></i> Edit
                             </button>
+                            ${(window.loggedUserDesignation || "").toLowerCase().includes("manager") ? `
+                            <button class="atl-delete-btn unique-delete-assigned-btn" title="Delete Task">
+                                <i class="fa-solid fa-trash-can"></i> Delete
+                            </button>` : ""}
                         </div>
                     `;
                     list.appendChild(card);
@@ -117,8 +121,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const _todayLocal = (function () {
         const d = new Date();
         return d.getFullYear() + '-'
-             + String(d.getMonth() + 1).padStart(2, '0') + '-'
-             + String(d.getDate()).padStart(2, '0');
+            + String(d.getMonth() + 1).padStart(2, '0') + '-'
+            + String(d.getDate()).padStart(2, '0');
     })();
 
     if (_picker) {
@@ -128,11 +132,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         _picker.addEventListener('focus', function () {
             this.style.borderColor = '#f97316';
-            this.style.boxShadow   = '0 0 0 3px rgba(249,115,22,0.12)';
+            this.style.boxShadow = '0 0 0 3px rgba(249,115,22,0.12)';
         });
         _picker.addEventListener('blur', function () {
             this.style.borderColor = '#e2e8f0';
-            this.style.boxShadow   = 'none';
+            this.style.boxShadow = 'none';
         });
     }
 
@@ -374,10 +378,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
             const strToday = `${yyyy}-${mm}-${dd}`;
-            
+
             // Default to today and set min date
             if (!addTaskDate.value) addTaskDate.value = strToday;
             addTaskDate.min = strToday;
+
+            // Restrict max time to 6:00 PM
+            addTaskTime.max = '18:00';
 
             // Restrict time if today is selected
             if (addTaskDate.value === strToday) {
@@ -394,9 +401,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Check constantly on change
         addTaskDate.addEventListener('change', setTimeConstraints);
-        
-        // Prevent manual past time input
-        addTaskTime.addEventListener('change', function() {
+
+        // Prevent manual past time input and after 6 PM input
+        addTaskTime.addEventListener('change', function () {
             if (addTaskDate.value === addTaskDate.min && this.value && this.value < this.min) {
                 try {
                     if (typeof showCustomAlert === 'function') {
@@ -404,8 +411,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     } else if (typeof showToast === 'function') {
                         showToast('Cannot select a time in the past.', 'warning');
                     }
-                } catch(e){}
+                } catch (e) { }
                 this.value = this.min;
+            }
+
+            if (this.value && this.value > '18:00') {
+                try {
+                    if (typeof showCustomAlert === 'function') {
+                        showCustomAlert('Invalid Time', 'Task deadline cannot be set after 06:00 PM.', 'error');
+                    } else if (typeof showToast === 'function') {
+                        showToast('Task deadline cannot be set after 06:00 PM.', 'warning');
+                    }
+                } catch (e) { }
+                this.value = '18:00';
             }
         });
     }
@@ -434,6 +452,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const dateVal = addTaskDate.value;
         const timeVal = addTaskTime ? addTaskTime.value : '';
+
+        // Restriction: Task deadline cannot be after 06:00 PM
+        if (timeVal && timeVal > '18:00') {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('Invalid Time', 'Task deadline cannot be set after 06:00 PM.', 'error');
+            } else if (typeof showToast === 'function') {
+                showToast('Task deadline cannot be set after 06:00 PM.', 'error');
+            } else {
+                alert('Task deadline cannot be set after 06:00 PM.');
+            }
+            return;
+        }
 
         // Auto-calculate priority based on task time limit
         let priority = "Low";
@@ -482,30 +512,70 @@ document.addEventListener("DOMContentLoaded", () => {
             displayTime = "No Deadline";
         }
 
-        // Use the global currentFilter variable updated by dropdown
-        // Make sure the array exists
-        if (!tasksData[currentFilter]) tasksData[currentFilter] = [];
+        const projectInput = document.getElementById('projectSearchInput');
+        const projectId = projectInput ? projectInput.dataset.projectId : null;
+        const projectVal = projectInput ? projectInput.value.trim() : '';
 
-        let selectedAssignees = window._getMentionedEmployees ? window._getMentionedEmployees() : [];
-        if (selectedAssignees.length === 0) {
-            const assigneesPool = ["Alex", "Sarah", "David", "Mike", "Anna"];
-            const shuffled = assigneesPool.sort(() => 0.5 - Math.random());
-            selectedAssignees = shuffled.slice(0, Math.floor(Math.random() * 3) + 1);
+        // ── Validation: Project is required & must be from search results ──
+        if (!projectId || !projectVal) {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('Missing Project', 'Please search and select a valid project from the list.', 'info');
+            } else {
+                alert('Please search and select a valid project from the list.');
+            }
+            return;
         }
 
-        const projectVal = document.getElementById('projectSearchInput') ? document.getElementById('projectSearchInput').value.trim() : '';
         const stageSelect = document.getElementById('stageSelect');
         const stageVal = stageSelect && stageSelect.value ? stageSelect.options[stageSelect.selectedIndex].text : '';
-        
-        let projectInfo = projectVal ? projectVal : 'General Task';
+
+        let projectInfo = projectVal;
         if (stageVal) {
             projectInfo += ' - ' + stageVal;
         }
-        
+
         const repeatVal = document.getElementById('repeatSelectText') ? document.getElementById('repeatSelectText').textContent.trim() : 'No';
-        const freqVal = document.getElementById('frequencySelectText') ? document.getElementById('frequencySelectText').textContent.trim() : 'Weekly';
-        
-        const recurringVal = repeatVal === 'Yes' ? freqVal : 'None';
+        const frequencySelectText = document.getElementById('frequencySelectText');
+        const freqVal = frequencySelectText ? frequencySelectText.textContent.trim() : 'Weekly';
+
+        // --- Custom Recurrence logic ---
+        let finalRecurringFreq = repeatVal === 'Yes' ? freqVal : null;
+        let customNumValue = null;
+        let customUnitStr = null;
+
+        if (repeatVal === 'Yes') {
+            const customGroup = document.getElementById('customFreqGroup');
+            // If custom group is visible, we override the freq string with the precise "Every X Unit" format
+            if (customGroup && customGroup.style.display !== 'none') {
+                const numEl = document.getElementById('customFreqNum');
+                const unitBtn = document.querySelector('#customFreqUnit .cfu-btn.cfu-active');
+                if (numEl && unitBtn) {
+                    customNumValue = parseInt(numEl.value) || 1;
+                    customUnitStr = unitBtn.dataset.unit;
+                    const label = customNumValue === 1 ? customUnitStr : customUnitStr + 's';
+                    finalRecurringFreq = `Every ${customNumValue} ${label}`;
+                }
+            }
+        }
+
+        // Collect mentioned employee IDs — stored as dataset on each chip
+        let assignedIds = [];
+        const chips = document.querySelectorAll('#mentionWrapper .m-chip');
+        chips.forEach(chip => {
+            if (chip.dataset.userId) assignedIds.push(chip.dataset.userId);
+        });
+
+        // ── Validation: Assignee is required ──
+        if (assignedIds.length === 0) {
+            if (typeof showCustomAlert === 'function') {
+                showCustomAlert('Missing Assignee', 'Please mention at least one team member using @name.', 'info');
+            } else {
+                alert('Please mention at least one team member using @name.');
+            }
+            return;
+        }
+
+        let selectedAssignees = window._getMentionedEmployees ? window._getMentionedEmployees() : [];
 
         const newTask = {
             id: Date.now(),
@@ -516,35 +586,24 @@ document.addEventListener("DOMContentLoaded", () => {
             rawDate: dateVal,
             checked: false,
             assignees: selectedAssignees,
-            recurring: recurringVal
+            recurring: finalRecurringFreq || 'None'
         };
 
-        // --- Persist to database ---
-        const projectInput = document.getElementById('projectSearchInput');
-        const stageSelectEl = document.getElementById('stageSelect');
-
-        // Collect mentioned employee IDs — stored as dataset on each chip
-        let assignedIds = [];
-        const chips = document.querySelectorAll('#mentionWrapper .m-chip');
-        chips.forEach(chip => {
-            if (chip.dataset.userId) assignedIds.push(chip.dataset.userId);
-        });
-
         const payload = {
-            project_id:         projectInput && projectInput.dataset.projectId ? parseInt(projectInput.dataset.projectId) : null,
-            project_name:       projectVal || null,
-            stage_id:           stageSelectEl && stageSelectEl.value ? parseInt(stageSelectEl.value) : null,
-            stage_number:       stageVal || null,
-            task_description:   text,
-            priority:           priority === 'Med' ? 'Medium' : priority,
-            assigned_to:        assignedIds.length > 0 ? assignedIds.join(',') : null,
-            assigned_names:     selectedAssignees.length > 0 ? selectedAssignees.join(',') : null,
-            due_date:           dateVal || null,
-            due_time:           timeVal || null,
-            is_recurring:       repeatVal === 'Yes',
-            recurrence_freq:    recurringVal !== 'None' ? recurringVal : null,
-            custom_freq_value:  null,
-            custom_freq_unit:   null
+            project_id: parseInt(projectId),
+            project_name: projectVal,
+            stage_id: stageSelect && stageSelect.value ? parseInt(stageSelect.value) : null,
+            stage_number: stageVal || null,
+            task_description: text,
+            priority: priority === 'Med' ? 'Medium' : priority,
+            assigned_to: assignedIds.join(','),
+            assigned_names: selectedAssignees.join(','),
+            due_date: dateVal || null,
+            due_time: timeVal || null,
+            is_recurring: repeatVal === 'Yes',
+            recurrence_freq: finalRecurringFreq,
+            custom_freq_value: customNumValue,
+            custom_freq_unit: customUnitStr
         };
 
         fetch('api/save_task.php', {
@@ -552,21 +611,21 @@ document.addEventListener("DOMContentLoaded", () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) {
-                console.error('Task save error:', data.error, data.details || '');
-            } else {
-                console.log('✅ Task saved to DB with ID:', data.task_id);
-                playTaskSound(); // 🔔 play assignment tone
-                
-                // Fetch fresh DB data to ensure it only appears here if the current user is assigned
-                if (typeof window.fetchMyTasks === 'function') {
-                    window.fetchMyTasks(window.currentFilter);
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    console.error('Task save error:', data.error, data.details || '');
+                } else {
+                    console.log('✅ Task saved to DB with ID:', data.task_id);
+                    playTaskSound(); // 🔔 play assignment tone
+
+                    // Fetch fresh DB data to ensure it only appears here if the current user is assigned
+                    if (typeof window.fetchMyTasks === 'function') {
+                        window.fetchMyTasks(window.currentFilter);
+                    }
                 }
-            }
-        })
-        .catch(err => console.error('Network error saving task:', err));
+            })
+            .catch(err => console.error('Network error saving task:', err));
 
         // Reset Inputs
         addTaskInput.value = '';
@@ -611,13 +670,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const card = document.createElement('div');
             card.className = 'assigned-task-item';
-            card.dataset.taskId          = newTask.id;
-            card.dataset.taskName        = projectInfo;
-            card.dataset.taskPriority    = badgeLabel;
+            card.dataset.taskId = newTask.id;
+            card.dataset.taskName = projectInfo;
+            card.dataset.taskPriority = badgeLabel;
             card.dataset.taskDescription = text;
-            card.dataset.taskDate        = dateVal || '';
-            card.dataset.taskTime        = formattedTime || '';
-            card.dataset.taskStatus      = 'Pending';
+            card.dataset.taskDate = dateVal || '';
+            card.dataset.taskTime = formattedTime || '';
+            card.dataset.taskStatus = 'Pending';
             card.dataset.taskAssigneeNames = selectedAssignees.join(',');
             card.innerHTML = `
                 <div class="atl-left">
@@ -631,6 +690,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 <div class="atl-right">
                     <button class="atl-edit-btn assigned-edit-btn unique-edit-assigned-btn" title="Edit Task"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
+                    ${(window.loggedUserDesignation || "").toLowerCase().includes("manager") ? `
+                    <button class="atl-delete-btn unique-delete-assigned-btn" title="Delete Task">
+                        <i class="fa-solid fa-trash-can"></i> Delete
+                    </button>` : ""}
                 </div>
             `;
             assignedList.insertBefore(card, assignedList.firstChild);
@@ -644,7 +707,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- @Mention Chip Input Logic ---
-    (function() {
+    (function () {
         const _w = document.getElementById('mentionWrapper');
         const _i = document.getElementById('multiSelectInput');
         const _m = document.getElementById('multiSelectMenu');
@@ -728,8 +791,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const filtered = EMP.filter(e =>
                 !selected.includes(e.name) &&
                 (term === '' ||
-                 e.name.toLowerCase().split(' ').some(w => w.startsWith(term)) ||
-                 e.name.toLowerCase().includes(term))
+                    e.name.toLowerCase().split(' ').some(w => w.startsWith(term)) ||
+                    e.name.toLowerCase().includes(term))
             );
             if (!filtered.length) { hideMenu(); return; }
 
@@ -774,7 +837,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         function addChip(name) {
-            const emp = EMP.find(e => e.name === name) || { color: '#94a3b8', initials: name.substring(0,2).toUpperCase(), id: null };
+            const emp = EMP.find(e => e.name === name) || { color: '#94a3b8', initials: name.substring(0, 2).toUpperCase(), id: null };
             const chip = document.createElement('span');
             chip.className = 'm-chip';
             chip.dataset.name = name;
@@ -840,7 +903,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         _i.addEventListener('blur', () => setTimeout(hideMenu, 160));
 
-        window._getMentionedEmployees   = () => [...selected];
+        window._getMentionedEmployees = () => [...selected];
         window._clearMentionedEmployees = () => {
             selected = [];
             _w.querySelectorAll('.m-chip').forEach(c => c.remove());
@@ -849,25 +912,25 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     })();
 
-        // --- Autocomplete Logic for Project Search ---
+    // --- Autocomplete Logic for Project Search ---
     const projectSearchInput = document.getElementById('projectSearchInput');
     const projectSearchMenu = document.getElementById('projectSearchMenu');
     let searchTimeout = null;
 
     if (projectSearchInput && projectSearchMenu) {
-        
+
         // Function to fetch project stages
         const fetchProjectStages = async (projectId) => {
             const stageContainer = document.getElementById('stageSelectContainer');
             const stageSelect = document.getElementById('stageSelect');
             if (!stageContainer || !stageSelect) return;
-            
+
             try {
                 const response = await fetch(`api/fetch_project_stages.php?project_id=${projectId}`);
                 const data = await response.json();
-                
+
                 if (data.success && data.stages && data.stages.length > 0) {
-                    stageSelect.innerHTML = '<option value="">Select a stage...</option>' + data.stages.map(s => 
+                    stageSelect.innerHTML = '<option value="">Select a stage...</option>' + data.stages.map(s =>
                         `<option value="${s.id}">${s.stage_number || ('Stage ' + s.id)}</option>`
                     ).join('');
                     stageContainer.style.display = 'block';
@@ -885,7 +948,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const response = await fetch(`api/search_projects.php?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
-                
+
                 if (data.success && data.projects.length > 0) {
                     projectSearchMenu.innerHTML = data.projects.map(project => `
                         <div class="project-search-item" data-id="${project.id}" data-title="${project.title.replace(/"/g, '&quot;')}" style="padding: 0.6rem 1rem; cursor: pointer; transition: background 0.2s; font-size: 0.9rem; font-weight: 500; display: flex; flex-direction: column; gap: 0.2rem;">
@@ -893,7 +956,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             ${project.project_type ? `<span style="font-size: 0.75rem; color: #64748b; font-weight: normal;">Type: ${project.project_type}</span>` : ''}
                         </div>
                     `).join('');
-                    
+
                     projectSearchMenu.style.display = 'block';
 
                     // Add click handlers to items
@@ -929,15 +992,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const val = e.target.value.trim();
             // Clear any id mapping if user alters text manually
             delete projectSearchInput.dataset.projectId;
-            
+
             // Hide and reset stages on input change
             const stageContainer = document.getElementById('stageSelectContainer');
             if (stageContainer) stageContainer.style.display = 'none';
             const stageSelect = document.getElementById('stageSelect');
             if (stageSelect) stageSelect.innerHTML = '<option value="">Select a stage...</option>';
-            
+
             clearTimeout(searchTimeout);
-            
+
             if (val.length < 2) {
                 projectSearchMenu.style.display = 'none';
                 return;
@@ -962,6 +1025,18 @@ document.addEventListener("DOMContentLoaded", () => {
             if (val.length >= 2) {
                 fetchProjects(val);
             }
+        });
+
+        // ── Validation: Clear input if no project was selected from results ──
+        projectSearchInput.addEventListener('blur', () => {
+            // Small delay to allow menu clicks to register before clearing
+            setTimeout(() => {
+                if (!projectSearchInput.dataset.projectId) {
+                    projectSearchInput.value = '';
+                    const stageContainer = document.getElementById('stageSelectContainer');
+                    if (stageContainer) stageContainer.style.display = 'none';
+                }
+            }, 200);
         });
     }
 
@@ -1010,7 +1085,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 e.stopPropagation();
                 const val = option.getAttribute('data-value');
                 repeatSelectText.textContent = val;
-                
+
                 // Show/hide frequency based on yes/no
                 const freqGroup = document.getElementById('frequencyGroup');
                 if (freqGroup) {
@@ -1107,11 +1182,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         function updateCustomPreview() {
-            const num  = document.getElementById('customFreqNum');
+            const num = document.getElementById('customFreqNum');
             const preview = document.getElementById('customFreqPreview');
             const activeBtn = document.querySelector('#customFreqUnit .cfu-btn.cfu-active');
             if (!num || !preview || !activeBtn) return;
-            const n    = parseInt(num.value) || 1;
+            const n = parseInt(num.value) || 1;
             const unit = activeBtn.dataset.unit;
             const label = n === 1 ? unit : unit + 's';
             const text = `Every ${n} ${label}`;
@@ -2143,7 +2218,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateShiftTimer() {
         const now = new Date();
         const endOfShift = new Date(now);
-        
+
         // Parse the dynamic shift end time
         if (_shiftEndTime) {
             const timeParts = _shiftEndTime.split(':');
@@ -2324,48 +2399,48 @@ document.addEventListener("DOMContentLoaded", () => {
                     const canvas = document.getElementById('cameraCanvas');
                     const grantBtn = document.getElementById('grantAccessBtn');
                     const clickPicBtn = document.getElementById('clickPicBtn');
-                
-    window.checkPunchInValidity = function() {
-        const clickPicBtn = document.getElementById('clickPicBtn');
-        const takePhotoBtn = document.getElementById('takePhotoBtnClick');
-        const punchInReason = document.getElementById('punchInReason');
-        const wordCountInReason = document.getElementById('wordCountInReason');
-        if (!clickPicBtn) return;
-        
-        const rDiv = document.getElementById('outOfRangeReasonInDiv');
-        let needsReason = rDiv && rDiv.style.display !== 'none';
-        
-        let reasonValid = true;
-        if (needsReason && punchInReason) {
-            let text = punchInReason.value.trim();
-            let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
-            let count = text === '' ? 0 : words.length;
-            if (wordCountInReason) wordCountInReason.textContent = count;
-            if (count < 10) reasonValid = false;
-        }
 
-        let photoTaken = takePhotoBtn && takePhotoBtn.style.display === 'none';
+                    window.checkPunchInValidity = function () {
+                        const clickPicBtn = document.getElementById('clickPicBtn');
+                        const takePhotoBtn = document.getElementById('takePhotoBtnClick');
+                        const punchInReason = document.getElementById('punchInReason');
+                        const wordCountInReason = document.getElementById('wordCountInReason');
+                        if (!clickPicBtn) return;
 
-        if (photoTaken && reasonValid) {
-            clickPicBtn.disabled = false;
-            clickPicBtn.classList.add('active');
-            clickPicBtn.textContent = 'PUNCH IN';
-        } else {
-            clickPicBtn.disabled = true;
-            clickPicBtn.classList.remove('active');
-            if (!photoTaken) {
-                 clickPicBtn.textContent = 'PLEASE TAKE A PHOTO';
-            } else if (!reasonValid) {
-                 clickPicBtn.textContent = 'PROVIDE REASON';
-            }
-        }
-    };
-    
-    document.addEventListener('input', function(e) {
-        if (e.target.id === 'punchInReason') window.checkPunchInValidity();
-    });
+                        const rDiv = document.getElementById('outOfRangeReasonInDiv');
+                        let needsReason = rDiv && rDiv.style.display !== 'none';
 
-    const takePhotoBtn = document.getElementById('takePhotoBtnClick');
+                        let reasonValid = true;
+                        if (needsReason && punchInReason) {
+                            let text = punchInReason.value.trim();
+                            let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
+                            let count = text === '' ? 0 : words.length;
+                            if (wordCountInReason) wordCountInReason.textContent = count;
+                            if (count < 10) reasonValid = false;
+                        }
+
+                        let photoTaken = takePhotoBtn && takePhotoBtn.style.display === 'none';
+
+                        if (photoTaken && reasonValid) {
+                            clickPicBtn.disabled = false;
+                            clickPicBtn.classList.add('active');
+                            clickPicBtn.textContent = 'PUNCH IN';
+                        } else {
+                            clickPicBtn.disabled = true;
+                            clickPicBtn.classList.remove('active');
+                            if (!photoTaken) {
+                                clickPicBtn.textContent = 'PLEASE TAKE A PHOTO';
+                            } else if (!reasonValid) {
+                                clickPicBtn.textContent = 'PROVIDE REASON';
+                            }
+                        }
+                    };
+
+                    document.addEventListener('input', function (e) {
+                        if (e.target.id === 'punchInReason') window.checkPunchInValidity();
+                    });
+
+                    const takePhotoBtn = document.getElementById('takePhotoBtnClick');
 
                     const camControls = document.getElementById('cameraControlsGrp');
                     const camPlaceholder = document.getElementById('cameraPlaceholder');
@@ -2429,48 +2504,48 @@ document.addEventListener("DOMContentLoaded", () => {
         const video = document.getElementById('cameraPreview');
         const grantBtn = document.getElementById('grantAccessBtn');
         const clickPicBtn = document.getElementById('clickPicBtn');
-    
-    window.checkPunchInValidity = function() {
-        const clickPicBtn = document.getElementById('clickPicBtn');
-        const takePhotoBtn = document.getElementById('takePhotoBtnClick');
-        const punchInReason = document.getElementById('punchInReason');
-        const wordCountInReason = document.getElementById('wordCountInReason');
-        if (!clickPicBtn) return;
-        
-        const rDiv = document.getElementById('outOfRangeReasonInDiv');
-        let needsReason = rDiv && rDiv.style.display !== 'none';
-        
-        let reasonValid = true;
-        if (needsReason && punchInReason) {
-            let text = punchInReason.value.trim();
-            let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
-            let count = text === '' ? 0 : words.length;
-            if (wordCountInReason) wordCountInReason.textContent = count;
-            if (count < 10) reasonValid = false;
-        }
 
-        let photoTaken = takePhotoBtn && takePhotoBtn.style.display === 'none';
+        window.checkPunchInValidity = function () {
+            const clickPicBtn = document.getElementById('clickPicBtn');
+            const takePhotoBtn = document.getElementById('takePhotoBtnClick');
+            const punchInReason = document.getElementById('punchInReason');
+            const wordCountInReason = document.getElementById('wordCountInReason');
+            if (!clickPicBtn) return;
 
-        if (photoTaken && reasonValid) {
-            clickPicBtn.disabled = false;
-            clickPicBtn.classList.add('active');
-            clickPicBtn.textContent = 'PUNCH IN';
-        } else {
-            clickPicBtn.disabled = true;
-            clickPicBtn.classList.remove('active');
-            if (!photoTaken) {
-                 clickPicBtn.textContent = 'PLEASE TAKE A PHOTO';
-            } else if (!reasonValid) {
-                 clickPicBtn.textContent = 'PROVIDE REASON';
+            const rDiv = document.getElementById('outOfRangeReasonInDiv');
+            let needsReason = rDiv && rDiv.style.display !== 'none';
+
+            let reasonValid = true;
+            if (needsReason && punchInReason) {
+                let text = punchInReason.value.trim();
+                let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
+                let count = text === '' ? 0 : words.length;
+                if (wordCountInReason) wordCountInReason.textContent = count;
+                if (count < 10) reasonValid = false;
             }
-        }
-    };
-    
-    document.addEventListener('input', function(e) {
-        if (e.target.id === 'punchInReason') window.checkPunchInValidity();
-    });
 
-    const takePhotoBtn = document.getElementById('takePhotoBtnClick');
+            let photoTaken = takePhotoBtn && takePhotoBtn.style.display === 'none';
+
+            if (photoTaken && reasonValid) {
+                clickPicBtn.disabled = false;
+                clickPicBtn.classList.add('active');
+                clickPicBtn.textContent = 'PUNCH IN';
+            } else {
+                clickPicBtn.disabled = true;
+                clickPicBtn.classList.remove('active');
+                if (!photoTaken) {
+                    clickPicBtn.textContent = 'PLEASE TAKE A PHOTO';
+                } else if (!reasonValid) {
+                    clickPicBtn.textContent = 'PROVIDE REASON';
+                }
+            }
+        };
+
+        document.addEventListener('input', function (e) {
+            if (e.target.id === 'punchInReason') window.checkPunchInValidity();
+        });
+
+        const takePhotoBtn = document.getElementById('takePhotoBtnClick');
 
 
         const geoCoordsText = document.getElementById('geoCoordsText');
@@ -2528,9 +2603,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const userAcc = position.coords.accuracy || null;
 
                 // Store GPS for API call
-                _punchInLat  = userLat;
-                _punchInLon  = userLon;
-                _punchInAcc  = userAcc;
+                _punchInLat = userLat;
+                _punchInLon = userLon;
+                _punchInAcc = userAcc;
                 _punchInAddr = userLat.toFixed(5) + ', ' + userLon.toFixed(5); // fallback until geocode resolves
 
                 if (geoCoordsText) geoCoordsText.innerHTML = userLat.toFixed(6) + ', ' + userLon.toFixed(6);
@@ -2566,9 +2641,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     if (isInside) {
                         // Store geofence result for API payload
-                        _punchInGeofenceId      = zone.id;
-                        _punchInWithinGeofence  = 1;
-                        _punchInDistance        = Math.round(geoResult.distance);
+                        _punchInGeofenceId = zone.id;
+                        _punchInWithinGeofence = 1;
+                        _punchInDistance = Math.round(geoResult.distance);
                         if (geoStatusBanner) { geoStatusBanner.className = 'c-pi-status'; geoStatusBanner.style.background = '#f0fdf4'; }
                         if (geoStatusIcon) { geoStatusIcon.className = 'fa-solid fa-circle-check'; geoStatusIcon.style.color = '#22c55e'; }
                         if (geoStatusText) { geoStatusText.innerHTML = 'Within <strong>' + zone.name + '</strong> (' + distDisplay + ' &bull; radius: ' + zone.radius + 'm)'; geoStatusText.style.color = '#166534'; }
@@ -2579,9 +2654,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (window.checkPunchInValidity) window.checkPunchInValidity();
                     } else {
                         // Store geofence result for API payload
-                        _punchInGeofenceId      = zone.id;
-                        _punchInWithinGeofence  = 0;
-                        _punchInDistance        = Math.round(geoResult.distance);
+                        _punchInGeofenceId = zone.id;
+                        _punchInWithinGeofence = 0;
+                        _punchInDistance = Math.round(geoResult.distance);
                         if (geoStatusBanner) { geoStatusBanner.className = 'c-pi-status'; geoStatusBanner.style.background = '#fef2f2'; }
                         if (geoStatusIcon) { geoStatusIcon.className = 'fa-solid fa-circle-xmark'; geoStatusIcon.style.color = '#ef4444'; }
                         if (geoStatusText) { geoStatusText.innerHTML = 'Outside <strong>' + zone.name + '</strong> (' + distDisplay + ' away &bull; allowed: ' + zone.radius + 'm) &mdash; Reason required'; geoStatusText.style.color = '#991b1b'; }
@@ -2731,9 +2806,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const userAcc = position.coords.accuracy || null;
 
                 // Store GPS for API call
-                _punchOutLat  = userLat;
-                _punchOutLon  = userLon;
-                _punchOutAcc  = userAcc;
+                _punchOutLat = userLat;
+                _punchOutLon = userLon;
+                _punchOutAcc = userAcc;
                 _punchOutAddr = userLat.toFixed(5) + ', ' + userLon.toFixed(5); // fallback until geocode resolves
 
                 if (geoCoordsText) geoCoordsText.innerHTML = 'Coordinates: ' + userLat.toFixed(6) + ', ' + userLon.toFixed(6);
@@ -2751,7 +2826,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const capturePicBtnOut = document.getElementById('capturePicBtnOut');
                 const retakeWrapperOut = document.getElementById('retakeWrapperOut');
-                const submitBtn       = document.getElementById('submitPunchOutBtn');
+                const submitBtn = document.getElementById('submitPunchOutBtn');
 
                 if (!geoResultOut) {
                     // No zones configured — allow freely
@@ -2765,8 +2840,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (retakeWrapperOut) retakeWrapperOut.style.display = 'none';
                     if (submitBtn) { submitBtn.style.display = 'block'; checkPunchOutValidity(); }
                 } else {
-                    const zone     = geoResultOut.zone;
-                    const distM    = Math.round(geoResultOut.distance);
+                    const zone = geoResultOut.zone;
+                    const distM = Math.round(geoResultOut.distance);
                     const isInside = geoResultOut.isInside;
                     const distDisplay = distM >= 1000 ? (distM / 1000).toFixed(2) + ' km' : distM + ' m';
 
@@ -2774,9 +2849,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     if (isInside) {
                         // Store geofence result for API payload
-                        _punchOutGeofenceId     = zone.id;
+                        _punchOutGeofenceId = zone.id;
                         _punchOutWithinGeofence = 1;
-                        _punchOutDistance       = Math.round(geoResultOut.distance);
+                        _punchOutDistance = Math.round(geoResultOut.distance);
                         if (geoStatusBanner) { geoStatusBanner.style.background = '#f0fdf4'; }
                         if (geoStatusIcon) { geoStatusIcon.className = 'fa-solid fa-circle-check'; geoStatusIcon.style.color = '#22c55e'; }
                         if (geoStatusText) { geoStatusText.innerHTML = 'Within <strong>' + zone.name + '</strong> (' + distDisplay + ' &bull; radius: ' + zone.radius + 'm)'; geoStatusText.style.color = '#166534'; }
@@ -2787,9 +2862,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (submitBtn) { submitBtn.style.display = 'block'; checkPunchOutValidity(); }
                     } else {
                         // Store geofence result for API payload
-                        _punchOutGeofenceId     = zone.id;
+                        _punchOutGeofenceId = zone.id;
                         _punchOutWithinGeofence = 0;
-                        _punchOutDistance       = Math.round(geoResultOut.distance);
+                        _punchOutDistance = Math.round(geoResultOut.distance);
                         if (geoStatusBanner) { geoStatusBanner.style.background = '#fef2f2'; }
                         if (geoStatusIcon) { geoStatusIcon.className = 'fa-solid fa-circle-xmark'; geoStatusIcon.style.color = '#ef4444'; }
                         if (geoStatusText) { geoStatusText.innerHTML = 'Outside <strong>' + zone.name + '</strong> (' + distDisplay + ' away &bull; allowed: ' + zone.radius + 'm) &mdash; Reason required'; geoStatusText.style.color = '#991b1b'; }
@@ -2819,8 +2894,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ── Work Report Smart Suggestions ─────────────────────────────────────────
     function generateWorkReportSuggestions() {
-        const panel     = document.getElementById('workReportSuggestionsPanel');
-        const list      = document.getElementById('workReportSuggestionsList');
+        const panel = document.getElementById('workReportSuggestionsPanel');
+        const list = document.getElementById('workReportSuggestionsList');
         const noSuggest = document.getElementById('workReportNoSuggestions');
         if (!panel || !list) return;
 
@@ -2835,45 +2910,45 @@ document.addEventListener("DOMContentLoaded", () => {
         list.innerHTML = '';
 
         if (allCompleted.length === 0) {
-            list.style.display      = 'none';
+            list.style.display = 'none';
             noSuggest.style.display = 'block';
-            panel.style.display     = 'block';
+            panel.style.display = 'block';
             return;
         }
 
         noSuggest.style.display = 'none';
-        list.style.display      = 'flex';
-        panel.style.display     = 'block';
+        list.style.display = 'flex';
+        panel.style.display = 'block';
 
-        const count      = allCompleted.length;
-        const titleList  = allCompleted.map(t => `"${t.title}"`).join(', ');
+        const count = allCompleted.length;
+        const titleList = allCompleted.map(t => `"${t.title}"`).join(', ');
         const detailList = allCompleted.map(t => `${t.title} (${t.desc})`).join('; ');
-        const briefList  = allCompleted.map(t => t.title).join(', ');
+        const briefList = allCompleted.map(t => t.title).join(', ');
 
         // 3 tone-varied combined reports covering ALL completed tasks
         const variations = [
             {
-                label   : '📝 Formal',
-                badge   : '#1e40af',
-                badgeBg : '#dbeafe',
-                text    : `Today I successfully completed ${count} assigned task${count > 1 ? 's' : ''}: ${titleList}. `
-                        + `All deliverables were met as planned and no blockers were encountered during the shift. `
-                        + `Each task was carried out in accordance with project requirements and quality standards.`
+                label: '📝 Formal',
+                badge: '#1e40af',
+                badgeBg: '#dbeafe',
+                text: `Today I successfully completed ${count} assigned task${count > 1 ? 's' : ''}: ${titleList}. `
+                    + `All deliverables were met as planned and no blockers were encountered during the shift. `
+                    + `Each task was carried out in accordance with project requirements and quality standards.`
             },
             {
-                label   : '📋 Detailed',
-                badge   : '#065f46',
-                badgeBg : '#d1fae5',
-                text    : `During today's shift, I completed a total of ${count} task${count > 1 ? 's' : ''}. `
-                        + `The tasks completed are as follows: ${detailList}. `
-                        + `All work was completed within the scheduled timeframe and relevant stakeholders were kept informed throughout the process.`
+                label: '📋 Detailed',
+                badge: '#065f46',
+                badgeBg: '#d1fae5',
+                text: `During today's shift, I completed a total of ${count} task${count > 1 ? 's' : ''}. `
+                    + `The tasks completed are as follows: ${detailList}. `
+                    + `All work was completed within the scheduled timeframe and relevant stakeholders were kept informed throughout the process.`
             },
             {
-                label   : '⚡ Brief',
-                badge   : '#92400e',
-                badgeBg : '#fef3c7',
-                text    : `Completed ${count} task${count > 1 ? 's' : ''} today — ${briefList}. `
-                        + `Shift completed successfully with all assigned work finished on time.`
+                label: '⚡ Brief',
+                badge: '#92400e',
+                badgeBg: '#fef3c7',
+                text: `Completed ${count} task${count > 1 ? 's' : ''} today — ${briefList}. `
+                    + `Shift completed successfully with all assigned work finished on time.`
             }
         ];
 
@@ -2906,16 +2981,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Hover
             chip.addEventListener('mouseenter', () => {
-                chip.style.background  = 'linear-gradient(135deg, #ede9fe, #ddd6fe)';
+                chip.style.background = 'linear-gradient(135deg, #ede9fe, #ddd6fe)';
                 chip.style.borderColor = '#818cf8';
-                chip.style.transform   = 'translateY(-1px)';
-                chip.style.boxShadow   = '0 4px 14px rgba(99,102,241,0.18)';
+                chip.style.transform = 'translateY(-1px)';
+                chip.style.boxShadow = '0 4px 14px rgba(99,102,241,0.18)';
             });
             chip.addEventListener('mouseleave', () => {
-                chip.style.background  = 'linear-gradient(135deg, #f5f3ff, #ede9fe)';
+                chip.style.background = 'linear-gradient(135deg, #f5f3ff, #ede9fe)';
                 chip.style.borderColor = '#c4b5fd';
-                chip.style.transform   = 'translateY(0)';
-                chip.style.boxShadow   = 'none';
+                chip.style.transform = 'translateY(0)';
+                chip.style.boxShadow = 'none';
             });
 
             // Click → fill textarea & trigger word-count
@@ -2928,11 +3003,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     ta.scrollTop = 0;
                 }
                 // Flash selected state
-                chip.style.background  = 'linear-gradient(135deg, #6366f1, #818cf8)';
+                chip.style.background = 'linear-gradient(135deg, #6366f1, #818cf8)';
                 chip.style.borderColor = '#6366f1';
                 chip.querySelectorAll('span, i').forEach(el => el.style.color = '#fff');
                 setTimeout(() => {
-                    chip.style.background  = 'linear-gradient(135deg, #ede9fe, #ddd6fe)';
+                    chip.style.background = 'linear-gradient(135deg, #ede9fe, #ddd6fe)';
                     chip.style.borderColor = '#818cf8';
                     chip.querySelectorAll('span, i').forEach(el => el.style.color = '');
                 }, 700);
@@ -3624,156 +3699,440 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    window.initPunchModalEvents = function() {
-    // Punch In Modal Interactions
-    const punchInModal = document.getElementById('punchInModal');
-    const closePunchInModal = document.getElementById('closePunchInModal');
-    const actualClosePunchInBtn = document.getElementById('actualClosePunchInBtn');
-    const grantAccessBtn = document.getElementById('grantAccessBtn');
-    const clickPicBtn = document.getElementById('clickPicBtn');
-
-    function closePunchIn() {
-        if (punchInModal) {
-            punchInModal.classList.remove('visible');
-            punchInModal.classList.remove('open');
-            const video = document.getElementById('cameraPreview');
-            if (video && video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-                video.srcObject = null;
-            }
-        }
-    }
-
-    if (closePunchInModal) closePunchInModal.addEventListener('click', closePunchIn);
-    if (actualClosePunchInBtn) actualClosePunchInBtn.addEventListener('click', closePunchIn);
-
-    // Also close on overlay click
-    if (punchInModal) {
-        punchInModal.addEventListener('click', (e) => {
-            if (e.target === punchInModal) closePunchIn();
-        });
-    }
-
-    if (grantAccessBtn) {
-        grantAccessBtn.addEventListener('click', requestPunchInAccess);
-    }
-
-    let currentFacingMode = 'user';
-    const switchCameraBtn = document.getElementById('switchCameraBtn');
-    if (switchCameraBtn) {
-        switchCameraBtn.addEventListener('click', async () => {
-            const video = document.getElementById('cameraPreview');
-            if (video && video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-            }
-            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
-                if (video) video.srcObject = stream;
-            } catch (err) {
-                console.error('Camera switch failed', err);
-            }
-        });
-    }
-
-
-    window.checkPunchInValidity = function() {
+    window.initPunchModalEvents = function () {
+        // Punch In Modal Interactions
+        const punchInModal = document.getElementById('punchInModal');
+        const closePunchInModal = document.getElementById('closePunchInModal');
+        const actualClosePunchInBtn = document.getElementById('actualClosePunchInBtn');
+        const grantAccessBtn = document.getElementById('grantAccessBtn');
         const clickPicBtn = document.getElementById('clickPicBtn');
-        const takePhotoBtn = document.getElementById('takePhotoBtnClick');
-        const punchInReason = document.getElementById('punchInReason');
-        const wordCountInReason = document.getElementById('wordCountInReason');
-        if (!clickPicBtn) return;
-        
-        const rDiv = document.getElementById('outOfRangeReasonInDiv');
-        let needsReason = rDiv && rDiv.style.display !== 'none';
-        
-        let reasonValid = true;
-        if (needsReason && punchInReason) {
-            let text = punchInReason.value.trim();
-            let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
-            let count = text === '' ? 0 : words.length;
-            if (wordCountInReason) wordCountInReason.textContent = count;
-            if (count < 10) reasonValid = false;
-        }
 
-        let photoTaken = takePhotoBtn && takePhotoBtn.style.display === 'none';
-
-        if (photoTaken && reasonValid) {
-            clickPicBtn.disabled = false;
-            clickPicBtn.classList.add('active');
-            clickPicBtn.textContent = 'PUNCH IN';
-        } else {
-            clickPicBtn.disabled = true;
-            clickPicBtn.classList.remove('active');
-            if (!photoTaken) {
-                 clickPicBtn.textContent = 'PLEASE TAKE A PHOTO';
-            } else if (!reasonValid) {
-                 clickPicBtn.textContent = 'PROVIDE REASON';
-            }
-        }
-    };
-    
-    document.addEventListener('input', function(e) {
-        if (e.target.id === 'punchInReason') window.checkPunchInValidity();
-    });
-
-    const takePhotoBtn = document.getElementById('takePhotoBtnClick');
-
-    if (takePhotoBtn) {
-        takePhotoBtn.addEventListener('click', () => {
-            const video = document.getElementById('cameraPreview');
-            const canvas = document.getElementById('cameraCanvas');
-            const submitBtn = document.getElementById('clickPicBtn');
-
-            if (video && canvas) {
-                const context = canvas.getContext('2d');
-                canvas.width = video.videoWidth || 640;
-                canvas.height = video.videoHeight || 480;
-
-                context.translate(canvas.width, 0);
-                context.scale(-1, 1);
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                context.setTransform(1, 0, 0, 1, 0, 0);
-
-                video.style.display = 'none';
-                canvas.style.display = 'block';
-
-                takePhotoBtn.style.display = 'none';
-                if (switchCameraBtn) switchCameraBtn.style.display = 'none';
-
-                if (submitBtn) {
-                    if (window.checkPunchInValidity) window.checkPunchInValidity();
+        function closePunchIn() {
+            if (punchInModal) {
+                punchInModal.classList.remove('visible');
+                punchInModal.classList.remove('open');
+                const video = document.getElementById('cameraPreview');
+                if (video && video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
                 }
             }
+        }
+
+        if (closePunchInModal) closePunchInModal.addEventListener('click', closePunchIn);
+        if (actualClosePunchInBtn) actualClosePunchInBtn.addEventListener('click', closePunchIn);
+
+        // Also close on overlay click
+        if (punchInModal) {
+            punchInModal.addEventListener('click', (e) => {
+                if (e.target === punchInModal) closePunchIn();
+            });
+        }
+
+        if (grantAccessBtn) {
+            grantAccessBtn.addEventListener('click', requestPunchInAccess);
+        }
+
+        let currentFacingMode = 'user';
+        const switchCameraBtn = document.getElementById('switchCameraBtn');
+        if (switchCameraBtn) {
+            switchCameraBtn.addEventListener('click', async () => {
+                const video = document.getElementById('cameraPreview');
+                if (video && video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                }
+                currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
+                    if (video) video.srcObject = stream;
+                } catch (err) {
+                    console.error('Camera switch failed', err);
+                }
+            });
+        }
+
+
+        window.checkPunchInValidity = function () {
+            const clickPicBtn = document.getElementById('clickPicBtn');
+            const takePhotoBtn = document.getElementById('takePhotoBtnClick');
+            const punchInReason = document.getElementById('punchInReason');
+            const wordCountInReason = document.getElementById('wordCountInReason');
+            if (!clickPicBtn) return;
+
+            const rDiv = document.getElementById('outOfRangeReasonInDiv');
+            let needsReason = rDiv && rDiv.style.display !== 'none';
+
+            let reasonValid = true;
+            if (needsReason && punchInReason) {
+                let text = punchInReason.value.trim();
+                let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
+                let count = text === '' ? 0 : words.length;
+                if (wordCountInReason) wordCountInReason.textContent = count;
+                if (count < 10) reasonValid = false;
+            }
+
+            let photoTaken = takePhotoBtn && takePhotoBtn.style.display === 'none';
+
+            if (photoTaken && reasonValid) {
+                clickPicBtn.disabled = false;
+                clickPicBtn.classList.add('active');
+                clickPicBtn.textContent = 'PUNCH IN';
+            } else {
+                clickPicBtn.disabled = true;
+                clickPicBtn.classList.remove('active');
+                if (!photoTaken) {
+                    clickPicBtn.textContent = 'PLEASE TAKE A PHOTO';
+                } else if (!reasonValid) {
+                    clickPicBtn.textContent = 'PROVIDE REASON';
+                }
+            }
+        };
+
+        document.addEventListener('input', function (e) {
+            if (e.target.id === 'punchInReason') window.checkPunchInValidity();
         });
-    }
 
-    if (clickPicBtn) {
-        clickPicBtn.addEventListener('click', async () => {
-            clickPicBtn.disabled = true;
-            clickPicBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Punching in...';
+        const takePhotoBtn = document.getElementById('takePhotoBtnClick');
 
-            // Grab photo from canvas
-            const canvas = document.getElementById('cameraCanvas');
-            const photoData = canvas ? canvas.toDataURL('image/jpeg', 0.85) : null;
+        if (takePhotoBtn) {
+            takePhotoBtn.addEventListener('click', () => {
+                const video = document.getElementById('cameraPreview');
+                const canvas = document.getElementById('cameraCanvas');
+                const submitBtn = document.getElementById('clickPicBtn');
+
+                if (video && canvas) {
+                    const context = canvas.getContext('2d');
+                    canvas.width = video.videoWidth || 640;
+                    canvas.height = video.videoHeight || 480;
+
+                    context.translate(canvas.width, 0);
+                    context.scale(-1, 1);
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    context.setTransform(1, 0, 0, 1, 0, 0);
+
+                    video.style.display = 'none';
+                    canvas.style.display = 'block';
+
+                    takePhotoBtn.style.display = 'none';
+                    if (switchCameraBtn) switchCameraBtn.style.display = 'none';
+
+                    if (submitBtn) {
+                        if (window.checkPunchInValidity) window.checkPunchInValidity();
+                    }
+                }
+            });
+        }
+
+        if (clickPicBtn) {
+            clickPicBtn.addEventListener('click', async () => {
+                clickPicBtn.disabled = true;
+                clickPicBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Punching in...';
+
+                // Grab photo from canvas
+                const canvas = document.getElementById('cameraCanvas');
+                const photoData = canvas ? canvas.toDataURL('image/jpeg', 0.85) : null;
+
+                // Grab out-of-geofence reason if visible
+                const rDiv = document.getElementById('outOfRangeReasonInDiv');
+                const reasonTA = document.getElementById('punchInReason');
+                const outOfGeofenceReason = (rDiv && rDiv.style.display !== 'none' && reasonTA) ? reasonTA.value.trim() : null;
+
+                const payload = {
+                    action: 'punch_in',
+                    latitude: _punchInLat,
+                    longitude: _punchInLon,
+                    accuracy: _punchInAcc,
+                    address: _punchInAddr,
+                    punch_in_photo: photoData,
+                    geofence_id: _punchInGeofenceId,
+                    within_geofence: _punchInWithinGeofence,
+                    distance_from_geofence: _punchInDistance
+                };
+                if (outOfGeofenceReason) payload.out_of_geofence_reason = outOfGeofenceReason;
+
+                try {
+                    const res = await fetch('../punch.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+
+                    if (data.success) {
+                        executePunchIn();
+                        closePunchIn();
+                        showDailyTasksPopup();
+                    } else {
+                        // Show error inline in modal
+                        clickPicBtn.disabled = false;
+                        clickPicBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> PUNCH IN';
+                        const geoStatus = document.getElementById('geoStatusBanner');
+                        if (geoStatus) {
+                            geoStatus.style.display = 'flex';
+                            geoStatus.style.background = '#fef2f2';
+                            const icon = document.getElementById('geoStatusIcon');
+                            if (icon) { icon.className = 'fa-solid fa-circle-xmark'; icon.style.color = '#ef4444'; }
+                            const txt = document.getElementById('geoStatusText');
+                            if (txt) { txt.textContent = data.message || 'Punch in failed. Please try again.'; txt.style.color = '#991b1b'; }
+                        }
+                    }
+                } catch (err) {
+                    clickPicBtn.disabled = false;
+                    clickPicBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> PUNCH IN';
+                    console.error('Punch in error:', err);
+                    alert('Network error. Please check your connection and try again.');
+                }
+            });
+        }
+
+        const punchOutModal = document.getElementById('punchOutModal');
+        const closePunchOutModal = document.getElementById('closePunchOutModal');
+        const grantAccessBtnOut = document.getElementById('grantAccessBtnOut');
+
+        function closePunchOut() {
+            if (punchOutModal) {
+                punchOutModal.classList.remove('visible');
+                punchOutModal.classList.remove('open');
+                const video = document.getElementById('cameraPreviewOut');
+                if (video && video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+            }
+        }
+
+        if (closePunchOutModal) closePunchOutModal.addEventListener('click', closePunchOut);
+        if (punchOutModal) punchOutModal.addEventListener('click', (e) => { if (e.target === punchOutModal) closePunchOut(); });
+        if (grantAccessBtnOut) grantAccessBtnOut.addEventListener('click', requestPunchOutAccess);
+
+        const retakePicBtnOut = document.getElementById('retakePicBtnOut');
+        if (retakePicBtnOut) {
+            retakePicBtnOut.addEventListener('click', () => {
+                const canvas = document.getElementById('cameraCanvasOut');
+                if (canvas) canvas.style.display = 'none';
+                requestPunchOutAccess();
+            });
+        }
+
+        const capturePicBtnOut = document.getElementById('capturePicBtnOut');
+        if (capturePicBtnOut) {
+            capturePicBtnOut.addEventListener('click', () => {
+                const video = document.getElementById('cameraPreviewOut');
+                const canvas = document.getElementById('cameraCanvasOut');
+                const retakeWrapperOut = document.getElementById('retakeWrapperOut');
+                const statusText = document.getElementById('punchOutStatus');
+
+                if (video && canvas) {
+                    const context = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.translate(canvas.width, 0);
+                    context.scale(-1, 1);
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    context.setTransform(1, 0, 0, 1, 0, 0);
+
+                    video.style.display = 'none';
+                    canvas.style.display = 'block';
+
+                    capturePicBtnOut.style.display = 'none';
+                    if (retakeWrapperOut) retakeWrapperOut.style.display = 'flex';
+
+                    if (statusText) {
+                        statusText.style.color = '#16a34a';
+                        statusText.textContent = 'Picture captured! Ready to punch out.';
+                        statusText.style.display = 'block';
+                    }
+                    checkPunchOutValidity();
+                }
+            });
+        }
+
+        const punchOutSummary = document.getElementById('punchOutSummary');
+        const submitPunchOutBtn = document.getElementById('submitPunchOutBtn');
+        const wordCountSpan = document.getElementById('wordCount');
+
+        function checkPunchOutValidity() {
+            if (!punchOutSummary || !submitPunchOutBtn) return;
+
+            let minWords = 20;
+            let text = punchOutSummary.value.trim();
+            let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
+            let count = text === '' ? 0 : words.length;
+
+            if (wordCountSpan) wordCountSpan.textContent = count;
+
+            let reportValid = (count >= minWords);
+
+            const rDivOut = document.getElementById('outOfRangeReasonOutDiv');
+            const punchOutReason = document.getElementById('punchOutReason');
+            const wordCountOutReason = document.getElementById('wordCountOutReason');
+
+            let needsReason = rDivOut && rDivOut.style.display !== 'none';
+            let reasonValid = true;
+            if (needsReason && punchOutReason) {
+                let reasonText = punchOutReason.value.trim();
+                let reasonWords = reasonText.split(/\s+/).filter(w => w.match(/[a-zA-Z0-9]/));
+                let reasonCount = reasonText === '' ? 0 : reasonWords.length;
+                if (wordCountOutReason) wordCountOutReason.textContent = reasonCount;
+                if (reasonCount < 10) reasonValid = false;
+            }
+
+            const retakeWrapperOut = document.getElementById('retakeWrapperOut');
+            let photoTaken = retakeWrapperOut && retakeWrapperOut.style.display !== 'none';
+
+            if (reportValid && reasonValid && photoTaken) {
+                submitPunchOutBtn.disabled = false;
+            } else {
+                submitPunchOutBtn.disabled = true;
+            }
+        }
+
+        document.addEventListener('input', function (e) {
+            if (e.target.id === 'punchOutReason') checkPunchOutValidity();
+        });
+
+        if (punchOutSummary) {
+            punchOutSummary.addEventListener('input', checkPunchOutValidity);
+        }
+
+        if (submitPunchOutBtn) {
+            submitPunchOutBtn.addEventListener('click', async () => {
+                // Check overtime eligibility upon clicking submit
+                let isOvertimeEligible = false;
+                let otStr = "";
+                if (_shiftEndTime) {
+                    const now = new Date();
+                    const endOfShift = new Date(now);
+                    const timeParts = _shiftEndTime.split(':');
+                    endOfShift.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]), parseInt(timeParts[2] || 0), 0);
+                    let diffSeconds = Math.floor((now - endOfShift) / 1000);
+                    if (diffSeconds >= 5400) { // 1 hour 30 minutes
+                        isOvertimeEligible = true;
+                        let h = Math.floor(diffSeconds / 3600);
+                        let m = Math.floor((diffSeconds % 3600) / 60);
+                        otStr = `${h} hr ${m} min`;
+                    }
+                }
+
+                if (isOvertimeEligible) {
+                    // Show OT Modal first
+                    const otModal = document.getElementById('overtimePromptModal');
+                    if (otModal) {
+                        otModal.style.display = 'flex';
+                        otModal.classList.add('visible', 'open');
+
+                        const durText = document.getElementById('otDurationText');
+                        if (durText) durText.textContent = otStr;
+
+                        // Reset UI
+                        document.getElementById('otPromptSection').style.display = 'block';
+                        document.getElementById('otReportSection').style.display = 'none';
+                        document.getElementById('otFooterSubmit').style.display = 'none';
+                        const otTA = document.getElementById('punchOutOvertimeReason');
+                        if (otTA) otTA.value = '';
+                        document.getElementById('wordCountOT').textContent = '0';
+                        document.getElementById('submitOtAndPunchOutBtn').disabled = true;
+                    }
+                    return; // Stop here and wait for OT Modal flow
+                } else {
+                    // No OT -> Normal submit
+                    processPunchOutSubmission();
+                }
+            });
+        }
+
+        // ── OVERTIME MODAL LOGIC ───────────────────────────────────────
+        const closeOtModalBtn = document.getElementById('closeOvertimePromptModal');
+        if (closeOtModalBtn) {
+            closeOtModalBtn.addEventListener('click', () => {
+                const otModal = document.getElementById('overtimePromptModal');
+                if (otModal) otModal.classList.remove('visible', 'open');
+            });
+        }
+
+        const otSkipBtn = document.getElementById('otSkipBtn');
+        if (otSkipBtn) {
+            otSkipBtn.addEventListener('click', () => {
+                const otModal = document.getElementById('overtimePromptModal');
+                if (otModal) otModal.classList.remove('visible', 'open');
+                // User skipped OT submission -> submit punch out normally
+                processPunchOutSubmission();
+            });
+        }
+
+        const otProceedBtn = document.getElementById('otProceedBtn');
+        if (otProceedBtn) {
+            otProceedBtn.addEventListener('click', () => {
+                document.getElementById('otPromptSection').style.display = 'none';
+                document.getElementById('otReportSection').style.display = 'block';
+                document.getElementById('otFooterSubmit').style.display = 'flex';
+            });
+        }
+
+        const otTA = document.getElementById('punchOutOvertimeReason');
+        const otSubmit = document.getElementById('submitOtAndPunchOutBtn');
+        const otWC = document.getElementById('wordCountOT');
+
+        if (otTA && otSubmit) {
+            otTA.addEventListener('input', () => {
+                let text = otTA.value.trim();
+                let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
+                let count = text === '' ? 0 : words.length;
+                if (otWC) otWC.textContent = count;
+
+                if (count >= 15) {
+                    otSubmit.disabled = false;
+                } else {
+                    otSubmit.disabled = true;
+                }
+            });
+
+            otSubmit.addEventListener('click', () => {
+                const otModal = document.getElementById('overtimePromptModal');
+                if (otModal) otModal.classList.remove('visible', 'open');
+                processPunchOutSubmission(otTA.value.trim());
+            });
+        }
+
+        // Extracted Submission API fetch
+        async function processPunchOutSubmission(overtimeReasonText = null) {
+            const statusText = document.getElementById('punchOutStatus');
+            if (submitPunchOutBtn) submitPunchOutBtn.disabled = true;
+
+            if (statusText) {
+                statusText.style.color = '#3b82f6';
+                statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving to database...';
+                statusText.style.display = 'flex';
+            }
+
+            // Grab punch-out photo from canvas
+            const canvasOut = document.getElementById('cameraCanvasOut');
+            const photoDataOut = canvasOut ? canvasOut.toDataURL('image/jpeg', 0.85) : null;
+
+            // Grab work summary
+            const summaryTA = document.getElementById('punchOutSummary');
+            const workReport = summaryTA ? summaryTA.value.trim() : '';
 
             // Grab out-of-geofence reason if visible
-            const rDiv = document.getElementById('outOfRangeReasonInDiv');
-            const reasonTA = document.getElementById('punchInReason');
-            const outOfGeofenceReason = (rDiv && rDiv.style.display !== 'none' && reasonTA) ? reasonTA.value.trim() : null;
+            const rDivOut = document.getElementById('outOfRangeReasonOutDiv');
+            const reasonTAOut = document.getElementById('punchOutReason');
+            const outOfGeofenceReasonOut = (rDivOut && rDivOut.style.display !== 'none' && reasonTAOut) ? reasonTAOut.value.trim() : null;
 
             const payload = {
-                action: 'punch_in',
-                latitude: _punchInLat,
-                longitude: _punchInLon,
-                accuracy: _punchInAcc,
-                address: _punchInAddr,
-                punch_in_photo: photoData,
-                geofence_id: _punchInGeofenceId,
-                within_geofence: _punchInWithinGeofence,
-                distance_from_geofence: _punchInDistance
+                action: 'punch_out',
+                work_report: workReport,
+                latitude: _punchOutLat,
+                longitude: _punchOutLon,
+                accuracy: _punchOutAcc,
+                address: _punchOutAddr,
+                punch_out_photo: photoDataOut,
+                geofence_id: _punchOutGeofenceId,
+                within_geofence: _punchOutWithinGeofence,
+                distance_from_geofence: _punchOutDistance
             };
-            if (outOfGeofenceReason) payload.out_of_geofence_reason = outOfGeofenceReason;
+
+            if (outOfGeofenceReasonOut) payload.out_of_geofence_reason = outOfGeofenceReasonOut;
+            if (overtimeReasonText) payload.overtime_report = overtimeReasonText; // New payload field for future use
 
             try {
                 const res = await fetch('../punch.php', {
@@ -3784,332 +4143,48 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await res.json();
 
                 if (data.success) {
-                    executePunchIn();
-                    closePunchIn();
-                    showDailyTasksPopup();
-                } else {
-                    // Show error inline in modal
-                    clickPicBtn.disabled = false;
-                    clickPicBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> PUNCH IN';
-                    const geoStatus = document.getElementById('geoStatusBanner');
-                    if (geoStatus) {
-                        geoStatus.style.display = 'flex';
-                        geoStatus.style.background = '#fef2f2';
-                        const icon = document.getElementById('geoStatusIcon');
-                        if (icon) { icon.className = 'fa-solid fa-circle-xmark'; icon.style.color = '#ef4444'; }
-                        const txt = document.getElementById('geoStatusText');
-                        if (txt) { txt.textContent = data.message || 'Punch in failed. Please try again.'; txt.style.color = '#991b1b'; }
+                    if (statusText) {
+                        statusText.style.color = '#16a34a';
+                        statusText.style.background = '#f0fdf4';
+                        statusText.style.borderRadius = '8px';
+                        statusText.style.padding = '10px 14px';
+                        statusText.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#22c55e;"></i>
+                        <span>${data.message}</span>`;
                     }
+                    setTimeout(() => {
+                        executePunchOut();
+                        const punchOutModal = document.getElementById('punchOutModal');
+                        if (punchOutModal) {
+                            punchOutModal.classList.remove('visible', 'open');
+
+                            const video = document.getElementById('cameraPreviewOut');
+                            if (video && video.srcObject) {
+                                video.srcObject.getTracks().forEach(track => track.stop());
+                                video.srcObject = null;
+                            }
+                        }
+                    }, 1200);
+                } else {
+                    // Show error
+                    if (statusText) {
+                        statusText.style.color = '#dc2626';
+                        statusText.style.background = '#fef2f2';
+                        statusText.style.borderRadius = '8px';
+                        statusText.style.padding = '10px 14px';
+                        statusText.innerHTML = `<i class="fa-solid fa-circle-xmark" style="color:#ef4444;"></i>
+                        <span>${data.message || 'Punch out failed. Please try again.'}</span>`;
+                    }
+                    if (submitPunchOutBtn) submitPunchOutBtn.disabled = false;
                 }
             } catch (err) {
-                clickPicBtn.disabled = false;
-                clickPicBtn.innerHTML = '<i class="fa-solid fa-check-circle"></i> PUNCH IN';
-                console.error('Punch in error:', err);
-                alert('Network error. Please check your connection and try again.');
-            }
-        });
-    }
-
-    const punchOutModal = document.getElementById('punchOutModal');
-    const closePunchOutModal = document.getElementById('closePunchOutModal');
-    const grantAccessBtnOut = document.getElementById('grantAccessBtnOut');
-
-    function closePunchOut() {
-        if (punchOutModal) {
-            punchOutModal.classList.remove('visible');
-            punchOutModal.classList.remove('open');
-            const video = document.getElementById('cameraPreviewOut');
-            if (video && video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-                video.srcObject = null;
-            }
-        }
-    }
-
-    if (closePunchOutModal) closePunchOutModal.addEventListener('click', closePunchOut);
-    if (punchOutModal) punchOutModal.addEventListener('click', (e) => { if (e.target === punchOutModal) closePunchOut(); });
-    if (grantAccessBtnOut) grantAccessBtnOut.addEventListener('click', requestPunchOutAccess);
-
-    const retakePicBtnOut = document.getElementById('retakePicBtnOut');
-    if (retakePicBtnOut) {
-        retakePicBtnOut.addEventListener('click', () => {
-            const canvas = document.getElementById('cameraCanvasOut');
-            if (canvas) canvas.style.display = 'none';
-            requestPunchOutAccess();
-        });
-    }
-
-    const capturePicBtnOut = document.getElementById('capturePicBtnOut');
-    if (capturePicBtnOut) {
-        capturePicBtnOut.addEventListener('click', () => {
-            const video = document.getElementById('cameraPreviewOut');
-            const canvas = document.getElementById('cameraCanvasOut');
-            const retakeWrapperOut = document.getElementById('retakeWrapperOut');
-            const statusText = document.getElementById('punchOutStatus');
-
-            if (video && canvas) {
-                const context = canvas.getContext('2d');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.translate(canvas.width, 0);
-                context.scale(-1, 1);
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                context.setTransform(1, 0, 0, 1, 0, 0);
-
-                video.style.display = 'none';
-                canvas.style.display = 'block';
-
-                capturePicBtnOut.style.display = 'none';
-                if (retakeWrapperOut) retakeWrapperOut.style.display = 'flex';
-
-                if (statusText) {
-                    statusText.style.color = '#16a34a';
-                    statusText.textContent = 'Picture captured! Ready to punch out.';
-                    statusText.style.display = 'block';
-                }
-                checkPunchOutValidity();
-            }
-        });
-    }
-
-    const punchOutSummary = document.getElementById('punchOutSummary');
-    const submitPunchOutBtn = document.getElementById('submitPunchOutBtn');
-    const wordCountSpan = document.getElementById('wordCount');
-
-    function checkPunchOutValidity() {
-        if (!punchOutSummary || !submitPunchOutBtn) return;
-
-        let minWords = 20;
-        let text = punchOutSummary.value.trim();
-        let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
-        let count = text === '' ? 0 : words.length;
-
-        if (wordCountSpan) wordCountSpan.textContent = count;
-
-        let reportValid = (count >= minWords);
-
-        const rDivOut = document.getElementById('outOfRangeReasonOutDiv');
-        const punchOutReason = document.getElementById('punchOutReason');
-        const wordCountOutReason = document.getElementById('wordCountOutReason');
-
-        let needsReason = rDivOut && rDivOut.style.display !== 'none';
-        let reasonValid = true;
-        if (needsReason && punchOutReason) {
-            let reasonText = punchOutReason.value.trim();
-            let reasonWords = reasonText.split(/\s+/).filter(w => w.match(/[a-zA-Z0-9]/));
-            let reasonCount = reasonText === '' ? 0 : reasonWords.length;
-            if (wordCountOutReason) wordCountOutReason.textContent = reasonCount;
-            if (reasonCount < 10) reasonValid = false;
-        }
-
-        const retakeWrapperOut = document.getElementById('retakeWrapperOut');
-        let photoTaken = retakeWrapperOut && retakeWrapperOut.style.display !== 'none';
-
-        if (reportValid && reasonValid && photoTaken) {
-            submitPunchOutBtn.disabled = false;
-        } else {
-            submitPunchOutBtn.disabled = true;
-        }
-    }
-
-    document.addEventListener('input', function(e) {
-        if (e.target.id === 'punchOutReason') checkPunchOutValidity();
-    });
-
-    if (punchOutSummary) {
-        punchOutSummary.addEventListener('input', checkPunchOutValidity);
-    }
-
-    if (submitPunchOutBtn) {
-        submitPunchOutBtn.addEventListener('click', async () => {
-            // Check overtime eligibility upon clicking submit
-            let isOvertimeEligible = false;
-            let otStr = "";
-            if (_shiftEndTime) {
-                const now = new Date();
-                const endOfShift = new Date(now);
-                const timeParts = _shiftEndTime.split(':');
-                endOfShift.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]), parseInt(timeParts[2] || 0), 0);
-                let diffSeconds = Math.floor((now - endOfShift) / 1000);
-                if (diffSeconds >= 5400) { // 1 hour 30 minutes
-                    isOvertimeEligible = true;
-                    let h = Math.floor(diffSeconds / 3600);
-                    let m = Math.floor((diffSeconds % 3600) / 60);
-                    otStr = `${h} hr ${m} min`;
-                }
-            }
-
-            if (isOvertimeEligible) {
-                // Show OT Modal first
-                const otModal = document.getElementById('overtimePromptModal');
-                if (otModal) {
-                    otModal.style.display = 'flex';
-                    otModal.classList.add('visible', 'open');
-                    
-                    const durText = document.getElementById('otDurationText');
-                    if (durText) durText.textContent = otStr;
-                    
-                    // Reset UI
-                    document.getElementById('otPromptSection').style.display = 'block';
-                    document.getElementById('otReportSection').style.display = 'none';
-                    document.getElementById('otFooterSubmit').style.display = 'none';
-                    const otTA = document.getElementById('punchOutOvertimeReason');
-                    if(otTA) otTA.value = '';
-                    document.getElementById('wordCountOT').textContent = '0';
-                    document.getElementById('submitOtAndPunchOutBtn').disabled = true;
-                }
-                return; // Stop here and wait for OT Modal flow
-            } else {
-                // No OT -> Normal submit
-                processPunchOutSubmission();
-            }
-        });
-    }
-
-    // ── OVERTIME MODAL LOGIC ───────────────────────────────────────
-    const closeOtModalBtn = document.getElementById('closeOvertimePromptModal');
-    if (closeOtModalBtn) {
-        closeOtModalBtn.addEventListener('click', () => {
-            const otModal = document.getElementById('overtimePromptModal');
-            if (otModal) otModal.classList.remove('visible', 'open');
-        });
-    }
-
-    const otSkipBtn = document.getElementById('otSkipBtn');
-    if (otSkipBtn) {
-        otSkipBtn.addEventListener('click', () => {
-            const otModal = document.getElementById('overtimePromptModal');
-            if (otModal) otModal.classList.remove('visible', 'open');
-            // User skipped OT submission -> submit punch out normally
-            processPunchOutSubmission();
-        });
-    }
-
-    const otProceedBtn = document.getElementById('otProceedBtn');
-    if (otProceedBtn) {
-        otProceedBtn.addEventListener('click', () => {
-            document.getElementById('otPromptSection').style.display = 'none';
-            document.getElementById('otReportSection').style.display = 'block';
-            document.getElementById('otFooterSubmit').style.display = 'flex';
-        });
-    }
-
-    const otTA = document.getElementById('punchOutOvertimeReason');
-    const otSubmit = document.getElementById('submitOtAndPunchOutBtn');
-    const otWC = document.getElementById('wordCountOT');
-
-    if (otTA && otSubmit) {
-        otTA.addEventListener('input', () => {
-            let text = otTA.value.trim();
-            let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
-            let count = text === '' ? 0 : words.length;
-            if (otWC) otWC.textContent = count;
-
-            if (count >= 15) {
-                otSubmit.disabled = false;
-            } else {
-                otSubmit.disabled = true;
-            }
-        });
-
-        otSubmit.addEventListener('click', () => {
-            const otModal = document.getElementById('overtimePromptModal');
-            if (otModal) otModal.classList.remove('visible', 'open');
-            processPunchOutSubmission(otTA.value.trim());
-        });
-    }
-
-    // Extracted Submission API fetch
-    async function processPunchOutSubmission(overtimeReasonText = null) {
-        const statusText = document.getElementById('punchOutStatus');
-        if (submitPunchOutBtn) submitPunchOutBtn.disabled = true;
-
-        if (statusText) {
-            statusText.style.color = '#3b82f6';
-            statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving to database...';
-            statusText.style.display = 'flex';
-        }
-
-        // Grab punch-out photo from canvas
-        const canvasOut = document.getElementById('cameraCanvasOut');
-        const photoDataOut = canvasOut ? canvasOut.toDataURL('image/jpeg', 0.85) : null;
-
-        // Grab work summary
-        const summaryTA = document.getElementById('punchOutSummary');
-        const workReport = summaryTA ? summaryTA.value.trim() : '';
-
-        // Grab out-of-geofence reason if visible
-        const rDivOut = document.getElementById('outOfRangeReasonOutDiv');
-        const reasonTAOut = document.getElementById('punchOutReason');
-        const outOfGeofenceReasonOut = (rDivOut && rDivOut.style.display !== 'none' && reasonTAOut) ? reasonTAOut.value.trim() : null;
-
-        const payload = {
-            action: 'punch_out',
-            work_report: workReport,
-            latitude: _punchOutLat,
-            longitude: _punchOutLon,
-            accuracy: _punchOutAcc,
-            address: _punchOutAddr,
-            punch_out_photo: photoDataOut,
-            geofence_id: _punchOutGeofenceId,
-            within_geofence: _punchOutWithinGeofence,
-            distance_from_geofence: _punchOutDistance
-        };
-        
-        if (outOfGeofenceReasonOut) payload.out_of_geofence_reason = outOfGeofenceReasonOut;
-        if (overtimeReasonText) payload.overtime_report = overtimeReasonText; // New payload field for future use
-
-        try {
-            const res = await fetch('../punch.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                if (statusText) {
-                    statusText.style.color = '#16a34a';
-                    statusText.style.background = '#f0fdf4';
-                    statusText.style.borderRadius = '8px';
-                    statusText.style.padding = '10px 14px';
-                    statusText.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#22c55e;"></i>
-                        <span>${data.message}</span>`;
-                }
-                setTimeout(() => {
-                    executePunchOut();
-                    const punchOutModal = document.getElementById('punchOutModal');
-                    if (punchOutModal) {
-                        punchOutModal.classList.remove('visible', 'open');
-                        
-                        const video = document.getElementById('cameraPreviewOut');
-                        if (video && video.srcObject) {
-                            video.srcObject.getTracks().forEach(track => track.stop());
-                            video.srcObject = null;
-                        }
-                    }
-                }, 1200);
-            } else {
-                // Show error
                 if (statusText) {
                     statusText.style.color = '#dc2626';
-                    statusText.style.background = '#fef2f2';
-                    statusText.style.borderRadius = '8px';
-                    statusText.style.padding = '10px 14px';
-                    statusText.innerHTML = `<i class="fa-solid fa-circle-xmark" style="color:#ef4444;"></i>
-                        <span>${data.message || 'Punch out failed. Please try again.'}</span>`;
+                    statusText.textContent = 'Network error. Check your connection.';
                 }
                 if (submitPunchOutBtn) submitPunchOutBtn.disabled = false;
+                console.error('Punch out error:', err);
             }
-        } catch (err) {
-            if (statusText) {
-                statusText.style.color = '#dc2626';
-                statusText.textContent = 'Network error. Check your connection.';
-            }
-            if (submitPunchOutBtn) submitPunchOutBtn.disabled = false;
-            console.error('Punch out error:', err);
         }
-    }
 
     };
 

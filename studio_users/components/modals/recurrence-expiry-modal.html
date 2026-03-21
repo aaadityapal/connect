@@ -1,0 +1,50 @@
+<!-- ================================================
+     RECURRENCE EXPIRY MODAL
+     File: components/modals/recurrence-expiry-modal.html
+     Shown when the last instance of a recurring task is displayed.
+     User can: Mark as Done (end recurrence) or Extend (add another cycle).
+     ================================================ -->
+<div id="recurrenceExpiryModal" class="rem-overlay" role="dialog" aria-modal="true" aria-labelledby="remTitle">
+    <div class="rem-card">
+
+        <!-- Header -->
+        <div class="rem-header">
+            <div class="rem-icon-ring">
+                <i class="fa-solid fa-clock-rotate-left rem-icon"></i>
+            </div>
+            <span class="rem-badge">Last Recurrence</span>
+        </div>
+
+        <!-- Body -->
+        <div class="rem-body">
+            <h3 class="rem-title" id="remTitle">Recurring Task Is Expiring</h3>
+            <p class="rem-subtitle">This is the <strong>last scheduled instance</strong> of this recurring task. What would you like to do?</p>
+
+            <div class="rem-task-info">
+                <i class="fa-solid fa-rotate"></i>
+                <span id="remTaskName">—</span>
+            </div>
+
+            <div class="rem-freq-row">
+                <span class="rem-freq-label">Frequency</span>
+                <span class="rem-freq-value" id="remFreq">—</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="rem-footer">
+            <button class="rem-btn rem-btn-done" id="remMarkDoneBtn">
+                <i class="fa-solid fa-circle-check"></i>
+                Mark as Done
+            </button>
+            <button class="rem-btn rem-btn-extend" id="remExtendBtn">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                Extend Recurrence
+            </button>
+        </div>
+        <button class="rem-close-btn" id="remCloseBtn" title="Dismiss">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+    </div>
+</div>

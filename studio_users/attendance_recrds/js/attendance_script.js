@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedMonth = currentMonth;
     let selectedYear = currentYear;
     let selectedStatus = 'All Status';
+    let currentAttendanceRecords = []; // For export functionality
 
     // Dropdown mappings
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -58,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await response.json();
 
             if (res.success) {
+                currentAttendanceRecords = res.data; // Store for export
                 updateKPIs(res.kpis);
                 updateTable(res.data);
                 updateCharts(res.chart_data, res.kpis);
@@ -402,6 +404,96 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     };
+
+    // --- Export Functionality ---
+    function getExportData() {
+        return currentAttendanceRecords.map(r => {
+            const dateObj = new Date(r.date);
+            const dateStr = `${String(dateObj.getDate()).padStart(2, '0')}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${dateObj.getFullYear()}`;
+            
+            return {
+                "Date": dateStr,
+                "Shift": r.shift_time || '09:00 AM - 06:00 PM',
+                "Punch In": r.punch_in ? formatTime(r.punch_in) : '-',
+                "Punch In Location": r.address || r.location || '-',
+                "Punch Out": r.punch_out ? formatTime(r.punch_out) : '-',
+                "Punch Out Location": r.punch_out_address || r.address || r.location || '-',
+                "Working Hours": r.working_hours || '-',
+                "Overtime": r.overtime_hours && r.overtime_hours !== '00:00' ? r.overtime_hours : '-',
+                "Work Report": r.work_report || '-',
+                "Status": r.status || 'N/A'
+            };
+        });
+    }
+
+    const exportToExcel = () => {
+        if (!currentAttendanceRecords || currentAttendanceRecords.length === 0) {
+            alert('No data available to export.');
+            return;
+        }
+        const data = getExportData();
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Attendance Report");
+        
+        // Auto-fit columns
+        const colWidths = Object.keys(data[0]).map(key => ({
+            wch: Math.max(key.length, ...data.map(obj => (obj[key] ? obj[key].toString().length : 10))) + 2
+        }));
+        ws['!cols'] = colWidths;
+
+        const filename = `Attendance_Report_${months[selectedMonth-1]}_${selectedYear}.xlsx`;
+        XLSX.writeFile(wb, filename);
+    };
+
+    const exportToPdf = () => {
+        if (!currentAttendanceRecords || currentAttendanceRecords.length === 0) {
+            alert('No data available to export.');
+            return;
+        }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4'); // Landscape
+        
+        const data = getExportData();
+        const headers = [Object.keys(data[0])];
+        const body = data.map(obj => Object.values(obj));
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(22);
+        doc.setTextColor(253, 126, 20); // Primary orange
+        doc.text("ATTENDANCE HISTORY REPORT", 14, 20);
+        
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(100);
+        doc.text(`Period: ${months[selectedMonth-1]} ${selectedYear}`, 14, 28);
+        doc.text(`Filter: ${selectedStatus}`, 14, 34);
+        doc.text(`Generated on: ${new Date().toLocaleString()}`, 14, 40);
+
+        doc.autoTable({
+            head: headers,
+            body: body,
+            startY: 45,
+            theme: 'grid',
+            headStyles: { fillColor: [253, 126, 20], textColor: [255, 255, 255], fontStyle: 'bold', halign: 'center' },
+            styles: { fontSize: 8, cellPadding: 2, font: 'helvetica', overflow: 'linebreak' },
+            alternateRowStyles: { fillColor: [250, 250, 250] },
+            columnStyles: {
+                0: { cellWidth: 20 },
+                1: { cellWidth: 25 },
+                8: { cellWidth: 60 }, // Work Report
+                9: { halign: 'center' }
+            }
+        });
+
+        const filename = `Attendance_Report_${months[selectedMonth-1]}_${selectedYear}.pdf`;
+        doc.save(filename);
+    };
+
+    const excelBtn = document.getElementById('exportExcelBtn');
+    const pdfBtn = document.getElementById('exportPdfBtn');
+    if (excelBtn) excelBtn.addEventListener('click', exportToExcel);
+    if (pdfBtn) pdfBtn.addEventListener('click', exportToPdf);
 
     // Initial Load
     fetchAttendanceData();

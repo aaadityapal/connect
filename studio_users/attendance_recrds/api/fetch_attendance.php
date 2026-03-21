@@ -59,66 +59,126 @@ try {
     foreach ($holidays_raw as $hol) {
         $holidays_map[$hol['holiday_date']] = $hol['holiday_name'];
     }
-    
-    $records = [];
+
+    // Index attendance by date
+    $attendance_map = [];
     foreach ($all_records as $rec) {
-        // Check for Short Leave of morning to waive late penalty
+        $attendance_map[$rec['date']] = $rec;
+    }
+
+    // Index leaves by date (expanding ranges)
+    $leave_map = [];
+    foreach ($leaves as $lv) {
+        $begin = new DateTime($lv['start_date']);
+        $end = new DateTime($lv['end_date']);
+        $end->modify('+1 day'); // inclusive
+        $interval = new DateInterval('P1D');
+        $daterange = new DatePeriod($begin, $interval, $end);
+        foreach ($daterange as $date) {
+            $d = $date->format("Y-m-d");
+            // Only map for the current month/year being viewed
+            if (date('m', strtotime($d)) == $month && date('Y', strtotime($d)) == $year) {
+                $leave_map[$d] = $lv;
+            }
+        }
+    }
+
+    $days_in_month = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+    $records = [];
+    
+    for ($d = 1; $d <= $days_in_month; $d++) {
+        $current_date_str = sprintf("%04d-%02d-%02d", $year, $month, $d);
+        $rec = null;
+
+        if (isset($attendance_map[$current_date_str])) {
+            $rec = $attendance_map[$current_date_str];
+        } else {
+            // Create a virtual record for missing dates
+            $rec = [
+                'date' => $current_date_str,
+                'user_id' => $user_id,
+                'punch_in' => null,
+                'punch_out' => null,
+                'punch_in_photo' => null,
+                'punch_out_photo' => null,
+                'working_hours' => null,
+                'status' => null,
+                'work_report' => null
+            ];
+        }
+        
+        // Finalize status logic for this date
         $is_morning_leave_waived = false;
-        foreach ($leaves as $leave) {
-            if ($rec['date'] >= $leave['start_date'] && $rec['date'] <= $leave['end_date']) {
-                $leave_name = strtolower($leave['leave_name'] ?? '');
-                
-                // Short leave check
-                if (strpos($leave_name, 'short') !== false || strpos($leave_name, 'half') !== false) {
-                    if (!empty($leave['time_from'])) {
-                        $time_from_hour = (int)date('H', strtotime($leave['time_from']));
-                        if ($time_from_hour < 13) {
-                            $is_morning_leave_waived = true;
-                        }
-                    } else {
-                        // If no time is specified, safely assume it could be morning
-                        $is_morning_leave_waived = true;
-                    }
-                }
-                
-                // Explicit first half check
-                if ($leave['duration_type'] === 'first_half' || $leave['day_type'] === 'first_half') {
+        
+        // Check for leave on this specific day
+        if (isset($leave_map[$current_date_str])) {
+            $lv = $leave_map[$current_date_str];
+            if (empty($rec['status']) || $rec['status'] === 'Absent') {
+                $rec['status'] = 'Leave';
+                $rec['work_report'] = "Approved Leave: " . ($lv['leave_name'] ?? 'Leave');
+            }
+            
+            // Waive late penalty check logic
+            $leave_name = strtolower($lv['leave_name'] ?? '');
+            if (strpos($leave_name, 'short') !== false || strpos($leave_name, 'half') !== false) {
+                if (!empty($lv['time_from'])) {
+                    if ((int)date('H', strtotime($lv['time_from'])) < 13) $is_morning_leave_waived = true;
+                } else {
                     $is_morning_leave_waived = true;
                 }
             }
+            if (($lv['duration_type'] ?? '') === 'first_half' || ($lv['day_type'] ?? '') === 'first_half') {
+                $is_morning_leave_waived = true;
+            }
         }
         
-        // Dynamic Late Calculation (15 mins tolerance)
+        // Check for holiday
+        if (isset($holidays_map[$current_date_str])) {
+            $rec['status'] = 'Holiday';
+            $rec['work_report'] = "Office Holiday: " . $holidays_map[$current_date_str];
+        }
+
+        // Default to Absent if past date, not Sunday, and no status yet
+        $timestamp = strtotime($current_date_str);
+        if (empty($rec['status'])) {
+            if ($timestamp <= strtotime(date('Y-m-d'))) {
+                if (date('w', $timestamp) == 0) { // Sunday
+                    $rec['status'] = 'Holiday';
+                    $rec['work_report'] = "Sunday";
+                } else {
+                    $rec['status'] = 'Absent';
+                }
+            } else {
+                $rec['status'] = 'Upcoming';
+            }
+        }
+
+        // Late Punch Status Logic
         if (!empty($rec['punch_in'])) {
-            $shift_start = !empty($rec['shift_start_time']) ? $rec['shift_start_time'] : null;
+            $shift_start = $rec['shift_start_time'] ?? null;
             if ($shift_start) {
-                $shiftStartTimestamp = strtotime($rec['date'] . ' ' . $shift_start);
-                $punchInTimestamp = strtotime($rec['date'] . ' ' . $rec['punch_in']);
-                
-                // > 15 minutes (900 seconds) - waived if morning short leave applied
+                $shiftStartTimestamp = strtotime($current_date_str . ' ' . $shift_start);
+                $punchInTimestamp = strtotime($current_date_str . ' ' . $rec['punch_in']);
                 if ($punchInTimestamp > ($shiftStartTimestamp + 900) && !$is_morning_leave_waived) {
                     $rec['status'] = 'Late';
-                } elseif ($rec['status'] !== 'Absent' && $rec['status'] !== 'Leave') {
+                } elseif ($rec['status'] !== 'Leave' && $rec['status'] !== 'Holiday') {
                     $rec['status'] = 'On Time';
                 }
             }
-        } else {
-             // Overwrite Absent with Holiday if applicable
-             if (isset($holidays_map[$rec['date']])) {
-                 $rec['status'] = 'Holiday';
-                 $rec['remarks'] = $holidays_map[$rec['date']];
-             }
         }
         
-        // Apply status filter matching earlier SQL behavior
-        if ($status !== 'All Status') {
-            if ($rec['status'] !== $status) {
-                continue;
-            }
+        // Filtering
+        if ($status !== 'All Status' && $rec['status'] !== $status) {
+            continue;
         }
         
         $records[] = $rec;
     }
+    
+    // Sort records descending by date to maintain UI consistency
+    usort($records, function($a, $b) {
+        return strcmp($b['date'], $a['date']);
+    });
 
     // Calculate KPIs
     $present_days = 0;

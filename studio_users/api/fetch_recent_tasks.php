@@ -15,6 +15,8 @@ try {
             ? $_GET['date']
             : date('Y-m-d');
 
+    $userId = $_SESSION['user_id'];
+
     $query = "SELECT 
                 sat.id,
                 sat.project_id,
@@ -38,10 +40,12 @@ try {
               LEFT JOIN users u ON sat.created_by = u.id
               WHERE sat.deleted_at IS NULL
                 AND DATE(sat.created_at) = :date
+                AND sat.created_by = :user_id
               ORDER BY sat.created_at DESC";
 
     $stmt = $pdo->prepare($query);
     $stmt->bindValue(':date', $date);
+    $stmt->bindValue(':user_id', $userId);
     $stmt->execute();
     $tasks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

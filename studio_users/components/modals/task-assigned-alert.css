@@ -1,0 +1,209 @@
+/* ================================================
+   TASK ASSIGNED ALERT MODAL — Styles
+   File: components/modals/task-assigned-alert.css
+   ================================================ */
+
+/* Overlay */
+.taa-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 15, 30, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: taaFadeIn 0.25s ease;
+}
+.taa-overlay.taa-open {
+    display: flex;
+}
+
+@keyframes taaFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Card */
+.taa-card {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    box-shadow:
+        0 32px 64px -12px rgba(0, 0, 0, 0.22),
+        0 0 0 1px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 460px;
+    overflow: hidden;
+    animation: taaPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes taaPop {
+    from { opacity: 0; transform: scale(0.9) translateY(16px); }
+    to   { opacity: 1; transform: scale(1)   translateY(0);    }
+}
+
+/* Header */
+.taa-header {
+    background: linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%);
+    padding: 1.75rem 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+}
+
+/* Pulsing icon ring */
+.taa-icon-ring {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: taaPulse 2s ease-in-out infinite;
+}
+
+@keyframes taaPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+    50%       { box-shadow: 0 0 0 12px rgba(255,255,255,0); }
+}
+
+.taa-icon {
+    font-size: 1.6rem;
+    color: #ffffff;
+}
+
+.taa-badge {
+    background: rgba(255, 255, 255, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.75rem;
+    border-radius: 99px;
+}
+
+/* Body */
+.taa-body {
+    padding: 1.5rem 1.5rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.taa-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 750;
+    color: #1e293b;
+    line-height: 1.25;
+    text-align: center;
+}
+
+.taa-subtitle {
+    margin: 0 0 0.75rem;
+    font-size: 0.82rem;
+    color: #64748b;
+    text-align: center;
+}
+
+/* Info grid */
+.taa-info-grid {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+.taa-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+.taa-info-row:last-child { border-bottom: none; }
+
+.taa-info-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748b;
+    min-width: 88px;
+    flex-shrink: 0;
+}
+.taa-info-label i {
+    color: #8b5cf6;
+    width: 14px;
+    text-align: center;
+}
+
+.taa-info-value {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #1e293b;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+/* Priority badge */
+.taa-priority-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.15rem 0.6rem;
+    border-radius: 99px;
+    background: #e2e8f0;
+    color: #475569;
+}
+.taa-priority-badge.priority-high   { background: #fee2e2; color: #dc2626; }
+.taa-priority-badge.priority-medium { background: #fef9c3; color: #b45309; }
+.taa-priority-badge.priority-low    { background: #dcfce7; color: #16a34a; }
+
+/* Received at */
+.taa-received-at {
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-align: center;
+}
+.taa-received-at i { margin-right: 4px; }
+
+/* Footer */
+.taa-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.taa-btn-ok {
+    background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+    color: #ffffff;
+    border: none;
+    border-radius: 0.65rem;
+    padding: 0.65rem 2rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 16px rgba(109, 40, 217, 0.35);
+    width: 100%;
+    justify-content: center;
+}
+.taa-btn-ok:hover  { opacity: 0.9; box-shadow: 0 6px 20px rgba(109, 40, 217, 0.45); }
+.taa-btn-ok:active { transform: scale(0.97); }

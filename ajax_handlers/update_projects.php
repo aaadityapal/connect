@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Kolkata');
 require_once '../config/db_connect.php';
 require_once '../functions/assignment_tracking.php';
 session_start();
@@ -29,6 +30,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $conn->begin_transaction();
+
+        // Helper for studio_assigned_tasks
+        if (!function_exists('upsertAssignedTask')) {
+            function upsertAssignedTask($conn, $projectId, $projectTitle, $stageId, $stageNumberStr, $taskDesc, $assignedTo, $dueDateStr, $substageId) {
+                if (!$assignedTo) return;
+                
+                // PREVENT RE-ASSIGNMENT IF TASK ALREADY CREATED
+                $stmtCheckFlag = $conn->prepare("SELECT is_task_created FROM project_substages WHERE id = ?");
+                $stmtCheckFlag->bind_param("i", $substageId);
+                $stmtCheckFlag->execute();
+                $resultFlag = $stmtCheckFlag->get_result();
+                $flagRow = $resultFlag->fetch_assoc();
+                
+                if ($flagRow && $flagRow['is_task_created'] == 1) {
+                    return; // Task has already been spawned, do not overwrite or re-assign
+                }
+                
+                $stmtUser = $conn->prepare("SELECT username FROM users WHERE id = ?");
+                $stmtUser->bind_param("i", $assignedTo);
+                $stmtUser->execute();
+                $resultUser = $stmtUser->get_result();
+                $assignedName = ($row = $resultUser->fetch_assoc()) ? $row['username'] : 'Unknown';
+                
+                $dueD = null; $dueT = null;
+                if (!empty($dueDateStr)) {
+                    $dueDateTime = new DateTime($dueDateStr);
+                    $dueD = $dueDateTime->format('Y-m-d');
+                    $dueT = $dueDateTime->format('H:i');
+                }
+                
+                $createdBy = $_SESSION['user_id'] ?? 1;
+
+                $stmtCheck = $conn->prepare("SELECT id FROM studio_assigned_tasks WHERE project_id=? AND stage_id=? AND stage_number=?");
+                $stmtCheck->bind_param("iis", $projectId, $stageId, $stageNumberStr);
+                $stmtCheck->execute();
+                $resultCheck = $stmtCheck->get_result();
+                
+                if ($rowCheck = $resultCheck->fetch_assoc()) {
+                    $taskId = $rowCheck['id'];
+                    $stmtUpdate = $conn->prepare("UPDATE studio_assigned_tasks SET task_description=?, assigned_to=?, assigned_names=?, due_date=?, due_time=? WHERE id=?");
+                    $stmtUpdate->bind_param("sisssi", $taskDesc, $assignedTo, $assignedName, $dueD, $dueT, $taskId);
+                    $stmtUpdate->execute();
+                } else {
+                    $stmtInsert = $conn->prepare("INSERT INTO studio_assigned_tasks (project_id, project_name, stage_id, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, is_recurring, status, created_by, created_at) VALUES (?, ?, ?, ?, ?, 'Medium', ?, ?, ?, ?, 0, 'Pending', ?, NOW())");
+                    $stmtInsert->bind_param("isississsi", $projectId, $projectTitle, $stageId, $stageNumberStr, $taskDesc, $assignedTo, $assignedName, $dueD, $dueT, $createdBy);
+                    $stmtInsert->execute();
+                    $taskId = $conn->insert_id;
+                    
+                    $logDesc = "Task assigned: \"{$projectTitle} — {$stageNumberStr}\" → {$assignedName}";
+                    $logMeta = json_encode(['task_id'=>$taskId,'project_name'=>$projectTitle,'stage_number'=>$stageNumberStr,'priority'=>'Medium','assigned_names'=>$assignedName,'due_date'=>$dueD]);
+                    
+                    // Log for creator (manager) — "You assigned..."
+                    $logStmt = $conn->prepare("INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read, is_dismissed) VALUES (?, 'task_assigned', 'task', ?, ?, ?, NOW(), 0, 0)");
+                    $logStmt->bind_param("iiss", $createdBy, $taskId, $logDesc, $logMeta);
+                    $logStmt->execute();
+                    
+                    // Log for the assignee — "You have been assigned..."
+                    $assigneeDesc = "You have been assigned a task: \"{$projectTitle} — {$stageNumberStr}\"";
+                    $logStmtAssignee = $conn->prepare("INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read, is_dismissed) VALUES (?, 'task_assigned', 'task', ?, ?, ?, NOW(), 0, 0)");
+                    $logStmtAssignee->bind_param("iiss", $assignedTo, $taskId, $assigneeDesc, $logMeta);
+                    $logStmtAssignee->execute();
+                    
+                    // Update the flag so it never gets assigned/overwritten again
+                    $stmtUpdateFlag = $conn->prepare("UPDATE project_substages SET is_task_created = 1 WHERE id = ?");
+                    $stmtUpdateFlag->bind_param("i", $substageId);
+                    $stmtUpdateFlag->execute();
+                }
+            }
+        }
 
         // Validate required fields
         if (!isset($data['projectId'])) {
@@ -119,7 +189,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Handle stages
         if (isset($data['stages']) && is_array($data['stages'])) {
+            $stageIndex = 0;
             foreach ($data['stages'] as $stage) {
+                $stageIndex++;
                 if (isset($stage['id']) && $stage['id']) {
                     // Convert assignTo value 0 to NULL for database storage
                     $stageAssignedTo = (!empty($stage['assignTo']) && $stage['assignTo'] !== '0') ? $stage['assignTo'] : null;
@@ -229,7 +301,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Handle substages
                 if (isset($stage['substages']) && is_array($stage['substages'])) {
+                    $substageIndex = 0;
                     foreach ($stage['substages'] as $substage) {
+                        $substageIndex++;
+                        $substageNumberStr = $stageIndex . '.' . $substageIndex;
                         if (isset($substage['id']) && $substage['id']) {
                             // Convert assignTo value 0 to NULL for database storage
                             $substageAssignedTo = (!empty($substage['assignTo']) && $substage['assignTo'] !== '0') ? $substage['assignTo'] : null;
@@ -282,6 +357,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $stage_id, 
                                 $substage['id']
                             );
+                            upsertAssignedTask($conn, $project_id, $data['projectTitle'], $stage_id, $substageNumberStr, $substage['title'], $substageAssignedTo, $subEnd, $substage['id']);
                         } else {
                             // Convert assignTo value 0 to NULL for database storage
                             $substageAssignedTo = (!empty($substage['assignTo']) && $substage['assignTo'] !== '0') ? $substage['assignTo'] : null;
@@ -328,6 +404,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $stage_id, 
                                 $substage_id
                             );
+                            upsertAssignedTask($conn, $project_id, $data['projectTitle'], $stage_id, $substageNumberStr, $substage['title'], $substageAssignedTo, $subEnd, $substage_id);
                         }
                     }
                 }

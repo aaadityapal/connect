@@ -53,6 +53,7 @@ try {
             sat.is_recurring,
             sat.recurrence_parent_id,
             sat.recurrence_freq,
+            sat.recurrence_extra,
             sat.created_at,
             sat.completed_at as global_completed_at,
             u.username AS created_by_name
@@ -166,15 +167,23 @@ try {
             'dateTo'            => $modalDateTo,
             'project_id'        => $task['project_id'],
             'project_name'      => $task['project_name'],
-            'stage_id'          => $task['stage_id'],
-            'stage_number'      => $task['stage_number'],
-            'due_date'          => $task['due_date'],
-            'due_time'          => $task['due_time'] ? date('h:i A', strtotime($task['due_time'])) : null,
-            'due_time_24'       => $task['due_time'] ? date('H:i', strtotime($task['due_time'])) : null,
-            'extension_count'   => (int)$task['extension_count'],
-            'extension_history' => $extHistory,
-            'previous_due_date' => $task['previous_due_date'],
-            'previous_due_time' => $task['previous_due_time'] ? date('h:i A', strtotime($task['previous_due_time'])) : null,
+            'stage_id'             => $task['stage_id'],
+            'stage_number'         => $task['stage_number'],
+            'due_date'             => $task['due_date'],
+            'due_time'             => $task['due_time'] ? date('h:i A', strtotime($task['due_time'])) : null,
+            'due_time_24'          => $task['due_time'] ? date('H:i', strtotime($task['due_time'])) : null,
+            'extension_count'      => (int)$task['extension_count'],
+            'extension_history'    => $extHistory,
+            'previous_due_date'    => $task['previous_due_date'],
+            'previous_due_time'    => $task['previous_due_time'] ? date('h:i A', strtotime($task['previous_due_time'])) : null,
+            // Recurrence expiry fields
+            'is_recurring'         => !empty($task['is_recurring']),
+            'recurrence_freq'      => $task['recurrence_freq'] ?? null,
+            'recurrence_extra'     => intval($task['recurrence_extra'] ?? 0),
+            'recurrence_base_limit'=> intval($task['recurrence_base_limit'] ?? 0),
+            'is_last_recurrence'   => !empty($task['is_last_recurrence']),
+            // Store the real master task id (virtual ids have suffix)
+            'master_task_id'       => is_numeric($task['id']) ? (int)$task['id'] : (int)explode('_', $task['id'])[0],
         ];
     }
 

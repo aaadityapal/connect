@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Kolkata');
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -19,6 +20,25 @@ try {
     $userId = isset($data['user_id']) ? $data['user_id'] : ($_SESSION['user_id'] ?? 1);
 
     $pdo->beginTransaction();
+    
+    // --- TASK INTEGRATION ADDITIONS ---
+    // Fetch project name for the task
+    $stmtProj = $pdo->prepare("SELECT title FROM projects WHERE id = ?");
+    $stmtProj->execute([$data['project_id']]);
+    $projectName = $stmtProj->fetchColumn() ?: 'Unnamed Project';
+    
+    $stmtUser = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+    $taskQuery = "INSERT INTO studio_assigned_tasks (
+        project_id, project_name, stage_id, stage_number, task_description, priority,
+        assigned_to, assigned_names, due_date, due_time, is_recurring, status, created_by, created_at
+    ) VALUES (
+        :project_id, :project_name, :stage_id, :stage_number, :task_description, 'Medium',
+        :assigned_to, :assigned_names, :due_date, :due_time, 0, 'Pending', :created_by, NOW()
+    )";
+    $stmtTask = $pdo->prepare($taskQuery);
+    
+    $logStmt = $pdo->prepare("INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read, is_dismissed) VALUES (:user_id, 'task_assigned', 'task', :entity_id, :description, :metadata, NOW(), 0, 0)");
+    // -----------------------------------
     
     foreach ($data['stages'] as $stageIndex => $stage) {
         // Convert assignTo value 0 to NULL for database storage
@@ -147,6 +167,68 @@ try {
                 ]);
                 
                 $substageId = $pdo->lastInsertId();
+                
+                // --- ADD SUBSTAGE AS TASK IF ASSIGNED ---
+                if ($substageAssignedTo) {
+                    $stmtUser->execute([$substageAssignedTo]);
+                    $assignedName = $stmtUser->fetchColumn() ?: 'Unknown';
+                    
+                    $dueDateTime = !empty($substage['dueDate']) ? new DateTime($substage['dueDate']) : null;
+                    $dueDateStr = $dueDateTime ? $dueDateTime->format('Y-m-d') : null;
+                    $dueTimeStr = $dueDateTime ? $dueDateTime->format('H:i') : null;
+                    
+                    $substageNumberStr = ($stageIndex + 1) . '.' . ($substageIndex + 1);
+                    
+                    $stmtTask->execute([
+                        ':project_id' => $data['project_id'],
+                        ':project_name' => $projectName,
+                        ':stage_id' => $stageId,
+                        ':stage_number' => $substageNumberStr,
+                        ':task_description' => $substage['title'],
+                        ':assigned_to' => $substageAssignedTo,
+                        ':assigned_names' => $assignedName,
+                        ':due_date' => $dueDateStr,
+                        ':due_time' => $dueTimeStr,
+                        ':created_by' => $userId
+                    ]);
+                    
+                    $taskId = $pdo->lastInsertId();
+                    
+                    // Log task assignment
+                    $taskLabel = $projectName . ' — Substage ' . $substageNumberStr;
+                    $logDesc = "Task assigned: \"{$taskLabel}\" → {$assignedName}";
+                    $logMeta = json_encode([
+                        'task_id'          => $taskId,
+                        'project_name'     => $projectName,
+                        'stage_number'     => $substageNumberStr,
+                        'task_description' => $substage['title'],
+                        'priority'         => 'Medium',
+                        'assigned_names'   => $assignedName,
+                        'due_date'         => $dueDateStr,
+                    ]);
+                    
+                    // Log for creator (manager) — "You assigned..."
+                    $logStmt->execute([
+                        'user_id'     => $userId,
+                        'entity_id'   => $taskId,
+                        'description' => "You assigned: \"{$taskLabel}\" → {$assignedName}",
+                        'metadata'    => $logMeta,
+                    ]);
+                    
+                    // Log for the assignee — "You have been assigned..."
+                    $logStmtAssignee = $pdo->prepare("INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read, is_dismissed) VALUES (:user_id, 'task_assigned', 'task', :entity_id, :description, :metadata, NOW(), 0, 0)");
+                    $logStmtAssignee->execute([
+                        'user_id'     => $substageAssignedTo,
+                        'entity_id'   => $taskId,
+                        'description' => "You have been assigned a task: \"{$taskLabel}\"",
+                        'metadata'    => $logMeta,
+                    ]);
+                    
+                    // Mark as task created to prevent reassignment on future updates
+                    $stmtUpdateFlag = $pdo->prepare("UPDATE project_substages SET is_task_created = 1 WHERE id = ?");
+                    $stmtUpdateFlag->execute([$substageId]);
+                }
+                // ----------------------------------------
                 
                 // Handle substage files
                 if (!empty($substage['files'])) {

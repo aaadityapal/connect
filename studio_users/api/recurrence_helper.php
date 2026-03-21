@@ -2,118 +2,188 @@
 /**
  * api/recurrence_helper.php
  * Helper to expand recurring tasks within a given date range.
+ *
+ * Recurrence limits per frequency:
+ *   Hourly  → repeats only on the SAME day as original due date, up to 6:00 PM
+ *   Daily   → max 90 instances (per extension cycle)
+ *   Weekly  → max 15 instances
+ *   Monthly → max 12 instances
+ *   Yearly  → max  5 instances
+ *   Custom  → inherits limit based on unit
+ *
+ * Extension:
+ *   Each time the user clicks "Extend Recurrence", recurrence_extra is incremented.
+ *   effectiveMax = base_limit × (1 + recurrence_extra)
+ *
+ * Expiry warning:
+ *   The very last emitted instance per task gets is_last_recurrence = true so the
+ *   frontend can show the "Expiry" modal with Mark Done / Extend options.
  */
 
 function expandRecurringTasks($tasks, $startDate, $endDate) {
-    $expanded = [];
-    $existingInstances = []; // Map of task_id => [array of materialized dates]
+    $expanded          = [];
+    $existingInstances = []; // [parent_id => ['Y-m-d_H:i:s', ...]]
     $startTs = strtotime($startDate);
-    $endTs = strtotime($endDate);
+    $endTs   = strtotime($endDate);
 
+    // ── Pass 1: catalogue already-materialised (completed) instances ─────
     foreach ($tasks as $task) {
-        // Track materialized instances to avoid duplicates
         if ($task['recurrence_parent_id']) {
             $key = $task['due_date'] . '_' . ($task['due_time'] ?: '00:00:00');
             $existingInstances[$task['recurrence_parent_id']][] = $key;
         }
     }
 
+    // ── Pass 2: expand master tasks ──────────────────────────────────────
     foreach ($tasks as $task) {
-        // Skip child instances themselves for expansion to avoid recursive expansion
-        if ($task['recurrence_parent_id']) continue;
+        if ($task['recurrence_parent_id']) continue; // skip child instances
 
-        // Always add the original task if it falls in range
+        // Add the original task if it falls in the requested window
         $taskDueTs = $task['due_date'] ? strtotime($task['due_date']) : null;
         if ($taskDueTs && $taskDueTs >= $startTs && $taskDueTs <= $endTs) {
-            $isHourly = (!empty($task['recurrence_freq']) && ($task['recurrence_freq'] === 'Hourly' || strpos(strtolower($task['recurrence_freq']), 'hour') !== false));
-            $baseHour = $taskDueTs ? (int)date('H', $taskDueTs) : null;
-            $baseMin = $taskDueTs ? (int)date('i', $taskDueTs) : null;
-            
-            $isAfter8PM = ($baseHour > 20) || ($baseHour === 20 && $baseMin > 0);
-            $isBefore9AM = ($baseHour !== null && $baseHour < 9);
-
-            if (!($isHourly && ($isBefore9AM || $isAfter8PM))) {
-                $expanded[] = $task;
-            }
+            $expanded[] = $task;
         }
 
-        // If not recurring, skip further processing
         if (empty($task['is_recurring']) || $task['is_recurring'] == 0) continue;
 
         $freq = $task['recurrence_freq'] ?? null;
         if (!$freq) continue;
 
-        $baseDateStr = $task['due_date'] . ' ' . ($task['due_time'] ?: '00:00:00');
-        $baseDate = new DateTime($baseDateStr);
-        $currentDate = clone $baseDate;
-        
-        // Define increment interval
+        // ── Base limits per frequency ────────────────────────────────────
+        $baseLimit   = 90;
         $intervalStr = '';
-        if ($freq === 'Daily') $intervalStr = 'P1D';
-        else if ($freq === 'Weekly') $intervalStr = 'P7D';
-        else if ($freq === 'Monthly') $intervalStr = 'P1M';
-        else if ($freq === 'Yearly') $intervalStr = 'P1Y';
-        else if ($freq === 'Hourly') $intervalStr = 'PT1H';
-        else if (strpos($freq, 'Every') === 0) {
-            // Parse "Every X Days/Weeks/Months"
+        $isHourly    = false;
+        $isSameDay   = false;
+
+        if ($freq === 'Hourly') {
+            $intervalStr = 'PT1H';
+            $baseLimit   = 11;       // 9 AM → 6 PM max slots
+            $isHourly    = true;
+            $isSameDay   = true;
+
+        } elseif ($freq === 'Daily') {
+            $intervalStr = 'P1D';
+            $baseLimit   = 90;
+
+        } elseif ($freq === 'Weekly') {
+            $intervalStr = 'P7D';
+            $baseLimit   = 15;
+
+        } elseif ($freq === 'Monthly') {
+            $intervalStr = 'P1M';
+            $baseLimit   = 12;
+
+        } elseif ($freq === 'Yearly') {
+            $intervalStr = 'P1Y';
+            $baseLimit   = 5;
+
+        } elseif (strpos($freq, 'Every') === 0) {
             $parts = explode(' ', $freq);
             if (count($parts) >= 3) {
-                $num = intval($parts[1]);
+                $num  = intval($parts[1]);
                 $unit = strtolower($parts[2]);
-                if (strpos($unit, 'minute') !== false) $intervalStr = "PT{$num}M";
-                else if (strpos($unit, 'hour') !== false) $intervalStr = "PT{$num}H";
-                else if (strpos($unit, 'day') !== false) $intervalStr = "P{$num}D";
-                else if (strpos($unit, 'week') !== false) $intervalStr = "P" . ($num * 7) . "D";
-                else if (strpos($unit, 'month') !== false) $intervalStr = "P{$num}M";
-                else if (strpos($unit, 'year') !== false) $intervalStr = "P{$num}Y";
+                if (strpos($unit, 'minute') !== false) {
+                    $intervalStr = "PT{$num}M"; $baseLimit = 90; $isHourly = true; $isSameDay = true;
+                } elseif (strpos($unit, 'hour') !== false) {
+                    $intervalStr = "PT{$num}H"; $baseLimit = 11; $isHourly = true; $isSameDay = true;
+                } elseif (strpos($unit, 'day')   !== false) {
+                    $intervalStr = "P{$num}D";   $baseLimit = 90;
+                } elseif (strpos($unit, 'week')  !== false) {
+                    $intervalStr = 'P' . ($num * 7) . 'D'; $baseLimit = 15;
+                } elseif (strpos($unit, 'month') !== false) {
+                    $intervalStr = "P{$num}M";   $baseLimit = 12;
+                } elseif (strpos($unit, 'year')  !== false) {
+                    $intervalStr = "P{$num}Y";   $baseLimit = 5;
+                }
             }
         }
 
         if (!$intervalStr) continue;
 
-        $interval = new DateInterval($intervalStr);
-        $safetyMax = 1000; // Limit instances to prevent infinite loops (increased for hourly tasks)
-        $count = 0;
+        // ── Effective max: base × (1 + number of extensions) ────────────
+        $extraExtensions = isset($task['recurrence_extra']) ? max(0, intval($task['recurrence_extra'])) : 0;
+        $effectiveMax    = $baseLimit * (1 + $extraExtensions);
 
-        // Start from the next occurrence
+        $interval    = new DateInterval($intervalStr);
+        $baseDateStr = $task['due_date'] . ' ' . ($task['due_time'] ?: '00:00:00');
+        $baseDate    = new DateTime($baseDateStr);
+        $currentDate = clone $baseDate;
+
+        // For same-day tasks (hourly) — hard stop at 18:00 of the original day
+        $sameDayEndTs = null;
+        if ($isSameDay) {
+            $sameDayEnd = clone $baseDate;
+            $sameDayEnd->setTime(18, 0, 0);
+            $sameDayEndTs = $sameDayEnd->getTimestamp();
+        }
+
+        // ── Generate all instances for this task into a local buffer ─────
+        // Then mark the LAST emitted one as is_last_recurrence = true.
+        $taskInstances = [];
+        $count = 0;
         $currentDate->add($interval);
 
-        while ($currentDate->getTimestamp() <= $endTs && $count < $safetyMax) {
-            $dateStr = $currentDate->format('Y-m-d');
-            $timeStr = $currentDate->format('H:i:s');
+        while ($count < $effectiveMax) {
+            $curTs = $currentDate->getTimestamp();
+
+            // Same-day / hourly cap
+            if ($isSameDay && $curTs > $sameDayEndTs) break;
+
+            // Date-window cap
+            if ($curTs > $endTs) break;
+
+            $dateStr     = $currentDate->format('Y-m-d');
+            $timeStr     = $currentDate->format('H:i:s');
             $combinedKey = $dateStr . '_' . $timeStr;
-            
-            // Limit hourly tasks between 9:00 AM and 8:00 PM
-            $hour = (int)$currentDate->format('H');
-            $min = (int)$currentDate->format('i');
-            $isAfter8PM = ($hour > 20) || ($hour === 20 && $min > 0);
-            $isBefore9AM = ($hour < 9);
-            $isHourly = ($freq === 'Hourly' || strpos(strtolower($freq ?? ''), 'hour') !== false);
 
-            if ($isHourly && ($isBefore9AM || $isAfter8PM)) {
+            // Skip out-of-day hours for hourly tasks
+            if ($isHourly) {
+                $hour     = (int)$currentDate->format('H');
+                $min      = (int)$currentDate->format('i');
+                $after6PM  = ($hour > 18) || ($hour === 18 && $min > 0);
+                $before9AM = ($hour < 9);
+                if ($before9AM || $after6PM) {
+                    $currentDate->add($interval);
+                    $count++;
+                    continue;
+                }
+            }
+
+            // Skip already-materialised (completed) instances
+            if (
+                isset($existingInstances[$task['id']]) &&
+                in_array($combinedKey, $existingInstances[$task['id']])
+            ) {
                 $currentDate->add($interval);
                 $count++;
                 continue;
             }
 
-            // Skip if a real materialized instance already exists for this date+time
-            if (isset($existingInstances[$task['id']]) && in_array($combinedKey, $existingInstances[$task['id']])) {
-                $currentDate->add($interval);
-                $count++;
-                continue;
+            // Only emit if within the requested window
+            if ($curTs >= $startTs) {
+                $newInstance                      = $task;
+                $newInstance['due_date']          = $dateStr;
+                $newInstance['due_time']          = $timeStr;
+                $newInstance['is_virtual']        = true;
+                $newInstance['is_last_recurrence']= false; // will be updated below
+                $newInstance['recurrence_base_limit'] = $baseLimit;
+                $newInstance['id']                = $task['id'] . '_' . $currentDate->format('YmdHi');
+                $taskInstances[] = $newInstance;
             }
 
-            if ($currentDate->getTimestamp() >= $startTs) {
-                $newInstance = $task;
-                $newInstance['due_date'] = $currentDate->format('Y-m-d');
-                $newInstance['due_time'] = $currentDate->format('H:i:s');
-                $newInstance['is_virtual'] = true; // Mark as virtual instance
-                $newInstance['id'] = $task['id'] . '_' . $currentDate->format('YmdHi'); // More unique for hourly
-                $expanded[] = $newInstance;
-            }
             $currentDate->add($interval);
             $count++;
         }
+
+        // ── Mark the very last emitted instance as expiring ─────────────
+        // This fires when count reaches effectiveMax (no more extensions applied yet)
+        if (!empty($taskInstances) && $count >= $effectiveMax) {
+            $last = count($taskInstances) - 1;
+            $taskInstances[$last]['is_last_recurrence'] = true;
+        }
+
+        $expanded = array_merge($expanded, $taskInstances);
     }
+
     return $expanded;
 }

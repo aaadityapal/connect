@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Kolkata');
 header('Content-Type: application/json');
 session_start();
 
@@ -12,11 +13,11 @@ require_once '../../config/db_connect.php';
 $userId = $_SESSION['user_id'];
 
 try {
-    $stmt = $pdo->prepare("SELECT action_type, description, created_at 
+    $stmt = $pdo->prepare("SELECT id, action_type, description, created_at, is_read, metadata
                            FROM global_activity_logs 
-                           WHERE user_id = ? 
+                           WHERE user_id = ? AND is_dismissed = 0
                            ORDER BY created_at DESC 
-                           LIMIT 20");
+                           LIMIT 50");
     $stmt->execute([$userId]);
     $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

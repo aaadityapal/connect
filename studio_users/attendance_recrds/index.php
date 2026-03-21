@@ -31,6 +31,11 @@ if (!isset($_SESSION['user_id'])) {
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>window.SIDEBAR_BASE_PATH = '../';</script>
     <script src="../components/sidebar-loader.js" defer></script>
+
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body class="ws-body-container">
     <div class="layout-wrapper" style="display: flex; height: 100vh; overflow: hidden;">
@@ -207,7 +212,15 @@ if (!isset($_SESSION['user_id'])) {
                                 <th class="ws-th">Punch Out Location</th>
                                 <th class="ws-th">Working Hours</th>
                                 <th class="ws-th">Overtime</th>
-                                <th class="ws-th">Work Report</th>
+                                <th class="ws-th">
+                                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                                        <span>Work Report</span>
+                                        <div class="ws-export-controls" style="display: flex; gap: 8px; margin-left:10px;">
+                                            <i class="fa-solid fa-file-excel ws-export-icon excel-icon" id="exportExcelBtn" title="Export to Excel" style="cursor:pointer; color: #1d6f42; font-size: 1.1rem;"></i>
+                                            <i class="fa-solid fa-file-pdf ws-export-icon pdf-icon" id="exportPdfBtn" title="Export to PDF" style="cursor:pointer; color: #c00; font-size: 1.1rem;"></i>
+                                        </div>
+                                    </div>
+                                </th>
                                 <th class="ws-th">Status</th>
                             </tr>
                         </thead>

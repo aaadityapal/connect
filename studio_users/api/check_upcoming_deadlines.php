@@ -26,7 +26,7 @@ try {
         FROM studio_assigned_tasks sat
         LEFT JOIN users u ON sat.created_by = u.id
         WHERE sat.deleted_at IS NULL
-          AND sat.status NOT IN ('Completed', 'Cancelled')
+          AND sat.status NOT IN ('Completed', 'Cancelled', 'Incomplete')
           AND FIND_IN_SET(:uid, sat.assigned_to) > 0
           AND NOT FIND_IN_SET(:uid_comp, IFNULL(sat.completed_by, ''))
           AND sat.due_date IS NOT NULL
@@ -66,7 +66,7 @@ try {
                 else if ($h > 0) $timeLabel = "Overdue by $h hr " . ($m > 0 ? "$m m" : "");
                 else $timeLabel = "Overdue by $m minute" . ($m == 1 ? "" : "s");
                 
-                $color = '#991b1b'; // Darker red for overdue
+                $color = '#991b1b';
                 $bgColor = '#fee2e2';
                 $titlePrefix = "Missed Deadline! ⚠️";
             } else {
@@ -75,6 +75,15 @@ try {
                 $color = '#e11d48';
                 $bgColor = '#fff1f2';
                 $titlePrefix = "Deadline Approaching ⏱️";
+            }
+
+            // Carried-over (from Incomplete) gets distinct orange styling
+            $isCarriedOver = !empty($task['carried_over_from']);
+            if ($isCarriedOver) {
+                $color      = '#ea580c';
+                $bgColor    = '#fff7ed';
+                $titlePrefix = "Incomplete — Carried Forward 📋";
+                $timeLabel   = "Review by Mon 8:30 AM";
             }
 
             // ── Format object for TaskModal/ExtendModal ──
@@ -128,31 +137,33 @@ try {
             }
 
             $taskData = [
-                'id' => $task['id'],
-                'title' => $task['task_description'],
-                'projectStage' => $projectStageTitle,
-                'desc' => $task['task_description'],
-                'due_date' => $task['due_date'],
-                'due_time_24' => $task['due_time'] ? date('H:i', strtotime($task['due_time'])) : null,
-                'extension_count' => $task['extension_count'] ?? 0,
-                'extension_history' => $history,
-                'previous_due_date' => $task['previous_due_date'] ?? null,
-                'previous_due_time' => $task['previous_due_time'] ?? null,
-                'time' => $timeStr,
-                'durationStr' => $durationStr,
-                'status' => 'Pending',
-                'person' => $myAssignedName ?? (count($personsMap) > 0 ? $personsMap[0] : 'Unassigned'),
-                'assignedBy' => $task['assigned_by_name'] ?? 'System Admin',
-                'persons' => $personsMap,
-                'assignee_statuses' => $assigneeStatuses,
-                'modalDateFrom'     => $created,
-                'modalDateTo'       => $due,
-                'dateFrom'          => $created,
-                'dateTo'            => $due,
-                'dotColor' => $color, 
-                'bgColor' => $bgColor,
-                'titlePrefix' => $titlePrefix,
-                'time_remaining_label' => $timeLabel
+                'id'                   => $task['id'],
+                'title'                => $task['task_description'],
+                'projectStage'         => $projectStageTitle,
+                'desc'                 => $task['task_description'],
+                'due_date'             => $task['due_date'],
+                'due_time_24'          => $task['due_time'] ? date('H:i', strtotime($task['due_time'])) : null,
+                'extension_count'      => $task['extension_count'] ?? 0,
+                'extension_history'    => $history,
+                'previous_due_date'    => $task['previous_due_date'] ?? null,
+                'previous_due_time'    => $task['previous_due_time'] ?? null,
+                'time'                 => $timeStr,
+                'durationStr'          => $durationStr,
+                'status'               => 'Pending',
+                'person'               => $myAssignedName ?? (count($personsMap) > 0 ? $personsMap[0] : 'Unassigned'),
+                'assignedBy'           => $task['assigned_by_name'] ?? 'System Admin',
+                'persons'              => $personsMap,
+                'assignee_statuses'    => $assigneeStatuses,
+                'modalDateFrom'        => $created,
+                'modalDateTo'          => $due,
+                'dateFrom'             => $created,
+                'dateTo'               => $due,
+                'dotColor'             => $color, 
+                'bgColor'              => $bgColor,
+                'titlePrefix'          => $titlePrefix,
+                'time_remaining_label' => $timeLabel,
+                'is_carried_over'      => !empty($task['carried_over_from']),
+                'carried_over_from'    => $task['carried_over_from'] ?? null,
             ];
 
             $upcoming[] = $taskData;

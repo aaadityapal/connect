@@ -12,6 +12,26 @@ document.addEventListener("DOMContentLoaded", () => {
     window.playTaskSound = playTaskSound; // expose to other script files
     // ─────────────────────────────────────────────────────────────────
 
+    // ── Process incomplete / carried-over tasks (runs silently on login) ──
+    // Runs 5 seconds after page load so it doesn't block initial render.
+    // Finds tasks missed before last Sunday 8 PM, marks them Incomplete,
+    // and creates a new Monday 08:30 AM carry-forward task automatically.
+    setTimeout(() => {
+        fetch('api/process_incomplete_tasks.php')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.processed > 0) {
+                    console.log(`[System] ${data.processed} incomplete task(s) carried forward to ${data.monday}`);
+                    // Refresh task list so the new Monday task appears
+                    if (typeof window.fetchMyTasks === 'function') {
+                        window.fetchMyTasks(window.currentFilter || new Date().toISOString().split('T')[0]);
+                    }
+                }
+            })
+            .catch(() => {}); // Silent failure — non-critical
+    }, 5000);
+    // ─────────────────────────────────────────────────────────────────
+
     // ══════════════════════════════════════════════════════
     // Load Recently Assigned Tasks (filtered by date)
     // ══════════════════════════════════════════════════════
@@ -1403,26 +1423,223 @@ document.addEventListener("DOMContentLoaded", () => {
         const notifContent = document.getElementById('notifContent');
         const drawerOverlay = document.getElementById('drawerOverlay');
         const closeNotif = document.getElementById('closeNotif');
-        let notifCount = 3; // Initial mock count
+        const markAllReadBtn = document.getElementById('markAllReadBtn');
+        const clearNotifBtn = document.getElementById('clearNotifBtn');
+        
+        // --- Notification Sound ---
+        const notifSound = new Audio('tones/global_notification.mp3');
+        notifSound.volume = 1.0;
+        let lastSeenMaxId = 0;       // tracks highest notif ID seen so far
+        let audioUnlocked = false;   // browsers block audio until first user interaction
+        let pendingSound = false;    // play sound on next interaction if blocked
+        let isDrawerOpen = false;
+
+        // Unlock audio engine on first user gesture (click or keydown)
+        function unlockAudio() {
+            audioUnlocked = true;
+            if (pendingSound && !isDrawerOpen) {
+                pendingSound = false;
+                notifSound.currentTime = 0;
+                notifSound.play().catch(() => {});
+            }
+            document.removeEventListener('click', unlockAudio);
+            document.removeEventListener('keydown', unlockAudio);
+        }
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('keydown', unlockAudio);
+
+        function playNotifSound() {
+            if (isDrawerOpen) return;
+            if (audioUnlocked) {
+                notifSound.currentTime = 0;
+                notifSound.play().catch(() => {});
+            } else {
+                pendingSound = true; // will fire on next interaction
+            }
+        }
+
+        async function fetchNotifications() {
+            try {
+                const res = await fetch('api/fetch_activity_logs.php');
+                const result = await res.json();
+                if(result.status === 'success') {
+                    renderNotifications(result.data);
+                }
+            } catch(e) {
+                console.error("Failed to load notifications", e);
+            }
+        }
+
+        function renderNotifications(logs) {
+            if(!notifContent) return;
+            notifContent.innerHTML = '';
+            let unreadCount = 0;
+            
+            if(!logs || logs.length === 0) {
+                notifContent.innerHTML = '<div style="padding: 20px; text-align: center; color: #94a3b8;"><i class="fa-regular fa-bell-slash" style="font-size:1.5rem; margin-bottom:8px; display:block;"></i> No recent notifications</div>';
+                if(notifBadge) { notifBadge.style.display = 'none'; notifBadge.textContent = '0'; }
+                lastSeenMaxId = 0;
+                return;
+            }
+
+            // Categorize
+            const todayLogs = [];
+            const yesterdayLogs = [];
+            const olderLogs = [];
+            
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            // Find max ID in this batch to detect truly new notifications
+            let batchMaxId = 0;
+            logs.forEach(log => {
+                const logId = parseInt(log.id) || 0;
+                if(logId > batchMaxId) batchMaxId = logId;
+                if(log.is_read == 0) unreadCount++;
+
+                const logDate = new Date(log.created_at);
+                logDate.setHours(0,0,0,0);
+                if(logDate.getTime() === today.getTime()) {
+                    todayLogs.push(log);
+                } else if(logDate.getTime() === yesterday.getTime()) {
+                    yesterdayLogs.push(log);
+                } else {
+                    olderLogs.push(log);
+                }
+            });
+
+            // ------ Sound + Modal on new notification ------
+            if (lastSeenMaxId === 0) {
+                // First load — register silently, queue sound if there are unread ones
+                if (unreadCount > 0) pendingSound = true;
+            } else if (batchMaxId > lastSeenMaxId) {
+                // Genuinely new notification arrived since last poll
+                playNotifSound();
+
+                // Find the newest task_assigned log in this batch that's truly new
+                const newTaskLog = logs.find(log =>
+                    log.action_type === 'task_assigned' &&
+                    (parseInt(log.id) || 0) > lastSeenMaxId
+                );
+                if (newTaskLog && typeof TaskAssignedAlert !== 'undefined') {
+                    // Parse metadata JSON string before passing to modal
+                    try {
+                        newTaskLog.metadata = typeof newTaskLog.metadata === 'string'
+                            ? JSON.parse(newTaskLog.metadata)
+                            : (newTaskLog.metadata || {});
+                    } catch(_) { newTaskLog.metadata = {}; }
+                    TaskAssignedAlert.show(newTaskLog);
+                }
+            }
+            lastSeenMaxId = batchMaxId;
+            // ------------------------------------------------
+
+            // Update badge
+            if(notifBadge) {
+                if(unreadCount > 0) {
+                    notifBadge.style.display = 'flex';
+                    notifBadge.textContent = unreadCount;
+                } else {
+                    notifBadge.style.display = 'none';
+                    notifBadge.textContent = '0';
+                }
+            }
+            
+            function buildLogHTML(log) {
+                // Color + icon mapping per action type
+                const typeConfig = {
+                    'punch_in':        { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-fingerprint',        label: 'Punched In'        },
+                    'punch_out':       { color: '#ef4444', bg: '#fff5f5', icon: 'fa-solid fa-right-from-bracket', label: 'Punched Out'       },
+                    'task_assigned':   { color: '#8b5cf6', bg: '#f5f3ff', icon: 'fa-solid fa-list-check',         label: 'Task Assigned'     },
+                    'deadline_snooze': { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-calendar-xmark',     label: 'Deadline Snoozed'  },
+                    'extend_deadline': { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-clock-rotate-left',  label: 'Deadline Extended' },
+                    'task_created':    { color: '#3b82f6', bg: '#eff6ff', icon: 'fa-solid fa-circle-plus',        label: 'Task Created'      },
+                    'task_completed':  { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-circle-check',       label: 'Task Completed'    },
+                };
+                const cfg = typeConfig[log.action_type] || { color: '#64748b', bg: '', icon: 'fa-solid fa-bell', label: formatActionType(log.action_type) };
+
+                const logDate = new Date(log.created_at);
+                const timeStr = logDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const dateStr = logDate.toLocaleDateString([], {month:'short', day:'numeric'});
+                const fullTimeStr = `${dateStr} at ${timeStr}`;
+
+                const unreadDot = log.is_read == 0
+                    ? `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${cfg.color}; margin-left:6px; vertical-align:middle;"></span>`
+                    : '';
+                const bgStyle = log.is_read == 0 ? `background:${cfg.bg};` : 'background:#fff;';
+
+                return `
+                <div class="notif-item" style="${bgStyle} border-left: 4px solid ${cfg.color}; padding: 12px 16px; margin: 4px 8px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                        <i class="${cfg.icon}" style="color:${cfg.color}; font-size:0.85rem;"></i>
+                        <h4 style="margin:0; color:#1e293b; font-size:0.88rem; font-weight:600;">${cfg.label}${unreadDot}</h4>
+                    </div>
+                    <p style="margin:0 0 6px; font-size:0.8rem; color:#475569; line-height:1.4;">${log.description}</p>
+                    <span class="notif-time" style="font-size:0.7rem; color:#94a3b8;"><i class="fa-regular fa-clock"></i> ${fullTimeStr}</span>
+                </div>`;
+            }
+
+            function formatActionType(type) {
+                return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            }
+
+            if(todayLogs.length > 0) {
+                notifContent.innerHTML += `<div style="padding: 10px 16px; font-weight: 700; color: #64748b; font-size: 0.75rem; text-transform: uppercase; background: #f8fafc; border-bottom: 1px solid #f1f5f9;">Today</div>`;
+                todayLogs.forEach(l => notifContent.innerHTML += buildLogHTML(l));
+            }
+            if(yesterdayLogs.length > 0) {
+                notifContent.innerHTML += `<div style="padding: 10px 16px; font-weight: 700; color: #64748b; font-size: 0.75rem; text-transform: uppercase; background: #f8fafc; border-bottom: 1px solid #f1f5f9; border-top: 1px solid #e2e8f0;">Yesterday</div>`;
+                yesterdayLogs.forEach(l => notifContent.innerHTML += buildLogHTML(l));
+            }
+            if(olderLogs.length > 0) {
+                notifContent.innerHTML += `<div style="padding: 10px 16px; font-weight: 700; color: #64748b; font-size: 0.75rem; text-transform: uppercase; background: #f8fafc; border-bottom: 1px solid #f1f5f9; border-top: 1px solid #e2e8f0;">Earlier</div>`;
+                olderLogs.forEach(l => notifContent.innerHTML += buildLogHTML(l));
+            }
+        }
+
+        // Action Handlers
+        async function runNotifAction(action) {
+            try {
+                await fetch('api/notification_actions.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action})
+                });
+                fetchNotifications();
+            } catch(e) { console.error('Error with notif action', e); }
+        }
+
+        if(markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', () => { runNotifAction('mark_all_read'); });
+        }
+        if(clearNotifBtn) {
+            clearNotifBtn.addEventListener('click', () => { runNotifAction('clear_all'); });
+        }
+
+        // Poll or initial fetch
+        fetchNotifications();
+        // Optional: Poll every 30 seconds for real-time vibe
+        setInterval(fetchNotifications, 15000);
 
         if (notifBtn && notifDrawer && drawerOverlay) {
             notifBtn.addEventListener('click', () => {
                 notifDrawer.classList.add('open');
                 drawerOverlay.classList.add('visible');
                 document.body.style.overflow = 'hidden'; // Prevent scroll
+                isDrawerOpen = true;
 
-                // Clear badge on open
-                notifCount = 0;
-                if (notifBadge) {
-                    notifBadge.style.display = 'none';
-                    notifBadge.textContent = '0';
-                }
+                // Trigger read action when opened to clear the badge fully
+                runNotifAction('mark_all_read');
             });
 
             const closeAction = () => {
                 notifDrawer.classList.remove('open');
                 drawerOverlay.classList.remove('visible');
                 document.body.style.overflow = '';
+                isDrawerOpen = false;
             };
 
             if (closeNotif) closeNotif.addEventListener('click', closeAction);

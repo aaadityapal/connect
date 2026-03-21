@@ -331,6 +331,15 @@ document.addEventListener('DOMContentLoaded', function () {
             taskContainer.appendChild(el);
         });
 
+        // ── Recurrence Expiry Alert ───────────────────────────────────────────
+        // After rendering, check if any visible task is the last recurrence instance.
+        // Show the modal for the first one found (oldest last-recurrence task).
+        const expiringTask = tasks.find(t => t.is_last_recurrence && !t.checked);
+        if (expiringTask && typeof RecurrenceExpiryModal !== 'undefined') {
+            // Small delay so the task list finishes painting first
+            setTimeout(() => RecurrenceExpiryModal.show(expiringTask), 600);
+        }
+
         // Re-apply status filter
         applyMyTaskStatusFilter();
     };

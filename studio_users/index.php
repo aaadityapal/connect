@@ -80,6 +80,8 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <link rel="stylesheet" href="components/modals/extend-deadline-modal.css">
     <link rel="stylesheet" href="components/modals/custom-alert-modal.css">
     <link rel="stylesheet" href="components/modals/upcoming-deadline-modal.css">
+    <link rel="stylesheet" href="components/modals/task-assigned-alert.css">
+    <link rel="stylesheet" href="components/modals/recurrence-expiry-modal.css">
 
     <style>
         /* Fix for duplicate tick marks */
@@ -1172,28 +1174,22 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
             </div>
         </main>
     </div>
+    <?php include 'components/modals/task-assigned-alert.html'; ?>
+    <?php include 'components/modals/recurrence-expiry-modal.html'; ?>
     <div id="drawerOverlay" class="drawer-overlay el-563"></div>
     <div id="notifDrawer" class="notification-drawer el-564">
-        <div class="drawer-header el-565">
-            <h3 class="el-283">Notifications</h3>
-            <button id="closeNotif" class="close-drawer el-566"><i class="fa-solid fa-xmark el-567"></i></button>
+        <div class="drawer-header el-565" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h3 class="el-283">Notifications</h3>
+            </div>
+            <div style="display:flex; gap:12px; align-items:center;">
+                <button id="markAllReadBtn" style="background:transparent; border:none; color:#3b82f6; cursor:pointer; font-size:0.75rem; font-weight:600;"><i class="fa-solid fa-check-double"></i> Mark All Read</button>
+                <button id="clearNotifBtn" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:0.75rem; font-weight:600;"><i class="fa-regular fa-trash-can"></i> Clear</button>
+                <button id="closeNotif" class="close-drawer el-566" style="position:static;"><i class="fa-solid fa-xmark el-567"></i></button>
+            </div>
         </div>
-        <div class="drawer-content el-568" id="notifContent">
-            <div class="notif-item el-569">
-                <h4 class="el-288">System Update</h4>
-                <p class="el-289">Welcome to the new enhanced task dashbaord.</p>
-                <span class="notif-time el-570">Just now</span>
-            </div>
-            <div class="notif-item el-571">
-                <h4 class="el-292">Deadline Reminder</h4>
-                <p class="el-293">Mobile App Redesign is due in 5 days.</p>
-                <span class="notif-time el-572">2 hours ago</span>
-            </div>
-            <div class="notif-item el-573">
-                <h4 class="el-296">Team Message</h4>
-                <p class="el-297">David shared a new progress report.</p>
-                <span class="notif-time el-574">Yesterday</span>
-            </div>
+        <div class="drawer-content el-568" id="notifContent" style="padding: 0;">
+            <!-- Dummy content completely cleared. Content will be dynamically rendered via global_activity_logs payload -->
         </div>
     </div>
     </div>
@@ -1549,6 +1545,8 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <script src="components/modals/custom-alert-modal.js"></script>
     <script src="components/modals/upcoming-deadline-modal.js"></script>
     <script src="components/modals/edit-task-modal.js"></script>
+    <script src="components/modals/task-assigned-alert.js"></script>
+    <script src="components/modals/recurrence-expiry-modal.js"></script>
 
 </body>
 

@@ -1,0 +1,197 @@
+/* ================================================
+   RECURRENCE EXPIRY MODAL — Styles
+   File: components/modals/recurrence-expiry-modal.css
+   ================================================ */
+
+.rem-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 15, 30, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 99998;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: remFadeIn 0.25s ease;
+}
+.rem-overlay.rem-open { display: flex; }
+
+@keyframes remFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.rem-card {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    box-shadow:
+        0 32px 64px -12px rgba(0, 0, 0, 0.22),
+        0 0 0 1px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 420px;
+    overflow: hidden;
+    animation: remPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+@keyframes remPop {
+    from { opacity: 0; transform: scale(0.9) translateY(16px); }
+    to   { opacity: 1; transform: scale(1)   translateY(0);    }
+}
+
+/* Header */
+.rem-header {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+    padding: 1.5rem 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.rem-icon-ring {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: remPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes remPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.45); }
+    50%       { box-shadow: 0 0 0 12px rgba(255,255,255,0); }
+}
+
+.rem-icon { font-size: 1.5rem; color: #ffffff; }
+
+.rem-badge {
+    background: rgba(255,255,255,0.22);
+    border: 1px solid rgba(255,255,255,0.35);
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.7rem;
+    border-radius: 99px;
+}
+
+/* Close button */
+.rem-close-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: rgba(255,255,255,0.18);
+    border: none;
+    border-radius: 50%;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background 0.2s;
+}
+.rem-close-btn:hover { background: rgba(255,255,255,0.35); }
+
+/* Body */
+.rem-body {
+    padding: 1.25rem 1.5rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.rem-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 750;
+    color: #1e293b;
+    text-align: center;
+}
+
+.rem-subtitle {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.rem-task-info {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 0.6rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #92400e;
+}
+.rem-task-info i { color: #d97706; flex-shrink: 0; }
+
+.rem-freq-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.25rem;
+}
+.rem-freq-label {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 500;
+}
+.rem-freq-value {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #d97706;
+    background: #fef9c3;
+    padding: 0.15rem 0.6rem;
+    border-radius: 99px;
+}
+
+/* Footer buttons */
+.rem-footer {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem 1.5rem;
+}
+
+.rem-btn {
+    flex: 1;
+    border: none;
+    border-radius: 0.65rem;
+    padding: 0.65rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+.rem-btn:active { transform: scale(0.97); }
+
+.rem-btn-done {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1.5px solid #e2e8f0;
+}
+.rem-btn-done:hover { background: #e2e8f0; }
+
+.rem-btn-extend {
+    background: linear-gradient(135deg, #d97706, #f59e0b);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);
+}
+.rem-btn-extend:hover { opacity: 0.9; box-shadow: 0 6px 18px rgba(217, 119, 6, 0.45); }

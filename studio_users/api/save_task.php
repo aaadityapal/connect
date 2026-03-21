@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Kolkata');
 session_start();
 require_once '../../config/db_connect.php';
 
@@ -83,27 +84,47 @@ try {
     $logDesc    = "Task assigned: \"{$taskLabel}\" → {$assignedTo}";
 
     $logMeta = json_encode([
-        'task_id'       => $new_id,
-        'project_name'  => $project_name,
-        'stage_number'  => $stage_number,
-        'priority'      => $priority,
-        'assigned_names'=> $assigned_names,
-        'due_date'      => $due_date,
+        'task_id'          => $new_id,
+        'project_name'     => $project_name,
+        'stage_number'     => $stage_number,
+        'task_description' => $task_description,
+        'priority'         => $priority,
+        'assigned_names'   => $assigned_names,
+        'due_date'         => $due_date,
     ]);
 
     try {
+        // assigned_to is a comma-separated list of user IDs e.g. "3,7,12"
+        // We insert one notification row per assignee so each of them sees it in their panel
+        $assignedIds = array_filter(array_map('intval', explode(',', $assigned_to ?? '')));
+
+        // Also log for the creator (so they see their own action too)
+        $recipientIds = array_unique(array_merge([$created_by], $assignedIds));
+
         $logStmt = $pdo->prepare(
             "INSERT INTO global_activity_logs
-                (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read)
+                (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read, is_dismissed)
              VALUES
-                (:user_id, 'task_assigned', 'task', :entity_id, :description, :metadata, NOW(), 0)"
+                (:user_id, 'task_assigned', 'task', :entity_id, :description, :metadata, NOW(), 0, 0)"
         );
-        $logStmt->execute([
-            'user_id'     => $created_by,
-            'entity_id'   => $new_id,
-            'description' => $logDesc,
-            'metadata'    => $logMeta,
-        ]);
+
+        foreach ($recipientIds as $recipientId) {
+            if ($recipientId <= 0) continue;
+
+            // Personalise the description for the assignee vs the creator
+            if ($recipientId === $created_by) {
+                $personalDesc = "You assigned: \"{$taskLabel}\" → {$assignedTo}";
+            } else {
+                $personalDesc = "You have been assigned a task: \"{$taskLabel}\"";
+            }
+
+            $logStmt->execute([
+                'user_id'     => $recipientId,
+                'entity_id'   => $new_id,
+                'description' => $personalDesc,
+                'metadata'    => $logMeta,
+            ]);
+        }
     } catch (Exception $logEx) {
         // Non-fatal — task was still saved successfully
         error_log('Activity log error: ' . $logEx->getMessage());

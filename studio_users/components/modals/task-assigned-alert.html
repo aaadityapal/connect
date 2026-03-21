@@ -1,0 +1,54 @@
+<!-- ================================================
+     TASK ASSIGNED ALERT MODAL
+     File: components/modals/task-assigned-alert.html
+     Pops up when a new task_assigned notification arrives.
+     Clicking "Got it" marks the notification as read.
+     ================================================ -->
+<div id="taskAssignedAlert" class="taa-overlay" role="dialog" aria-modal="true" aria-labelledby="taaTitle">
+    <div class="taa-card">
+
+        <!-- Pulsing Icon Header -->
+        <div class="taa-header">
+            <div class="taa-icon-ring">
+                <i class="fa-solid fa-list-check taa-icon"></i>
+            </div>
+            <span class="taa-badge">New Task</span>
+        </div>
+
+        <!-- Content -->
+        <div class="taa-body">
+            <h3 class="taa-title" id="taaTitle">You've been assigned a task!</h3>
+            <p class="taa-subtitle" id="taaSubtitle">Here are the details of your new assignment:</p>
+
+            <div class="taa-info-grid">
+                <div class="taa-info-row">
+                    <span class="taa-info-label"><i class="fa-solid fa-briefcase"></i> Project</span>
+                    <span class="taa-info-value" id="taaProject">—</span>
+                </div>
+                <div class="taa-info-row">
+                    <span class="taa-info-label"><i class="fa-solid fa-layer-group"></i> Stage</span>
+                    <span class="taa-info-value" id="taaStage">—</span>
+                </div>
+                <div class="taa-info-row">
+                    <span class="taa-info-label"><i class="fa-solid fa-align-left"></i> Task</span>
+                    <span class="taa-info-value" id="taaDescription">—</span>
+                </div>
+
+                <div class="taa-info-row" id="taaDueDateRow">
+                    <span class="taa-info-label"><i class="fa-solid fa-calendar-day"></i> Due Date</span>
+                    <span class="taa-info-value" id="taaDueDate">—</span>
+                </div>
+            </div>
+
+            <p class="taa-received-at"><i class="fa-regular fa-clock"></i> Received at: <span id="taaReceivedAt">—</span></p>
+        </div>
+
+        <!-- Footer -->
+        <div class="taa-footer">
+            <button class="taa-btn-ok" id="taaOkBtn">
+                <i class="fa-solid fa-circle-check"></i> Got it, Thanks!
+            </button>
+        </div>
+
+    </div>
+</div>

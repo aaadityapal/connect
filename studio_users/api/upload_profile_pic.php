@@ -23,7 +23,7 @@ if (isset($_FILES['profile_pic'])) {
     $fileExt = explode('.', $fileName);
     $fileActualExt = strtolower(end($fileExt));
 
-    $allowed = array('jpg', 'jpeg', 'png');
+    $allowed = array('jpg', 'jpeg', 'png', 'heic');
 
     if (in_array($fileActualExt, $allowed)) {
         if ($fileError === 0) {
@@ -54,7 +54,7 @@ if (isset($_FILES['profile_pic'])) {
             echo json_encode(['status' => 'error', 'message' => 'There was an error uploading your file']);
         }
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Invalid file type (JPG, JPEG, PNG only)']);
+        echo json_encode(['status' => 'error', 'message' => 'Invalid file type (JPG, JPEG, PNG, HEIC only)']);
     }
 } else {
     echo json_encode(['status' => 'error', 'message' => 'No file provided']);

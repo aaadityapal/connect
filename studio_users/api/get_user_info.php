@@ -29,6 +29,7 @@ try {
         bank_details,
         notification_preferences,
         profile_picture,
+        documents,
         status, last_login, created_at
         FROM users WHERE id = ?");
     $stmt->execute([$userId]);
@@ -36,7 +37,7 @@ try {
 
     if ($user) {
         // Parse JSON fields safely
-        $jsonFields = ['social_media', 'education_background', 'work_experiences', 'bank_details', 'notification_preferences'];
+        $jsonFields = ['social_media', 'education_background', 'work_experiences', 'bank_details', 'notification_preferences', 'documents'];
         foreach ($jsonFields as $field) {
             if (!empty($user[$field])) {
                 $decoded = json_decode($user[$field], true);
@@ -62,6 +63,21 @@ try {
                 } else {
                     $user[$field] = null;
                 }
+            }
+        }
+        
+        // ── Normalization: Ensure documents follow consistent structure ──
+        if (!empty($user['documents']) && is_array($user['documents'])) {
+            foreach ($user['documents'] as &$doc) {
+                if (!isset($doc['id'])) { $doc['id'] = md5($doc['path'] ?? ($doc['file_path'] ?? uniqid())); }
+                if (!isset($doc['name']) && isset($doc['filename'])) { $doc['name'] = $doc['filename']; }
+                if (!isset($doc['path']) && isset($doc['file_path'])) { $doc['path'] = $doc['file_path']; }
+                if (!isset($doc['extension']) && isset($doc['path'])) {
+                    $doc['extension'] = strtolower(pathinfo($doc['path'], PATHINFO_EXTENSION));
+                }
+                if (!isset($doc['type']) && isset($doc['doc_type'])) { $doc['type'] = $doc['doc_type']; }
+                // Fallback for type
+                if (!isset($doc['type'])) { $doc['type'] = 'Document'; }
             }
         }
 

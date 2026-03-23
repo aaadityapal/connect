@@ -25,4 +25,3 @@ function logUserActivity($pdo, $userId, $actionType, $entityType, $description, 
         return false;
     }
 }
-?>

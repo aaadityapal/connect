@@ -23,14 +23,25 @@
 
     /* Tabs adjusting for mobile view */
     .profile-tabs {
-        padding: 8px;
-        flex-wrap: nowrap;
+        padding: 8px !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none;
         margin-bottom: 16px;
     }
+    
+    .profile-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
     .tab-btn {
         font-size: 13px;
-        padding: 10px 16px;
-        flex: 1 0 auto;
+        padding: 10px 20px !important;
+        flex: 0 0 auto !important;
+        min-width: max-content !important;
     }
 
     /* Breadcrumbs slightly smaller */

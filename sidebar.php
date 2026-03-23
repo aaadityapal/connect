@@ -275,9 +275,9 @@ if (!isset($_SESSION['user_id'])) {
                     </a>
                 </li>
                 <li>
-                    <a href="leave.php">
+                    <a href="studio_users/leave_pages/index.php">
                         <i class="fas fa-calendar-check"></i>
-                        <span class="sidebar-text">Leaves</span>
+                        <span class="sidebar-text">Apply Leaves</span>
                     </a>
                 </li>
                 <li>

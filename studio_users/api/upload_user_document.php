@@ -50,11 +50,23 @@ if (move_uploaded_file($file['tmp_name'], $targetFile)) {
         $stmt = $pdo->prepare("SELECT documents FROM users WHERE id = ?");
         $stmt->execute([$userId]);
         $userData = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         $documents = [];
         if (!empty($userData['documents'])) {
             $documents = json_decode($userData['documents'], true);
-            if (!is_array($documents)) $documents = [];
+            if (!is_array($documents)) {
+                $documents = [];
+            } else {
+                // Normalize legacy formats
+                foreach ($documents as &$doc) {
+                    if (!isset($doc['name']) && isset($doc['filename'])) { $doc['name'] = $doc['filename']; }
+                    if (!isset($doc['path']) && isset($doc['file_path'])) { $doc['path'] = $doc['file_path']; }
+                    if (!isset($doc['id'])) { $doc['id'] = md5($doc['path'] ?? uniqid()); }
+                    if (!isset($doc['extension']) && isset($doc['path'])) {
+                        $doc['extension'] = strtolower(pathinfo($doc['path'], PATHINFO_EXTENSION));
+                    }
+                }
+            }
         }
 
         // Add new document
@@ -66,9 +78,9 @@ if (move_uploaded_file($file['tmp_name'], $targetFile)) {
             'uploaded_at' => date('Y-m-d H:i:s'),
             'extension' => $fileExt
         ];
-        
+
         $documents[] = $newDoc;
-        
+
         // Update DB
         $updateStmt = $pdo->prepare("UPDATE users SET documents = ? WHERE id = ?");
         $updateStmt->execute([json_encode($documents), $userId]);

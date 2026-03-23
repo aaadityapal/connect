@@ -68,7 +68,8 @@ if (isset($_SESSION['user_id'])) {
         </a>
 
         <div class="menu-title">Leave &amp; Expenses</div>
-        <a href="apply-leave.php" class="menu-item" data-page="apply-leave">
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'leave_pages/index.php'; return false;"
+            class="menu-item" data-page="apply-leave">
             <i data-lucide="calendar-check" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Apply Leave</span>
             <div class="tooltip">Apply Leave</div>
@@ -121,6 +122,12 @@ if (isset($_SESSION['user_id'])) {
             <span class="menu-text">Team Hierarchy</span>
             <div class="tooltip">Hierarchy</div>
         </a>
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'manager_mapping.php'; return false;"
+            class="menu-item" data-page="manager-mapping">
+            <i data-lucide="users-2" class="menu-icon" style="width:17px;height:17px;"></i>
+            <span class="menu-text">Manager Mapping</span>
+            <div class="tooltip">Manager Mapping</div>
+        </a>
         <?php
 endif; ?>
 
@@ -136,7 +143,8 @@ endif; ?>
             <div class="tooltip">Help &amp; Support</div>
         </a>
 
-        <a href="../logout.php" class="menu-item menu-item-logout" data-page="logout">
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../logout.php'; return false;"
+           class="menu-item menu-item-logout" data-page="logout">
             <i data-lucide="power" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Logout</span>
             <div class="tooltip">Logout</div>

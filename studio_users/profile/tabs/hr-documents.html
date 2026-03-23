@@ -1,73 +1,301 @@
-            <section class="card section-hr-documents">
-                <h2 class="section-title">HR Documents</h2>
+<style>
+    /* Responsive Improvements for HR Tab */
+    .section-hr-documents {
+        padding: 1.5rem !important;
+    }
+    
+    .section-hr-documents .section-title {
+        font-size: 1.1rem !important;
+        margin-bottom: 20px !important;
+    }
 
-                <div class="sub-tabs">
-                    <button class="sub-tab-btn active" data-subtarget="policies">Policies & Staff Requirements Forms</button>
-                    <button class="sub-tab-btn" data-subtarget="official">Official Documents</button>
-                    <button class="sub-tab-btn" data-subtarget="personal">User Personal Documents</button>
-                </div>
+    /* Horizontal Tab Scrolling for Mobile */
+    .sub-tabs {
+        display: flex !important;
+        gap: 8px !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding-bottom: 12px !important;
+        margin-bottom: 25px !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        scrollbar-width: none; /* Hide scrollbar for Firefox */
+        -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+    }
 
+    .sub-tabs::-webkit-scrollbar {
+        display: none; /* Hide scrollbar for Chrome/Safari */
+    }
+
+    .sub-tab-btn {
+        flex-shrink: 0 !important;
+        padding: 8px 16px !important;
+        font-size: 0.85rem !important;
+    }
+
+        /* Shared Document Card Styles */
+        .hr-docs-grid {
+            display: grid;
+            gap: 1rem;
+            margin-top: 5px;
+        }
+
+        .doc-card-premium {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            padding: 1.25rem 1.5rem;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: default;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .doc-card-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -8px rgba(0,0,0,0.08);
+            border-color: rgba(37, 99, 235, 0.25);
+        }
+
+        .file-icon-box {
+            flex-shrink: 0;
+            width: 48px;
+            height: 58px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .file-emoji {
+            font-size: 1.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        .doc-card-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .doc-card-title {
+            margin: 0;
+            font-size: 0.975rem;
+            font-weight: 600;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .doc-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            transition: all 0.2s;
+            text-decoration: none;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .action-btn:hover {
+            background: #2563eb;
+            color: #fff;
+            border-color: #2563eb;
+        }
+
+        .action-btn.download:hover {
+            background: #0f172a;
+            border-color: #0f172a;
+        }
+
+        .action-btn.acknowledge {
+            background: #f0fdf4;
+            color: #16a34a;
+            border-color: #dcfce7;
+        }
+
+        .action-btn.acknowledge:hover {
+            background: #16a34a;
+            color: #fff;
+        }
+
+        .year-strip span {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #94a3b8;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 99px;
+            letter-spacing: 0.05em;
+        }
+
+        /* Mobile-First Adjustments for Filter Bar */
+        @media (max-width: 640px) {
+            .section-hr-documents {
+                padding: 1rem !important;
+            }
+
+            .salary-filter-bar {
+                flex-direction: column;
+                gap: 12px;
+                padding: 15px;
+            }
+            
+            .filter-inputs {
+                flex-direction: column !important;
+                gap: 10px !important;
+            }
+
+            #filter-salary-month, #filter-salary-year {
+                width: 100% !important;
+                flex: none !important;
+            }
+
+            /* Document Card Mobile Optimization */
+            .doc-card-premium {
+                padding: 1rem !important;
+                gap: 0.75rem !important;
+            }
+
+            .file-icon-box {
+                width: 38px !important;
+                height: 48px !important;
+            }
+
+            .file-emoji {
+                font-size: 1.15rem !important;
+            }
+
+            .doc-card-title {
+                font-size: 0.825rem !important;
+            }
+
+            .action-btn {
+                width: 36px !important;
+                height: 36px !important;
+            }
+            
+            .year-strip span {
+                font-size: 0.7rem !important;
+                padding: 2px 8px !important;
+            }
+        }
+    </style>
+
+
+<section class="card section-hr-documents">
+    <h2 class="section-title">HR & Career Documents</h2>
+
+    <div class="sub-tabs">
+        <button class="sub-tab-btn active" data-subtarget="policies">Company Policies</button>
+        <button class="sub-tab-btn" data-subtarget="salary-slips">Salary Slips</button>
+        <button class="sub-tab-btn" data-subtarget="offer-letters">Offer Letters</button>
+        <button class="sub-tab-btn" data-subtarget="appraisal-letters">Appraisals</button>
+        <button class="sub-tab-btn" data-subtarget="experience-letters">Experience Letters</button>
+    </div>
+
+                <!-- Policies Section -->
                 <div class="sub-tab-page active" id="policies">
-                    <div class="doc-card">
-                        <div class="doc-icon">📄</div>
-                        <div class="doc-body">
-                            <div class="doc-line">
-                                <div class="doc-title">HR Policy</div>
-                                <div class="doc-status">Acknowledged</div>
-                            </div>
-                            <div class="doc-meta">Type: HR Policy</div>
-                            <div class="doc-meta">Last updated: 2025-03-29 06:12:08 • Size: 757.39 KB</div>
-                        </div>
-                        <div class="doc-actions">
-                            <button class="icon-btn" title="View">👁️</button>
-                            <button class="icon-btn" title="Download">⬇️</button>
-                        </div>
-                    </div>
-
-                    <div class="doc-card">
-                        <div class="doc-icon">📄</div>
-                        <div class="doc-body">
-                            <div class="doc-line">
-                                <div class="doc-title">Sales Rules</div>
-                                <div class="doc-status">Acknowledged</div>
-                            </div>
-                            <div class="doc-meta">Type: Other</div>
-                            <div class="doc-meta">Last updated: 2025-03-29 07:51:09 • Size: 564.3 KB</div>
-                        </div>
-                        <div class="doc-actions">
-                            <button class="icon-btn" title="View">👁️</button>
-                            <button class="icon-btn" title="Download">⬇️</button>
-                        </div>
-                    </div>
-
-                    <div class="doc-card">
-                        <div class="doc-icon">📄</div>
-                        <div class="doc-body">
-                            <div class="doc-line">
-                                <div class="doc-title">TIME MANAGEMENT SHEET - SALES</div>
-                                <div class="doc-status">Acknowledged</div>
-                            </div>
-                            <div class="doc-meta">Type: Other</div>
-                            <div class="doc-meta">Last updated: 2025-03-29 07:51:14 • Size: 582.43 KB</div>
-                        </div>
-                        <div class="doc-actions">
-                            <button class="icon-btn" title="View">👁️</button>
-                            <button class="icon-btn" title="Download">⬇️</button>
+                    <div id="hr-policies-container">
+                        <div class="ag-skeleton-container" style="padding: 20px; text-align: center;">
+                            <span style="font-size: 0.85rem; color: #94a3b8;">Loading official policies...</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="sub-tab-page" id="official">
-                    <div class="empty-state">
-                        <div class="empty-icon">📁</div>
-                        <p>No official documents available yet.</p>
+                <!-- Salary Slips Section -->
+                <div class="sub-tab-page" id="salary-slips">
+                    <div class="salary-filter-bar" style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 16px; border: 1px solid #e2e8f0; align-items: center;">
+                        <div class="filter-inputs" style="flex: 1; display: flex; gap: 0.75rem;">
+                            <select id="filter-salary-month" style="flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; background: #fff; color: #1e293b; outline: none;">
+                                <option value="">Filter by Month</option>
+                                <option value="01">January</option>
+                                <option value="02">February</option>
+                                <option value="03">March</option>
+                                <option value="04">April</option>
+                                <option value="05">May</option>
+                                <option value="06">June</option>
+                                <option value="07">July</option>
+                                <option value="08">August</option>
+                                <option value="09">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                            <select id="filter-salary-year" style="flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; background: #fff; color: #1e293b; outline: none;">
+                                <option value="">Filter by Year</option>
+                                <script>
+                                    const currentYear = new Date().getFullYear();
+                                    for(let y = currentYear; y >= 2020; y--) {
+                                        document.write(`<option value="${y}">${y}</option>`);
+                                    }
+                                </script>
+                            </select>
+                        </div>
+                        <button id="btn-clear-salary-filters" style="padding: 10px 16px; border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; font-size: 0.8rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s;"
+                                onmouseover="this.style.background='#f1f5f9'; this.style.color='#1e293b';"
+                                onmouseout="this.style.background='#fff'; this.style.color='#64748b';">
+                            Clear
+                        </button>
                     </div>
+                    <div id="hr-salary-slips-container"></div>
                 </div>
 
-                <div class="sub-tab-page" id="personal">
-                    <div class="empty-state">
-                        <div class="empty-icon">🗂️</div>
-                        <p>No personal documents uploaded yet.</p>
-                    </div>
+                <!-- Offer Letters Section -->
+                <div class="sub-tab-page" id="offer-letters">
+                    <div id="hr-offer-letters-container"></div>
+                </div>
+
+                <!-- Appraisal Letters Section -->
+                <div class="sub-tab-page" id="appraisal-letters">
+                    <div id="hr-appraisal-letters-container"></div>
+                </div>
+
+                <!-- Experience Letters Section -->
+                <div class="sub-tab-page" id="experience-letters">
+                    <div id="hr-experience-letters-container"></div>
                 </div>
             </section>
+
+            <!-- HR Acknowledgment Modal -->
+            <div id="acknowledge-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+                <div style="background: white; width: 90%; max-width: 450px; border-radius: 24px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);">
+                    <div style="width: 60px; height: 60px; background: #f0fdf4; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; color: #16a34a;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    </div>
+                    
+                    <h3 style="margin: 0 0 10px 0; font-size: 1.25rem; font-weight: 700; color: #0f172a;">Confirm Acknowledgment</h3>
+                    <p style="margin: 0 0 25px 0; font-size: 0.95rem; line-height: 1.6; color: #64748b;">
+                        Are you sure you want to acknowledge receipt of <strong id="ack-doc-name" style="color: #0f172a;"></strong>? 
+                        This confirms you have read and accepted the document policies.
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <button onclick="closeAcknowledgeModal()" 
+                                style="padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; color: #64748b; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                            Cancel
+                        </button>
+                        <button id="btn-confirm-ack"
+                                style="padding: 12px; border: none; border-radius: 12px; background: #16a34a; color: white; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2);">
+                            I Acknowledge
+                        </button>
+                    </div>
+                </div>
+            </div>

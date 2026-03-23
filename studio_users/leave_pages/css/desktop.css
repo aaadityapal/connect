@@ -1,0 +1,56 @@
+/* =============================================
+   DESKTOP LAYOUT  (min-width: 769px)
+   ============================================= */
+
+/* ── Core Layout ─────────────────────────────── */
+#content-wrapper { flex-direction: row; }
+#main-content    { width: 100%; }
+
+.leave-dashboard {
+    padding: 26px 32px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* ── Header ──────────────────────────────────── */
+.site-header {
+    padding: 0 26px;
+}
+
+/* Show the clock on desktop */
+.header-center {
+    display: flex;
+}
+
+/* ── Stats Row ───────────────────────────────── */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+/* ── Main Grid: Form + Balance ───────────────── */
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: start;
+}
+
+/* ── Date Row inside Form ────────────────────── */
+.date-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 10px;
+    align-items: flex-end;
+    margin-bottom: 15px;
+}
+
+/* ── History Filters ─────────────────────────── */
+.history-filters {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}

@@ -43,9 +43,12 @@ try {
 
     logUserActivity($pdo, $userId, 'password_change', 'user', 'Changed account password');
 
+    ob_clean();
     echo json_encode(['status' => 'success', 'message' => 'Password updated successfully']);
+    exit();
 
 } catch (PDOException $e) {
+    ob_clean();
     echo json_encode(['status' => 'error', 'message' => 'Database error: ' . $e->getMessage()]);
+    exit();
 }
-?>

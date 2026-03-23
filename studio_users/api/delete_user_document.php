@@ -32,14 +32,25 @@ try {
     }
 
     $documents = json_decode($userData['documents'], true);
-    if (!is_array($documents)) $documents = [];
+    if (!is_array($documents)) {
+        $documents = [];
+    } else {
+        // Normalize legacy formats
+        foreach ($documents as &$doc) {
+            if (!isset($doc['path']) && isset($doc['file_path'])) { $doc['path'] = $doc['file_path']; }
+            if (!isset($doc['name']) && isset($doc['filename'])) { $doc['name'] = $doc['filename']; }
+            if (!isset($doc['id'])) { $doc['id'] = md5($doc['path'] ?? uniqid()); }
+        }
+    }
 
+    $deletedDocName = '';
     // Find and remove the document
     $newDocs = [];
     foreach ($documents as $doc) {
         if ($doc['id'] != $docId) {
             $newDocs[] = $doc;
         } else {
+            $deletedDocName = $doc['name'] ?? 'Untitled';
             // Optional: delete physical file if needed
             $filePath = "../../" . $doc['path'];
             if (file_exists($filePath)) {
@@ -52,7 +63,7 @@ try {
     $updateStmt = $pdo->prepare("UPDATE users SET documents = ? WHERE id = ?");
     $updateStmt->execute([json_encode($newDocs), $userId]);
 
-    logUserActivity($pdo, $userId, 'document_delete', 'user', "Deleted document");
+    logUserActivity($pdo, $userId, 'document_delete', 'user', "Deleted document: " . $deletedDocName);
 
     echo json_encode(['status' => 'success', 'message' => 'Document deleted successfully', 'documents' => $newDocs]);
 

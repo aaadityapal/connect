@@ -38,6 +38,10 @@
             currentPage = 'worksheet';
         }
 
+        if (window.location.pathname.includes('/leave_pages/')) {
+            currentPage = 'apply-leave';
+        }
+
         document.querySelectorAll('#appSidebar .menu-item[data-page]').forEach(item => {
             item.classList.remove('active');
             if (item.dataset.page === currentPage) {

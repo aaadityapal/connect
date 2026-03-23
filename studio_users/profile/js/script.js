@@ -66,7 +66,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         initModals();
         initEmergencyContacts();
         initTagSystem();
-        initSecurityTab();
+        initAgUploadModal();
+        if (typeof initSecurityTab === 'function') initSecurityTab();
         initActivityLog();
         initNotificationsTab();
         // initAgModalSystem(); // Moved to top-level for better reliability
@@ -82,6 +83,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 3. Load user data from API
     loadUserInfo();
 });
+
+/**
+ * Initialize Avatar and Document Upload Modals
+ */
+function initAgUploadModal() {
+    // 1. Photo Upload Trigger
+    const photoTrigger = document.getElementById('ag-trigger-upload');
+    if (photoTrigger) {
+        photoTrigger.addEventListener('click', (e) => {
+            e.preventDefault();
+            const modal = document.getElementById('ag-upload-modal');
+            if (modal) modal.classList.add('ag-active');
+        });
+    }
+
+    // 2. Photo Removal
+    const removeBtn = document.getElementById('ag-remove-photo');
+    if (removeBtn) {
+        removeBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (confirm("Are you sure you want to reset your profile picture?")) {
+                try {
+                    const response = await fetch('../api/reset_profile_pic.php', { method: 'POST' });
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        showToast("Profile picture reset");
+                        location.reload();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (err) { console.error(err); }
+            }
+        });
+    }
+
+    // Note: Other listeners for clicks and changes remain delegated or in global listeners below
+}
 
 async function loadUserInfo() {
     try {
@@ -498,79 +536,6 @@ function addTag(listId, label, groupName) {
 // ── End Tag System ────────────────────────────────────────────────────────────
 
 
-// ── Security Tab: Change Password ─────────────────────────────────────────────
-
-function initSecurityTab() {
-    document.addEventListener('submit', async function(e) {
-        if (e.target.id === 'changePasswordForm') {
-            e.preventDefault();
-            
-            const currentPass = document.getElementById('currentPassword').value;
-            const newPass     = document.getElementById('newPassword').value;
-            const confirmPass = document.getElementById('confirmPassword').value;
-            const alertBox    = document.getElementById('changePasswordAlert');
-            const submitBtn   = document.getElementById('changePasswordBtn');
-
-            if (newPass !== confirmPass) {
-                alert("New passwords do not match!");
-                return;
-            }
-
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Updating...';
-            }
-
-            try {
-                const formData = new FormData();
-                formData.append('current_password', currentPass);
-                formData.append('new_password',     newPass);
-                formData.append('confirm_password', confirmPass);
-
-                const response = await fetch('../api/change_password.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    showToast("Success! Your password has been changed.");
-                    e.target.reset();
-                    initActivityLog(); // Refresh log
-                    if (alertBox) {
-                        alertBox.style.display = 'block';
-                        alertBox.className = 'mt-3 p-3 rounded bg-green-50 text-green-700 border border-green-200';
-                        alertBox.style.background = '#f0fdf4';
-                        alertBox.style.color = '#15803d';
-                        alertBox.style.padding = '12px';
-                        alertBox.style.borderRadius = '8px';
-                        alertBox.textContent = result.message;
-                    }
-                } else {
-                    if (alertBox) {
-                        alertBox.style.display = 'block';
-                        alertBox.style.background = '#fef2f2';
-                        alertBox.style.color = '#b91c1c';
-                        alertBox.style.padding = '12px';
-                        alertBox.style.borderRadius = '8px';
-                        alertBox.textContent = result.message;
-                    } else {
-                        alert(result.message);
-                    }
-                }
-            } catch (err) {
-                console.error("Security update error:", err);
-                alert("An error occurred. Please try again.");
-            } finally {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = 'Update Password';
-                }
-            }
-        }
-    });
-}
-
 // ── Activity Log: Fetch and Render ───────────────────────────────────────────
 
 async function initActivityLog() {
@@ -768,6 +733,11 @@ function initTabs() {
             pages.forEach(page => {
                 page.classList.toggle('active', page.id === target);
             });
+
+            // Initialize specific tab logic
+            if (target === 'hr-documents') {
+                initHRDocuments();
+            }
         });
     });
 }
@@ -1061,6 +1031,8 @@ async function saveChanges() {
         formData.append('skills',    getTags('skills-tag-list'));
         formData.append('interests', getTags('interests-tag-list'));
 
+        // Bank details are now READ-ONLY. Handled by admin.
+        /*
         const bankDetails = {
             bank_name:      getVal('pi-bank-name'),
             account_holder: getVal('pi-account-holder'),
@@ -1068,6 +1040,7 @@ async function saveChanges() {
             ifsc_code:      getVal('pi-ifsc')
         };
         formData.append('bank_details', JSON.stringify(bankDetails));
+        */
 
         // ── SECTION 8: Social Media ──────────────────────────────────
         const socialMedia = {
@@ -1355,15 +1328,44 @@ document.addEventListener('change', (e) => {
             const previewBox = document.getElementById('ag-preview-box');
             const previewImg = document.getElementById('ag-preview-img');
             const instructions = document.getElementById('ag-upload-instructions');
+            const fileNameLabel = document.getElementById('ag-file-name');
             
             if (previewBox && previewImg && instructions) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    previewImg.src = event.target.result;
-                    previewBox.style.display = 'block';
-                    instructions.style.display = 'none';
+                // If it's a HEIC file, we need conversion to show preview
+                if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
+                    if (fileNameLabel) fileNameLabel.textContent = "Processing HEIC Image...";
+                    
+                    if (typeof heic2any !== 'undefined') {
+                        heic2any({
+                            blob: file,
+                            toType: "image/jpeg",
+                            quality: 0.8
+                        }).then(function(resultBlob) {
+                            const reader = new FileReader();
+                            reader.onload = function(ev) {
+                                previewImg.src = ev.target.result;
+                                previewBox.style.display = 'block';
+                                instructions.style.display = 'none';
+                                if (fileNameLabel) fileNameLabel.textContent = "Click to select or drag & drop";
+                            }
+                            reader.readAsDataURL(resultBlob);
+                        }).catch(function(err) {
+                            console.error("HEIC Conversion Failed:", err);
+                            if (fileNameLabel) fileNameLabel.textContent = "Preview error. File still valid.";
+                        });
+                    } else {
+                        console.error("heic2any library not loaded");
+                        if (fileNameLabel) fileNameLabel.textContent = "HEIC Preview not supported";
+                    }
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        previewImg.src = event.target.result;
+                        previewBox.style.display = 'block';
+                        instructions.style.display = 'none';
+                    }
+                    reader.readAsDataURL(file);
                 }
-                reader.readAsDataURL(file);
             }
         }
     }
@@ -1405,12 +1407,32 @@ async function handleAgSubmitUpload(btn) {
         return;
     }
 
-    const formData = new FormData();
-    formData.append('profile_pic', file);
-
     const originalText = btn.textContent;
     btn.disabled = true;
     btn.innerHTML = '<span style="display:inline-block; font-size:1.1rem; transform-origin:center; animation:ag-spin 1s linear infinite;">⌛</span> Uploading...';
+
+    // ── Pre-process HEIC if it hasn't been handled yet ─────────────────────────
+    let uploadFile = file;
+    if (file.name.toLowerCase().endsWith('.heic') || file.type === 'image/heic') {
+        try {
+            if (typeof heic2any !== 'undefined') {
+                const jpegBlob = await heic2any({
+                    blob: file,
+                    toType: "image/jpeg",
+                    quality: 0.8
+                });
+                // Rename to .jpg for maximum system compatibility
+                const newName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+                uploadFile = new File([jpegBlob], newName, { type: "image/jpeg" });
+            }
+        } catch (err) {
+            console.error("Critical HEIC pre-upload failure:", err);
+            // We fall back to uploading the raw HEIC if conversion fails
+        }
+    }
+
+    const formData = new FormData();
+    formData.append('profile_pic', uploadFile);
     
     try {
         const response = await fetch('../api/upload_profile_pic.php', {
@@ -1667,4 +1689,250 @@ function resetAgDocumentUI() {
         preview.style.display = 'none';
     }
     if (instructions) instructions.style.display = 'block';
+}
+// ── HR Documents Fetch & Rendering ───────────────────────────
+async function initHRDocuments() {
+    const policiesContainer = document.getElementById('hr-policies-container');
+    const salaryContainer = document.getElementById('hr-salary-slips-container');
+    const offerContainer = document.getElementById('hr-offer-letters-container');
+    const appraisalContainer = document.getElementById('hr-appraisal-letters-container');
+    const expContainer = document.getElementById('hr-experience-letters-container');
+
+    if (!policiesContainer) return;
+
+    try {
+        const response = await fetch('../api/fetch_hr_documents.php');
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            const allDocs = result.hr_documents || [];
+            
+            // Initial Filtering
+            const policies = allDocs.filter(d => (d.type || '').toLowerCase().includes('policy'));
+            const salary = allDocs.filter(d => (d.type || '').toLowerCase().includes('salary') || (d.type || '').toLowerCase().includes('slip'));
+            const offer = allDocs.filter(d => (d.type || '').toLowerCase().includes('offer'));
+            const appraisal = allDocs.filter(d => (d.type || '').toLowerCase().includes('appraisal'));
+            const experience = allDocs.filter(d => (d.type || '').toLowerCase().includes('experience'));
+
+            renderHRDocs(policies, policiesContainer, 'policy');
+            renderHRDocs(salary, salaryContainer, 'salary');
+            renderHRDocs(offer, offerContainer, 'offer');
+            renderHRDocs(appraisal, appraisalContainer, 'appraisal');
+            renderHRDocs(experience, expContainer, 'experience');
+
+            // ── Salary Filtering Logic ───────────────────────────
+            const monthFilter = document.getElementById('filter-salary-month');
+            const yearFilter = document.getElementById('filter-salary-year');
+            const clearBtn = document.getElementById('btn-clear-salary-filters');
+
+            if (monthFilter && yearFilter) {
+                // Determine current running month and year
+                const now = new Date();
+                const runningMonth = String(now.getMonth() + 1).padStart(2, '0');
+                const runningYear = String(now.getFullYear());
+
+                // Force visual selection in the dropdowns
+                monthFilter.value = runningMonth;
+                yearFilter.value = runningYear;
+
+                const applySalaryFilters = () => {
+                    let filtered = [...salary];
+                    const mValue = monthFilter.value;
+                    const yValue = yearFilter.value;
+
+                    if (mValue) {
+                        filtered = filtered.filter(d => {
+                            const date = new Date(d.upload_date);
+                            return String(date.getMonth() + 1).padStart(2, '0') === mValue;
+                        });
+                    }
+                    if (yValue) {
+                        filtered = filtered.filter(d => {
+                            const date = new Date(d.upload_date);
+                            return String(date.getFullYear()) === yValue;
+                        });
+                    }
+                    renderHRDocs(filtered, salaryContainer, 'policy');
+                };
+
+                // Trigger filtering immediately for the running month
+                applySalaryFilters();
+
+                monthFilter.onchange = applySalaryFilters;
+                yearFilter.onchange = applySalaryFilters;
+                clearBtn.onclick = () => {
+                    monthFilter.value = "";
+                    yearFilter.value = "";
+                    renderHRDocs(salary, salaryContainer, 'policy');
+                };
+            }
+        } else {
+            policiesContainer.innerHTML = `<p style="padding:20px; color:#ef4444; font-size:0.85rem;">Failed to load documents: ${result.message}</p>`;
+        }
+    } catch (err) {
+        console.error("Error loading HR documents:", err);
+    }
+}
+
+function renderHRDocs(docs, container, category) {
+    if (!docs || docs.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state" style="text-align: center; padding: 60px 20px; background: #f8fafc; border-radius: 20px; border: 2px dashed #e2e8f0; margin-top: 10px;">
+                <div style="font-size: 3rem; margin-bottom: 15px; filter: grayscale(1); opacity: 0.5;">📁</div>
+                <h4 style="color: #1e293b; font-weight: 600; margin-bottom: 5px;">No files available</h4>
+                <p style="font-size: 0.875rem; color: #64748b;">You don't have any documents in this category yet.</p>
+            </div>`;
+        return;
+    }
+
+    let lastYear = null;
+    let html = `<div class="hr-docs-grid">`;
+
+    docs.forEach((doc, idx) => {
+        const name = doc.name || doc.original_name || 'Untitled Document';
+        const dateStr = doc.upload_date || doc.uploaded_at || '';
+        const dateObj = dateStr ? new Date(dateStr) : null;
+        const currentYear = dateObj ? dateObj.getFullYear() : 'Unknown';
+        const dateDisplay = dateStr || '—';
+        const size = doc.formatted_size || (doc.file_size ? (doc.file_size / 1024).toFixed(1) + ' KB' : '—');
+        const status = (doc.acknowledgment_status || 'Viewed').toLowerCase();
+        const ext = (doc.extension || 'file').toLowerCase();
+
+        // Insert Year Strip if year changes
+        if (currentYear !== lastYear) {
+            html += `
+                <div class="year-strip" style="display: flex; align-items: center; gap: 15px; margin: 20px 0 10px 0;">
+                    <span>${currentYear}</span>
+                    <div style="flex: 1; height: 1px; background: linear-gradient(to right, #e2e8f0, transparent);"></div>
+                </div>`;
+            lastYear = currentYear;
+        }
+        
+        // Professional Color Palette
+        const colors = {
+            pdf: { bg: '#fff1f2', icon: '#e11d48', label: 'PDF' },
+            doc: { bg: '#eff6ff', icon: '#2563eb', label: 'DOC' },
+            docx: { bg: '#eff6ff', icon: '#2563eb', label: 'DOCX' },
+            xls: { bg: '#f0fdf4', icon: '#16a34a', label: 'XLS' },
+            xlsx: { bg: '#f0fdf4', icon: '#16a34a', label: 'XLSX' },
+            img: { bg: '#faf5ff', icon: '#9333ea', label: 'IMG' },
+            file: { bg: '#f8fafc', icon: '#64748b', label: 'FILE' }
+        };
+
+        const typeKey = ['pdf','doc','docx','xls','xlsx'].includes(ext) ? ext : 
+                       (['jpg','jpeg','png'].includes(ext) ? 'img' : 'file');
+        const theme = colors[typeKey];
+
+        const viewUrl = `../../hr_document_handler.php?id=${doc.id}&action=view&category=${category}`;
+        const downloadUrl = `../../hr_document_handler.php?id=${doc.id}&action=download&category=${category}`;
+
+        html += `
+            <div class="doc-card-premium">
+                <!-- File Type Icon -->
+                <div class="file-icon-box" style="background: ${theme.bg};">
+                    <div class="file-emoji">
+                        ${typeKey === 'pdf' ? '📕' : (typeKey.includes('xls') ? '📗' : (typeKey.includes('doc') ? '📘' : '📄'))}
+                    </div>
+                    <span style="font-size: 0.6rem; font-weight: 800; color: ${theme.icon}; margin-top: 2px;">${theme.label}</span>
+                </div>
+
+                <!-- Content -->
+                <div class="doc-card-content">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                        <h4 class="doc-card-title">${name}</h4>
+                        ${status === 'pending' ? 
+                            `<span style="flex-shrink:0; font-size: 0.65rem; padding: 3px 8px; border-radius: 6px; background: #fff7ed; color: #c2410c; font-weight: 700; border: 1px solid #ffedd5; text-transform: uppercase; letter-spacing: 0.02em;">Pending</span>` : 
+                            `<span style="flex-shrink:0; font-size: 0.65rem; padding: 3px 8px; border-radius: 6px; background: #f0fdf4; color: #15803d; font-weight: 700; border: 1px solid #dcfce7; text-transform: uppercase; letter-spacing: 0.02em;">Verified</span>`
+                        }
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; font-size: 0.775rem; color: #64748b;">
+                        <span style="display:flex; align-items:center; gap:4px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                            ${dateDisplay}
+                        </span>
+                        <span style="display:flex; align-items:center; gap:4px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            ${size}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="doc-card-actions">
+                    ${category === 'policy' && status === 'pending' ? `
+                        <button class="action-btn acknowledge" onclick="showAcknowledgeModal(${doc.id}, '${name}')" title="Acknowledge Receipt">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        </button>
+                    ` : ''}
+                    <a class="action-btn" href="${viewUrl}" target="_blank" title="View Document">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </a>
+                    <a class="action-btn download" href="${downloadUrl}" download title="Download">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </a>
+                </div>
+            </div>`;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+// ── HR Document Acknowledge Logic ────────────────────────────
+function showAcknowledgeModal(docId, docName) {
+    const modal = document.getElementById('acknowledge-modal');
+    const nameSpan = document.getElementById('ack-doc-name');
+    const confirmBtn = document.getElementById('btn-confirm-ack');
+
+    if (!modal || !nameSpan || !confirmBtn) return;
+
+    nameSpan.innerText = docName;
+    
+    // Show modal
+    modal.style.display = 'flex';
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        modal.querySelector('div').style.transform = 'translateY(0)';
+    }, 10);
+
+    // One-time click handler
+    confirmBtn.onclick = async () => {
+        confirmBtn.disabled = true;
+        confirmBtn.innerText = "Acknowledging...";
+        
+        try {
+            const formData = new FormData();
+            formData.append('document_id', docId);
+
+            const response = await fetch('../api/acknowledge_document.php', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                showToast("Document Acknowledged!");
+                closeAcknowledgeModal();
+                initHRDocuments();
+            } else {
+                showToast("Error: " + result.message);
+            }
+        } catch (err) {
+            console.error("Acknowledgment Error:", err);
+            showToast("Failed to acknowledge document");
+        } finally {
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = "I Acknowledge";
+        }
+    };
+}
+
+function closeAcknowledgeModal() {
+    const modal = document.getElementById('acknowledge-modal');
+    if (!modal) return;
+    modal.style.opacity = '0';
+    modal.querySelector('div').style.transform = 'translateY(20px)';
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
 }

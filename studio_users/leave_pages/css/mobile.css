@@ -1,0 +1,123 @@
+/* =============================================
+   MOBILE LAYOUT  (max-width: 768px)
+   ============================================= */
+
+/* ── Core Layout ─────────────────────────────── */
+.leave-dashboard {
+    padding: 14px 16px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* ── Header ──────────────────────────────────── */
+.site-header {
+    padding: 0 14px;
+}
+
+/* Hide clock on mobile — too cluttered */
+.header-center {
+    display: none;
+}
+
+/* Compact greeting */
+.header-greeting .greeting-sub {
+    display: none;
+}
+
+.greeting-main {
+    font-size: 0.82rem;
+}
+
+/* ── Page Heading ─────────────────────────────── */
+.page-heading h1 { font-size: 1.05rem; }
+
+/* ── Stats Row: 2 columns on mobile ──────────── */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.stat-value { font-size: 1.2rem; }
+.stat-tag   { display: none; }
+
+/* ── Main Grid: stacked on mobile ────────────── */
+.main-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+/* ── Date Row: stacked on mobile ─────────────── */
+.date-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.date-row .btn-ghost {
+    width: 100%;
+    margin-top: 4px;
+}
+
+/* Prevent auto-zoom on mobile devices by making sure inputs are 16px */
+.form-group input,
+.form-group select,
+.form-group textarea,
+.table-select {
+    font-size: 16px !important;
+}
+
+/* ── Card padding reduction ───────────────────── */
+.card {
+    padding: 16px;
+}
+
+/* ── History filters: wrap on small screens ───── */
+.history-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.history-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+}
+
+.dropdown-trigger {
+    min-width: 90px;
+    font-size: 0.78rem;
+}
+
+/* ── Form actions: full-width on mobile ──────── */
+.form-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+}
+
+.form-actions .btn {
+    width: 100%;
+    justify-content: center;
+}
+
+/* ── Tables: scrollable on mobile ────────────── */
+.table-wrap {
+    overflow-x: auto;
+}
+
+table {
+    min-width: 480px;
+}
+
+/* ── Footer ───────────────────────────────────── */
+.site-footer {
+    padding: 10px 14px;
+    font-size: 0.7rem;
+}

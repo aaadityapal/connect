@@ -1,0 +1,61 @@
+<section class="card filter-section">
+    <div class="filter-header">
+        <div class="section-title">
+            <span class="accent-bar"></span>
+            Filter Expenses
+        </div>
+        <span style="font-size:12px;color:var(--text-muted);"><i class="fa-solid fa-sliders"
+                style="margin-right:5px;"></i>Advanced Search</span>
+    </div>
+    <div class="filter-row">
+        <!-- Status -->
+        <div class="field-group">
+            <label>Status</label>
+            <div class="custom-select" data-target="filter-status" tabindex="0">
+                <div class="select-trigger">
+                    <span style="display:flex;align-items:center;gap:8px;">
+                        <i class="fa-solid fa-list-check" style="color:#94a3b8;"></i>
+                        <span class="select-value">All Statuses</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down" style="color:#cbd5e1;font-size:11px;"></i>
+                </div>
+                <div class="select-dropdown">
+                    <div class="select-item active" data-value="">All Statuses</div>
+                    <div class="select-item" data-value="pending">Pending</div>
+                    <div class="select-item" data-value="approved">Approved</div>
+                    <div class="select-item" data-value="paid">Paid</div>
+                    <div class="select-item" data-value="rejected">Rejected</div>
+                </div>
+            </div>
+            <input type="hidden" id="filter-status" value="">
+        </div>
+
+
+
+        <!-- Date From -->
+        <div class="field-group">
+            <label for="filter-date-from">Date From</label>
+            <div class="field-wrap">
+                <input id="filter-date-from" type="date" class="form-control" aria-label="Date From">
+            </div>
+        </div>
+
+        <!-- Date To -->
+        <div class="field-group">
+            <label for="filter-date-to">Date To</label>
+            <div class="field-wrap">
+                <input id="filter-date-to" type="date" class="form-control" aria-label="Date To">
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="filter-actions">
+            <button id="btn-apply-filter" class="btn btn-blue">
+                <i class="fa-solid fa-magnifying-glass"></i> Apply
+            </button>
+            <button id="btn-reset-filter" class="btn btn-ghost">
+                <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+        </div>
+    </div>
+</section>

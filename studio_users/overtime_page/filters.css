@@ -1,0 +1,187 @@
+/* =====================================================
+   FILTERS GRID
+   ===================================================== */
+.filters-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    /* Updated from 4 fields to 2 fields + button */
+    gap: 16px;
+    align-items: end;
+}
+
+.filter-group label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-muted);
+    font-size: 1rem;
+    pointer-events: none;
+}
+
+.form-select,
+.form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    outline: none;
+    transition: border-color var(--t-fast);
+}
+
+.form-select {
+    padding-left: 36px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239ca3af' viewBox='0 0 256 256'%3E%3Cpath d='M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+}
+
+.form-select:focus,
+.form-input:focus {
+    border-color: var(--orange);
+}
+
+/* =====================================================
+   CUSTOM FILTER DROPDOWN
+   ===================================================== */
+.filter-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.filter-dropdown .dropdown-trigger {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    cursor: pointer;
+    background: var(--bg-surface);
+    padding: 8px 12px 8px 36px;
+    /* Space for left calendar icon */
+    position: relative;
+}
+
+.filter-dropdown .input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+.filter-dropdown .caret-icon {
+    margin-left: auto;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+}
+
+/* Open State Trigger */
+.filter-dropdown.open .dropdown-trigger {
+    border-color: var(--orange);
+    color: var(--text-primary);
+}
+
+.filter-dropdown.open .caret-icon {
+    transform: rotate(180deg);
+}
+
+/* Droplist Menu overlay */
+.dropdown-options {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: all 0.2s var(--ease);
+    z-index: 50;
+    max-height: 260px;
+    overflow-y: auto;
+    list-style: none;
+    padding: 8px;
+}
+
+/* When the dropdown is open */
+.filter-dropdown.open .dropdown-options {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Individual list options */
+.dropdown-options li {
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 2px;
+}
+
+.dropdown-options li:last-child {
+    margin-bottom: 0;
+}
+
+/* Hover and selection matching the user image logic exactly */
+.dropdown-options li:hover {
+    background-color: var(--bg-muted);
+    color: var(--text-primary);
+}
+
+.dropdown-options li.selected {
+    background-color: #fff7ed;
+    /* Light soft-orange tone */
+    color: var(--orange);
+    /* Bold orange font */
+    font-weight: 600;
+}
+
+/* Custom Webkit scrollbar matching the smooth grey bar seen in the screenshot */
+.style-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.style-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 8px;
+    margin: 4px 0;
+}
+
+.style-scroll::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 8px;
+}
+
+.style-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
+/* Ensure the card allows dropdown absolute positioned items to overflow visibly */
+.card.section-card {
+    overflow: visible;
+}

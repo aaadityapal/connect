@@ -1,0 +1,47 @@
+/*
+  desktop.css — Layout overrides for large screens (≥ 1025px)
+  Loaded after style.css to refine desktop-specific presentation.
+*/
+
+/* =====================================================
+   DESKTOP LARGE (≥ 1280px)
+   ===================================================== */
+@media screen and (min-width: 1280px) {
+    .app-container {
+        padding: 40px 56px 80px;
+    }
+}
+
+/* =====================================================
+   DESKTOP STANDARD (1025px – 1279px)
+   ===================================================== */
+@media screen and (min-width: 1025px) and (max-width: 1279px) {
+    .app-container {
+        padding: 36px 40px 72px;
+    }
+}
+
+/* =====================================================
+   TABLET-LANDSCAPE / SMALL DESKTOP (769px – 1024px)
+   ===================================================== */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .app-container {
+        padding: 28px 28px 60px;
+    }
+
+    .modern-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    .filters-grid {
+        grid-template-columns: repeat(2, 1fr);
+        align-items: end;
+    }
+
+    .filter-actions {
+        grid-column: span 2;
+        display: flex;
+        justify-content: flex-end;
+    }
+}

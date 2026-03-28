@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
+    // Global HR Elements
+    const hrCard = document.querySelector('.hr-card');
+    const hrPolicyText = document.getElementById('hrPolicyText');
 
     // ── Task assignment / edit success sound ──────────────────────────
     const _taskSound = new Audio('tones/task_allotment.mp3');
@@ -290,92 +293,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // applyMyTaskStatusFilter, initMyTaskStatusFilter, drag-and-drop
     // ══════════════════════════════════════════════════════════════════════════
 
-    const mandatoryPolicies = [
-        {
-            id: 1,
-            title: "Employment Basics",
-            version: "v2.0 - 2026",
-            content: `
-                <h3>1. Employment Basics</h3>
-                <p><strong>Effective Date:</strong> 1 January 2026</p>
-                <p>This policy applies to all employees, trainees, and staff members of the organization.</p>
-                <ul>
-                    <li><strong>Probation Period:</strong> All new joinees will undergo a mandatory 3-month probation period.</li>
-                    <li><strong>Leave During Probation:</strong> No paid or unpaid leave is allowed during the probation period except in medical emergencies (requires valid proof).</li>
-                </ul>
-                <p>By accepting this, you acknowledge that you have read and understood the terms regarding your employment status and probation requirements.</p>
-                <br><br><br><br><br><!-- Spacer for scroll demo -->
-                <p><em>End of Section 1.</em></p>
-            `,
-            accepted: false
-        },
-        {
-            id: 2,
-            title: "Work Schedule",
-            version: "v1.5",
-            content: `
-                <h3>2. Work Schedule & Timings</h3>
-                <p>Standard working hours are 9 hours per day.</p>
-                <ul>
-                    <li><strong>Lunch Break:</strong> 1:30 PM – 2:00 PM</li>
-                    <li><strong>Tea Break:</strong> 4:00 PM – 4:15 PM</li>
-                </ul>
-                <h4>Late Arrival Policy</h4>
-                <p>We provide a 10-minute grace period for late arrivals. However, consistency is key.</p>
-                <ul>
-                    <li>3 Late Marks in a month will result in a <strong>Half-day Salary Deduction</strong>.</li>
-                </ul>
-                <h4>Monthly Meeting</h4>
-                <p>The 4th Saturday of every month is a mandatory working day for the Monthly General Meeting. All other Saturdays are off unless specified otherwise by your manager.</p>
-                <br><br><br><br><br><!-- Spacer for scroll demo -->
-                <p><em>End of Section 2.</em></p>
-            `,
-            accepted: false
-        },
-        {
-            id: 3,
-            title: "Salary & Compensation",
-            version: "v1.2",
-            content: `
-                <h3>3. Salary & Compensation</h3>
-                <p>Your salary will be credited between the <strong>12th and 15th</strong> of every month.</p>
-                <ul>
-                    <li><strong>Arrears:</strong> Any arrears or pending dues will be processed on the 25th of the month.</li>
-                    <li><strong>Deductions:</strong> Statutory deductions like PF, TDS, and ESIC are applicable as per government norms.</li>
-                    <li><strong>Appraisals:</strong> Compensation increases are strictly performance-based and subject to the biannual review cycle.</li>
-                </ul>
-                <br><br><br><br><br><!-- Spacer for scroll demo -->
-                <p><em>End of Section 3.</em></p>
-            `,
-            accepted: false
-        },
-        {
-            id: 4,
-            title: "Leave Policy",
-            version: "v3.0",
-            content: `
-                <h3>Leave Entitlements</h3>
-                <p>Employees are eligible for the following leaves after confirmation:</p>
-                <ul>
-                    <li><strong>Annual Paid Leaves:</strong> 12 per year (1 per month accrued).</li>
-                    <li><strong>Sick Leaves:</strong> 6 per year (Medical certificate required for >2 days).</li>
-                    <li><strong>Maternity Leave:</strong> 26 Weeks (As per Maternity Benefit Act).</li>
-                </ul>
-                <h4>Unapproved Leaves</h4>
-                <p>Any leave taken without prior approval will be treated as Leave Without Pay (LWP) and may attract a penalty deduction of 1.5x or 2x the daily salary depending on the impact on project deliverables.</p>
-                <br><br><br><br><br><!-- Spacer for scroll demo -->
-                <p><em>End of Section 4.</em></p>
-            `,
-            accepted: false
-        }
-    ];
+    let mandatoryPolicies = [];
 
-    // ── Restore HR policy acceptance from sessionStorage (survives refresh, clears on tab close) ──
-    mandatoryPolicies.forEach(p => {
-        if (sessionStorage.getItem(`hrPolicy_accepted_${p.id}`) === 'true') {
-            p.accepted = true;
-        }
-    });
+    // --- Dynamic HR Corner is now fully synchronized with the database in loadHRDashboardData() ---
 
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -1898,247 +1818,192 @@ document.addEventListener("DOMContentLoaded", () => {
         if (window.updateHRCornerDisplay) window.updateHRCornerDisplay();
     };
 
-    const hrPolicyText = document.getElementById('hrPolicyText');
-    const hrCard = document.querySelector('.hr-card');
-    const editHrBtn = document.getElementById('editHrPolicyBtn');
+    // --- Combined Dynamic HR Items (Policies + Notices) ---
+    let dynamicHRItems = [];
 
-    // Default list
-    const policies = [
-        "🏢 1. Emp. Basics: Effective 1 Jan '26 | 3-Mo Probation (No Leave) | Applies to All",
-        "⏰ 2. Schedule: 9 Hrs/Day | Lunch 1:30-2:00 | Tea 4:00-4:15 | Late: 10m Grace, 3 Marks=1/2 Day",
-        "💰 3. Salary: Paid 12-15th | Arrears 25th | PF/TDS Deducted | Perf. Based Hike",
-        "📊 4. Appraisal: 2x/Year (>1yr) | Hike 0-30% | +5% Promotion | PIP Policy",
-        "🏖️ 5. Leaves: 12 Annual + 6 Sick | Maternity (Act) | Unapproved = Salary Ded.",
-        "⏱️ 6. Overtime: >1.5 Hrs | Food+Cab >10 PM | Female Staff Cab >9 PM",
-        "🎁 7. Incentives: Project ₹5k-50k | Referral ₹1k-5k | Diwali Bonus (Tenure)",
-        "🏠 8. Remote: Eligible >6 Mo | Manager Approval | Own Internet | Confidentiality",
-        "🔒 9. Rules: No Harassment/Drugs | Anti-Bribery | Confidential | Pro Dress Code",
-        "📄 10. Notice: 1 Month Mandatory | Sudden Exit: Dues Forfeited"
-    ];
+    async function loadHRDashboardData() {
+        try {
+            const res = await fetch('api/get_hr_dashboard_content.php?v=' + Date.now());
+            const data = await res.json();
+            console.log("[HR Sync Debug]", data);
+            
+            if (data.success) {
+                dynamicHRItems = [];
+                
+                // --- Add Hardcoded Policies to general rotation for visibility ---
+                mandatoryPolicies.forEach(p => {
+                    if (!p.db_id) dynamicHRItems.push(`🏢 Policy: ${p.title} — General Information`);
+                });
+
+                // --- Sync DB Mandatory Policies to Local Mandatory Array ---
+                data.policies.forEach(p => {
+                    const localSessionAccepted = sessionStorage.getItem(`hrPolicy_db_accepted_${p.id}`) === 'true';
+                    const isFullyAccepted = (p.is_acknowledged == 1) || localSessionAccepted;
+
+                    if (p.is_mandatory == 1 && !isFullyAccepted) {
+                        const exists = mandatoryPolicies.find(mp => mp.db_id === p.id);
+                        if (!exists) {
+                            mandatoryPolicies.push({
+                                db_id: p.id,
+                                id: mandatoryPolicies.length + 1,
+                                title: p.heading,
+                                version: "v" + new Date(p.updated_at).toLocaleDateString().replace(/\//g, '.'),
+                                content: `<h3>${p.heading}</h3><p>${p.short_desc}</p><br>${p.long_desc}`,
+                                accepted: false
+                            });
+                        }
+                    }
+                    dynamicHRItems.push(`🏢 Policy: ${p.heading} — ${p.short_desc}`);
+                });
+                
+                // --- Sync DB Mandatory Notices to Local Mandatory Array ---
+                data.notices.forEach(n => {
+                    const localSessionAccepted = sessionStorage.getItem(`hrNotice_db_accepted_${n.id}`) === 'true';
+                    const isFullyAccepted = (n.is_acknowledged == 1) || localSessionAccepted;
+
+                    if (n.is_mandatory == 1 && !isFullyAccepted) {
+                        const exists = mandatoryPolicies.find(mp => mp.notif_db_id === n.id);
+                        if (!exists) {
+                            let noticeBody = `<h3>Notice: ${n.title}</h3><p>${n.short_desc}</p><br>${n.long_desc}`;
+                            if (n.attachment) noticeBody += `<br><br><a href="${n.attachment}" target="_blank" style="color:#2563eb; font-weight:700; text-decoration:underline;"><i class="fa-solid fa-file-pdf"></i> Download/View PDF Attachment</a>`;
+
+                            mandatoryPolicies.push({
+                                notif_db_id: n.id,
+                                id: mandatoryPolicies.length + 1,
+                                title: "📢 " + n.title,
+                                version: "Broadcast: " + new Date(n.created_at).toLocaleDateString(),
+                                content: noticeBody,
+                                accepted: false
+                            });
+                        }
+                    }
+
+                    // Add to rotation
+                    let noticeText = `📢 Notice: ${n.title}`;
+                    if (n.attachment) {
+                        noticeText += ` <span class="pdf-badge" onclick="window.open('${n.attachment}', '_blank'); event.stopPropagation();" style="cursor:pointer; background:#ef4444; color:#fff; padding:1px 6px; border-radius:4px; font-size:0.7rem; font-weight:700; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-file-pdf"></i> PDF</span>`;
+                    }
+                    dynamicHRItems.push(noticeText);
+                });
+
+                // Update the compliance display immediately after syncing
+                if (typeof updateHRCornerDisplay === 'function') updateHRCornerDisplay();
+
+                if (dynamicHRItems.length > 0) {
+                    showHRItem(0);
+                    if (window.hrInterval) clearInterval(window.hrInterval);
+                    window.hrInterval = setInterval(() => {
+                        window.hrIdx = (window.hrIdx + 1) % dynamicHRItems.length;
+                        showHRItem(window.hrIdx);
+                    }, 6500); 
+                } else {
+                    if (hrPolicyText) hrPolicyText.textContent = "No recent HR updates.";
+                }
+            }
+        } catch (e) {
+            console.error("[HR Corner] Error fetching data:", e);
+            if (hrPolicyText) hrPolicyText.textContent = "Error loading updates.";
+        }
+    }
+
+    // click handler for the entire HR Card
+    if (hrCard) {
+        hrCard.addEventListener('click', () => {
+            const pendingPolicy = mandatoryPolicies.find(p => !p.accepted);
+            if (pendingPolicy) {
+                const idx = mandatoryPolicies.indexOf(pendingPolicy);
+                if (typeof loadPolicy === 'function') loadPolicy(idx);
+                const pModal = document.getElementById('policyModal');
+                if (pModal) { pModal.classList.add('visible'); pModal.classList.add('open'); }
+            }
+        });
+        hrCard.style.cursor = 'pointer';
+    }
+
+    // Reference to existing rotation logic but adapted for dynamic data
+    window.hrIdx = 0;
+    function showHRItem(index) {
+        if (!hrPolicyText || !dynamicHRItems[index]) return;
+        
+        const content = dynamicHRItems[index];
+        const card = document.querySelector('.hr-card');
+        const iconBox = card.querySelector('.icon-box');
+
+        // Dynamic Sizing Logic (similar to original showPolicy)
+        const plainText = content.replace(/<[^>]*>/g, ''); // strip HTML for length check
+        if (plainText.length > 100) {
+            hrPolicyText.style.fontSize = '0.9rem';
+        } else {
+            hrPolicyText.style.fontSize = '1.05rem';
+        }
+
+        hrPolicyText.style.opacity = '0';
+        hrPolicyText.style.transform = 'translateY(8px)';
+
+        setTimeout(() => {
+            hrPolicyText.innerHTML = content;
+            hrPolicyText.style.opacity = '1';
+            hrPolicyText.style.transform = 'translateY(0)';
+        }, 300);
+    }
 
     if (hrPolicyText) {
-        let policyIndex = 0;
-        let intervalId = null;
+        window.hrIdx = 0;
+        window.hrInterval = null;
 
         function updateHRCornerDisplay() {
-            // Check for unaccepted policies FIRST
             const pendingPolicy = mandatoryPolicies.find(p => !p.accepted);
-
             if (pendingPolicy) {
-                // Stop rotation if it was running
-                if (intervalId) { clearInterval(intervalId); intervalId = null; }
-
-                // Show Pending Policy with ACCEPT BUTTON
+                if (window.hrInterval) { clearInterval(window.hrInterval); window.hrInterval = null; }
                 const card = document.querySelector('.hr-card');
-                const iconBox = card.querySelector('.icon-box');
                 const announcementEl = document.getElementById('hrAnnouncement');
                 if (announcementEl) announcementEl.style.display = 'flex';
-
-                // Ensure visibility (in case rotation hid it)
-                hrPolicyText.style.opacity = '1';
-                hrPolicyText.style.transform = 'translateY(0)';
-
-                hrPolicyText.innerHTML = `
-                    <div style="font-size:0.75rem; color:#ca8a04; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.5rem;">
-                        <i class="fa-solid fa-bullhorn"></i> Latest Announcement
-                    </div>
-                    <div style="padding-bottom: 0.5rem; line-height: 1.3;">
-                        ${pendingPolicy.title}
-                    </div>
-                    <button id="cornerAcceptBtn" class="policy-btn primary" style="
-                        margin-top: 0.5rem; 
-                        padding: 0.3rem 0.8rem; 
-                        font-size: 0.75rem; 
-                        animation: pulse 1.5s infinite;
-                        width: auto;
-                        display: inline-block;
-                        height: auto;
-                        min-height: unset;
-                        box-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
-                    ">
-                        Review & Accept
-                    </button>
-                `;
-
-                // Card Border Highlight
-                card.style.border = '1px solid #ca8a04';
-                card.style.boxShadow = '0 0 15px rgba(202, 138, 4, 0.15)';
-
-                // Adjust styles for single item view
-                hrPolicyText.style.fontSize = '1.1rem';
-                hrPolicyText.style.lineHeight = '1.2';
-                iconBox.style.transform = 'scale(0.8)';
-                iconBox.style.marginBottom = '2px';
-
-                // Attach Event
+                if (hrPolicyText) {
+                    hrPolicyText.style.opacity = '1';
+                    hrPolicyText.style.transform = 'translateY(0)';
+                    hrPolicyText.innerHTML = `
+                        <div style="font-size:0.75rem; color:#ca8a04; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.5rem;">
+                            <i class="fa-solid fa-bullhorn"></i> Important Action
+                        </div>
+                        <div style="padding-bottom: 0.5rem; line-height: 1.3;">
+                            ${pendingPolicy.title}
+                        </div>
+                        <button id="cornerAcceptBtn" class="policy-btn primary" style="
+                            margin-top: 0.5rem; padding: 0.3rem 0.8rem; font-size: 0.75rem; 
+                            animation: pulse 1.5s infinite; width: auto; display: inline-block;
+                            height: auto; min-height: unset; box-shadow: 0 0 10px rgba(37, 99, 235, 0.3);">
+                            Review & Accept
+                        </button>
+                    `;
+                }
+                if (card) {
+                    card.style.border = '1px solid #ca8a04';
+                    card.style.boxShadow = '0 0 15px rgba(202, 138, 4, 0.15)';
+                }
                 const btn = document.getElementById('cornerAcceptBtn');
                 if (btn) {
                     btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        // Open modal
+                        e.stopPropagation(); e.preventDefault();
                         const idx = mandatoryPolicies.indexOf(pendingPolicy);
-                        loadPolicy(idx);
-                        policyModal.classList.add('visible');
-                        policyModal.classList.add('open');
+                        if (typeof loadPolicy === 'function') loadPolicy(idx);
+                        const pModal = document.getElementById('policyModal');
+                        if (pModal) { pModal.classList.add('visible'); pModal.classList.add('open'); }
                     });
                 }
-
-            } else if (latestHRNotification && !latestHRNotification.acknowledged) {
-                // --- Show New Notification ---
-                if (intervalId) { clearInterval(intervalId); intervalId = null; }
-
-                const card = document.querySelector('.hr-card');
-                const iconBox = card.querySelector('.icon-box');
-                const announcementEl = document.getElementById('hrAnnouncement');
-                if (announcementEl) announcementEl.style.display = 'flex';
-                const notif = latestHRNotification;
-
-                // Ensure visibility
-                hrPolicyText.style.opacity = '1';
-                hrPolicyText.style.transform = 'translateY(0)';
-
-                // Color based on type
-                let typeColor = '#3b82f6';
-                let typeIcon = '<i class="fa-solid fa-circle-info"></i>';
-                if (notif.type === 'warning') { typeColor = '#ca8a04'; typeIcon = '<i class="fa-solid fa-triangle-exclamation"></i>'; }
-                if (notif.type === 'success') { typeColor = '#16a34a'; typeIcon = '<i class="fa-solid fa-check-circle"></i>'; }
-
-                hrPolicyText.innerHTML = `
-                    <div style="font-size:0.75rem; color:${typeColor}; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">
-                        ${typeIcon} Latest Announcement
-                    </div>
-                    ${notif.title}
-                    <button id="cornerAckBtn" class="policy-btn secondary" style="
-                        margin-top: 6px; 
-                        padding: 0.3rem 0.8rem; 
-                        font-size: 0.75rem; 
-                        width: auto;
-                        display: inline-block;
-                        height: auto;
-                        min-height: unset;
-                        background: rgba(255,255,255,0.9);
-                        color: #1f2937;
-                        border: 1px solid #d1d5db;
-                        cursor: pointer;
-                    ">
-                        <i class="fa-regular fa-bell"></i> Open Notifications
-                    </button>
-                `;
-
-                // Card Border Highlight
-                card.style.border = `1px solid ${typeColor}`;
-                card.style.boxShadow = `0 0 10px ${typeColor}20`; // Hex alpha
-
-                // Adjust styles
-                hrPolicyText.style.fontSize = '1.1rem';
-                hrPolicyText.style.lineHeight = '1.2';
-                iconBox.style.transform = 'scale(0.8)';
-                iconBox.style.marginBottom = '2px';
-
-                // Attach Event
-                const btn = document.getElementById('cornerAckBtn');
-                if (btn) {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        // Mark as acknowledged (clears it from this card)
-                        latestHRNotification.acknowledged = true;
-                        updateHRCornerDisplay();
-
-                        // Open Notification Drawer by triggering the bell click
-                        const notifBtn = document.getElementById('notifBtn');
-                        if (notifBtn) notifBtn.click();
-                    });
-                }
-
             } else {
-                // All accepted -> Run Rotation
                 const card = document.querySelector('.hr-card');
-                const announcementEl = document.getElementById('hrAnnouncement');
-                if (announcementEl) announcementEl.style.display = 'none';
-
-                if (card) {
-                    card.style.border = ''; // Reset
-                    card.style.boxShadow = '';
+                if (card) { card.style.border = ''; card.style.boxShadow = ''; }
+                if (!window.hrInterval && (window.dynamicHRItems || []).length > 0) {
+                    showHRItem(window.hrIdx % window.dynamicHRItems.length);
+                    window.hrInterval = setInterval(() => {
+                        window.hrIdx = (window.hrIdx + 1) % window.dynamicHRItems.length;
+                        showHRItem(window.hrIdx);
+                    }, 6500);
                 }
-                if (!intervalId) startRotation();
             }
         }
-
-        function showPolicy(index) {
-            // Safety check
-            if (!policies || policies.length === 0) return;
-
-            const text = policies[index];
-            const length = text.length;
-            const card = document.querySelector('.hr-card');
-            const iconBox = card.querySelector('.icon-box');
-
-            // Allow transition 
-            iconBox.style.transition = 'all 0.5s ease';
-            hrPolicyText.style.transition = 'all 0.5s ease';
-
-            // Dynamic Sizing Logic
-            if (length > 100) {
-                hrPolicyText.style.fontSize = '0.95rem'; hrPolicyText.style.lineHeight = '1.2';
-                iconBox.style.transform = 'scale(0.7)'; iconBox.style.marginBottom = '-12px'; iconBox.style.opacity = '0.8';
-            } else if (length > 60) {
-                hrPolicyText.style.fontSize = '1.1rem'; hrPolicyText.style.lineHeight = '1.3';
-                iconBox.style.transform = 'scale(0.8)'; iconBox.style.marginBottom = '0px'; iconBox.style.opacity = '1';
-            } else {
-                hrPolicyText.style.fontSize = '1.6rem'; hrPolicyText.style.lineHeight = '1.4';
-                iconBox.style.transform = 'scale(1)'; iconBox.style.marginBottom = '0.75rem'; iconBox.style.opacity = '1';
-            }
-
-            hrPolicyText.style.opacity = '0';
-            hrPolicyText.style.transform = 'translateY(10px)';
-
-            setTimeout(() => {
-                hrPolicyText.textContent = text;
-                hrPolicyText.style.opacity = '1';
-                hrPolicyText.style.transform = 'translateY(0)';
-            }, 400);
-        }
-
-        function startRotation() {
-            // First show immediately
-            showPolicy(policyIndex);
-
-            if (intervalId) clearInterval(intervalId);
-            intervalId = setInterval(() => {
-                policyIndex = (policyIndex + 1) % policies.length;
-                showPolicy(policyIndex);
-            }, 5000);
-        }
-
-        // Initial Logic Check
         updateHRCornerDisplay();
-
-        // Hook into renderPolicySteps to update corner whenever progress changes
-        // We override the function to also call our update logic
-        // (Wait until renderPolicySteps is defined below, or define a wrapper)
-        // Since renderPolicySteps is defined later, we use a timeout or poll? 
-        // Better: We see renderPolicySteps is defined below. We can assign a listener or just ensure 
-        // when loadPolicy/accept happens, we call updateHRCornerDisplay().
-        // We will modify the 'Next Button Logic' below to call updateHRCornerDisplay().
-
-        // Edit/Post functionality -> linked to Policy Upload System
-        if (editHrBtn) {
-            editHrBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const uploadModal = document.getElementById('uploadPolicyModal');
-                if (uploadModal) {
-                    uploadModal.classList.add('visible');
-                    uploadModal.classList.add('open');
-                }
-            });
-        }
-
-        // Expose update function to global scope or attach to window so later functions can call it?
-        // Or simply attach it to the window object to be safe
-        window.updateHRCornerDisplay = updateHRCornerDisplay;
+        loadHRDashboardData();
     }
 
     // --- Policy Acknowledgement System ---
@@ -2289,20 +2154,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Next Button Logic
     if (nextPolicyBtn) {
-        nextPolicyBtn.addEventListener('click', () => {
-            // Mark current as accepted and persist to sessionStorage
-            mandatoryPolicies[currentPolicyIndex].accepted = true;
-            sessionStorage.setItem(`hrPolicy_accepted_${mandatoryPolicies[currentPolicyIndex].id}`, 'true');
+        nextPolicyBtn.addEventListener('click', async () => {
+            const p = mandatoryPolicies[currentPolicyIndex];
+            p.accepted = true;
+
+            // 1. Persist to SessionStorage (Immediate)
+            if (p.notif_db_id) {
+                sessionStorage.setItem(`hrNotice_db_accepted_${p.notif_db_id}`, 'true');
+            } else if (p.db_id) {
+                sessionStorage.setItem(`hrPolicy_db_accepted_${p.db_id}`, 'true');
+            } else {
+                sessionStorage.setItem(`hrPolicy_accepted_${p.id}`, 'true');
+            }
+
+            // 2. Persist to Database (Background)
+            if (p.db_id || p.notif_db_id) {
+                try {
+                    fetch('api/acknowledge_hr_item.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            item_id: p.db_id || p.notif_db_id,
+                            item_type: p.db_id ? 'policy' : 'notice'
+                        })
+                    });
+                } catch (e) { console.error("Failed to save HR ack:", e); }
+            }
 
             // Check if last
             if (currentPolicyIndex === mandatoryPolicies.length - 1) {
                 // Close
-                closePolicyModal.click();
-                renderPolicySteps(); // Update final badge
-                alert("All policies acknowledged successfully!");
+                if (closePolicyModal) closePolicyModal.click();
+                if (typeof renderPolicySteps === 'function') renderPolicySteps(); 
+                if (typeof updateHRCornerDisplay === 'function') updateHRCornerDisplay();
+                alert("All HR updates acknowledged successfully!");
             } else {
                 // Next
-                loadPolicy(currentPolicyIndex + 1);
+                if (typeof loadPolicy === 'function') loadPolicy(currentPolicyIndex + 1);
             }
         });
     }
@@ -2546,7 +2434,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 const unacknowledgedNotif = latestHRNotification && !latestHRNotification.acknowledged;
 
                 if (unacceptedPolicy || unacknowledgedNotif) {
+                    console.log("[Compliance Trace]", { 
+                        mandatoryPolicies, 
+                        latestHRNotification, 
+                        unacceptedPolicy, 
+                        unacknowledgedNotif 
+                    });
                     alert("You cannot punch out yet. Please review and accept all pending HR policies and notifications in the HR Corner.");
+                    
+                    // Directly open the Compliance Hub for the user
+                    const pendingPolicy = mandatoryPolicies.find(p => !p.accepted);
+                    if (pendingPolicy) {
+                        const idx = mandatoryPolicies.indexOf(pendingPolicy);
+                        if (typeof loadPolicy === 'function') loadPolicy(idx);
+                        const pModal = document.getElementById('policyModal');
+                        if (pModal) { 
+                            pModal.classList.add('visible'); 
+                            pModal.classList.add('open'); 
+                        }
+                    }
                     return; // Stop here, do not toggle state
                 }
                 const punchOutModal = document.getElementById('punchOutModal');

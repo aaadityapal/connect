@@ -15,7 +15,33 @@ $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
 $status = isset($_GET['status']) ? $_GET['status'] : 'All Status';
 
 try {
-    $sql = "SELECT a.*, s.start_time AS shift_start_time, s.end_time AS shift_end_time 
+    // 1. Fetch all user shift assignments that overlap with the selected month
+    $month_start = sprintf("%04d-%02d-01", $year, $month);
+    $month_end = sprintf("%04d-%02d-%02d", $year, $month, cal_days_in_month(CAL_GREGORIAN, $month, $year));
+    
+    $shift_sql = "SELECT us.effective_from, us.effective_to, us.weekly_offs, s.start_time, s.end_time 
+                  FROM user_shifts us
+                  JOIN shifts s ON us.shift_id = s.id
+                  WHERE us.user_id = :user_id
+                  AND us.effective_from <= :month_end
+                  AND (us.effective_to IS NULL OR us.effective_to >= :month_start)
+                  ORDER BY us.effective_from ASC";
+    $shift_stmt = $pdo->prepare($shift_sql);
+    $shift_stmt->execute(['user_id' => $user_id, 'month_start' => $month_start, 'month_end' => $month_end]);
+    $user_shift_history = $shift_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Helper to get shift for a specific date
+    $get_shift_for_date = function($date_str) use ($user_shift_history) {
+        foreach ($user_shift_history as $sh) {
+            if ($date_str >= $sh['effective_from'] && (empty($sh['effective_to']) || $date_str <= $sh['effective_to'])) {
+                return $sh;
+            }
+        }
+        return null; // No shift found
+    };
+
+    // 2. Fetch attendance records
+    $sql = "SELECT a.*, s.start_time AS shift_start_time, s.end_time AS shift_end_time, us.weekly_offs
             FROM attendance a
             LEFT JOIN user_shifts us 
                 ON a.user_id = us.user_id 
@@ -89,6 +115,11 @@ try {
     for ($d = 1; $d <= $days_in_month; $d++) {
         $current_date_str = sprintf("%04d-%02d-%02d", $year, $month, $d);
         $rec = null;
+        
+        $shift_info = $get_shift_for_date($current_date_str);
+        $weekly_offs = $shift_info ? explode(',', strtolower($shift_info['weekly_offs'])) : ['sunday'];
+        $current_day_name = strtolower(date('l', strtotime($current_date_str)));
+        $is_weekly_off = in_array($current_day_name, $weekly_offs);
 
         if (isset($attendance_map[$current_date_str])) {
             $rec = $attendance_map[$current_date_str];
@@ -103,7 +134,10 @@ try {
                 'punch_out_photo' => null,
                 'working_hours' => null,
                 'status' => null,
-                'work_report' => null
+                'work_report' => null,
+                'shift_start_time' => $shift_info['start_time'] ?? null,
+                'shift_end_time' => $shift_info['end_time'] ?? null,
+                'weekly_offs' => $shift_info['weekly_offs'] ?? 'Sunday'
             ];
         }
         
@@ -138,13 +172,13 @@ try {
             $rec['work_report'] = "Office Holiday: " . $holidays_map[$current_date_str];
         }
 
-        // Default to Absent if past date, not Sunday, and no status yet
+        // Default to Absent if past date, weekly off, and no status yet
         $timestamp = strtotime($current_date_str);
         if (empty($rec['status'])) {
             if ($timestamp <= strtotime(date('Y-m-d'))) {
-                if (date('w', $timestamp) == 0) { // Sunday
+                if ($is_weekly_off) { 
                     $rec['status'] = 'Holiday';
-                    $rec['work_report'] = "Sunday";
+                    $rec['work_report'] = ucfirst($current_day_name) . " (Weekly Off)";
                 } else {
                     $rec['status'] = 'Absent';
                 }
@@ -209,8 +243,15 @@ try {
     for ($i = 1; $i <= $days_in_month; $i++) {
         $date_string = "$year-" . str_pad($month, 2, "0", STR_PAD_LEFT) . "-" . str_pad($i, 2, "0", STR_PAD_LEFT);
         $loop_date = strtotime($date_string);
-        // exclude sunday and only evaluate till current date
-        if (date('w', $loop_date) != 0 && $loop_date <= $current_date) { 
+        
+        // Get dynamic weekly off for this date
+        $loop_shift = $get_shift_for_date($date_string);
+        $loop_weekly_offs = $loop_shift ? explode(',', strtolower($loop_shift['weekly_offs'])) : ['sunday'];
+        $loop_day_name = strtolower(date('l', $loop_date));
+        $is_loop_off = in_array($loop_day_name, $loop_weekly_offs);
+
+        // exclude weekly offs AND office holidays, and only evaluate till current date
+        if (!$is_loop_off && !isset($holidays_map[$date_string]) && $loop_date <= $current_date) { 
             $working_days++;
         }
     }
@@ -231,7 +272,8 @@ try {
             }
         }
         
-        if ($record['status'] !== 'Absent' && $record['status'] !== 'Leave') {
+        // FIX: Only count as present if they actually punched in 
+        if (!empty($record['punch_in'])) {
             $present_days++;
         }
         

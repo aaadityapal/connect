@@ -1,0 +1,252 @@
+/* ============================================
+   notice.css — Notice Upload Section Styles
+   ============================================ */
+
+.hr-notice-section {
+    padding: 0 1rem 2.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.hr-notice-card {
+    background: var(--hr-surface);
+    width: 100%;
+    max-width: 95%; /* Use more of the full page */
+    border-radius: var(--hr-radius);
+    box-shadow: var(--hr-shadow-md);
+    padding: 2.5rem;
+    border: 1px solid var(--hr-border);
+    margin: 0 auto;
+}
+
+/* ── Card Header ── */
+.hr-notice-card-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--hr-border);
+}
+
+.hr-notice-card-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--hr-secondary);
+    margin-bottom: 0.4rem;
+}
+
+.hr-notice-card-subtitle {
+    font-size: 0.88rem;
+    color: var(--hr-text-muted);
+}
+
+/* ── Form Layout ── */
+.hr-notice-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.hr-notice-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* ── Labels (match form.css style) ── */
+.hr-notice-field-label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--hr-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.hr-notice-field-icon {
+    font-size: 0.82rem;
+    color: var(--hr-primary);
+}
+
+.hr-notice-optional-tag {
+    margin-left: auto;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--hr-text-muted);
+    background: #f1f5f9;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* ── Inputs ── */
+.hr-notice-field-input,
+.hr-notice-field-textarea {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--hr-border);
+    border-radius: 8px;
+    font-family: var(--hr-font);
+    font-size: 0.92rem;
+    color: var(--hr-text);
+    background-color: #f8fafc;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.hr-notice-field-textarea {
+    resize: vertical;
+    min-height: 140px;
+    line-height: 1.65;
+}
+
+.hr-notice-field-input:focus,
+.hr-notice-field-textarea:focus {
+    border-color: var(--hr-primary);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.hr-notice-field-input::placeholder,
+.hr-notice-field-textarea::placeholder {
+    color: #94a3b8;
+}
+
+/* ── Upload Zone ── */
+.hr-notice-upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 2px dashed var(--hr-border);
+    border-radius: 10px;
+    padding: 2rem 1rem;
+    background: #f8fafc;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    text-align: center;
+}
+
+.hr-notice-upload-zone:hover,
+.hr-notice-upload-zone.hr-notice-drag-over {
+    border-color: var(--hr-primary);
+    background-color: rgba(59, 130, 246, 0.04);
+}
+
+.hr-notice-upload-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: #eff6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+    transition: background 0.2s;
+}
+
+.hr-notice-upload-zone:hover .hr-notice-upload-icon-wrap {
+    background: #dbeafe;
+}
+
+.hr-notice-upload-icon {
+    font-size: 1.4rem;
+    color: var(--hr-primary);
+}
+
+.hr-notice-upload-text {
+    font-size: 0.9rem;
+    color: var(--hr-text-muted);
+}
+
+.hr-notice-upload-highlight {
+    color: var(--hr-primary);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.hr-notice-upload-hint {
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+/* File selected state */
+.hr-notice-upload-zone.hr-notice-file-selected {
+    border-color: var(--hr-success);
+    background-color: rgba(16, 185, 129, 0.04);
+}
+
+.hr-notice-upload-zone.hr-notice-file-selected .hr-notice-upload-icon-wrap {
+    background: #d1fae5;
+}
+
+.hr-notice-upload-zone.hr-notice-file-selected .hr-notice-upload-icon {
+    color: var(--hr-success);
+}
+
+/* Hidden native file input */
+.hr-notice-file-input {
+    display: none;
+}
+
+/* ── Action Buttons ── */
+.hr-notice-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.25rem;
+}
+
+.hr-notice-btn-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.72rem 1.4rem;
+    border: 1px solid var(--hr-border);
+    background: transparent;
+    border-radius: 8px;
+    font-family: var(--hr-font);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--hr-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hr-notice-btn-clear:hover {
+    background-color: #f1f5f9;
+    color: var(--hr-secondary);
+    border-color: #cbd5e1;
+}
+
+.hr-notice-btn-publish {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.72rem 1.75rem;
+    border: none;
+    background-color: var(--hr-primary);
+    border-radius: 8px;
+    font-family: var(--hr-font);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    transition: all 0.2s ease;
+}
+
+.hr-notice-btn-publish:hover {
+    background-color: var(--hr-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.35);
+}
+
+.hr-notice-btn-publish:active {
+    transform: translateY(0);
+}
+
+.hr-notice-btn-publish:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}

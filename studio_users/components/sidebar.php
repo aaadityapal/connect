@@ -114,6 +114,14 @@ if (isset($_SESSION['user_id'])) {
             <div class="tooltip">Analytics</div>
         </a>
 
+        <div class="menu-title">HR &amp; Admin</div>
+        <a href="javascript:void(0)" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'hr_backend/index.php'; return false;"
+           class="menu-item" data-page="hr-corner" style="cursor:pointer; display:flex !important; align-items:center !important; width:100%;">
+            <i data-lucide="briefcase" class="menu-icon" style="width:17px;height:17px; flex-shrink:0;"></i>
+            <span class="menu-text">HR Corner</span>
+            <div class="tooltip">HR Corner</div>
+        </a>
+
         <?php if (isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'relationship manager'): ?>
         <div class="menu-title">Management</div>
         <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'hierarchy.php'; return false;"
@@ -128,8 +136,7 @@ if (isset($_SESSION['user_id'])) {
             <span class="menu-text">Manager Mapping</span>
             <div class="tooltip">Manager Mapping</div>
         </a>
-        <?php
-endif; ?>
+        <?php endif; ?>
 
         <div class="menu-title">System</div>
         <a href="settings.php" class="menu-item" data-page="settings">

@@ -1,0 +1,137 @@
+/* ============================================
+   mobile.css — All Mobile Responsive Overrides
+   Applies to: screens 768px and narrower
+   ============================================ */
+
+@media (max-width: 768px) {
+
+    /* ── Pill Toggle ── */
+    .hr-toggle-bar {
+        padding: 1rem 1rem 0.25rem;
+    }
+    .hr-toggle-option {
+        padding: 0.5rem 1rem;
+        font-size: 0.82rem;
+    }
+    .hr-toggle-icon {
+        font-size: 0.8rem;
+    }
+
+    /* ── Header ── */
+    .hr-header {
+        height: auto;
+        padding: 0.85rem 1rem;
+    }
+    .mobile-hamburger-btn {
+        display: flex;
+    }
+    .hr-header-logo-title {
+        font-size: 0.95rem;
+    }
+    .hr-header-logo-icon {
+        font-size: 1.1rem;
+    }
+    .hr-header-profile-name {
+        display: none;
+    }
+    .hr-header-avatar {
+        width: 34px;
+        height: 34px;
+        font-size: 0.8rem;
+    }
+
+    /* ── Form Section ── */
+    .hr-form-section {
+        padding: 1rem 0.75rem;
+    }
+    .hr-form-card {
+        padding: 1.5rem 1rem;
+        border-radius: 10px;
+    }
+    .hr-form-card-title {
+        font-size: 1.2rem;
+    }
+    .hr-form-card-subtitle {
+        font-size: 0.8rem;
+    }
+    .hr-policy-form {
+        gap: 1.25rem;
+    }
+    .hr-field-input,
+    .hr-field-textarea {
+        font-size: 0.88rem;
+        padding: 0.75rem 0.85rem;
+    }
+    .hr-form-actions {
+        flex-direction: column-reverse;
+        gap: 0.75rem;
+    }
+    .hr-btn-clear,
+    .hr-btn-publish {
+        width: 100%;
+        justify-content: center;
+        padding: 0.85rem;
+    }
+
+    /* ── Notice Section ── */
+    .hr-notice-section {
+        padding: 0 0.75rem 1.5rem;
+    }
+    .hr-notice-card {
+        padding: 1.5rem 1rem;
+        border-radius: 10px;
+    }
+    .hr-notice-card-title {
+        font-size: 1.2rem;
+    }
+    .hr-notice-card-subtitle {
+        font-size: 0.8rem;
+    }
+    .hr-notice-form {
+        gap: 1.25rem;
+    }
+    .hr-notice-field-input,
+    .hr-notice-field-textarea {
+        font-size: 0.88rem;
+        padding: 0.75rem 0.85rem;
+    }
+    .hr-notice-upload-zone {
+        padding: 1.5rem 0.75rem;
+    }
+    .hr-notice-actions {
+        flex-direction: column-reverse;
+        gap: 0.75rem;
+    }
+    .hr-notice-btn-clear,
+    .hr-notice-btn-publish {
+        width: 100%;
+        justify-content: center;
+        padding: 0.85rem;
+    }
+
+    /* ── Custom Section ── */
+    .hr-custom-section {
+        padding: 0 0.75rem 1.5rem;
+    }
+    .hr-custom-card {
+        padding: 1.5rem 1rem;
+        border-radius: 10px;
+    }
+    .hr-custom-card-title {
+        font-size: 1.2rem;
+    }
+    .hr-custom-card-subtitle {
+        font-size: 0.8rem;
+    }
+
+    /* ── Toast ── */
+    .hr-toast {
+        left: 0.75rem;
+        right: 0.75rem;
+        min-width: unset;
+        bottom: -120px;
+    }
+    .hr-toast.show {
+        bottom: 1rem;
+    }
+}

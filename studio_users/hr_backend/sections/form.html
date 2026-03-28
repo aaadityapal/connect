@@ -1,0 +1,68 @@
+<section class="hr-form-section" id="hrFormSection">
+    <div class="hr-form-card">
+
+        <div class="hr-form-card-header">
+            <h2 class="hr-form-card-title">Update Company Policy</h2>
+            <p class="hr-form-card-subtitle">Changes made here will directly reflect on the employee dashboard's HR Corner.</p>
+        </div>
+
+        <form class="hr-policy-form" id="hrPolicyForm">
+
+            <!-- Main Heading -->
+            <div class="hr-field-group" id="hrFieldHeading">
+                <label for="hrInputHeading" class="hr-field-label">
+                    <i class="fa-solid fa-heading hr-field-label-icon"></i>
+                    Main Heading
+                </label>
+                <input
+                    type="text"
+                    id="hrInputHeading"
+                    class="hr-field-input"
+                    placeholder="e.g., Remote Work Policy 2026"
+                    required
+                >
+            </div>
+
+            <!-- Short Description -->
+            <div class="hr-field-group" id="hrFieldShortDesc">
+                <label for="hrInputShortDesc" class="hr-field-label">
+                    <i class="fa-solid fa-align-left hr-field-label-icon"></i>
+                    Short Description
+                </label>
+                <input
+                    type="text"
+                    id="hrInputShortDesc"
+                    class="hr-field-input"
+                    placeholder="Brief 1-2 sentence summary of the policy..."
+                    required
+                >
+            </div>
+
+            <!-- Detailed Description -->
+            <div class="hr-field-group" id="hrFieldLongDesc">
+                <label for="hrInputLongDesc" class="hr-field-label">
+                    <i class="fa-solid fa-file-lines hr-field-label-icon"></i>
+                    Detailed Description
+                </label>
+                <textarea
+                    id="hrInputLongDesc"
+                    class="hr-field-textarea"
+                    rows="9"
+                    placeholder="Enter the full described form of the policy here..."
+                    required
+                ></textarea>
+            </div>
+
+            <!-- Actions -->
+            <div class="hr-form-actions" id="hrFormActions">
+                <button type="button" class="hr-btn-clear" id="hrBtnClear">
+                    <i class="fa-solid fa-rotate-left"></i> Clear Form
+                </button>
+                <button type="submit" class="hr-btn-publish" id="hrBtnPublish">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> Publish Policy
+                </button>
+            </div>
+
+        </form>
+    </div>
+</section>

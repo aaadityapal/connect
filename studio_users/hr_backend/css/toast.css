@@ -1,0 +1,36 @@
+/* ============================================
+   toast.css — Toast Notification Styles
+   ============================================ */
+
+.hr-toast {
+    position: fixed;
+    bottom: -120px;
+    right: 2rem;
+    background-color: var(--hr-surface);
+    border-left: 4px solid var(--hr-success);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: var(--hr-shadow-md);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 260px;
+    z-index: 9999;
+    transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hr-toast.show {
+    bottom: 2rem;
+}
+
+.hr-toast-icon {
+    color: var(--hr-success);
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.hr-toast-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--hr-secondary);
+}

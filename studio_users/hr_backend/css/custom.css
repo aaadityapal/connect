@@ -1,0 +1,102 @@
+/* ============================================
+   custom.css — Manage Policies Section Styles
+   ============================================ */
+
+.hr-custom-section { padding: 0 1rem 2.5rem; display: flex; justify-content: center; }
+.hr-custom-card {
+    background: var(--hr-surface); width: 100%; max-width: 95%; /* Use more of the full page */
+    border-radius: var(--hr-radius); box-shadow: var(--hr-shadow-md);
+    padding: 2.5rem; border: 1px solid var(--hr-border);
+    margin: 0 auto;
+}
+.hr-custom-card-header { margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--hr-border); }
+.hr-custom-card-title { font-size: 1.6rem; font-weight: 700; color: var(--hr-secondary); margin-bottom: 0.4rem; }
+.hr-custom-card-subtitle { font-size: 0.88rem; color: var(--hr-text-muted); }
+
+/* Policy List Styling */
+.hr-policy-list {
+    display: flex; flex-direction: column; gap: 1rem;
+}
+.hr-policy-list-loader {
+    text-align: center; color: var(--hr-text-muted); padding: 2rem; font-size: 0.95rem; font-weight: 500;
+}
+.hr-policy-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.25rem 1.5rem; border: 1px solid var(--hr-border); border-radius: 12px;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    transition: all 0.2s ease;
+}
+.hr-policy-item:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+    transform: translateY(-2px);
+}
+.hr-policy-item-content {
+    flex: 1; min-width: 0; padding-right: 1.5rem;
+}
+.hr-policy-item-title {
+    font-size: 1.05rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hr-policy-item-desc {
+    font-size: 0.85rem; color: #64748b; margin-bottom: 0.4rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hr-policy-item-meta {
+    font-size: 0.75rem; color: #94a3b8; font-weight: 500;
+}
+.hr-policy-item-badge {
+    background: #dbeafe; color: #2563eb; padding: 0.2rem 0.5rem; border-radius: 4px; margin-left: 0.5rem; font-size: 0.7rem; font-weight: 700;
+}
+.hr-policy-item-actions {
+    flex-shrink: 0; display: flex; gap: 0.5rem;
+}
+.hr-btn-edit {
+    padding: 0.5rem 1rem; background: #f8fafc; border: 1px solid #e2e8f0;
+    color: #475569; font-weight: 600; font-size: 0.82rem; border-radius: 6px;
+    cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.hr-btn-edit:hover {
+    background: #fff; border-color: var(--hr-primary); color: var(--hr-primary);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.hr-btn-delete {
+    padding: 0.5rem 1rem; background: #fef2f2; border: 1px solid #fee2e2;
+    color: #ef4444; font-weight: 600; font-size: 0.82rem; border-radius: 6px;
+    cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.hr-btn-delete:hover {
+    background: #ef4444; border-color: #ef4444; color: #ffffff;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+/* Edit Form Styling */
+.hr-custom-form { display: flex; flex-direction: column; gap: 1.75rem; }
+.hr-custom-field-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.hr-custom-field-label { font-size: 0.88rem; font-weight: 600; color: var(--hr-secondary); display: flex; align-items: center; gap: 0.4rem; }
+.hr-custom-field-icon { font-size: 0.82rem; color: var(--hr-primary); }
+.hr-custom-field-input, .hr-custom-field-textarea {
+    width: 100%; padding: 0.85rem 1rem; border: 1px solid var(--hr-border); border-radius: 8px;
+    font-family: inherit; font-size: 0.92rem; color: var(--hr-text); background-color: #f8fafc;
+    outline: none; transition: all 0.2s ease;
+}
+.hr-custom-field-input:focus, .hr-custom-field-textarea:focus {
+    border-color: var(--hr-primary); background-color: #fff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+.hr-custom-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 0.25rem; }
+
+.hr-btn-back {
+    display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem;
+    background: transparent; border: 1px solid transparent; color: #94a3b8;
+    font-size: 0.85rem; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all 0.2s ease;
+}
+.hr-btn-back:hover { color: #ef4444; background: #fef2f2; border-color: #fca5a5; }
+
+.hr-custom-btn-publish {
+    display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.72rem 1.75rem;
+    border: none; background-color: var(--hr-primary); border-radius: 8px;
+    font-family: inherit; font-size: 0.88rem; font-weight: 600; color: #fff;
+    cursor: pointer; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3); transition: all 0.2s ease;
+}
+.hr-custom-btn-publish:hover { background-color: #2563eb; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(59, 130, 246, 0.35); }

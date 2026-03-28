@@ -461,6 +461,12 @@
     background: #ecfeff;
 }
 
+/* HR Corner — Slate Blue */
+.menu-item[data-page="hr-corner"] .menu-icon {
+    color: #475569;
+    background: #f1f5f9;
+}
+
 /* Settings — Slate */
 .menu-item[data-page="settings"] .menu-icon {
     color: #475569;

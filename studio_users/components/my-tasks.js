@@ -241,48 +241,74 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
-            // Done / Undo toggle — updates DB + re-renders
             const doneBtn = el.querySelector('.done-btn');
             if (doneBtn && !doneBtn.hasAttribute('disabled')) {
                 doneBtn.addEventListener('click', e => {
                     e.stopPropagation();
-                    if (disableUndo) return; // double safeguard
+                    if (el.classList.contains('is-updating')) return; 
+
                     const newStatus = task.checked ? 'Pending' : 'Completed';
-                    task.checked = !task.checked;
-                    task.status  = newStatus;
-                    task.time    = task.checked ? 'Completed' : (task.due_time || 'No Deadline');
-                    if (task.checked) {
-                        const now = new Date().toISOString();
-                        task.completed_at    = now;
-                        task.my_completed_at = now;
-                        try { new Audio('tones/task_done.wav').play(); } catch(e){}
-                    } else {
-                        task.completed_at    = null;
-                        task.my_completed_at = null;
-                    }
-
-                    // Smooth exit animation
-                    el.style.transition = 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
-                    el.style.opacity = '0';
-                    el.style.transform = 'translateY(15px) scale(0.98)';
+                    
+                    // ── Show Loading State ──
+                    el.classList.add('is-updating');
                     el.style.pointerEvents = 'none'; // Lock interaction
+                    const originalHtml = doneBtn.innerHTML;
+                    doneBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
+                    doneBtn.style.opacity = '0.8';
 
-                    setTimeout(() => {
-                        window.tasksData[type] = sortTasksByStatusAndDate(window.tasksData[type]);
-                        window.renderTasks(type);
-                        
-                        // ── SYNC: Refresh the timeline if it exists
-                        if (window.ScheduleTimeline && typeof window.ScheduleTimeline.init === 'function') {
-                            window.ScheduleTimeline.init();
-                        }
-                    }, 350);
-
-                    // Persist to DB
+                    // Persist to DB first
                     fetch('api/update_task_status.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ task_id: task.id, status: newStatus })
-                    }).catch(err => console.warn('[MyTasks] Status update failed:', err));
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.success) {
+                            // Update local task state
+                            task.checked = !task.checked;
+                            task.status  = newStatus;
+                            task.time    = task.checked ? 'Completed' : (task.due_time || 'No Deadline');
+                            
+                            if (task.checked) {
+                                const now = new Date().toISOString();
+                                task.completed_at    = now;
+                                task.my_completed_at = now;
+                                try { new Audio('tones/task_done.wav').play(); } catch(e){}
+                            } else {
+                                task.completed_at    = null;
+                                task.my_completed_at = null;
+                            }
+
+                            // Smooth exit animation
+                            el.style.transition = 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+                            el.style.opacity = '0';
+                            el.style.transform = 'translateY(15px) scale(0.98)';
+
+                            setTimeout(() => {
+                                window.tasksData[type] = sortTasksByStatusAndDate(window.tasksData[type]);
+                                window.renderTasks(type);
+                                
+                                if (window.ScheduleTimeline && typeof window.ScheduleTimeline.init === 'function') {
+                                    window.ScheduleTimeline.init();
+                                }
+                            }, 350);
+                        } else {
+                            // Revert on failure
+                            el.classList.remove('is-updating');
+                            el.style.pointerEvents = 'auto';
+                            doneBtn.innerHTML = originalHtml;
+                            doneBtn.style.opacity = '1';
+                            alert('Erro: ' + (res.error || 'Failed to update task.'));
+                        }
+                    })
+                    .catch(err => {
+                        console.warn('[MyTasks] Status update failed:', err);
+                        el.classList.remove('is-updating');
+                        el.style.pointerEvents = 'auto';
+                        doneBtn.innerHTML = originalHtml;
+                        doneBtn.style.opacity = '1';
+                    });
                 });
             }
 
@@ -290,41 +316,68 @@ document.addEventListener('DOMContentLoaded', function () {
             const checkbox = el.querySelector('input');
             if (checkbox && !checkbox.hasAttribute('disabled')) {
                 checkbox.addEventListener('change', ev => {
-                    if (disableUndo) { ev.preventDefault(); return; }
-                    const newStatus = ev.target.checked ? 'Completed' : 'Pending';
-                    task.checked = ev.target.checked;
-                    task.status  = newStatus;
-                    task.time    = task.checked ? 'Completed' : (task.due_time || 'No Deadline');
-                    if (task.checked) {
-                        const now = new Date().toISOString();
-                        task.completed_at    = now;
-                        task.my_completed_at = now;
-                        try { new Audio('tones/task_done.wav').play(); } catch(e){}
-                    } else {
-                        task.completed_at    = null;
-                        task.my_completed_at = null;
+                    if (el.classList.contains('is-updating')) {
+                        ev.preventDefault();
+                        return;
                     }
 
-                    // Smooth exit animation
-                    el.style.transition = 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
-                    el.style.opacity = '0';
-                    el.style.transform = 'translateY(15px) scale(0.98)';
+                    const newStatus = ev.target.checked ? 'Completed' : 'Pending';
+                    const originalChecked = !ev.target.checked; // To revert if needed
+
+                    // ── Show Loading State ──
+                    el.classList.add('is-updating');
                     el.style.pointerEvents = 'none';
 
-                    setTimeout(() => {
-                        window.tasksData[type] = sortTasksByStatusAndDate(window.tasksData[type]);
-                        window.renderTasks(type);
-
-                        // ── SYNC: Refresh the timeline if it exists
-                        if (window.ScheduleTimeline && typeof window.ScheduleTimeline.init === 'function') {
-                            window.ScheduleTimeline.init();
-                        }
-                    }, 350);
+                    // Persist to DB first
                     fetch('api/update_task_status.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ task_id: task.id, status: newStatus })
-                    }).catch(err => console.warn('[MyTasks] Status update failed:', err));
+                    })
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.success) {
+                            task.checked = ev.target.checked;
+                            task.status  = newStatus;
+                            task.time    = task.checked ? 'Completed' : (task.due_time || 'No Deadline');
+                            
+                            if (task.checked) {
+                                const now = new Date().toISOString();
+                                task.completed_at    = now;
+                                task.my_completed_at = now;
+                                try { new Audio('tones/task_done.wav').play(); } catch(e){}
+                            } else {
+                                task.completed_at    = null;
+                                task.my_completed_at = null;
+                            }
+
+                            // Smooth exit animation
+                            el.style.transition = 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)';
+                            el.style.opacity = '0';
+                            el.style.transform = 'translateY(15px) scale(0.98)';
+
+                            setTimeout(() => {
+                                window.tasksData[type] = sortTasksByStatusAndDate(window.tasksData[type]);
+                                window.renderTasks(type);
+
+                                if (window.ScheduleTimeline && typeof window.ScheduleTimeline.init === 'function') {
+                                    window.ScheduleTimeline.init();
+                                }
+                            }, 350);
+                        } else {
+                            // Revert
+                            ev.target.checked = originalChecked;
+                            el.classList.remove('is-updating');
+                            el.style.pointerEvents = 'auto';
+                            alert('Error: ' + (res.error || 'Failed to update task.'));
+                        }
+                    })
+                    .catch(err => {
+                        console.warn('[MyTasks] Status update failed:', err);
+                        ev.target.checked = originalChecked;
+                        el.classList.remove('is-updating');
+                        el.style.pointerEvents = 'auto';
+                    });
                 });
             }
 

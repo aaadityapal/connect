@@ -1,0 +1,88 @@
+<section class="hr-notice-section" id="hrNoticeSection">
+    <div class="hr-notice-card">
+
+        <!-- Card Header -->
+        <div class="hr-notice-card-header">
+            <h2 class="hr-notice-card-title">Upload Notice</h2>
+            <p class="hr-notice-card-subtitle">Published notices will appear immediately on the employee dashboard.</p>
+        </div>
+
+        <!-- Notice Form -->
+        <form class="hr-notice-form" id="hrNoticeForm">
+
+            <!-- Notice Title -->
+            <div class="hr-notice-field-group" id="hrNoticeFieldTitle">
+                <label for="hrNoticeTitle" class="hr-notice-field-label">
+                    <i class="fa-solid fa-heading hr-notice-field-icon"></i>
+                    Notice Title
+                </label>
+                <input
+                    type="text"
+                    id="hrNoticeTitle"
+                    class="hr-notice-field-input"
+                    placeholder="e.g., Office Closed — Public Holiday"
+                    required
+                >
+            </div>
+
+            <!-- Short Description -->
+            <div class="hr-notice-field-group" id="hrNoticeFieldShortDesc">
+                <label for="hrNoticeShortDesc" class="hr-notice-field-label">
+                    <i class="fa-solid fa-align-left hr-notice-field-icon"></i>
+                    Short Description
+                </label>
+                <input
+                    type="text"
+                    id="hrNoticeShortDesc"
+                    class="hr-notice-field-input"
+                    placeholder="Brief 1-2 sentence summary of the notice..."
+                    required
+                >
+            </div>
+
+            <!-- Detailed Description -->
+            <div class="hr-notice-field-group" id="hrNoticeFieldLongDesc">
+                <label for="hrNoticeLongDesc" class="hr-notice-field-label">
+                    <i class="fa-solid fa-file-lines hr-notice-field-icon"></i>
+                    Detailed Description
+                </label>
+                <textarea
+                    id="hrNoticeLongDesc"
+                    class="hr-notice-field-textarea"
+                    rows="9"
+                    placeholder="Enter the full described form of the notice here..."
+                    required
+                ></textarea>
+            </div>
+
+            <!-- Upload Attachment (Optional) -->
+            <div class="hr-notice-field-group" id="hrNoticeFieldUpload">
+                <label class="hr-notice-field-label">
+                    <i class="fa-solid fa-paperclip hr-notice-field-icon"></i>
+                    Attachment <span class="hr-notice-optional-tag">Optional</span>
+                </label>
+                <label for="hrNoticeFile" class="hr-notice-upload-zone" id="hrNoticeUploadZone">
+                    <div class="hr-notice-upload-icon-wrap">
+                        <i class="fa-solid fa-cloud-arrow-up hr-notice-upload-icon" id="hrNoticeUploadIconMain"></i>
+                    </div>
+                    <p class="hr-notice-upload-text" id="hrNoticeUploadText">
+                        <span class="hr-notice-upload-highlight">Click to upload</span> or drag & drop
+                    </p>
+                    <p class="hr-notice-upload-hint">PDF, DOC, DOCX, PNG, JPG — Max 5MB</p>
+                    <input type="file" id="hrNoticeFile" name="attachment" class="hr-notice-file-input" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
+                </label>
+            </div>
+
+            <!-- Actions -->
+            <div class="hr-notice-actions" id="hrNoticeFormActions">
+                <button type="button" class="hr-notice-btn-clear" id="hrNoticeBtnClear">
+                    <i class="fa-solid fa-rotate-left"></i> Clear Form
+                </button>
+                <button type="submit" class="hr-notice-btn-publish" id="hrNoticeBtnPublish">
+                    <i class="fa-solid fa-paper-plane"></i> Send Notice
+                </button>
+            </div>
+
+        </form>
+    </div>
+</section>

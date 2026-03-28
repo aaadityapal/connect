@@ -1,0 +1,164 @@
+/* ============================================
+   form.css — Policy Form Section Styles
+   ============================================ */
+
+.hr-form-section {
+    flex: 1;
+    padding: 2.5rem 2rem;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.hr-form-card {
+    background: var(--hr-surface);
+    width: 100%;
+    max-width: 95%; /* Use more of the full page */
+    border-radius: var(--hr-radius);
+    box-shadow: var(--hr-shadow-md);
+    padding: 2.5rem;
+    border: 1px solid var(--hr-border);
+    margin: 0 auto;
+}
+
+/* Card Header */
+.hr-form-card-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--hr-border);
+}
+
+.hr-form-card-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--hr-secondary);
+    margin-bottom: 0.4rem;
+}
+
+.hr-form-card-subtitle {
+    font-size: 0.88rem;
+    color: var(--hr-text-muted);
+}
+
+/* Form Layout */
+.hr-policy-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.hr-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.hr-field-label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--hr-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.hr-field-label-icon {
+    font-size: 0.82rem;
+    color: var(--hr-primary);
+}
+
+.hr-field-input,
+.hr-field-textarea {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--hr-border);
+    border-radius: 8px;
+    font-family: var(--hr-font);
+    font-size: 0.92rem;
+    color: var(--hr-text);
+    background-color: #f8fafc;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.hr-field-textarea {
+    resize: vertical;
+    min-height: 140px;
+    line-height: 1.65;
+}
+
+.hr-field-input:focus,
+.hr-field-textarea:focus {
+    border-color: var(--hr-primary);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.hr-field-input::placeholder,
+.hr-field-textarea::placeholder {
+    color: #94a3b8;
+}
+
+/* Buttons Row */
+.hr-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.25rem;
+}
+
+.hr-btn-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.72rem 1.4rem;
+    border: 1px solid var(--hr-border);
+    background: transparent;
+    border-radius: 8px;
+    font-family: var(--hr-font);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--hr-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.hr-btn-clear:hover {
+    background-color: #f1f5f9;
+    color: var(--hr-secondary);
+    border-color: #cbd5e1;
+}
+
+.hr-btn-publish {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.72rem 1.75rem;
+    border: none;
+    background-color: var(--hr-primary);
+    border-radius: 8px;
+    font-family: var(--hr-font);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    transition: all 0.2s ease;
+}
+
+.hr-btn-publish:hover {
+    background-color: var(--hr-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.35);
+}
+
+.hr-btn-publish:active {
+    transform: translateY(0);
+}
+
+.hr-btn-publish:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}

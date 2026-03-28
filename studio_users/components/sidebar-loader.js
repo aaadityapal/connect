@@ -42,6 +42,10 @@
             currentPage = 'apply-leave';
         }
 
+        if (window.location.pathname.includes('/hr_backend/')) {
+            currentPage = 'hr-corner';
+        }
+
         document.querySelectorAll('#appSidebar .menu-item[data-page]').forEach(item => {
             item.classList.remove('active');
             if (item.dataset.page === currentPage) {
@@ -152,6 +156,8 @@
                 // Render Lucide icons (sidebar icons)
                 if (window.lucide) {
                     lucide.createIcons();
+                    // Additional pass to ensure dynamic elements are processed
+                    setTimeout(() => lucide.createIcons(), 50);
                 } else {
                     console.warn('[SidebarLoader] Lucide not loaded yet. Add the Lucide script before sidebar-loader.js');
                 }

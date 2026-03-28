@@ -164,6 +164,12 @@ function expandRecurringTasks($tasks, $startDate, $endDate) {
                 $newInstance                      = $task;
                 $newInstance['due_date']          = $dateStr;
                 $newInstance['due_time']          = $timeStr;
+                // --- FIX: Reset completion status for virtual instances ---
+                $newInstance['status']             = 'Pending';
+                $newInstance['completed_by']       = null;
+                $newInstance['completed_at']       = null;
+                $newInstance['completion_history'] = null;
+                // -----------------------------------------------------------
                 $newInstance['is_virtual']        = true;
                 $newInstance['is_last_recurrence']= false; // will be updated below
                 $newInstance['recurrence_base_limit'] = $baseLimit;

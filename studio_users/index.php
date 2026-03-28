@@ -38,23 +38,29 @@ $designation = $user ? $user['designation'] : '';
 $fromDate = $_GET['from'] ?? date('Y-m-d', strtotime('monday this week'));
 $toDate   = $_GET['to']   ?? date('Y-m-d', strtotime('sunday this week'));
 
-// Queries for current filtered period
-$baseSQL = "FROM studio_assigned_tasks WHERE deleted_at IS NULL AND FIND_IN_SET(?, REPLACE(assigned_to, ', ', ',')) AND due_date BETWEEN ? AND ?";
+// Queries for current filtered period (User-centric counts)
+$stmtStats = $pdo->prepare("
+    SELECT 
+        COUNT(*) as total,
+        COUNT(CASE WHEN FIND_IN_SET(:uid1, REPLACE(IFNULL(completed_by, ''), ' ', '')) = 0 AND (status IS NULL OR status != 'Cancelled') THEN 1 END) as pending,
+        COUNT(CASE WHEN FIND_IN_SET(:uid2, REPLACE(IFNULL(completed_by, ''), ' ', '')) > 0 THEN 1 END) as completed
+    FROM studio_assigned_tasks 
+    WHERE deleted_at IS NULL 
+      AND FIND_IN_SET(:uid3, REPLACE(assigned_to, ' ', '')) 
+      AND due_date BETWEEN :from AND :to
+");
+$stmtStats->execute([
+    'uid1' => (string)$user_id,
+    'uid2' => (string)$user_id,
+    'uid3' => (string)$user_id,
+    'from' => $fromDate,
+    'to'   => $toDate
+]);
+$stats = $stmtStats->fetch(PDO::FETCH_ASSOC);
 
-// Total Tasks in Period
-$stmtTotal = $pdo->prepare("SELECT COUNT(*) " . $baseSQL);
-$stmtTotal->execute([$user_id, $fromDate, $toDate]);
-$periodTotalTasks = $stmtTotal->fetchColumn();
-
-// Pending Tasks in Period
-$stmtPending = $pdo->prepare("SELECT COUNT(*) " . $baseSQL . " AND (status IS NULL OR status != 'Completed')");
-$stmtPending->execute([$user_id, $fromDate, $toDate]);
-$periodPendingTasks = $stmtPending->fetchColumn();
-
-// Completed Tasks in Period
-$stmtCompleted = $pdo->prepare("SELECT COUNT(*) " . $baseSQL . " AND status = 'Completed'");
-$stmtCompleted->execute([$user_id, $fromDate, $toDate]);
-$periodCompletedTasks = $stmtCompleted->fetchColumn();
+$periodTotalTasks = $stats['total'] ?? 0;
+$periodPendingTasks = $stats['pending'] ?? 0;
+$periodCompletedTasks = $stats['completed'] ?? 0;
 
 // Calculate Efficiency (Completed / Total)
 $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTotalTasks) * 100) : 0;
@@ -324,7 +330,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Lucide Icons — for sidebar & header -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
     <!-- Reusable Sidebar Loader -->
     <script src="components/sidebar-loader.js" defer></script>
     <!-- Sidebar CSS auto-injected by components/sidebar-loader.js -->
@@ -603,176 +609,14 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                                     </tr>
                                 </thead>
                                 <tbody id="taskListTableBody" class="el-146">
-                                    <?php
-                                    // Fetch user's tasks for the dynamic board
-                                    $fromDate = $_GET['from'] ?? date('Y-m-d', strtotime('monday this week'));
-                                    $toDate = $_GET['to'] ?? date('Y-m-d', strtotime('sunday this week'));
-
-                                    $tlQuery = "SELECT sat.*, u.username as creator_name 
-                                                FROM studio_assigned_tasks sat
-                                                LEFT JOIN users u ON sat.created_by = u.id
-                                                WHERE sat.deleted_at IS NULL 
-                                                AND FIND_IN_SET(?, REPLACE(sat.assigned_to, ', ', ',')) 
-                                                AND sat.due_date BETWEEN ? AND ?
-                                                ORDER BY sat.created_at DESC LIMIT 50";
-                                    $tlStmt = $pdo->prepare($tlQuery);
-                                    $tlStmt->execute([$user_id, $fromDate, $toDate]);
-                                    $rows = $tlStmt->fetchAll();
-
-                                    if (empty($rows)) {
-                                        echo '<tr><td colspan="6" style="text-align:center; padding: 2rem; color: #94a3b8;">No tasks found for you.</td></tr>';
-                                    }
-
-                                    foreach ($rows as $row) {
-                                        $pName = $row['project_name'] ?: 'General Task';
-                                        $pStage = $row['stage_number'] ? " - Stage " . $row['stage_number'] : "";
-                                        $fullTitle = $pName . $pStage;
-                                        
-                                        $priority = $row['priority'] ?: 'Low';
-                                        $pColor = $priority === 'High' ? '#ef4444' : ($priority === 'Medium' ? '#f59e0b' : '#10b981');
-                                        $pBg = $priority === 'High' ? 'rgba(239, 68, 68, 0.08)' : ($priority === 'Medium' ? 'rgba(245, 158, 11, 0.08)' : 'rgba(16, 185, 129, 0.08)');
-                                        
-                                        // Initial Target Date/Time logic
-                                        $extHistory = json_decode($row['extension_history'] ?? '[]', true);
-                                        if (!empty($extHistory)) {
-                                            $firstExt = $extHistory[0];
-                                            $initDate = $firstExt['previous_due_date'] ?: $row['due_date'];
-                                            $initTime = $firstExt['previous_due_time'] ?: $row['due_time'];
-                                        } else {
-                                            $initDate = $row['due_date'];
-                                            $initTime = $row['due_time'];
-                                        }
-
-                                        $targetDate = $initDate ? date('F j, Y', strtotime($initDate)) : 'No Date';
-                                        $targetTime = $initTime ? date('h:i A', strtotime($initTime)) : '11:59 PM';
-                                        
-                                        // Completion logic
-                                        $compHist = json_decode($row['completion_history'] ?? '{}', true);
-                                        $myCompAt = $compHist[$user_id] ?? null;
-                                        $compDate = $myCompAt ? date('F j, Y', strtotime($myCompAt)) : '--';
-                                        $compTime = $myCompAt ? date('h:i A', strtotime($myCompAt)) : '--';
-                                        // Convert to ISO 8601 treating the stored string as IST
-                                        // (stored by update_task_status.php as IST datetime string)
-                                        $myCompAtIso = null;
-                                        if ($myCompAt) {
-                                            try {
-                                                // The stored value is IST — parse it explicitly as IST
-                                                $myCompAtIso = (new DateTime($myCompAt, new DateTimeZone('Asia/Kolkata')))->format('c');
-                                            } catch (Exception $e) { $myCompAtIso = null; }
-                                        }
-                                        
-                                        $extCount = (int)$row['extension_count'];
-                                        $perf = rand(75, 99) . '%'; // Randomized as requested
-                                        $perfColor = (int)$perf > 80 ? '#10b981' : '#f59e0b';
-
-                                        // Team involved icons
-                                        $assignees = array_filter(array_map('trim', explode(',', $row['assigned_names'] ?? '')));
-                                        $aCount = count($assignees);
-                                        
-                                        $assignedIdsList = array_filter(array_map('trim', explode(',', $row['assigned_to'] ?? '')));
-                                        $completedIdsList = array_filter(array_map('trim', explode(',', $row['completed_by'] ?? '')));
-                                        
-                                        $assigneeStatuses = [];
-                                        for ($idx = 0; $idx < count($assignedIdsList); $idx++) {
-                                            $cId = $assignedIdsList[$idx];
-                                            $cName = $assignees[$idx] ?? "User $cId";
-                                            $userExtCount = 0;
-                                            if (is_array($extHistory)) {
-                                                foreach ($extHistory as $h) {
-                                                    if (isset($h['user_id']) && $h['user_id'] == $cId) {
-                                                        $userExtCount++;
-                                                    }
-                                                }
-                                            }
-                                            $assigneeStatuses[] = [
-                                                'name' => $cName,
-                                                'status' => in_array($cId, $completedIdsList) ? 'Completed' : 'Pending',
-                                                'extended' => $userExtCount > 0,
-                                                'extension_count' => $userExtCount
-                                            ];
-                                        }
-
-                                        // Prepare TaskModal object for JS
-                                        $myStatus = in_array((string)$user_id, $completedIdsList) ? 'Completed' : ($row['status'] === 'Cancelled' ? 'Cancelled' : ($row['status'] === 'Completed' ? 'Completed' : 'Pending'));
-                                        $tmObject = [
-                                            'id' => (int)$row['id'],
-                                            'projectStage' => $fullTitle,
-                                            'title' => $row['task_description'],
-                                            'desc' => $row['task_description'],
-                                            'status' => $myStatus,
-                                            'global_status' => $row['status'],
-                                            'priority' => $priority,
-                                            'dotColor' => $pColor,
-                                            'person' => !empty($assignees) ? $assignees[0] : 'Unassigned',
-                                            'assignees' => $assignees,
-                                            'assignedBy' => $row['creator_name'] ?: 'System Manager',
-                                            'dateFrom' => date('M j, Y - g:i A', strtotime($row['created_at'])),
-                                            'dateTo' => ($row['due_date'] ? date('M j, Y', strtotime($row['due_date'])) . ' - ' . ($row['due_time'] ? date('g:i A', strtotime($row['due_time'])) : '11:59 PM') : 'No Deadline'),
-                                            'extension_count' => $extCount,
-                                            'extension_history' => $extHistory,
-                                            'due_date' => $row['due_date'],
-                                            'due_time_24' => $row['due_time'] ? date('H:i', strtotime($row['due_time'])) : null,
-                                            'previous_due_date' => $row['previous_due_date'],
-                                            'previous_due_time' => $row['previous_due_time'],
-                                            'my_completed_at' => $myCompAtIso,
-                                            'assignee_statuses' => $assigneeStatuses
-                                        ];
-                                        $tmJson = htmlspecialchars(json_encode($tmObject), ENT_QUOTES, 'UTF-8');
-                                    ?>
-                                    <tr class="task-list-row el-519" 
-                                        data-task-json='<?php echo $tmJson; ?>'
-                                        style="box-shadow: 0 2px 10px rgba(0,0,0,0.04); background: linear-gradient(to right, <?php echo $pBg; ?> 0%, #ffffff 40%); border-radius: 8px; cursor: pointer;">
-                                        <td style="white-space: normal; word-wrap: break-word; padding: 12px 16px; font-weight: 500; color: #475569; border-left: 4px solid <?php echo $pColor; ?>; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
-                                            <?php echo htmlspecialchars($fullTitle); ?>
-                                        </td>
-                                        <td>
-                                            <div style="display: flex; align-items: center; gap: 8px;">
-                                                <div style="display: flex; align-items: center;">
-                                                    <?php for($i=0; $i<min(2, $aCount); $i++): 
-                                                        $uCol = ltrim(getPersonColor($assignees[$i]), '#');
-                                                    ?>
-                                                        <div style="width: 24px; height: 24px; border-radius: 50%; overflow: hidden; border: 2px solid #fff; margin-right: -8px;">
-                                                            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($assignees[$i]); ?>&background=<?php echo $uCol; ?>&color=fff" style="width: 100%; height: 100%; object-fit: cover;">
-                                                        </div>
-                                                    <?php endfor; ?>
-                                                </div>
-                                                <span style="font-size: 0.8rem; color: #64748b; margin-left: <?php echo $aCount > 1 ? '8px' : '0'; ?>;">
-                                                    <?php echo $aCount; ?> <?php echo $aCount === 1 ? 'person' : 'people'; ?>
-                                                </span>
+                                    <tr>
+                                        <td colspan="6" style="text-align:center; padding: 4rem; color: #94a3b8;">
+                                            <div class="loader-container" style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                                                <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
+                                                <span style="font-size: 0.9rem; font-weight: 500;">Loading your tasks...</span>
                                             </div>
-                                        </td>
-                                        <td style="padding: 0;">
-                                            <div style="display:flex; height: 100%; align-items:center;">
-                                                <span class="target-date-cell" style="flex: 1; text-align: center; padding: 12px 2px; font-size: 0.75rem;">
-                                                    <?php echo $targetDate; ?>
-                                                </span>
-                                                <span class="time-col" style="flex: 1; text-align: center; padding: 12px 2px; border-left: 1px dashed #e2e8f0; font-size: 0.75rem;">
-                                                    <?php echo $targetTime; ?>
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td style="padding: 0;">
-                                            <div style="display:flex; height: 100%; align-items:center; color: <?php echo $myCompAt ? '#10b981' : '#94a3b8'; ?>;">
-                                                <span style="flex: 1; text-align: center; padding: 12px 2px; font-size: 0.75rem;">
-                                                    <?php echo $compDate; ?>
-                                                </span>
-                                                <span style="flex: 1; text-align: center; padding: 12px 2px; border-left: 1px dashed #e2e8f0; font-size: 0.75rem;">
-                                                    <?php echo $compTime; ?>
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td style="text-align:center;">
-                                            <span class="task-report-count" style="font-weight: bold; background: #fef9c3; padding: 4px 8px; border-radius: 12px; color: #854d0e; font-size: 0.8rem;">
-                                                <?php echo $extCount; ?>
-                                            </span>
-                                        </td>
-                                        <td style="text-align:center; font-weight: bold; border-top-right-radius: 8px; border-bottom-right-radius: 8px;">
-                                            <span class="task-performance-cell" style="color: <?php echo $perfColor; ?>; font-size: 0.85rem;">
-                                                <?php echo $perf; ?>
-                                            </span>
                                         </td>
                                     </tr>
-                                    <?php } ?>
                                 </tbody>
                             </table>
                         </div>
@@ -1547,6 +1391,56 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <script src="components/modals/edit-task-modal.js"></script>
     <script src="components/modals/task-assigned-alert.js"></script>
     <script src="components/modals/recurrence-expiry-modal.js"></script>
+    <script>
+        /**
+         * Dynamic Task List Loader (Performance Optimization)
+         */
+        function refreshDashboardTaskList() {
+            const from = document.getElementById('taskDateFrom').value;
+            const to = document.getElementById('taskDateTo').value;
+            const body = document.getElementById('taskListTableBody');
+            
+            if (!body) return;
+            
+            // Show loader
+            body.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align:center; padding: 4rem; color: #94a3b8;">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                            <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
+                            <span style="font-size: 0.9rem;">Updating task list...</span>
+                        </div>
+                    </td>
+                </tr>`;
+            
+            fetch(`api/fetch_dashboard_tasks.php?from=${from}&to=${to}`)
+                .then(res => res.text())
+                .then(html => {
+                    body.innerHTML = html;
+                    if (window.lucide) lucide.createIcons();
+                })
+                .catch(err => {
+                    console.error('Task list fetch error:', err);
+                    body.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem; color: #ef4444;">Failed to load tasks.</td></tr>';
+                });
+        }
+
+        document.getElementById('applyDateBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            refreshDashboardTaskList();
+            
+            // Optional: Update URL without reload to persist filter on refresh
+            const from = document.getElementById('taskDateFrom').value;
+            const to = document.getElementById('taskDateTo').value;
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('from', from);
+            newUrl.searchParams.set('to', to);
+            window.history.pushState({}, '', newUrl);
+        });
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', refreshDashboardTaskList);
+    </script>
 
 </body>
 

@@ -1,0 +1,75 @@
+/* ─── Page Header ─────────────────────────────────── */
+.page-header {
+    background: 
+        radial-gradient(circle at 92% -10%, rgba(249,115,22,0.15) 0%, transparent 140px),
+        radial-gradient(circle at 15% 140%, rgba(99,102,241,0.18) 0%, transparent 120px),
+        linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-radius: var(--radius-lg);
+    padding: 10px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+}
+
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    z-index: 1;
+}
+
+.page-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.page-title i {
+    font-size: 18px;
+    color: var(--clr-orange);
+}
+
+.page-subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 1px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 1;
+}
+
+/* Current User / Date Badges */
+.header-meta-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 7px 14px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(6px);
+    line-height: 1.3;
+}
+.header-meta-pill .meta-label {
+    font-size: 10px;
+    color: #64748b;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.header-meta-pill .meta-value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2e8f0;
+}

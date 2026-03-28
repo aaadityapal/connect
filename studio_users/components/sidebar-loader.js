@@ -23,33 +23,70 @@
     const SIDEBAR_PATH = basePath + 'components/sidebar.php';
 
     // ─── Helpers ──────────────────────────────────────────
+
+    /**
+     * Maps a URL path segment / directory to the sidebar data-page value.
+     * Order matters: more-specific checks go first.
+     */
+    function resolveCurrentPage() {
+        const path = window.location.pathname;
+
+        // ── Sub-directory matches (checked before filename) ──
+        if (path.includes('/profile/'))           return 'profile';
+        if (path.includes('/leave_pages/'))       return 'apply-leave';
+        if (path.includes('/travel_exp/'))        return 'travel-expenses';
+        if (path.includes('/overtime_page/'))     return 'overtime';
+        if (path.includes('/attendance_recrds/')) return 'worksheet';
+        if (path.includes('/hr_backend/'))        return 'hr-corner';
+        if (path.includes('/hierarchy'))          return 'hierarchy';
+        if (path.includes('/overtime_mapping'))   return 'overtime-mapping';
+        if (path.includes('/manager_mapping'))    return 'manager-mapping';
+        if (path.includes('/projects'))           return 'projects';
+        if (path.includes('/site-updates'))       return 'site-updates';
+        if (path.includes('/my-tasks'))           return 'my-tasks';
+        if (path.includes('/analytics'))          return 'analytics';
+        if (path.includes('/settings'))           return 'settings';
+        if (path.includes('/help'))               return 'help';
+
+        // ── Filename fallback ──
+        let file = path.split('/').pop() || 'index';
+        file = file.replace(/\.html$|\.php$/, '');
+
+        // Map bare filenames that differ from data-page values
+        const fileMap = {
+            'index'           : 'index',
+            'travel-expenses' : 'travel-expenses',
+            'overtime'        : 'overtime',
+            'projects'        : 'projects',
+            'site-updates'    : 'site-updates',
+            'my-tasks'        : 'my-tasks',
+            'analytics'       : 'analytics',
+            'settings'        : 'settings',
+            'help'            : 'help',
+            'hierarchy'       : 'hierarchy',
+            'manager_mapping' : 'manager-mapping',
+        };
+
+        return fileMap[file] || file;
+    }
+
     function highlightActiveItem() {
-        let currentFile = window.location.pathname.split('/').pop();
-        if (!currentFile || currentFile === '') {
-            currentFile = 'index';
-        }
-        let currentPage = currentFile.replace(/\.html$|\.php$/, '');
-
-        if (window.location.pathname.includes('/profile/')) {
-            currentPage = 'profile';
-        }
-        
-        if (window.location.pathname.includes('attendance_recrds')) {
-            currentPage = 'worksheet';
-        }
-
-        if (window.location.pathname.includes('/leave_pages/')) {
-            currentPage = 'apply-leave';
-        }
-
-        if (window.location.pathname.includes('/hr_backend/')) {
-            currentPage = 'hr-corner';
-        }
+        const currentPage = resolveCurrentPage();
 
         document.querySelectorAll('#appSidebar .menu-item[data-page]').forEach(item => {
             item.classList.remove('active');
+
+            // Remove any previously injected active-bar
+            const existingBar = item.querySelector('.active-bar');
+            if (existingBar) existingBar.remove();
+
             if (item.dataset.page === currentPage) {
                 item.classList.add('active');
+
+                // Inject active-bar so the CSS left-bar animation fires
+                const bar = document.createElement('span');
+                bar.className = 'active-bar';
+                item.insertBefore(bar, item.firstChild);
             }
         });
     }

@@ -505,6 +505,18 @@
             </div>
 
             <div id="otReportSection" style="display: none;">
+                <div id="otManagerSelectWrapper" style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; color: #1e293b; display: block; margin-bottom: 8px; font-size: 0.9rem;">
+                        Approving Manager
+                    </label>
+                    <div id="otManagerLoading" style="font-size: 0.8rem; color: #64748b; margin-bottom: 8px; display: none;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Loading managers...
+                    </div>
+                    <select id="otManagerSelect" style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.95rem; background-color: white;">
+                        <option value="">Select Manager</option>
+                    </select>
+                </div>
+
                 <label style="font-weight: 600; color: #1e293b; display: block; margin-bottom: 8px; font-size: 0.9rem;">
                     Tasks completed during overtime (Min 15 Words)
                 </label>

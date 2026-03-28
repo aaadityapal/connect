@@ -1,0 +1,95 @@
+/* ─── Detailed Completion Tracking ───────────────── */
+
+/* Filter Pills (All Tasks, Stages, Substages, Late) */
+.filter-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.pill-btn {
+    padding: 6px 14px;
+    border-radius: var(--pill);
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    background: var(--bg-surface);
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all var(--t-fast);
+    font-family: 'Inter', sans-serif;
+}
+
+.pill-btn.active {
+    background: var(--clr-blue);
+    color: #fff;
+    border-color: var(--clr-blue);
+    box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+}
+
+.pill-btn:not(.active):hover {
+    background: var(--bg-muted);
+    color: var(--text-primary);
+}
+
+/* ─── Three Mini Tracking Cards ──────────────────── */
+.tracking-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+@media (max-width: 768px) { .tracking-cards { grid-template-columns: 1fr; } }
+
+.track-card {
+    background: var(--bg-surface);
+    border-radius: var(--radius-md);
+    padding: 18px;
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow-xs);
+    transition: transform var(--t-fast), box-shadow var(--t-fast);
+}
+
+.track-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.track-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.track-icon.blue   { background: var(--clr-blue-light);  color: var(--clr-blue);  }
+.track-icon.cyan   { background: var(--clr-cyan-light);  color: var(--clr-cyan); }
+.track-icon.red    { background: var(--clr-red-light);   color: var(--clr-red);   }
+
+.track-info .lbl {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+}
+
+.track-info .num {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 4px 0 2px;
+}
+
+.track-info .sub {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}

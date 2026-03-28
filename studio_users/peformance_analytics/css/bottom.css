@@ -1,0 +1,153 @@
+/* ─── Bottom Two-Column Grid ──────────────────────── */
+
+/* Search input */
+.search-wrap {
+    position: relative;
+    max-width: 240px;
+}
+.search-wrap input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    font-size: 13px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-base);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color var(--t-fast);
+    font-family: 'Inter', sans-serif;
+}
+.search-wrap input:focus { border-color: #93c5fd; }
+.search-wrap i {
+    position: absolute;
+    left: 11px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 13px;
+    pointer-events: none;
+}
+
+/* ─── Custom Dropdown (Range Picker) ─────────────── */
+.custom-range-select {
+    position: relative;
+    width: 160px;
+    font-family: 'Inter', sans-serif;
+    user-select: none;
+}
+
+.range-trigger {
+    padding: 8px 36px 8px 12px;
+    background: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-primary);
+    transition: border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
+    position: relative;
+}
+.range-trigger .range-caret {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 11px;
+    transition: transform var(--t-fast);
+    pointer-events: none;
+}
+
+/* Orange focus/open state — matches the image */
+.custom-range-select.open .range-trigger {
+    border-color: var(--clr-orange);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+.custom-range-select.open .range-trigger .range-caret {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+/* Dropdown list */
+.range-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    padding: 6px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity var(--t-fast), transform var(--t-fast), visibility var(--t-fast);
+    z-index: 200;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+/* Thin custom scrollbar inside dropdown */
+.range-dropdown::-webkit-scrollbar { width: 4px; }
+.range-dropdown::-webkit-scrollbar-track { background: transparent; }
+.range-dropdown::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.range-dropdown::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.custom-range-select.open .range-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Dropdown items */
+.range-item {
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-secondary);
+    transition: background var(--t-fast), color var(--t-fast);
+    margin-bottom: 2px;
+}
+.range-item:last-child { margin-bottom: 0; }
+.range-item:hover {
+    background: #f1f5f9;
+    color: var(--text-primary);
+}
+.range-item.active {
+    background: #fff3ec;
+    color: var(--clr-orange-dark);
+    font-weight: 600;
+}
+
+/* ─── Scrollable Lists ────────────────────────────── */
+.projects-list,
+.completions-list {
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Thin custom scrollbar for lists */
+.projects-list::-webkit-scrollbar,
+.completions-list::-webkit-scrollbar { 
+    width: 6px; 
+}
+.projects-list::-webkit-scrollbar-track,
+.completions-list::-webkit-scrollbar-track { 
+    background: #f8fafc; 
+    border-radius: 8px;
+}
+.projects-list::-webkit-scrollbar-thumb,
+.completions-list::-webkit-scrollbar-thumb { 
+    background: #cbd5e1; 
+    border-radius: 8px; 
+}
+.projects-list::-webkit-scrollbar-thumb:hover,
+.completions-list::-webkit-scrollbar-thumb:hover { 
+    background: #aba0b8; 
+}

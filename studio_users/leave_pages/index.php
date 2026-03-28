@@ -248,6 +248,36 @@ if (!isset($_SESSION['user_id'])) {
                                 </div>
                             </div>
 
+                            <!-- Sick Leave Upload (Hidden by default) -->
+                            <div id="sick-leave-upload-section" style="display: none; margin: 20px 0;">
+                                <div class="nlr-field nlr-field--full">
+                                    <label class="nlr-label">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                        Medical Documents (Mandatory for Sick Leave) <span class="nlr-required">*</span>
+                                    </label>
+                                    <div class="file-upload-wrapper" style="border: 2px dashed #e5e7eb; padding: 24px; border-radius: 12px; text-align: center; background: #fafafa; transition: all 0.2s; cursor: pointer; border-color: #d1d5db;" onmouseover="this.style.borderColor='#9ca3af'; this.style.background='#f3f4f6';" onmouseout="this.style.borderColor='#d1d5db'; this.style.background='#fafafa';">
+                                        <input type="file" id="sick-leave-files" name="sick_leave_files[]" multiple accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
+                                        <label for="sick-leave-files" style="cursor: pointer; display: block;">
+                                            <div style="font-size: 2rem; margin-bottom: 12px;">📄</div>
+                                            <div style="font-weight: 600; color: #374151; font-size: 0.95rem;">Click to upload or drag files here</div>
+                                            <div style="font-size: 0.78rem; color: #6b7280; margin-top: 6px;">Supports PDF, PNG, JPG, JPEG (Multiple files allowed)</div>
+                                        </label>
+                                        <div id="file-list-preview" style="margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;"></div>
+                                    </div>
+                                    <style>
+                                        .file-chip {
+                                            background: white; border: 1px solid #e5e7eb; padding: 8px 10px; border-radius: 8px; font-size: 0.75rem; 
+                                            display: flex; align-items: center; justify-content: space-between; gap: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                                            animation: slideIn 0.2s ease;
+                                        }
+                                        .file-chip span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px; color: #4b5563; font-weight: 500; }
+                                        .file-chip .remove-file { color: #9ca3af; cursor: pointer; transition: color 0.1s; }
+                                        .file-chip .remove-file:hover { color: #ef4444; }
+                                        @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+                                    </style>
+                                </div>
+                            </div>
+
                             <!-- Duration pill -->
                             <div class="nlr-duration-bar">
                                 <div class="nlr-duration-left">

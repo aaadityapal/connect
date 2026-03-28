@@ -18,7 +18,7 @@ try {
               LEFT JOIN travel_expense_attachments tea ON te.id = tea.expense_id
               WHERE te.user_id = ?
               ORDER BY te.travel_date DESC, te.created_at DESC";
-
+              
     $stmt = $pdo->prepare($query);
     $stmt->execute([$user_id]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -43,7 +43,7 @@ try {
                 'payment_status' => $row['payment_status'] ?? 'Pending',
                 'attachments' => []
             ];
-
+            
             // Add primary file paths if they exist
             if (!empty($row['bill_file_path'])) {
                 $expenses[$id]['attachments'][] = [
@@ -67,15 +67,12 @@ try {
                 ];
             }
         }
-
+        
         // Add additional attachments from travel_expense_attachments
         if (!empty($row['tea_file_path'])) {
             $found = false;
             foreach ($expenses[$id]['attachments'] as $att) {
-                if ($att['path'] === $row['tea_file_path']) {
-                    $found = true;
-                    break;
-                }
+                if ($att['path'] === $row['tea_file_path']) { $found = true; break; }
             }
             if (!$found) {
                 $expenses[$id]['attachments'][] = [

@@ -4,28 +4,28 @@ function initTable() {
         refreshBtn.addEventListener('click', () => {
             const icon = refreshBtn.querySelector('i');
             icon.style.transition = 'transform 0.6s ease';
-            icon.style.transform = 'rotate(360deg)';
+            icon.style.transform  = 'rotate(360deg)';
             setTimeout(() => {
                 icon.style.transition = 'none';
-                icon.style.transform = 'rotate(0deg)';
+                icon.style.transform  = 'rotate(0deg)';
             }, 620);
-
+            
             // Actually fetch live records on clicking refresh
             fetchTableData();
         });
     }
-
+    
     // Automatically perform initial data fetch on setup
     fetchTableData();
 }
 
-window.allManagers = [];
-window.assignedManagerId = null;
+    window.allManagers = [];
+    window.assignedManagerId = null;
 
 async function fetchTableData() {
     const tbody = document.querySelector('.data-table tbody');
     if (!tbody) return;
-
+    
     try {
         // Show loading state immediately to provide visual feedback
         tbody.innerHTML = `
@@ -40,43 +40,43 @@ async function fetchTableData() {
         let filterParams = '';
         const monthVal = document.querySelector('#month-dropdown .selected-value')?.textContent;
         const yearVal = document.querySelector('#year-dropdown .selected-value')?.textContent;
-
+        
         if (monthVal && yearVal) {
             const monthNum = new Date(`${monthVal} 1, 2000`).getMonth() + 1;
             filterParams = `&month=${monthNum}&year=${yearVal}`;
         }
-
+    
         // Prevent browser caching using a timestamp so updates always show instantly
         const response = await fetch(`api_overtime.php?v=${Date.now()}${filterParams}`, { cache: "no-store" });
         const json = await response.json();
-
+        
         if (json.status === 'success' && json.data.length > 0) {
             window.allManagers = json.managers || [];
             window.assignedManagerId = json.assigned_manager_id;
-
+            
             tbody.innerHTML = ''; // Wipe out "Empty state"
-
+            
             let pendingRequests = 0;
             let approvedHours = 0;
             let rejectedRequests = 0;
             let expiredHours = 0;
             let totalOtHours = 0;
-
+            
             json.data.forEach(record => {
                 const tr = document.createElement('tr');
-
+                
                 // Cleanly format SQL DATE string to readable format
-                const fancyDate = new Date(record.submission_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
+                const fancyDate = new Date(record.submission_date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric'});
+                
                 // Truncate SQL TIME seconds ("18:00:00" -> "18:00")
                 const formatTime = (timeStr) => timeStr.substring(0, 5);
-
+                
                 // 1. Determine Badge styling and accumulate calculated stats based on UI logic
                 let badgeClass = 'badge-pending';
                 let statusName = (record.status || 'pending').charAt(0).toUpperCase() + (record.status || 'pending').slice(1);
-
+                
                 const isExplicitlyExpired = record.is_expired === true || record.is_expired === 1 || String(record.status).toLowerCase() === 'expired';
-
+                
                 let rowBgClass = '';
 
                 if (isExplicitlyExpired) {
@@ -85,20 +85,20 @@ async function fetchTableData() {
                     expiredHours += parseFloat(record.calculated_ot || 0);
                     rowBgClass = 'row-expired';
                 }
-                else if (record.status === 'approved') {
-                    badgeClass = 'badge-approved';
+                else if (record.status === 'approved') { 
+                    badgeClass = 'badge-approved'; 
                     statusName = 'Approved';
                     const hrs = parseFloat(record.accepted_ot !== null ? record.accepted_ot : record.calculated_ot);
                     approvedHours += hrs;
                     totalOtHours += hrs;
                     rowBgClass = 'row-approved';
                 }
-                else if (record.status === 'rejected') {
-                    badgeClass = 'badge-rejected';
+                else if (record.status === 'rejected') { 
+                    badgeClass = 'badge-rejected'; 
                     statusName = 'Rejected';
                     rejectedRequests++;
                     rowBgClass = 'row-rejected';
-                }
+                } 
                 else if (record.status === 'submitted') {
                     badgeClass = 'badge-submitted';
                     rowBgClass = 'row-submitted';
@@ -117,7 +117,7 @@ async function fetchTableData() {
                 if (record.status === 'pending' || record.status === 'submitted' || record.status === 'rejected') {
                     displayAccepted = record.calculated_ot;
                 }
-
+                
                 // NOT adding anything to totalOtHours here anymore because it's only for APPROVED now.
 
                 // Construct Row
@@ -140,22 +140,22 @@ async function fetchTableData() {
                 `;
                 tbody.appendChild(tr);
             });
-
+            
             // INSTANT SYNC PREVIOUSLY STATIC TOP STAT CARDS USING THE DYNAMIC DB SUMMARY
-            const pS = document.querySelector('.blue-card .stat-value');
-            if (pS) { pS.dataset.value = pendingRequests; pS.textContent = pendingRequests; }
-
-            const aS = document.querySelector('.green-card .stat-value');
-            if (aS) { aS.dataset.value = approvedHours.toFixed(1); aS.textContent = approvedHours.toFixed(1); }
-
-            const rS = document.querySelector('.red-card .stat-value');
-            if (rS) { rS.dataset.value = rejectedRequests; rS.textContent = rejectedRequests; }
+            const pS = document.querySelector('.blue-card .stat-value'); 
+            if(pS) { pS.dataset.value = pendingRequests; pS.textContent = pendingRequests; }
+            
+            const aS = document.querySelector('.green-card .stat-value'); 
+            if(aS) { aS.dataset.value = approvedHours.toFixed(1); aS.textContent = approvedHours.toFixed(1); }
+            
+            const rS = document.querySelector('.red-card .stat-value'); 
+            if(rS) { rS.dataset.value = rejectedRequests; rS.textContent = rejectedRequests; }
 
             const eS = document.querySelector('.yellow-card .stat-value');
-            if (eS) { eS.dataset.value = expiredHours.toFixed(1); eS.textContent = expiredHours.toFixed(1); }
+            if(eS) { eS.dataset.value = expiredHours.toFixed(1); eS.textContent = expiredHours.toFixed(1); }
 
             const tS = document.querySelector('.purple-card .stat-value');
-            if (tS) { tS.dataset.value = totalOtHours.toFixed(1); tS.textContent = totalOtHours.toFixed(1); }
+            if(tS) { tS.dataset.value = totalOtHours.toFixed(1); tS.textContent = totalOtHours.toFixed(1); }
 
             // Re-trigger premium numeric animation
             if (typeof window.animateCards === 'function') { window.animateCards(); }
@@ -171,17 +171,17 @@ async function fetchTableData() {
                     </td>
                 </tr>
             `;
-            const pS = document.querySelector('.blue-card .stat-value'); if (pS) { pS.dataset.value = 0; pS.textContent = '0'; }
-            const aS = document.querySelector('.green-card .stat-value'); if (aS) { aS.dataset.value = 0.0; aS.textContent = '0.0'; }
-            const rS = document.querySelector('.red-card .stat-value'); if (rS) { rS.dataset.value = 0; rS.textContent = '0'; }
-
-            const eS = document.querySelector('.yellow-card .stat-value'); if (eS) { eS.dataset.value = 0; eS.textContent = '0.0'; }
-            const tS = document.querySelector('.purple-card .stat-value'); if (tS) { tS.dataset.value = 0; tS.textContent = '0.0'; }
+            const pS = document.querySelector('.blue-card .stat-value'); if(pS) { pS.dataset.value = 0; pS.textContent = '0'; }
+            const aS = document.querySelector('.green-card .stat-value'); if(aS) { aS.dataset.value = 0.0; aS.textContent = '0.0'; }
+            const rS = document.querySelector('.red-card .stat-value'); if(rS) { rS.dataset.value = 0; rS.textContent = '0'; }
+            
+            const eS = document.querySelector('.yellow-card .stat-value'); if(eS) { eS.dataset.value = 0; eS.textContent = '0.0'; }
+            const tS = document.querySelector('.purple-card .stat-value'); if(tS) { tS.dataset.value = 0; tS.textContent = '0.0'; }
 
         } else if (json.status === 'error') {
             tbody.innerHTML = `<tr><td colspan="9" class="empty-cell" style="padding:40px;"><div style="color:var(--text-muted);"><i>Database error: ${json.message || 'Unknown error occurred.'}</i></div></td></tr>`;
         }
-
+        
     } catch (err) {
         console.error("Could not fetch API successfully. Is MySQL offline?", err);
     }
@@ -234,7 +234,7 @@ function setupSendModal() {
         </div>
     </div>
     `;
-
+    
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
     const modal = document.getElementById('ot-send-modal');
@@ -252,29 +252,29 @@ function setupSendModal() {
         const text = input.value.trim();
         const words = text === "" ? 0 : text.split(/\s+/).length;
         wordCount.textContent = `${words} / 15 words`;
-        wordCount.style.color = (words >= 15) ? '#10b981' : '#ef4444';
+        wordCount.style.color = (words >= 15) ? '#10b981' : '#ef4444'; 
     });
 
     // Handle form submission mapped seamlessly back to the database
     submitBtn.addEventListener('click', async () => {
         const text = input.value.trim();
         const words = text === "" ? 0 : text.split(/\s+/).length;
-
+        
         if (words < 15) { alert("Your report is too short. Please write at least 15 words. (Current count: " + words + ")"); return; }
 
         const recordId = submitBtn.dataset.recordId;
         const managerId = document.getElementById('ot-manager-select').value;
-
+        
         if (!managerId) { alert("Please select a manager for approval."); return; }
 
         // Switch to "Sending" Animation State
         const modalContainer = document.querySelector('.ot-modal-content');
-        const mainElements = modalContainer.querySelectorAll('.ot-details, .manager-selection, div:has(textarea), #ot-submit-btn, label, h3');
+        const mainElements = modalContainer.querySelectorAll('.ot-details, .manager-selection, div:has(textarea), #ot-submit-btn, label, h3'); 
         const successView = document.getElementById('ot-success-view');
 
         // Capture original states to hide them
         const originalDisplay = [];
-        mainElements.forEach(el => {
+        mainElements.forEach(el => { 
             if (el.id !== 'ot-success-view' && !el.closest('#ot-success-view')) {
                 originalDisplay.push({ el, display: el.style.display });
                 el.style.display = 'none';
@@ -298,15 +298,15 @@ function setupSendModal() {
             fd.append('manager_id', managerId);
             const res = await fetch('api_submit_overtime.php', { method: 'POST', body: fd, cache: 'no-store' });
             const result = await res.json();
-
+            
             loadingMsg.remove();
 
             if (result.status === 'success') {
                 successView.style.display = 'flex';
                 // Attach close logic
                 document.getElementById('ot-ok-btn').onclick = () => {
-                    document.getElementById('ot-send-modal').style.display = 'none';
-                    fetchTableData(); // Refresh the list
+                   document.getElementById('ot-send-modal').style.display = 'none';
+                   fetchTableData(); // Refresh the list
                 };
             } else {
                 // Restore UI on error
@@ -326,10 +326,10 @@ document.addEventListener('click', (e) => {
     const sendBtn = e.target.closest('.send-btn');
     const viewBtn = e.target.closest('.view-btn');
     const resubmitBtn = e.target.closest('.resubmit-btn');
-
+    
     if (sendBtn || viewBtn || resubmitBtn) {
         setupSendModal();
-
+        
         const btn = sendBtn || viewBtn || resubmitBtn;
         const record = JSON.parse(btn.dataset.record);
         const modal = document.getElementById('ot-send-modal');
@@ -370,7 +370,7 @@ document.addEventListener('click', (e) => {
             });
         }
 
-        const fancyDate = new Date(record.submission_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const fancyDate = new Date(record.submission_date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric'});
         const workReport = record.work_report ? record.work_report.replace(/"/g, '&quot;') : 'No daily report available';
 
         // 1. Update Core Details
@@ -380,8 +380,8 @@ document.addEventListener('click', (e) => {
                 <span><strong>OT Hours:</strong> ${record.calculated_ot}h</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
-                <span><strong>Shift End:</strong> ${record.end_time.substring(0, 5)}</span> 
-                <span><strong>Punch Out:</strong> ${record.punch_out_time.substring(0, 5)}</span>
+                <span><strong>Shift End:</strong> ${record.end_time.substring(0,5)}</span> 
+                <span><strong>Punch Out:</strong> ${record.punch_out_time.substring(0,5)}</span>
             </div>
             <div style="border-top: 1px solid rgba(0,0,0,0.05); padding-top: 8px; margin-bottom: 8px;">
                 <strong style="color:var(--text-primary);">Daily Work Report:</strong>
@@ -400,7 +400,7 @@ document.addEventListener('click', (e) => {
         }
 
         details.innerHTML = detailHTML;
-
+        
         // 2. Handle View vs Submit Mode
         const isExplicitlyExpired = record.is_expired === true || record.is_expired === 1 || String(record.status).toLowerCase() === 'expired';
         const currentResubmits = parseInt(record.resubmit_count) || 0;
@@ -413,7 +413,7 @@ document.addEventListener('click', (e) => {
             input.disabled = true;
             mgrSelect.disabled = true;
             wordCount.style.display = 'none';
-
+            
             // Adjust Submit button for visibility only OR hide it
             if (isClosed) {
                 const statusLabel = isExplicitlyExpired ? 'Expired' : record.status.charAt(0).toUpperCase() + record.status.slice(1);
@@ -435,7 +435,7 @@ document.addEventListener('click', (e) => {
             wordCount.style.display = 'block';
             submitBtn.style.display = 'inline-flex';
             submitBtn.disabled = false;
-
+            
             if (record.status === 'rejected') {
                 const currentResubmits = parseInt(record.resubmit_count) || 0;
                 if (currentResubmits >= 2) {

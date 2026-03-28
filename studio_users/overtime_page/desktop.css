@@ -33,12 +33,12 @@
         grid-template-columns: repeat(3, 1fr);
         gap: 14px;
     }
-
+    
     .filters-grid {
         grid-template-columns: repeat(2, 1fr);
         align-items: end;
     }
-
+    
     .filter-actions {
         grid-column: span 2;
         display: flex;

@@ -1,0 +1,76 @@
+/* ─── Summary Stats Grid ──────────────────────────── */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 1100px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px)  { .summary-grid { grid-template-columns: 1fr; } }
+
+.stat-card {
+    border-radius: var(--radius-md);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid transparent;
+    transition: transform var(--t-fast), box-shadow var(--t-fast);
+    position: relative;
+    overflow: hidden;
+}
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Colour themes */
+.stat-card.blue   { background: var(--clr-blue-light);   border-color: #bfdbfe; }
+.stat-card.green  { background: var(--clr-green-light);  border-color: #a7f3d0; }
+.stat-card.cyan   { background: var(--clr-cyan-light);   border-color: #a5f3fc; }
+.stat-card.amber  { background: var(--clr-amber-light);  border-color: #fde68a; }
+
+.stat-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+.stat-card.blue   .stat-label { color: var(--clr-blue); }
+.stat-card.green  .stat-label { color: var(--clr-green); }
+.stat-card.cyan   .stat-label { color: var(--clr-cyan); }
+.stat-card.amber  .stat-label { color: var(--clr-amber); }
+
+.stat-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #fff;
+    flex-shrink: 0;
+}
+.stat-card.blue   .stat-icon { background: var(--clr-blue); }
+.stat-card.green  .stat-icon { background: var(--clr-green); }
+.stat-card.cyan   .stat-icon { background: var(--clr-cyan); }
+.stat-card.amber  .stat-icon { background: var(--clr-amber); }
+
+.stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+}
+.stat-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}

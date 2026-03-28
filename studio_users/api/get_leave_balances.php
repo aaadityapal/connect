@@ -23,6 +23,40 @@ try {
     $stmt->execute([$user_id, $year]);
     $balances = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    $uStmt = $pdo->prepare("SELECT joining_date FROM users WHERE id = ?");
+    $uStmt->execute([$user_id]);
+    $userRow = $uStmt->fetch(PDO::FETCH_ASSOC);
+
+    $isEligibleForParental = false;
+    $parentalLockMessage = '';
+    if ($userRow && !empty($userRow['joining_date'])) {
+        $joinDate = new DateTime($userRow['joining_date']);
+        $oneYearLater = clone $joinDate;
+        $oneYearLater->modify('+365 days');
+        $today = new DateTime();
+        $oneYearLater->setTime(0, 0, 0);
+        $today->setTime(0, 0, 0);
+        
+        if ($today >= $oneYearLater) {
+            $isEligibleForParental = true;
+        } else {
+            $diff = $today->diff($oneYearLater);
+            $parentalLockMessage = "Opens in " . $diff->days . " days";
+        }
+    } else {
+        $parentalLockMessage = "Opens after 1 year";
+    }
+
+    foreach ($balances as &$b) {
+        $b['is_locked'] = false;
+        $b['lockMessage'] = '';
+        $nameStr = strtolower($b['leave_type']);
+        if ((strpos($nameStr, 'maternity') !== false || strpos($nameStr, 'paternity') !== false) && !$isEligibleForParental) {
+            $b['is_locked'] = true;
+            $b['lockMessage'] = $parentalLockMessage;
+        }
+    }
+
     // 2. Fetch usage for the selected month/year
     // $month is 0-indexed, so Jan = 0. DateTime handles this.
     $dateObj = new DateTime("$year-" . ($month + 1) . "-01");

@@ -1,0 +1,15 @@
+<div class="section-card trend-section">
+    <div class="card-header-row">
+        <div class="card-title-left">
+            <span class="vertical-accent"></span>
+            <h3>Performance Trend</h3>
+        </div>
+        <div class="toggle-group">
+            <button class="toggle-btn active" id="btn-6m" onclick="updateTrend('6M', this)">6 Months</button>
+            <button class="toggle-btn" id="btn-12m" onclick="updateTrend('12M', this)">12 Months</button>
+        </div>
+    </div>
+    <div class="chart-wrap">
+        <canvas id="performanceTrendChart"></canvas>
+    </div>
+</div>

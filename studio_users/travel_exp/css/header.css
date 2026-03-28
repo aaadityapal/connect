@@ -1,0 +1,68 @@
+/* ─── Page Header Banner ─────────────────────────────────── */
+.page-header {
+  background: 
+    radial-gradient(circle at 90% -20%, rgba(249,115,22,0.18) 0%, transparent 140px),
+    radial-gradient(circle at 20% 150%, rgba(59,130,246,0.15) 0%, transparent 120px),
+    linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: var(--border-radius-lg);
+  padding: 10px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 1;
+}
+.breadcrumb {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.breadcrumb span.sep { color: #475569; }
+.breadcrumb span.active { color: #cbd5e1; }
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.4px;
+}
+.page-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1;
+}
+
+.month-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 8px;
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.month-badge:hover { background: rgba(255,255,255,0.14); }
+.month-badge i { color: var(--clr-orange); }

@@ -1,0 +1,45 @@
+<div class="two-col">
+    <!-- Task Status Distribution -->
+    <div class="section-card">
+        <div class="card-header-row">
+            <div class="card-title-left">
+                <span class="vertical-accent"></span>
+                <h3>Task Status Distribution</h3>
+            </div>
+        </div>
+        <div class="pie-container" style="display: flex; gap: 32px; align-items: center; justify-content: center; height: 260px;">
+            <div class="pie-wrap" style="flex: 1; height: 100%; position: relative; max-width: 220px; margin: 0; filter: drop-shadow(0px 8px 16px rgba(0,0,0,0.06));">
+                <canvas id="statusPieChart"></canvas>
+            </div>
+            <div id="pie-details" style="flex: 1.5; display: flex; flex-direction: column; justify-content: center; padding-right:12px;">
+                <!-- Detailed legends injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Suggestions -->
+    <div class="section-card ai-section">
+        <div class="card-header-row">
+            <div class="card-title-left">
+                <span class="vertical-accent"></span>
+                <h3>Performance Improvement Suggestions By A.I. 👽</h3>
+            </div>
+        </div>
+
+        <div class="ai-alert-box">
+            <div class="ai-alert-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="ai-alert-body">
+                <div class="ai-alert-title">
+                    Critical Efficiency Alert
+                    <span class="urgent-tag">Urgent</span>
+                </div>
+                <p>
+                    Your on-time completion rate is <strong>0%</strong>. Focus on time estimation.
+                    Set personal deadlines <strong>2–3 days</strong> before official deadlines.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

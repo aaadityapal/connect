@@ -11,7 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $input = json_decode(file_get_contents('php://input'), true);
 $managerId = $input['manager_id'] ?? null;
-$subordinates = $input['subordinates'] ?? [];
+$subordinates = $input['subordinates'] ?? []; 
 
 if (!$managerId) {
     echo json_encode(['success' => false, 'error' => 'Manager ID is required']);
@@ -30,8 +30,8 @@ try {
         $insertData = [];
         $placeholders = [];
         foreach ($subordinates as $subId) {
-            $insertData[] = (int) $subId;
-            $insertData[] = (int) $managerId;
+            $insertData[] = (int)$subId;
+            $insertData[] = (int)$managerId;
             $placeholders[] = "(?, ?)";
         }
         $bulkSql = "INSERT INTO overtime_approval_mapping (employee_id, manager_id) VALUES " . implode(', ', $placeholders);

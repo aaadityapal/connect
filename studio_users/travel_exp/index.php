@@ -7,13 +7,12 @@ if (!isset($_SESSION['user_id'])) {
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel Expenses Tracker</title>
     <meta name="description" content="Submit, track, and manage all your travel reimbursements in one place.">
-
+    
     <!-- Sidebar Requirements -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script>
@@ -23,7 +22,7 @@ if (!isset($_SESSION['user_id'])) {
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
+    
     <!-- Modular CSS -->
     <link rel="stylesheet" href="css/global.css">
     <link rel="stylesheet" href="css/header.css">
@@ -41,7 +40,6 @@ if (!isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 </head>
-
 <body>
     <div class="dashboard-container">
         <!-- Sidebar injected here -->
@@ -67,5 +65,4 @@ if (!isset($_SESSION['user_id'])) {
 
     <script src="js/app.js"></script>
 </body>
-
 </html>

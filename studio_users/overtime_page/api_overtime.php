@@ -10,13 +10,13 @@ if (!isset($_SESSION['user_id'])) {
 require_once '../../config/db_connect.php';
 
 $user_id = $_SESSION['user_id'];
-$month = isset($_GET['month']) ? (int) $_GET['month'] : null;
-$year = isset($_GET['year']) ? (int) $_GET['year'] : null;
+$month = isset($_GET['month']) ? (int)$_GET['month'] : null;
+$year = isset($_GET['year']) ? (int)$_GET['year'] : null;
 
 try {
     $whereClause = "WHERE a.user_id = :user_id AND a.punch_out IS NOT NULL";
     $params = [':user_id' => $user_id];
-
+    
     if ($month && $year) {
         $whereClause .= " AND MONTH(a.date) = :month AND YEAR(a.date) = :year";
         $params[':month'] = $month;
@@ -52,7 +52,7 @@ try {
         $whereClause
         ORDER BY a.date DESC
     ";
-
+    
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
     $records = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -66,11 +66,11 @@ try {
 
         $shiftEnd = strtotime($row['end_time']);
         $punchOut = strtotime($row['punch_out_time']);
-
+        
         // Check if punched out after shift ended
         if ($punchOut > $shiftEnd) {
             $diffMins = floor(($punchOut - $shiftEnd) / 60);
-
+            
             // Overtime countable only after 1 hour and 30 minutes (90 mins).
             // Example:
             // 90 mins (1h 30m) = 1.5 hr OT
@@ -79,14 +79,14 @@ try {
             if ($diffMins >= 90) {
                 // Determine the chunks of 30 minutes: 90 / 30 = 3; 3 * 0.5 = 1.5 hrs
                 $calculatedOt = floor($diffMins / 30) * 0.5;
-
+                
                 $acceptedOtDec = floatval($row['accepted_ot_decimal'] ?? 0);
 
                 $isExpired = false;
                 $rawStatus = isset($row['raw_status']) ? trim(strtolower($row['raw_status'])) : 'pending';
-
+                
                 // If it's more than 15 days old and not strictly finalized (approved/rejected)
-                if ((int) $row['db_expired'] === 1) {
+                if ((int)$row['db_expired'] === 1) {
                     if ($rawStatus !== 'approved' && $rawStatus !== 'rejected') {
                         $isExpired = true;
                     }
@@ -108,7 +108,7 @@ try {
                     'overtime_actioned_at' => $row['overtime_actioned_at'],
                     'debug_days_old' => $row['db_expired'],
                     'rejection_reason' => $row['reason'] ?: '',
-                    'resubmit_count' => (int) $row['resubmit_count']
+                    'resubmit_count' => (int)$row['resubmit_count']
                 ];
             }
         }
@@ -122,10 +122,10 @@ try {
     $mapStmt = $pdo->prepare("SELECT manager_id FROM overtime_approval_mapping WHERE employee_id = :uid LIMIT 1");
     $mapStmt->execute([':uid' => $user_id]);
     $userMap = $mapStmt->fetch(PDO::FETCH_ASSOC);
-    $mappedManagerId = $userMap ? (int) $userMap['manager_id'] : null;
+    $mappedManagerId = $userMap ? (int)$userMap['manager_id'] : null;
 
     echo json_encode([
-        'status' => 'success',
+        'status' => 'success', 
         'data' => $results,
         'managers' => $allManagers,
         'assigned_manager_id' => $mappedManagerId

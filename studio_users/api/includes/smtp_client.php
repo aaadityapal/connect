@@ -31,19 +31,34 @@ class MinimalSmtpClient {
 
     private function sendCommand($command) {
         fputs($this->socket, $command . "\r\n");
-        return $this->getServerResponse();
+        $response = $this->getServerResponse();
+        $code = (int)substr($response, 0, 3);
+        if ($code >= 400) {
+            // Mask the command in the error message to avoid leaking passwords if it's an AUTH step
+            throw new Exception("SMTP Error: $response");
+        }
+        return $response;
     }
 
     public function send($to, $subject, $message) {
         $remote = 'ssl://' . $this->host . ':' . $this->port;
-        $this->socket = stream_socket_client($remote, $errno, $errstr, 15);
+        
+        $context = stream_context_create([
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            ]
+        ]);
+        
+        $this->socket = stream_socket_client($remote, $errno, $errstr, 15, STREAM_CLIENT_CONNECT, $context);
         
         if (!$this->socket) {
             throw new Exception("Connection failed: $errstr ($errno)");
         }
 
         $this->getServerResponse();
-        $this->sendCommand("EHLO " . $_SERVER['SERVER_NAME']);
+        $this->sendCommand("EHLO localhost");
         $this->sendCommand("AUTH LOGIN");
         $this->sendCommand(base64_encode($this->username));
         $this->sendCommand(base64_encode($this->password));
@@ -57,6 +72,7 @@ class MinimalSmtpClient {
         $headers .= "From: " . $this->fromName . " <" . $this->fromEmail . ">\r\n";
         $headers .= "Subject: " . $subject . "\r\n";
         $headers .= "Date: " . date("r") . "\r\n";
+        $headers .= "Message-ID: <" . uniqid() . "@" . (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'architectshive.com') . ">\r\n";
         $headers .= "X-Mailer: ConnectStudio/1.0\r\n";
 
         $fullMsg = $headers . "\r\n" . $message . "\r\n.";

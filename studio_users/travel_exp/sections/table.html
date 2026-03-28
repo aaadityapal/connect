@@ -1,0 +1,51 @@
+<div class="table-wrapper">
+
+    <!-- Toolbar above table -->
+    <div class="table-toolbar">
+        <div class="table-toolbar-left">
+            <h3>My Travel Expenses</h3>
+            <p>All submitted expense claims for this period</p>
+        </div>
+        <button id="btn-add-expense" class="btn btn-primary btn-pill">
+            <i class="fa-solid fa-plus"></i> Add Travel Expense
+        </button>
+    </div>
+
+    <!-- Table card -->
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Purpose</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Mode</th>
+                        <th>Distance</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="expense-table-body">
+                    <tr>
+                        <td colspan="10" style="padding:0;">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">
+                                    <i class="fa-solid fa-car-side"></i>
+                                </div>
+                                <div class="empty-state-title">No travel expenses found</div>
+                                <div class="empty-state-text">
+                                    Click <strong>Add Travel Expense</strong> to submit your first claim
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

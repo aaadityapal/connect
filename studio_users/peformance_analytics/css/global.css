@@ -1,0 +1,269 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* =====================================================
+   DESIGN TOKENS
+   ===================================================== */
+:root {
+    /* Backgrounds */
+    --bg-base:      #f4f5f7;
+    --bg-surface:   #ffffff;
+    --bg-muted:     #f0f2f5;
+    --bg-hover:     #f8f9fb;
+
+    /* Brand */
+    --clr-orange:       #f97316;
+    --clr-orange-dark:  #ea6c0a;
+    --clr-orange-light: #fff7ed;
+
+    --clr-blue:         #3b82f6;
+    --clr-blue-dark:    #2563eb;
+    --clr-blue-light:   #eff6ff;
+
+    --clr-green:        #10b981;
+    --clr-green-light:  #ecfdf5;
+
+    --clr-purple:       #8b5cf6;
+    --clr-purple-light: #f5f3ff;
+
+    --clr-amber:        #f59e0b;
+    --clr-amber-light:  #fffbeb;
+
+    --clr-red:          #ef4444;
+    --clr-red-light:    #fef2f2;
+
+    --clr-teal:         #14b8a6;
+    --clr-teal-light:   #f0fdfa;
+
+    --clr-cyan:         #06b6d4;
+    --clr-cyan-light:   #ecfeff;
+
+    /* Text */
+    --text-primary:   #111827;
+    --text-secondary: #4b5563;
+    --text-muted:     #9ca3af;
+    --text-white:     #ffffff;
+
+    /* Borders */
+    --border-color:     #e2e8f0;
+    --border-light:     #e9eaec;
+    --border-mid:       #d1d5db;
+
+    /* Geometry */
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --pill:      9999px;
+
+    /* Shadows */
+    --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.09);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+
+    /* Transitions */
+    --ease: cubic-bezier(0.25, 1, 0.5, 1);
+    --t-fast: 0.15s var(--ease);
+    --t-med:  0.22s var(--ease);
+}
+
+/* =====================================================
+   RESET
+   ===================================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+/* ─── Custom Scrollbar ─────────────────────────────── */
+::-webkit-scrollbar           { width: 7px; height: 7px; }
+::-webkit-scrollbar-track     { background: #f1f5f9; border-radius: 6px; }
+::-webkit-scrollbar-thumb     { background: #cbd5e1; border-radius: 6px; border: 2px solid #f1f5f9; }
+::-webkit-scrollbar-thumb:hover{ background: #94a3b8; }
+* { scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9; }
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    animation: fadeUp 0.35s var(--ease) both;
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── App Container ──────────────────────────────── */
+.app-container {
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 28px 32px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+/* ─── Section Cards ──────────────────────────────── */
+.section-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow-xs);
+}
+
+/* ─── Card Header Row ────────────────────────────── */
+.card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--bg-muted);
+}
+
+.card-title-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.card-title-left h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.card-title-right {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ─── Orange Vertical Accent Bar ─────────────────── */
+.vertical-accent {
+    width: 3px;
+    height: 18px;
+    border-radius: var(--pill);
+    background: var(--clr-orange);
+    flex-shrink: 0;
+}
+
+/* ─── Shared Buttons ─────────────────────────────── */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 18px;
+    font-size: 13.5px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background var(--t-fast), transform 0.12s, box-shadow var(--t-fast);
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+    text-decoration: none;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-blue {
+    background: var(--clr-blue);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+    border: none;
+}
+.btn-blue:hover { background: var(--clr-blue-dark); }
+
+.btn-orange {
+    background: var(--clr-orange);
+    color: #fff;
+    border-radius: var(--pill);
+    border: none;
+    box-shadow: 0 4px 14px rgba(249,115,22,0.35);
+    font-weight: 600;
+}
+.btn-orange:hover { background: var(--clr-orange-dark); box-shadow: 0 6px 20px rgba(249,115,22,0.45); }
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+.btn-ghost:hover { background: #f8fafc; }
+
+/* ─── Badge ──────────────────────────────────────── */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: var(--pill);
+    font-size: 12px;
+    font-weight: 600;
+}
+.badge-approved { background: var(--clr-green-light); color: var(--clr-green); border: 1px solid #a7f3d0; }
+.badge-pending  { background: var(--clr-amber-light);  color: var(--clr-amber);  border: 1px solid #fde68a; }
+.badge-rejected { background: var(--clr-red-light);    color: var(--clr-red);    border: 1px solid #fecaca; }
+
+/* ─── Icon Action Buttons ────────────────────────── */
+.icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all var(--t-fast);
+}
+.icon-btn.view-btn   { color: #3b82f6; border-color: #dbeafe; background: #eff6ff; }
+.icon-btn.edit-btn   { color: #f59e0b; border-color: #fef3c7; background: #fffbeb; }
+.icon-btn.delete-btn { color: #ef4444; border-color: #fee2e2; background: #fef2f2; }
+.icon-btn:hover { filter: brightness(0.93); transform: scale(1.05); }
+
+/* ─── Empty State ────────────────────────────────── */
+.empty-state {
+    padding: 60px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+}
+.empty-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--bg-muted);
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: var(--text-muted);
+}
+.empty-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); }
+.empty-desc  { font-size: 13px; color: var(--text-muted); }
+
+/* ─── Utility ────────────────────────────────────── */
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+
+/* Two-column layout — collapses to 1 col when a child is hidden */
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    align-items: start;  /* prevents empty space when one panel is hidden */
+}
+.two-col > [style*="display: none"] { display: none !important; }
+/* When only one child is visible, span it full width */
+.two-col:has(> *:only-of-type:not([style*="display: none"])) {
+    grid-template-columns: 1fr;
+}
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr !important; } }

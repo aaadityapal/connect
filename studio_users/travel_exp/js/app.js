@@ -14,16 +14,16 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     Promise.all([
-        loadSection("header-container", "sections/header.html"),
+        loadSection("header-container",  "sections/header.html"),
         loadSection("summary-container", "sections/summary.html"),
-        loadSection("filter-container", "sections/filter.html"),
-        loadSection("table-container", "sections/table.html"),
-        loadSection("modals-container", "sections/modals.html")
+        loadSection("filter-container",  "sections/filter.html"),
+        loadSection("table-container",   "sections/table.html"),
+        loadSection("modals-container",  "sections/modals.html")
     ]).then(() => {
         initializeInteractions();
         initMonthPicker();
         initModals();
-        fetchExpenses();
+        fetchExpenses(); 
     });
 });
 
@@ -64,7 +64,7 @@ async function fetchExpenses() {
 let tableData = [];
 
 // Tracks which row is being edited or deleted
-let activeEditId = null;
+let activeEditId   = null;
 let activeDeleteId = null;
 
 // ── Status Alert Modal (Higher Z-index than main modals)
@@ -73,9 +73,9 @@ function showStatusAlert(msg, title = "Attention") {
     if (!alertModal) {
         alertModal = document.createElement("div");
         alertModal.id = "status-alert-modal";
-        alertModal.className = "modal-overlay";
+        alertModal.className = "modal-overlay"; 
         alertModal.style.cssText = "position:fixed; inset:0; z-index:40000 !important; background:rgba(15,23,42,0.6); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; padding: 20px;";
-
+        
         alertModal.innerHTML = `
             <div class="modal-content" style="max-width: 420px; width: 100%; border-radius: 24px; padding: 0 !important; overflow: hidden; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: statusBounce 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); background: #ffffff;">
                 <style>
@@ -108,14 +108,14 @@ function showStatusAlert(msg, title = "Attention") {
 // Leaflet & Role specific
 let routingControl = null;
 let leafletMap = null;
-let userRequiresMeters = false;
+let userRequiresMeters = false; 
 let transportRates = {}; // { 'Car': 10, 'Bike': 5, ... }
 
 /* ═══════════════════════════════════════════════
    MONTH PICKER (Header badge)
 ═══════════════════════════════════════════════ */
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-let pickerYear = 2026;
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+let pickerYear  = 2026;
 let pickerMonth = "March"; // default
 
 function initMonthPicker() {
@@ -144,7 +144,7 @@ function initMonthPicker() {
 
 function buildPickerUI() {
     const yearLabel = document.getElementById("picker-year-label");
-    const grid = document.getElementById("picker-months-grid");
+    const grid      = document.getElementById("picker-months-grid");
     if (!yearLabel || !grid) return;
 
     yearLabel.textContent = pickerYear;
@@ -161,7 +161,7 @@ function buildPickerUI() {
             // Update the badge label
             const badgeText = document.getElementById("badge-text");
             if (badgeText) badgeText.textContent = `Showing ${pickerMonth} ${pickerYear}`;
-
+            
             document.getElementById("month-dropdown").classList.remove("open");
             applyFilters();
         });
@@ -207,10 +207,10 @@ function initCustomSelects() {
                     hiddenInput = select.querySelector("input[type='hidden']");
                 }
                 const valueSpan = select.querySelector(".select-value");
-
+                
                 select.querySelectorAll(".select-item").forEach(i => i.classList.remove("active"));
                 item.classList.add("active");
-
+                
                 if (hiddenInput) {
                     hiddenInput.value = item.dataset.value;
                     hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
@@ -234,23 +234,23 @@ function updateSummaryStats(filteredData) {
     // If filteredData is provided, use it. Otherwise use the default tableData for the selected month/year.
     const internalData = filteredData || tableData.filter(item => {
         const monthsMap = {
-            "January": "01", "February": "02", "March": "03", "April": "04",
-            "May": "05", "June": "06", "July": "07", "August": "08",
-            "September": "09", "October": "10", "November": "11", "December": "12"
+            "January":"01","February":"02","March":"03","April":"04",
+            "May":"05","June":"06","July":"07","August":"08",
+            "September":"09","October":"10","November":"11","December":"12"
         };
         const monthNum = monthsMap[pickerMonth];
         return (item.date.substring(0, 4) === pickerYear.toString() && item.date.substring(5, 7) === monthNum);
     });
 
     let stats = { count: 0, total: 0, approved: 0, paid: 0, pending: 0, rejected: 0 };
-
+    
     internalData.forEach(item => {
         stats.count++;
         const amt = parseFloat(item.amount);
         stats.total += amt;
-
+        
         let isPaid = (item.payment_status && item.payment_status.toLowerCase() === 'paid');
-
+        
         if (isPaid) stats.paid += amt;
         else if (item.status === 'approved') stats.approved += amt;
         else if (item.status === 'pending') stats.pending += amt;
@@ -260,10 +260,10 @@ function updateSummaryStats(filteredData) {
     // Update DOM
     const safeFmt = (val) => "₹" + val.toLocaleString("en-IN", { minimumFractionDigits: 2 });
     const el = (id) => document.getElementById(id);
-
-    if (el('summary-month-text')) {
+    
+    if(el('summary-month-text')) {
         const dateFrom = document.getElementById("filter-date-from")?.value;
-        const dateTo = document.getElementById("filter-date-to")?.value;
+        const dateTo   = document.getElementById("filter-date-to")?.value;
         if (dateFrom || dateTo) {
             el('summary-month-text').textContent = "Filtered Period";
         } else {
@@ -271,23 +271,23 @@ function updateSummaryStats(filteredData) {
         }
     }
 
-    if (el('stat-count')) el('stat-count').textContent = stats.count;
-    if (el('stat-total')) el('stat-total').textContent = safeFmt(stats.total);
-    if (el('stat-approved')) el('stat-approved').textContent = safeFmt(stats.approved);
-    if (el('stat-paid')) el('stat-paid').textContent = safeFmt(stats.paid);
-    if (el('stat-pending')) el('stat-pending').textContent = safeFmt(stats.pending);
-    if (el('stat-rejected')) el('stat-rejected').textContent = safeFmt(stats.rejected);
+    if(el('stat-count'))    el('stat-count').textContent    = stats.count;
+    if(el('stat-total'))    el('stat-total').textContent    = safeFmt(stats.total);
+    if(el('stat-approved')) el('stat-approved').textContent = safeFmt(stats.approved);
+    if(el('stat-paid'))     el('stat-paid').textContent     = safeFmt(stats.paid);
+    if(el('stat-pending'))  el('stat-pending').textContent  = safeFmt(stats.pending);
+    if(el('stat-rejected')) el('stat-rejected').textContent = safeFmt(stats.rejected);
 }
 
 function applyFilters() {
     const statusVal = (document.getElementById("filter-status")?.value || "").toLowerCase();
-    const dateFrom = document.getElementById("filter-date-from")?.value || "";
-    const dateTo = document.getElementById("filter-date-to")?.value || "";
+    const dateFrom  = document.getElementById("filter-date-from")?.value || "";
+    const dateTo    = document.getElementById("filter-date-to")?.value || "";
 
     const monthsMap = {
-        "January": "01", "February": "02", "March": "03", "April": "04",
-        "May": "05", "June": "06", "July": "07", "August": "08",
-        "September": "09", "October": "10", "November": "11", "December": "12"
+        "January":"01","February":"02","March":"03","April":"04",
+        "May":"05","June":"06","July":"07","August":"08",
+        "September":"09","October":"10","November":"11","December":"12"
     };
 
     const filtered = tableData.filter(item => {
@@ -299,11 +299,11 @@ function applyFilters() {
             }
             if (itemFinalStatus !== statusVal) return false;
         }
-
+        
         // 2. Date Filter (If dates provided, ignore the header month badge)
         if (dateFrom || dateTo) {
             if (dateFrom && new Date(item.date) < new Date(dateFrom)) return false;
-            if (dateTo && new Date(item.date) > new Date(dateTo)) return false;
+            if (dateTo   && new Date(item.date) > new Date(dateTo))   return false;
         } else {
             // Default: Filter by the current pickerYear and pickerMonth from header
             const monthNum = monthsMap[pickerMonth];
@@ -321,7 +321,7 @@ function resetFilters() {
     const s = document.getElementById("filter-status");
     const f = document.getElementById("filter-date-from");
     const t = document.getElementById("filter-date-to");
-
+    
     if (s) {
         s.value = "";
         const cSelect = document.querySelector('.custom-select[data-target="filter-status"]');
@@ -332,10 +332,10 @@ function resetFilters() {
             if (first) first.classList.add("active");
         }
     }
-
+    
     if (f) f.value = "";
     if (t) t.value = "";
-
+    
     applyFilters();
 }
 
@@ -374,10 +374,10 @@ function renderTable(dataArray) {
         }
         const badgeClass = `badge badge-${finalStatus}`;
         const statusText = finalStatus.charAt(0).toUpperCase() + finalStatus.slice(1);
-        const isLocked = item.manager_status === 'approved' ||
-            item.accountant_status === 'approved' ||
-            item.hr_status === 'approved' ||
-            item.status === 'approved';
+        const isLocked = item.manager_status === 'approved' || 
+                         item.accountant_status === 'approved' || 
+                         item.hr_status === 'approved' || 
+                         item.status === 'approved';
 
         return `
             <tr>
@@ -407,7 +407,7 @@ function renderTable(dataArray) {
     // Attach row-level action events
     tbody.querySelectorAll(".action-btn-custom.view").forEach(b => b.addEventListener("click", () => openViewModal(b.dataset.id)));
     tbody.querySelectorAll(".action-btn-custom.edit").forEach(b => b.addEventListener("click", () => openEditModal(b.dataset.id)));
-    tbody.querySelectorAll(".action-btn-custom.del").forEach(b => b.addEventListener("click", () => openDeleteModal(b.dataset.id)));
+    tbody.querySelectorAll(".action-btn-custom.del") .forEach(b => b.addEventListener("click", () => openDeleteModal(b.dataset.id)));
 }
 
 /* ═══════════════════════════════════════════════
@@ -471,7 +471,7 @@ function initModals() {
                 // All other combinations require a photo.
                 let showAsterisk = true;
                 if (!userRequiresMeters && isVehicle) {
-                    showAsterisk = false;
+                    showAsterisk = false; 
                 }
                 form.querySelectorAll(".add-photo-field label .req").forEach(req => {
                     req.style.display = showAsterisk ? "inline" : "none";
@@ -515,7 +515,7 @@ function initModals() {
         formsContainer.addEventListener("input", e => {
             if (e.target.classList.contains("e-distance") || e.target.classList.contains("e-amount") || e.target.classList.contains("e-purpose")) {
                 const form = e.target.closest(".expense-entry-form");
-
+                
                 if (e.target.classList.contains("e-distance")) {
                     e.target.dataset.manual = "true"; // Flag as manually edited
                     updateAmountBasedOnDistance(form);
@@ -540,7 +540,7 @@ function initModals() {
     });
 }
 
-function openModal(id) { document.getElementById(id)?.classList.add("open"); }
+function openModal(id)  { document.getElementById(id)?.classList.add("open"); }
 function closeModal(id) { document.getElementById(id)?.classList.remove("open"); }
 
 // ── VIEW
@@ -548,15 +548,15 @@ function openViewModal(id) {
     const item = tableData.find(r => r.id === id);
     if (!item) return;
     const statusText = item.status.charAt(0).toUpperCase() + item.status.slice(1);
-
+    
     // Format date roughly like '3/6/2026'
     let dateStr = item.date;
     try {
         const d = new Date(item.date);
         if (!isNaN(d.getTime())) {
-            dateStr = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+            dateStr = `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
         }
-    } catch (e) { }
+    } catch(e){}
 
     const isAppr = item.status === 'approved';
     const mainIcon = isAppr ? 'circle-check' : (item.status === 'rejected' ? 'circle-xmark' : 'hourglass-half');
@@ -656,11 +656,11 @@ function openViewModal(id) {
                 <h5 class="ev-section-title">Attachments</h5>
                 <div style="display:flex; gap:16px; flex-wrap:wrap;">
                     ${item.attachments.map(att => {
-        const isImg = att.path.match(/\.(jpg|jpeg|png|gif)$/i);
-        const icon = isImg ? 'image' : (att.path.endsWith('.pdf') ? 'file-pdf' : 'file-lines');
-        const label = att.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-        return `
+                        const isImg = att.path.match(/\.(jpg|jpeg|png|gif)$/i);
+                        const icon = isImg ? 'image' : (att.path.endsWith('.pdf') ? 'file-pdf' : 'file-lines');
+                        const label = att.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        
+                        return `
                         <div class="ev-attachment-card" style="min-width: 240px; border-style:dashed;">
                             <div class="ev-file-icon"><i class="fa-regular fa-${icon}"></i></div>
                             <div class="ev-file-details">
@@ -672,7 +672,7 @@ function openViewModal(id) {
                             </a>
                         </div>
                         `;
-    }).join('')}
+                    }).join('')}
                 </div>
             </div>
             ` : ''}
@@ -686,7 +686,7 @@ function openViewModal(id) {
             </button>
         </div>
     `;
-
+    
     // Add event listeners for the new close buttons
     document.getElementById("view-modal-close-new")?.addEventListener("click", () => closeModal("view-modal"));
     document.getElementById("view-modal-close-footer")?.addEventListener("click", () => closeModal("view-modal"));
@@ -700,11 +700,11 @@ function openEditModal(id) {
     const item = tableData.find(r => r.id === id);
     if (!item) return;
     activeEditId = id;
-
+    
     // UI Helpers
     const statusText = item.status.charAt(0).toUpperCase() + item.status.slice(1);
     const bgCol = item.status === 'approved' ? '#10b981' : (item.status === 'rejected' ? '#ef4444' : '#f59e0b');
-
+    
     // Number part of ID
     const numId = item.id.replace('EXP-', '');
 
@@ -801,8 +801,8 @@ function openEditModal(id) {
                 <h5 class="ev-section-title" style="margin-bottom:12px;">Existing Attachments</h5>
                 <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:4px;">
                     ${item.attachments.map(att => {
-        const isImg = att.path.match(/\.(jpg|jpeg|png|gif)$/i);
-        return `
+                        const isImg = att.path.match(/\.(jpg|jpeg|png|gif)$/i);
+                        return `
                         <div style="position:relative; width:64px; height:64px; border-radius:10px; overflow:hidden; border:1.5px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,0.06); background:#fff; flex-shrink:0;">
                             ${isImg ? `<img src="../../${att.path}" style="width:100%; height:100%; object-fit:cover;">` : `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#94a3b8; font-size:20px;"><i class="fa-solid fa-file-lines"></i></div>`}
                             <a href="../../${att.path}" target="_blank" style="position:absolute; inset:0; background:rgba(15,23,42,0.4); display:flex; align-items:center; justify-content:center; opacity:0; transition:0.2s; color:#fff;">
@@ -810,7 +810,7 @@ function openEditModal(id) {
                             </a>
                         </div>
                         `;
-    }).join('')}
+                    }).join('')}
                 </div>
                 <p style="font-size:10px; color:#94a3b8; margin-top:10px; font-style:italic;">* Uploading new files below will replace these documents.</p>
             </div>
@@ -902,7 +902,7 @@ function openEditModal(id) {
             updateAmountBasedOnDistance(document.getElementById("edit-modal-dynamic-content"));
         });
     }
-
+    
     initAddressAutocomplete(document.getElementById("edit-modal-dynamic-content"));
 
     openModal("edit-modal");
@@ -919,9 +919,9 @@ async function saveEdit() {
     const selectedDateStr = document.getElementById("edit-date").value;
     const selectedDate = new Date(selectedDateStr);
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(0,0,0,0);
     const diffDays = Math.ceil((today - selectedDate) / (1000 * 60 * 60 * 24));
-
+    
     if (diffDays > 15 && selectedDate < today) {
         showStatusAlert("Expense date cannot be more than 15 days in the past.", "Policy Restriction");
         if (saveBtn) {
@@ -934,19 +934,19 @@ async function saveEdit() {
     try {
         const formData = new FormData();
         formData.append('id', activeEditId);
-        formData.append('date', selectedDateStr);
-        formData.append('purpose', document.getElementById("edit-purpose").value);
-        formData.append('from', document.getElementById("edit-from").value);
-        formData.append('to', document.getElementById("edit-to").value);
-        formData.append('mode', document.getElementById("edit-mode").value);
+        formData.append('date',     selectedDateStr);
+        formData.append('purpose',  document.getElementById("edit-purpose").value);
+        formData.append('from',     document.getElementById("edit-from").value);
+        formData.append('to',       document.getElementById("edit-to").value);
+        formData.append('mode',     document.getElementById("edit-mode").value);
         const rawDistance = document.getElementById("edit-distance").value;
         const cleanDistance = parseFloat(rawDistance.replace(/[^\d.]/g, '')) || 0;
-
+        
         const rawAmount = document.getElementById("edit-amount").value;
         const cleanAmount = parseFloat(rawAmount.replace(/[^\d.]/g, '')) || 0;
 
         formData.append('distance', cleanDistance);
-        formData.append('amount', cleanAmount);
+        formData.append('amount',   cleanAmount);
 
         const billInput = document.getElementById("edit-attachment");
         const startInput = document.getElementById("edit-meter-start");
@@ -964,7 +964,7 @@ async function saveEdit() {
 
         if (result.success) {
             // Re-fetch all expenses to ensure local tableData is in sync with server (including new file paths)
-            await fetchExpenses();
+            await fetchExpenses(); 
             closeModal("edit-modal");
         } else {
             showStatusAlert(result.message, "Update Failed");
@@ -1006,19 +1006,19 @@ async function confirmDelete() {
     try {
         const fd = new FormData();
         fd.append('id', activeDeleteId);
-
+        
         const resp = await fetch('../api/delete_travel_expense.php', {
             method: 'POST',
             body: fd
         });
         const result = await resp.json();
-
+        
         if (result.success) {
             // Update local state and UI
             tableData = tableData.filter(r => r.id !== activeDeleteId);
             closeModal("delete-modal");
             applyFilters();
-
+            
             // Visual success indicator could be added here
         } else {
             console.error("Delete failed:", result.message);
@@ -1037,7 +1037,7 @@ async function confirmDelete() {
         }
         showStatusAlert("An unexpected error occurred during deletion.", "System Error");
     }
-
+    
     activeDeleteId = null;
 }
 
@@ -1074,12 +1074,12 @@ function openAddExpenseModal() {
         firstForm.querySelectorAll(".e-meter-start-input, .e-meter-end-input, .e-bill-input").forEach(el => el.value = "");
         firstForm.querySelectorAll(".e-meter-start-name, .e-meter-end-name, .e-bill-name").forEach(el => el.textContent = "Choose file…");
         firstForm.querySelectorAll(".file-drop-zone").forEach(el => el.classList.remove("has-file"));
-
+        
         // Default visibility based on role
-        const isMeterInitial = userRequiresMeters;
+        const isMeterInitial = userRequiresMeters; 
         firstForm.querySelectorAll(".meter-photo-field").forEach(el => el.style.display = isMeterInitial ? "flex" : "none");
         firstForm.querySelectorAll(".bill-photo-field").forEach(el => el.style.display = isMeterInitial ? "none" : "flex");
-
+        
         // Ensure no remove button on first form
         const rm = firstForm.querySelector(".remove-expense-btn");
         if (rm) rm.remove();
@@ -1103,7 +1103,7 @@ function initDateLimits(form) {
     // Use a fixed date reference to avoid time-of-day edge cases
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+    
     const pastLimit = new Date();
     pastLimit.setDate(today.getDate() - 15);
     pastLimit.setHours(0, 0, 0, 0);
@@ -1139,21 +1139,21 @@ function stageExpense() {
 
 function handleReturnTripChoice(isReturnTrip) {
     closeModal("return-trip-modal");
-
+    
     if (isReturnTrip && lastValidatedForm) {
         // Create Return Trip entry
         const returnForm = createNewExpenseForm(lastValidatedForm, true);
         document.getElementById("expense-forms-container").appendChild(returnForm);
         updateExpenseHeaders();
         initAddressAutocomplete(returnForm);
-
+        
         // After return trip, add a blank one? 
         // User says "next expense will automatically added". Let's add a blank one as well for next entry.
         const blankForm = createNewExpenseForm(returnForm, false);
         document.getElementById("expense-forms-container").appendChild(blankForm);
         updateExpenseHeaders();
         initAddressAutocomplete(blankForm);
-
+        
         setTimeout(() => { blankForm.scrollIntoView({ behavior: "smooth", block: "start" }); }, 100);
     } else if (lastValidatedForm) {
         // Just add a blank form as before
@@ -1161,9 +1161,9 @@ function handleReturnTripChoice(isReturnTrip) {
         document.getElementById("expense-forms-container").appendChild(blankForm);
         updateExpenseHeaders();
         initAddressAutocomplete(blankForm);
-
+        
         initDateLimits(blankForm);
-
+        
         setTimeout(() => { blankForm.scrollIntoView({ behavior: "smooth", block: "start" }); }, 100);
     }
     updateModalSummary();
@@ -1191,10 +1191,10 @@ function createNewExpenseForm(sourceForm, forReturnTrip = false) {
         newForm.querySelector(".e-purpose").value = `Return: ${originalPurpose}`;
         newForm.querySelector(".e-from").value = originalTo;
         newForm.querySelector(".e-to").value = originalFrom;
-
+        
         const modeInput = newForm.querySelector(".e-mode");
         if (modeInput) modeInput.value = originalMode;
-
+        
         // Update custom select UI for return trip mode
         const modeSelect = newForm.querySelector(".custom-select");
         if (modeSelect) {
@@ -1244,13 +1244,13 @@ function createNewExpenseForm(sourceForm, forReturnTrip = false) {
 
 // Read and validate a specific form element
 function readFormEntryElement(form) {
-    const date = form.querySelector(".e-date")?.value.trim() || "";
-    const purpose = form.querySelector(".e-purpose")?.value.trim() || "";
-    const from = form.querySelector(".e-from")?.value.trim() || "";
-    const to = form.querySelector(".e-to")?.value.trim() || "";
-    const mode = form.querySelector(".e-mode")?.value || "";
+    const date     = form.querySelector(".e-date")?.value.trim()     || "";
+    const purpose  = form.querySelector(".e-purpose")?.value.trim()  || "";
+    const from     = form.querySelector(".e-from")?.value.trim()     || "";
+    const to       = form.querySelector(".e-to")?.value.trim()       || "";
+    const mode     = form.querySelector(".e-mode")?.value            || "";
     const distance = form.querySelector(".e-distance")?.value.trim() || "";
-    const amount = form.querySelector(".e-amount")?.value.trim() || "";
+    const amount   = form.querySelector(".e-amount")?.value.trim()   || "";
 
     if (!date || !purpose || !from || !to || !mode || !distance || !amount) return null;
 
@@ -1266,17 +1266,17 @@ function readFormEntryElement(form) {
 function validateForm(form) {
     let valid = true;
     const required = [".e-date", ".e-purpose", ".e-from", ".e-to", ".e-mode", ".e-distance", ".e-amount"];
-
+    
     required.forEach(cls => {
         const el = form.querySelector(cls);
         if (!el) return;
         if (!el.value.trim()) {
             valid = false;
             el.style.borderColor = "#f87171";
-            el.style.boxShadow = "0 0 0 3px rgba(248,113,113,0.15)";
+            el.style.boxShadow   = "0 0 0 3px rgba(248,113,113,0.15)";
             el.addEventListener("input", () => {
                 el.style.borderColor = "";
-                el.style.boxShadow = "";
+                el.style.boxShadow   = "";
             }, { once: true });
         }
     });
@@ -1291,7 +1291,7 @@ function validateForm(form) {
         if (diffDays > 15) {
             valid = false;
             dateInput.style.borderColor = "#f87171";
-            dateInput.style.boxShadow = "0 0 0 3px rgba(248,113,113,0.15)";
+            dateInput.style.boxShadow   = "0 0 0 3px rgba(248,113,113,0.15)";
             showToast("Expenses older than 15 days cannot be submitted.");
         }
     }
@@ -1340,7 +1340,7 @@ function markFileError(zone) {
 async function saveAllExpenses() {
     const container = document.getElementById("expense-forms-container");
     const forms = container.querySelectorAll(".expense-entry-form");
-
+    
     let allValid = true;
     const formData = new FormData();
 
@@ -1350,23 +1350,23 @@ async function saveAllExpenses() {
             allValid = false;
         } else {
             // Mapping fields to the index-based FormData keys that PHP expects
-            formData.append(`expenses[${index}][date]`, form.querySelector(".e-date")?.value || "");
-            formData.append(`expenses[${index}][purpose]`, form.querySelector(".e-purpose")?.value || "");
-            formData.append(`expenses[${index}][from]`, form.querySelector(".e-from")?.value || "");
-            formData.append(`expenses[${index}][to]`, form.querySelector(".e-to")?.value || "");
-            formData.append(`expenses[${index}][mode]`, form.querySelector(".e-mode")?.value || "");
+            formData.append(`expenses[${index}][date]`,     form.querySelector(".e-date")?.value || "");
+            formData.append(`expenses[${index}][purpose]`,  form.querySelector(".e-purpose")?.value || "");
+            formData.append(`expenses[${index}][from]`,     form.querySelector(".e-from")?.value || "");
+            formData.append(`expenses[${index}][to]`,       form.querySelector(".e-to")?.value || "");
+            formData.append(`expenses[${index}][mode]`,     form.querySelector(".e-mode")?.value || "");
             formData.append(`expenses[${index}][distance]`, form.querySelector(".e-distance")?.value || 0);
-            formData.append(`expenses[${index}][amount]`, form.querySelector(".e-amount")?.value || 0);
-            formData.append(`expenses[${index}][notes]`, form.querySelector(".e-notes")?.value || "");
+            formData.append(`expenses[${index}][amount]`,   form.querySelector(".e-amount")?.value || 0);
+            formData.append(`expenses[${index}][notes]`,    form.querySelector(".e-notes")?.value || "");
 
             // Attachments
-            const billImg = form.querySelector(".e-bill-input")?.files[0];
+            const billImg  = form.querySelector(".e-bill-input")?.files[0];
             const startImg = form.querySelector(".e-meter-start-input")?.files[0];
-            const endImg = form.querySelector(".e-meter-end-input")?.files[0];
+            const endImg   = form.querySelector(".e-meter-end-input")?.files[0];
 
-            if (billImg) formData.append(`expenses[${index}][bill]`, billImg);
+            if (billImg)  formData.append(`expenses[${index}][bill]`, billImg);
             if (startImg) formData.append(`expenses[${index}][meter_start]`, startImg);
-            if (endImg) formData.append(`expenses[${index}][meter_end]`, endImg);
+            if (endImg)   formData.append(`expenses[${index}][meter_end]`, endImg);
         }
     });
 
@@ -1460,11 +1460,11 @@ function initLeafletMap() {
 
 async function calculateDistanceForForm(formRow) {
     const fromVal = formRow.querySelector('.e-from').value.trim();
-    const toVal = formRow.querySelector('.e-to').value.trim();
+    const toVal   = formRow.querySelector('.e-to').value.trim();
     const distInput = formRow.querySelector('.e-distance');
 
     if (!fromVal || !toVal || fromVal.length < 3 || toVal.length < 3) return;
-
+    
     distInput.placeholder = "Calculating...";
 
     try {
@@ -1475,11 +1475,11 @@ async function calculateDistanceForForm(formRow) {
         };
 
         const fromLatLng = await geocode(fromVal);
-        const toLatLng = await geocode(toVal);
+        const toLatLng   = await geocode(toVal);
 
         if (fromLatLng && toLatLng) {
             if (routingControl) leafletMap.removeControl(routingControl);
-
+            
             routingControl = L.Routing.control({
                 waypoints: [fromLatLng, toLatLng],
                 router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' }),
@@ -1491,7 +1491,7 @@ async function calculateDistanceForForm(formRow) {
 
             routingControl.on('routesfound', (e) => {
                 const distanceKm = (e.routes[0].summary.totalDistance / 1000).toFixed(2);
-
+                
                 // ONLY OVERWRITE IF NOT MANUALLY EDITED
                 if (distInput.dataset.manual !== "true" || !distInput.value) {
                     distInput.value = distanceKm;
@@ -1509,13 +1509,13 @@ async function calculateDistanceForForm(formRow) {
 function updateAmountBasedOnDistance(form) {
     const modeEl = form.querySelector('.e-mode') || form.querySelector('#edit-mode');
     const distEl = form.querySelector('.e-distance') || form.querySelector('#edit-distance');
-    const amtEl = form.querySelector('.e-amount') || form.querySelector('#edit-amount');
-
+    const amtEl  = form.querySelector('.e-amount') || form.querySelector('#edit-amount');
+    
     if (!modeEl || !distEl || !amtEl) return;
 
     const mode = modeEl.value;
     const distance = parseFloat(distEl.value) || 0;
-
+    
     if (transportRates[mode] && transportRates[mode] > 0 && distance > 0) {
         amtEl.value = (transportRates[mode] * distance).toFixed(2);
         updateModalSummary();
@@ -1527,7 +1527,7 @@ function updateModalSummary() {
     const container = document.getElementById("expense-forms-container");
     const tbody = document.getElementById("modal-summary-tbody");
     const totalEl = document.getElementById("modal-summary-total");
-
+    
     if (!summarySection || !container || !tbody || !totalEl) return;
 
     const forms = container.querySelectorAll(".expense-entry-form");
@@ -1536,12 +1536,12 @@ function updateModalSummary() {
     let totalCount = 0;
     let totalAmt = 0;
     let html = "";
-
+    
     forms.forEach((form, idx) => {
         const purpose = form.querySelector(".e-purpose")?.value || "";
         const mode = form.querySelector(".e-mode")?.value || "-";
         const amt = parseFloat(form.querySelector(".e-amount")?.value) || 0;
-
+        
         totalAmt += amt;
         totalCount++;
 
@@ -1550,13 +1550,13 @@ function updateModalSummary() {
                 <td style="padding: 10px; color: #94a3b8;">${idx + 1}</td>
                 <td style="padding: 10px; color: #475569;">${purpose ? (purpose.length > 25 ? purpose.substring(0, 25) + "..." : purpose) : '<span style="color:#cbd5e1; font-style:italic">No purpose</span>'}</td>
                 <td style="padding: 10px; color: #475569;">${mode}</td>
-                <td style="padding: 10px; text-align: right; color: #1e293b; font-weight: 700;">₹ ${amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                <td style="padding: 10px; text-align: right; color: #1e293b; font-weight: 700;">₹ ${amt.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
             </tr>
         `;
     });
 
     tbody.innerHTML = html;
-    totalEl.textContent = `₹ ${totalAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+    totalEl.textContent = `₹ ${totalAmt.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
 }
 
 /**
@@ -1587,25 +1587,25 @@ function debounce(func, wait) {
 
 function initAddressAutocomplete(parentEl) {
     const fromInput = parentEl.querySelector('.e-from') || parentEl.querySelector('#edit-from');
-    const toInput = parentEl.querySelector('.e-to') || parentEl.querySelector('#edit-to');
-
+    const toInput   = parentEl.querySelector('.e-to') || parentEl.querySelector('#edit-to');
+    
     [fromInput, toInput].forEach(innerInput => {
         if (!innerInput) return;
         const container = innerInput.nextElementSibling;
         if (!container || !container.classList.contains('address-suggestions')) return;
-
+        
         innerInput.addEventListener('input', debounce(async () => {
             const query = innerInput.value.trim();
             if (query.length < 3) {
                 container.style.display = 'none';
                 return;
             }
-
+            
             try {
                 const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`;
                 const response = await fetch(url);
                 const results = await response.json();
-
+                
                 if (results && results.length > 0) {
                     container.innerHTML = results.map(res => `
                         <div class="suggestion-item" data-full="${res.display_name}">
@@ -1620,13 +1620,13 @@ function initAddressAutocomplete(parentEl) {
                 console.error("Autocomplete fetch error:", e);
             }
         }, 500));
-
+        
         container.addEventListener('mousedown', (e) => {
             const item = e.target.closest('.suggestion-item');
             if (item) {
                 innerInput.value = item.dataset.full;
                 container.style.display = 'none';
-
+                
                 // Clear manual override flag so system can recalculate
                 const distInput = parentEl.querySelector('.e-distance') || parentEl.querySelector('#edit-distance');
                 if (distInput) delete distInput.dataset.manual;
@@ -1634,7 +1634,7 @@ function initAddressAutocomplete(parentEl) {
                 calculateDistanceForForm(parentEl);
             }
         });
-
+        
         innerInput.addEventListener('blur', () => {
             setTimeout(() => { container.style.display = 'none'; }, 200);
             calculateDistanceForForm(parentEl);

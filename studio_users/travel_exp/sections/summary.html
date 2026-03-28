@@ -1,0 +1,84 @@
+<section class="card summary-section">
+    <div class="summary-header flex-between">
+        <div class="section-title">
+            <span class="accent-bar"></span>
+            Travel Expenses Summary
+        </div>
+        <span id="summary-month-text" style="font-size:12px;color:var(--text-muted);">March 2026</span>
+    </div>
+    <div class="summary-grid">
+
+        <!-- Total Expenses -->
+        <div class="stat-card blue">
+            <div class="stat-top">
+                <span class="stat-label">Total Expenses</span>
+                <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
+            </div>
+            <div>
+                <div class="stat-value" id="stat-count">0</div>
+                <div class="stat-sub">Expense Claims</div>
+            </div>
+        </div>
+
+        <!-- Total Amount -->
+        <div class="stat-card teal">
+            <div class="stat-top">
+                <span class="stat-label">Total Amount</span>
+                <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+            </div>
+            <div>
+                <div class="stat-value" id="stat-total">₹0.00</div>
+                <div class="stat-sub">Claimed Amount</div>
+            </div>
+        </div>
+
+        <!-- Approved Amount -->
+        <div class="stat-card green">
+            <div class="stat-top">
+                <span class="stat-label">Approved</span>
+                <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+            </div>
+            <div>
+                <div class="stat-value" id="stat-approved">₹0.00</div>
+                <div class="stat-sub">Reimbursed</div>
+            </div>
+        </div>
+
+        <!-- Paid Amount -->
+        <div class="stat-card purple">
+            <div class="stat-top">
+                <span class="stat-label">Paid Amount</span>
+                <div class="stat-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+            </div>
+            <div>
+                <div class="stat-value" id="stat-paid">₹0.00</div>
+                <div class="stat-sub">Disbursed</div>
+            </div>
+        </div>
+
+        <!-- Pending Amount -->
+        <div class="stat-card amber">
+            <div class="stat-top">
+                <span class="stat-label">Pending</span>
+                <div class="stat-icon"><i class="fa-solid fa-clock"></i></div>
+            </div>
+            <div>
+                <div class="stat-value" id="stat-pending">₹0.00</div>
+                <div class="stat-sub">Awaiting Approval</div>
+            </div>
+        </div>
+
+        <!-- Rejected Amount -->
+        <div class="stat-card red">
+            <div class="stat-top">
+                <span class="stat-label">Rejected</span>
+                <div class="stat-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+            </div>
+            <div>
+                <div class="stat-value" id="stat-rejected">₹0.00</div>
+                <div class="stat-sub">Not Approved</div>
+            </div>
+        </div>
+
+    </div>
+</section>

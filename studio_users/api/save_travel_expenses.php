@@ -29,16 +29,15 @@ try {
 
     foreach ($expenses as $index => $data) {
         $travel_date = $data['date'] ?? null;
-        $purpose = $data['purpose'] ?? '';
-        $from = $data['from'] ?? '';
-        $to = $data['to'] ?? '';
-        $mode = $data['mode'] ?? '';
-        $distance = $data['distance'] ?? 0;
-        $amount = $data['amount'] ?? 0;
-        $notes = $data['notes'] ?? '';
+        $purpose    = $data['purpose'] ?? '';
+        $from       = $data['from'] ?? '';
+        $to         = $data['to'] ?? '';
+        $mode       = $data['mode'] ?? '';
+        $distance   = $data['distance'] ?? 0;
+        $amount     = $data['amount'] ?? 0;
+        $notes      = $data['notes'] ?? '';
 
-        if (!$travel_date || !$from || !$to || !$mode)
-            continue;
+        if (!$travel_date || !$from || !$to || !$mode) continue;
 
         // ───── Server-side Date Validation (Max 15 days in past) ─────
         $tDate = new DateTime($travel_date);
@@ -61,7 +60,7 @@ try {
         // PHP $_FILES structure for nested arrays: $_FILES['expenses']['name'][$index]['bill']
         if (isset($_FILES['expenses']['tmp_name'][$index])) {
             $fileData = $_FILES['expenses'];
-
+            
             // 1. Bill Photo
             if (!empty($fileData['tmp_name'][$index]['bill'])) {
                 $billPath = uploadTravelFile($fileData, $index, 'bill', $user_id, $uploadDir);
@@ -82,25 +81,16 @@ try {
                     bill_file_path, meter_start_photo_path, meter_end_photo_path,
                     created_at
                   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, NOW())";
-
+        
         $stmt = $pdo->prepare($query);
         $stmt->execute([
-            $user_id,
-            $travel_date,
-            $purpose,
-            $from,
-            $to,
-            $mode,
-            $distance,
-            $amount,
-            $notes,
-            $billPath,
-            $meterStartPath,
-            $meterEndPath
+            $user_id, $travel_date, $purpose, $from, $to,
+            $mode, $distance, $amount, $notes,
+            $billPath, $meterStartPath, $meterEndPath
         ]);
 
         $newId = $pdo->lastInsertId();
-
+        
         // Log Activity
         $logDescription = "Added new travel expense #$newId for $purpose. Trip: $from to $to on $travel_date via $mode ($distance km). Total: ₹$amount.";
         $metadata = json_encode([
@@ -113,12 +103,12 @@ try {
             'distance' => $distance,
             'amount' => $amount
         ]);
-
+        
         $logQuery = "INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata, created_at) 
                      VALUES (?, 'travel_added', 'travel', ?, ?, ?, NOW())";
         $logStmt = $pdo->prepare($logQuery);
         $logStmt->execute([$user_id, $newId, $logDescription, $metadata]);
-
+        
         $insertedCount++;
     }
 
@@ -126,21 +116,18 @@ try {
     echo json_encode(['success' => true, 'message' => "$insertedCount expenses saved successfully"]);
 
 } catch (Exception $e) {
-    if ($pdo->inTransaction())
-        $pdo->rollBack();
+    if ($pdo->inTransaction()) $pdo->rollBack();
     echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
 }
 
 /**
  * Helper to handle the weird PHP $_FILES structure for nested arrays
  */
-function uploadTravelFile($fileData, $index, $field, $user_id, $uploadDir)
-{
+function uploadTravelFile($fileData, $index, $field, $user_id, $uploadDir) {
     $tmpName = $fileData['tmp_name'][$index][$field];
-    $origin = $fileData['name'][$index][$field];
-
-    if (!$tmpName)
-        return null;
+    $origin  = $fileData['name'][$index][$field];
+    
+    if (!$tmpName) return null;
 
     $ext = pathinfo($origin, PATHINFO_EXTENSION);
     $newName = 'travel_' . $user_id . '_' . time() . '_' . $index . '_' . $field . '.' . $ext;

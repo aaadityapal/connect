@@ -325,7 +325,6 @@ document.getElementById('ag-submit-password-reset')?.addEventListener('click', a
                 showAlert(result.message, false);
                 submitBtn.innerText = "Verify Code";
                 startResendCountdown();
-                if (result.debug_otp) console.log("OTP:", result.debug_otp);
             } else {
                 throw new Error(result.message);
             }
@@ -450,4 +449,5 @@ document.querySelectorAll('#ag-password-reset-modal input').forEach(input => {
 });
 
 // Run on load
-document.addEventListener('DOMContentLoaded', initSecurityTab);
+// Note: This is now manually initialized by script.js after dynamic tab loading
+// document.addEventListener('DOMContentLoaded', initSecurityTab);

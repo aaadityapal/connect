@@ -76,6 +76,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } else if (floatItem) {
             e.stopPropagation();
+            if (floatItem.classList.contains('disabled')) return; // Prevents selecting locked types
+            
             const dd = activeDd;
             const selectedSpan = dd.querySelector('.selected-value');
             const srcMenu = dd.querySelector('.dropdown-menu');
@@ -135,13 +137,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const calculateDynamicDuration = () => {
         let total = 0;
+        let hasSickLeave = false;
         const rows = document.querySelectorAll('#generated-dates-body tr');
         rows.forEach(row => {
             const checkbox = row.querySelector('input[type="checkbox"]');
             if (checkbox && checkbox.checked) {
-                // Determine Day Type from the second dropdown in the row
                 const dropdowns = row.querySelectorAll('.custom-dropdown');
                 if (dropdowns.length >= 2) {
+                    const leaveType = dropdowns[0].querySelector('.selected-value').textContent.trim();
+                    if (leaveType.toLowerCase().includes('sick')) hasSickLeave = true;
+
                     const selectedValue = dropdowns[1].querySelector('.selected-value').textContent.trim();
                     if (selectedValue === 'Full Day') {
                         total += 1;
@@ -153,6 +158,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         });
+
+        const uploadSection = document.getElementById('sick-leave-upload-section');
+        if (uploadSection) {
+            uploadSection.style.display = hasSickLeave ? 'block' : 'none';
+        }
         
         const totalMinutes = Math.round(total * 9 * 60);
         const days    = Math.floor(totalMinutes / (9 * 60));
@@ -217,10 +227,15 @@ document.addEventListener("DOMContentLoaded", () => {
                             usageHtml = `<div class="${badgeClass}">${used}/${limit} used in ${month}</div>`;
                         }
 
-                        let html = `${Math.floor(leave.remaining_balance)} days`;
-                        if (name.includes('Short')) {
-                             const prog = (parseFloat(leave.remaining_balance) / 2) * 100;
-                             html = `${parseFloat(leave.remaining_balance)} <div class="mini-prog"><div class="mini-prog-fill" style="width:${prog}%"></div></div>`;
+                        let html = '';
+                        if (leave.is_locked) {
+                            html = `<span style="color:#d32f2f; background:#fef2f2; padding:3px 8px; border-radius:12px; font-size:0.75rem; border:1px solid #fecaca; font-weight:500;">${leave.lockMessage}</span>`;
+                        } else {
+                            html = `${Math.floor(leave.remaining_balance)} days`;
+                            if (name.includes('Short')) {
+                                 const prog = (parseFloat(leave.remaining_balance) / 2) * 100;
+                                 html = `${parseFloat(leave.remaining_balance)} <div class="mini-prog"><div class="mini-prog-fill" style="width:${prog}%"></div></div>`;
+                            }
                         }
 
                         valDiv.innerHTML = html;
@@ -228,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         // Remove any old badges first
                         const oldBadge = infoDiv.querySelector('.usage-badge');
                         if (oldBadge) oldBadge.remove();
-                        if (usageHtml) infoDiv.innerHTML += usageHtml;
+                        if (usageHtml && !leave.is_locked) infoDiv.innerHTML += usageHtml;
 
                         // Update Top Stats too
                         if (name.includes('Casual')) {
@@ -279,7 +294,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.success && data.data.length > 0) {
                 leaveTypes = data.data.map(type => {
                     leaveTypeMap[type.name] = type.id;
-                    return type.name;
+                    return {
+                        name: type.name, 
+                        disabled: type.disabled || false, 
+                        lockMessage: type.lockMessage || ''
+                    };
                 });
                 console.log('Leave types loaded:', leaveTypes);
             }
@@ -319,7 +338,15 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchApprovers();
 
     const mkSelect = (opts, cls, def = null) => {
-        const selected = def && opts.includes(def) ? def : opts[0];
+        const getVal = o => typeof o === 'string' ? o : o.name;
+        const isDis = o => typeof o === 'object' && o.disabled;
+        const getMsg = o => typeof o === 'object' ? (o.lockMessage || '') : '';
+        
+        // Find default or fallback to first valid option
+        let validOpts = opts.filter(o => !isDis(o));
+        if (validOpts.length === 0) validOpts = opts; 
+        const selected = def && opts.find(o => getVal(o) === def && !isDis(o)) ? def : getVal(validOpts[0]);
+        
         return `
             <div class="custom-dropdown ${cls}">
                 <button class="dropdown-trigger" type="button" style="padding: 5px 8px; width: 100%; justify-content: space-between;">
@@ -327,7 +354,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
                 <div class="dropdown-menu">
-                    ${opts.map(o => `<div class="dropdown-item ${o === selected ? 'active' : ''}" data-value="${o}">${o}</div>`).join('')}
+                    ${opts.map(o => {
+                        const val = getVal(o);
+                        if (isDis(o)) {
+                            return '<div class="dropdown-item disabled" style="opacity:0.65; cursor:not-allowed; background:#f9fafb;" data-value="' + val + '">' +
+                                val +
+                                '<span style="display:block; font-size:0.65rem; color:#d32f2f; margin-top:2px;">' + getMsg(o) + '</span>' +
+                            '</div>';
+                        } else {
+                            const actCls = (val === selected) ? 'active' : '';
+                            return '<div class="dropdown-item ' + actCls + '" data-value="' + val + '">' + val + '</div>';
+                        }
+                    }).join('')}
                 </div>
             </div>`;
     };
@@ -376,7 +414,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 dayBasicName;
 
             // Priority: select "Compensate" if available, else first type
-            const defLeave = leaveTypes.find(t => t.toLowerCase().includes('compensate')) || leaveTypes[0];
+            const validLeaves = leaveTypes.filter(t => !(typeof t === 'object' && t.disabled));
+            const getTName = t => typeof t === 'string' ? t : t.name;
+            const defLeaveObj = validLeaves.find(t => getTName(t).toLowerCase().includes('compensate')) || validLeaves[0];
+            const defLeave = getTName(defLeaveObj);
 
             rows += `
                 <tr ${isOff ? 'style="opacity:.6; background:#fffafa;"' : ''}>
@@ -435,10 +476,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const fetchHistory = async () => {
         try {
             const res = await fetch('../api/fetch_leave_history.php');
-            const allData = await res.json();
+            const json = await res.json();
+            
+            if (!json.success || !Array.isArray(json.data)) {
+                console.error('History fetch failed:', json.message || 'Unknown error');
+                const tbody = document.getElementById('history-table-body');
+                if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="empty-state">${json.message || 'Error loading history.'}</td></tr>`;
+                return;
+            }
+
+            const allData = json.data;
             
             // Store globally for the view/edit modals to use
-            window.leaveHistoryData = allData;
+            window.allLeaveHistoryData = allData; // All data for this user
 
             const tbody = document.getElementById('history-table-body');
             tbody.innerHTML = '';
@@ -465,7 +515,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            window.leaveHistoryData = data; // Store data globally for modal access
+            window.leaveHistoryData = data; // Store filtered data for modal access
 
             tbody.innerHTML = data.map((item, index) => {
                 const isPending = item.status === 'Pending';
@@ -501,6 +551,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
     fetchHistory();
     document.getElementById('load-history-btn').addEventListener('click', fetchHistory);
+
+    // ─────────────────────────────────────────────
+    // 5.1 File Upload Preview & Tracking
+    // ─────────────────────────────────────────────
+    let selectedFiles = [];
+    const fileInput = document.getElementById('sick-leave-files');
+    const previewContainer = document.getElementById('file-list-preview');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', () => {
+            const files = Array.from(fileInput.files);
+            files.forEach(file => {
+                if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                    selectedFiles.push(file);
+                }
+            });
+            renderFilePreviews();
+            fileInput.value = ''; // Reset to allow same file again if removed
+        });
+    }
+
+    function renderFilePreviews() {
+        if (!previewContainer) return;
+        previewContainer.innerHTML = selectedFiles.map((file, idx) => `
+            <div class="file-chip">
+                <span title="${file.name}">${file.name}</span>
+                <div class="remove-file" onclick="removeSelectedFile(${idx})">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    window.removeSelectedFile = (idx) => {
+        selectedFiles.splice(idx, 1);
+        renderFilePreviews();
+    };
 
     // ─────────────────────────────────────────────
     // 6. Form Submit
@@ -542,6 +629,13 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // Sick Leave Mandatory File Check
+        const requiresUpload = dates.some(d => d.type_name.toLowerCase().includes('sick'));
+        if (requiresUpload && selectedFiles.length === 0) {
+            alert('Please upload medical documents for your Sick Leave request.');
+            return;
+        }
+
         const btn = document.getElementById('submit-btn');
         btn.textContent = 'Processing...';
         btn.disabled = true;
@@ -572,10 +666,18 @@ document.addEventListener("DOMContentLoaded", () => {
         const minWait = new Promise(resolve => setTimeout(resolve, 3000));
 
         try {
+            const formData = new FormData();
+            formData.append('reason', reason);
+            formData.append('approver_id', approver);
+            formData.append('dates', JSON.stringify(dates));
+            
+            selectedFiles.forEach(file => {
+                formData.append('sick_leave_files[]', file);
+            });
+
             const resPromise = fetch('../api/save_leave_request.php', {
                 method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ reason, approver_id: approver, dates: dates })
+                body:    formData // FormData automatically sets correct headers
             });
 
             const [res] = await Promise.all([resPromise, minWait]);
@@ -587,6 +689,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (data.success) {
                 showResultModal('Success!', data.message, 'success');
                 document.getElementById('application-form').reset();
+                selectedFiles = [];
+                renderFilePreviews();
                 document.getElementById('generated-dates-body').innerHTML =
                     '<tr><td colspan="5" class="nlr-empty-state"><p>All set! Application submitted.</p></td></tr>';
                 const dBadge = document.querySelector('.duration-badge');
@@ -679,6 +783,26 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                     <div class="view-value reason-block">${item.reason}</div>
                 </div>
+                ${item.attachments && item.attachments.length > 0 ? `
+                <div class="view-item full">
+                    <div class="view-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                        Attachments
+                    </div>
+                    <div class="view-attachments" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                        ${item.attachments.map(att => {
+                            const isImg = att.type.includes('image');
+                            const icon = isImg ? '🖼️' : '📄';
+                            const path = '../../' + att.path; // Relative to studio_users/leave_pages/
+                            return `
+                            <a href="${path}" target="_blank" class="att-link" style="display:flex; align-items:center; gap:8px; padding:6px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; text-decoration:none; color:#1e293b; font-size:0.78rem; transition:all 0.15s; font-weight:500;">
+                                <span>${icon}</span>
+                                <span style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${att.name}</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="color:#94a3b8;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                            </a>`;
+                        }).join('')}
+                    </div>
+                </div>` : ''}
             </div>
         `;
         document.getElementById('view-modal-content').innerHTML = content;

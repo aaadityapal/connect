@@ -1,0 +1,94 @@
+/* ─── Summary Cards ─────────────────────────────────── */
+.summary-section {
+  padding: 24px;
+}
+
+.summary-header {
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1200px) {
+  .summary-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 640px) {
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Each summary card */
+.stat-card {
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Colour themes */
+.stat-card.blue   { background: var(--clr-blue-light);   border-color: #bfdbfe; }
+.stat-card.green  { background: var(--clr-green-light);  border-color: #a7f3d0; }
+.stat-card.teal   { background: var(--clr-teal-light);   border-color: #99f6e4; }
+.stat-card.purple { background: var(--clr-purple-light); border-color: #ddd6fe; }
+.stat-card.amber  { background: var(--clr-amber-light);  border-color: #fde68a; }
+.stat-card.red    { background: var(--clr-red-light);    border-color: #fecaca; }
+
+.stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.stat-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.stat-card.blue   .stat-label { color: var(--clr-blue);   }
+.stat-card.green  .stat-label { color: var(--clr-green);  }
+.stat-card.teal   .stat-label { color: var(--clr-teal);   }
+.stat-card.purple .stat-label { color: var(--clr-purple); }
+.stat-card.amber  .stat-label { color: var(--clr-amber);  }
+.stat-card.red    .stat-label { color: var(--clr-red);    }
+
+.stat-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+.stat-card.blue   .stat-icon { background: var(--clr-blue);   color: #fff; }
+.stat-card.green  .stat-icon { background: var(--clr-green);  color: #fff; }
+.stat-card.teal   .stat-icon { background: var(--clr-teal);   color: #fff; }
+.stat-card.purple .stat-icon { background: var(--clr-purple); color: #fff; }
+.stat-card.amber  .stat-icon { background: var(--clr-amber);  color: #fff; }
+.stat-card.red    .stat-icon { background: var(--clr-red);    color: #fff; }
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+.stat-sub {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}

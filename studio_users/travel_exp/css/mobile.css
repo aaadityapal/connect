@@ -1,0 +1,355 @@
+/* ════════════════════════════════════════════════════════════
+   MOBILE.CSS  — Professional responsive for iPhone XR & all mobile
+   iPhone XR viewport: 414px CSS pixels
+   ════════════════════════════════════════════════════════════ */
+
+/* ─── CRITICAL: Prevent ANY element from causing horizontal scroll ─── */
+html {
+    overflow-x: hidden;
+}
+body {
+    overflow-x: hidden;
+    min-width: 0;
+}
+*, *::before, *::after {
+    box-sizing: border-box;
+    min-width: 0;
+}
+img, video, iframe, embed, object {
+    max-width: 100%;
+}
+
+/* ════════════════════════════════════
+   TABLET (≤ 960px)
+   ════════════════════════════════════ */
+@media (max-width: 960px) {
+    body {
+        padding: 16px;
+    }
+    .page-wrapper {
+        gap: 16px;
+    }
+    .summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .filter-row {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    .filter-actions {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ════════════════════════════════════
+   MOBILE (≤ 768px)  — iPhone XR = 414px
+   ════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    /* ── Body & wrapper ── */
+    body {
+        padding: 10px;
+    }
+    .page-wrapper {
+        gap: 12px;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* ── HEADER ── */
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        width: 100%;
+    }
+    .header-left {
+        width: 100%;
+    }
+    .page-title {
+        font-size: 17px !important;
+        white-space: normal;
+        word-break: break-word;
+    }
+    .header-right {
+        width: 100%;
+    }
+    .month-picker-wrapper {
+        width: 100%;
+    }
+    .month-badge {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 10px;
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+    .month-dropdown {
+        min-width: unset;
+        width: 100%;
+        left: 0;
+        right: 0;
+    }
+    .months-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    /* ── SUMMARY ── */
+    .summary-section {
+        padding: 14px 16px;
+    }
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px;
+    }
+    .stat-card {
+        padding: 12px;
+    }
+    .stat-value {
+        font-size: 17px;
+    }
+    .stat-label {
+        font-size: 10.5px;
+    }
+    .stat-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+    }
+
+    /* ── FILTER ── */
+    .filter-section {
+        padding: 14px 16px;
+    }
+    .filter-header {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .filter-row {
+        grid-template-columns: 1fr !important;
+        gap: 14px;
+    }
+    .filter-actions {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .filter-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* ── TABLE ── */
+    .table-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    .table-toolbar .btn-pill {
+        width: 100%;
+        justify-content: center;
+    }
+    .table-card {
+        border-radius: 10px;
+    }
+    /* Horizontal scroll ONLY inside table — not the full page */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+    }
+    table.data-table {
+        min-width: 600px; /* forces table to be scrollable inside its container */
+    }
+    table.data-table thead th,
+    table.data-table tbody td {
+        padding: 11px 14px;
+        font-size: 12.5px;
+    }
+
+    /* ── MODALS — Slide-up sheet style ── */
+    .modal-overlay {
+        align-items: flex-end;
+        padding: 0;
+    }
+    .modal-box {
+        width: 100%;
+        margin: 0;
+        border-radius: 20px 20px 0 0;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    /* Add Expense Modal */
+    .add-expense-box {
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+        max-height: 90vh;
+    }
+    .add-modal-header {
+        padding: 16px 18px;
+    }
+    .add-modal-header h2 {
+        font-size: 16px;
+    }
+    .add-modal-body {
+        padding: 18px;
+        gap: 16px;
+    }
+    .add-form-row,
+    .add-form-row-3 {
+        grid-template-columns: 1fr !important;
+        gap: 14px;
+    }
+    .add-photo-row {
+        grid-template-columns: 1fr !important;
+        gap: 14px;
+    }
+    .bill-photo-field {
+        grid-column: auto !important;
+    }
+    .add-modal-footer {
+        flex-direction: column;
+        padding: 14px 18px;
+        gap: 10px;
+    }
+    .add-modal-footer > * {
+        width: 100%;
+    }
+    .add-modal-footer div[style] {
+        display: flex !important;
+        gap: 10px;
+    }
+    .add-modal-footer .btn {
+        flex: 1;
+        justify-content: center;
+    }
+
+    /* View / Edit Modal */
+    #view-modal-container,
+    #edit-modal-container {
+        border-radius: 20px 20px 0 0;
+    }
+    .vm-premium-header {
+        padding: 16px 18px;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .vm-header-left h2 {
+        font-size: 16px;
+    }
+    .vm-header-right {
+        justify-content: space-between;
+        width: 100%;
+    }
+    .vm-premium-body {
+        padding: 14px 18px;
+        max-height: 58vh;
+    }
+    .vm-stats-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .vm-two-col {
+        flex-direction: column;
+        gap: 14px;
+    }
+    .edit-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .vm-premium-footer {
+        padding: 12px 18px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .vm-premium-footer .btn {
+        flex: 1;
+        justify-content: center;
+    }
+    .vm-attachment-box {
+        max-width: 100%;
+    }
+
+    /* ── Minimalist View Modal (ev-) ── */
+    .ev-header {
+        padding: 24px 20px 14px;
+        flex-direction: column;
+        gap: 14px;
+        align-items: flex-start;
+    }
+    .ev-header-left h2 {
+        font-size: 19px;
+    }
+    /* Header right part (pill + close) */
+    .ev-header > div:last-child {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .ev-body {
+        padding: 0 20px 24px;
+    }
+    .ev-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+        margin-top: 16px;
+    }
+    .ev-stat-box {
+        padding: 14px;
+    }
+    .ev-stat-value {
+        font-size: 15px;
+    }
+    .ev-stat-value.amount {
+        font-size: 17px;
+    }
+    .ev-details-section {
+        grid-template-columns: 1fr !important;
+        gap: 30px;
+    }
+    .ev-section-title {
+        margin-bottom: 14px;
+    }
+    .ev-info-value {
+        word-break: break-word;
+    }
+    .ev-footer {
+        padding: 18px 20px;
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+    .ev-footer button {
+        width: 100%;
+        justify-content: center;
+    }
+    .ev-attachment-card {
+        min-width: 100% !important;
+    }
+}
+
+/* ════════════════════════════════════
+   SMALL PHONES (≤ 430px)
+   ════════════════════════════════════ */
+@media (max-width: 430px) {
+    body {
+        padding: 8px;
+    }
+    .page-title {
+        font-size: 15px !important;
+    }
+    .summary-grid {
+        gap: 8px;
+    }
+    .stat-value {
+        font-size: 15px;
+    }
+    .action-btn-custom {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+    .months-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

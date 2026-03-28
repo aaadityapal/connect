@@ -14,9 +14,12 @@ $user_id = $_SESSION['user_id'];
 try {
     // Fetch all leave requests for the logged-in user
     // We fetch them ordered by created_at and start_date so we can group them
-    $query = "SELECT lr.*, lt.name as leave_type_name
+    // Fetch all leave requests for the logged-in user with their attachments
+    $query = "SELECT lr.*, lt.name as leave_type_name, 
+                     la.file_path, la.file_name, la.file_type
               FROM leave_request lr
               JOIN leave_types lt ON lr.leave_type = lt.id
+              LEFT JOIN leave_attachments la ON lr.id = la.leave_request_id
               WHERE lr.user_id = ?
               ORDER BY lr.created_at DESC, lr.start_date ASC";
               
@@ -24,7 +27,7 @@ try {
     $stmt->execute([$user_id]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Grouping logic: Group by reasonable proximity (same created_at, same leave_type, same reason)
+    // Grouping logic
     $grouped = [];
     foreach ($rows as $row) {
         $key = $row['created_at'] . '_' . $row['leave_type'] . '_' . substr($row['reason'], 0, 50);
@@ -40,12 +43,30 @@ try {
                 'total_duration' => 0,
                 'created_at' => $row['created_at'],
                 'time_from' => $row['time_from'],
-                'time_to' => $row['time_to']
+                'time_to' => $row['time_to'],
+                'attachments' => []
             ];
         }
         
-        $grouped[$key]['raw_dates'][] = $row['start_date'];
-        $grouped[$key]['total_duration'] += (float)$row['duration'];
+        if (!in_array($row['start_date'], $grouped[$key]['raw_dates'])) {
+            $grouped[$key]['raw_dates'][] = $row['start_date'];
+            $grouped[$key]['total_duration'] += (float)$row['duration'];
+        }
+
+        // Add attachment if it exists and isn't already added
+        if ($row['file_path']) {
+            $found = false;
+            foreach ($grouped[$key]['attachments'] as $att) {
+                if ($att['path'] === $row['file_path']) { $found = true; break; }
+            }
+            if (!$found) {
+                $grouped[$key]['attachments'][] = [
+                    'path' => $row['file_path'],
+                    'name' => $row['file_name'],
+                    'type' => $row['file_type']
+                ];
+            }
+        }
     }
 
     $final = [];
@@ -56,7 +77,6 @@ try {
             $dateRange .= ' to ' . end($g['raw_dates']);
         }
 
-        // For Short Leave, show the time instead of duration maybe?
         $durStr = $g['total_duration'] . ' days';
         if ($g['leaveType'] === 'Short Leave' && $g['time_from']) {
             $durStr = $g['time_from'] . ' - ' . $g['time_to'];
@@ -69,11 +89,12 @@ try {
             'duration' => $durStr,
             'status' => $g['status'],
             'managerStatus' => $g['managerStatus'],
-            'reason' => $g['reason']
+            'reason' => $g['reason'],
+            'attachments' => $g['attachments']
         ];
     }
 
-    echo json_encode($final);
+    echo json_encode(['success' => true, 'data' => $final]);
 
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);

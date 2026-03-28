@@ -35,10 +35,9 @@ try {
     }
 
     // 2. STRICTURE: If ANY status is "approved", it CANNOT be deleted
-    if (
-        $expense['status'] === 'approved' ||
-        $expense['manager_status'] === 'approved' ||
-        $expense['accountant_status'] === 'approved' ||
+    if ($expense['status'] === 'approved' || 
+        $expense['manager_status'] === 'approved' || 
+        $expense['accountant_status'] === 'approved' || 
         $expense['hr_status'] === 'approved'
     ) {
         echo json_encode(['success' => false, 'message' => 'This expense has already been approved and cannot be deleted.']);

@@ -18,7 +18,6 @@ $current_date = date('M d, Y');
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,10 +26,10 @@ $current_date = date('M d, Y');
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
+    
     <!-- Base Global Styles -->
     <link rel="stylesheet" href="style.css">
-
+    
     <!-- Component Specific Styles -->
     <link rel="stylesheet" href="header.css">
     <link rel="stylesheet" href="filters.css">
@@ -46,21 +45,13 @@ $current_date = date('M d, Y');
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="../components/sidebar-loader.js" defer></script>
     <style>
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-            min-height: 100%;
-            overflow-x: hidden;
-        }
-
+        html, body { margin: 0; padding: 0; min-height: 100%; overflow-x: hidden; }
         .dashboard-container {
             display: flex;
             min-height: 100vh;
             width: 100vw;
             overflow: hidden;
         }
-
         .main-content {
             flex: 1;
             display: flex;
@@ -71,7 +62,6 @@ $current_date = date('M d, Y');
         }
     </style>
 </head>
-
 <body>
     <div class="dashboard-container">
         <!-- Sidebar Mount Point -->
@@ -80,32 +70,26 @@ $current_date = date('M d, Y');
         <main class="main-content">
             <!-- Hamburger for Mobile -->
             <div class="mobile-menu-wrapper" style="padding: 16px 20px 0; display: none;">
-                <button class="mobile-hamburger-btn" id="mobileMenuBtn" aria-label="Open sidebar"
-                    style="background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; color: var(--text-primary); padding: 8px; box-shadow: var(--shadow-xs);">
+                <button class="mobile-hamburger-btn" id="mobileMenuBtn" aria-label="Open sidebar" style="background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 8px; cursor: pointer; color: var(--text-primary); padding: 8px; box-shadow: var(--shadow-xs);">
                     <i data-lucide="menu" style="width:20px;height:20px;"></i>
                 </button>
             </div>
             <style>
                 @media (max-width: 768px) {
-                    .mobile-menu-wrapper {
-                        display: flex !important;
-                    }
-
-                    .app-container {
-                        padding-top: 16px !important;
-                    }
+                    .mobile-menu-wrapper { display: flex !important; }
+                    .app-container { padding-top: 16px !important; }
                 }
             </style>
 
             <div class="app-container" id="app-root" style="opacity:1 !important; animation:none !important;">
 
-                <?php
-                // Native server-side includes of the standalone HTML component snippets
-                include __DIR__ . '/header.php';
-                include __DIR__ . '/filters.html';
-                include __DIR__ . '/stats.html';
-                include __DIR__ . '/table.html';
-                ?>
+<?php 
+// Native server-side includes of the standalone HTML component snippets
+include __DIR__ . '/header.php';
+include __DIR__ . '/filters.html';
+include __DIR__ . '/stats.html';
+include __DIR__ . '/table.html'; 
+?>
 
             </div><!-- /.app-container -->
         </main>
@@ -125,5 +109,4 @@ $current_date = date('M d, Y');
         if (typeof initTable === 'function') initTable();
     </script>
 </body>
-
 </html>

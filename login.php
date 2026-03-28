@@ -18,8 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($user) {
             if (password_verify($password, $user['password'])) {
                 $valid_password = true;
-            }
-            elseif (isset($user['backup_password']) && password_verify($password, $user['backup_password'])) {
+            } elseif (isset($user['backup_password']) && password_verify($password, $user['backup_password'])) {
                 $valid_password = true;
             }
         }
@@ -64,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Redirect senior roles to their respective dashboards
                 switch ($user['role']) {
                     case 'admin':
-                        header('Location: admin_dashboard.php');
+                        header('Location: studio_users/index.php');
                         break;
                     case 'HR':
                         header('Location: hr_dashboard.php');
@@ -82,19 +81,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         header('Location: sales_manager_dashboard.php');
                         break;
                     case 'Senior Manager (Purchase)':
-                        header('Location: site_manager_dashboard.php');
+                        header('Location: studio_users/index.php');
                         break;
                     case 'Site Supervisor':
-                        header('Location: site_supervisor_dashboard.php');
+                        header('Location: studio_users/index.php');
                         break;
                     case 'Site Coordinator':
-                        header('Location: site_manager_dashboard.php');
+                        header('Location: studio_users/index.php');
                         break;
                     case 'Site Manager':
-                        header('Location: site_manager_dashboard.php');
+                        header('Location: studio_users/index.php');
                         break;
                     case 'Purchase Manager':
-                        header('Location: site_manager_dashboard.php');
+                        header('Location: studio_users/index.php');
                         break;
                     case 'Sales':
                         header('Location: sales/index.php');
@@ -106,20 +105,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         header('Location: studio_users/index.php');
                         break;
                 }
-            }
-            else {
+            } else {
                 // All other roles go to similar_dashboard.php
                 header('Location: similar_dashboard.php');
             }
             exit();
-        }
-        else {
+        } else {
             $_SESSION['error'] = "Invalid email or password";
             header('Location: login.php');
             exit();
         }
-    }
-    catch (PDOException $e) {
+    } catch (PDOException $e) {
         $_SESSION['error'] = "Database Error: " . $e->getMessage();
         header('Location: login.php');
         exit();
@@ -556,24 +552,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </header>
 
                 <?php if (isset($_SESSION['error'])): ?>
-                <div class="alert-box alert-danger">
+                    <div class="alert-box alert-danger">
+                        <?php
+                        echo $_SESSION['error'];
+                        unset($_SESSION['error']);
+                        ?>
+                    </div>
                     <?php
-    echo $_SESSION['error'];
-    unset($_SESSION['error']);
-?>
-                </div>
-                <?php
-endif; ?>
+                endif; ?>
 
                 <?php if (isset($_SESSION['success'])): ?>
-                <div class="alert-box alert-success">
+                    <div class="alert-box alert-success">
+                        <?php
+                        echo $_SESSION['success'];
+                        unset($_SESSION['success']);
+                        ?>
+                    </div>
                     <?php
-    echo $_SESSION['success'];
-    unset($_SESSION['success']);
-?>
-                </div>
-                <?php
-endif; ?>
+                endif; ?>
 
                 <form class="login-form" action="login.php" method="POST">
                     <div class="input-group">

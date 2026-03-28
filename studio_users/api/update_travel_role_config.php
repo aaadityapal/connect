@@ -12,7 +12,7 @@ require_once '../../config/db_connect.php';
 try {
     $uStmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
     $uStmt->execute([$_SESSION['user_id']]);
-    $userRole = $uStmt->fetchColumn();
+    $userRole = $uStmt->fetchColumn(); 
 
     // Accessible for Relationship Manager (and Admin as general safety)
     $allowed = ['Relationship Manager', 'Admin', 'admin'];

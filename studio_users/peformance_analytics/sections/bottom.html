@@ -1,0 +1,54 @@
+<div class="two-col" id="bottom-sections">
+
+    <!-- All Projects — shown for: all / stages / substages -->
+    <div class="section-card" id="projects-panel">
+        <div class="card-header-row">
+            <div class="card-title-left">
+                <span class="vertical-accent"></span>
+                <h3>All Projects — Stages &amp; Substages</h3>
+            </div>
+            <div class="search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" id="project-search" placeholder="Search projects..." oninput="filterProjects(this.value)">
+            </div>
+        </div>
+        <div class="empty-state" id="projects-empty">
+            <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+            <div class="empty-title">No project data available.</div>
+            <div class="empty-desc">Projects will appear here once assigned.</div>
+        </div>
+    </div>
+
+    <!-- Recent Task Completions — shown for: all / late -->
+    <div class="section-card" id="completions-panel">
+        <div class="card-header-row">
+            <div class="card-title-left">
+                <span class="vertical-accent"></span>
+                <h3>Recent Task Completions</h3>
+            </div>
+
+            <!-- Custom Dropdown -->
+            <div class="custom-range-select" id="range-select">
+                <div class="range-trigger" id="range-trigger">
+                    <span class="range-value" id="range-value-text">Last 30 days</span>
+                    <i class="fas fa-chevron-down range-caret"></i>
+                </div>
+                <div class="range-dropdown" id="range-dropdown">
+                    <div class="range-item active" data-value="30">Last 30 days</div>
+                    <div class="range-item"        data-value="60">Last 60 days</div>
+                    <div class="range-item"        data-value="90">Last 90 days</div>
+                    <div class="range-item"        data-value="180">Last 6 months</div>
+                    <div class="range-item"        data-value="365">Last 1 year</div>
+                </div>
+                <input type="hidden" id="completion-range" value="30">
+            </div>
+        </div>
+
+        <div class="empty-state" id="completions-empty">
+            <div class="empty-icon"><i class="fas fa-history"></i></div>
+            <div class="empty-title">No recent completions found.</div>
+            <div class="empty-desc">Completed tasks will appear here.</div>
+        </div>
+    </div>
+
+</div>

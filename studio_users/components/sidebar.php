@@ -14,6 +14,10 @@ if (isset($_SESSION['user_id'])) {
         $email = $user['email'];
     }
 }
+
+// Role-based access: define privileged roles
+$_userRole   = strtolower($_SESSION['role'] ?? '');
+$_isPrivileged = in_array($_userRole, ['admin', 'hr', 'relationship manager']);
 ?>
 <!-- =====================================================
      REUSABLE SIDEBAR COMPONENT
@@ -60,7 +64,8 @@ if (isset($_SESSION['user_id'])) {
         </a>
 
         <div class="menu-title">Personal</div>
-        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'profile/index.php'; return false;"
+        <a href="#"
+            onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'profile/index.php'; return false;"
             class="menu-item" data-page="profile">
             <i data-lucide="user-round" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">My Profile</span>
@@ -68,18 +73,23 @@ if (isset($_SESSION['user_id'])) {
         </a>
 
         <div class="menu-title">Leave &amp; Expenses</div>
-        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'leave_pages/index.php'; return false;"
+        <a href="#"
+            onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'leave_pages/index.php'; return false;"
             class="menu-item" data-page="apply-leave">
             <i data-lucide="calendar-check" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Apply Leave</span>
             <div class="tooltip">Apply Leave</div>
         </a>
-        <a href="travel-expenses.php" class="menu-item" data-page="travel-expenses">
+        <a href="#"
+            onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'travel_exp/index.php'; return false;"
+            class="menu-item" data-page="travel-expenses">
             <i data-lucide="receipt" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Travel Expenses</span>
             <div class="tooltip">Travel Expenses</div>
         </a>
-        <a href="overtime.php" class="menu-item" data-page="overtime">
+        <a href="#"
+            onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'overtime_page/index.php'; return false;"
+            class="menu-item" data-page="overtime">
             <i data-lucide="alarm-clock" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Overtime</span>
             <div class="tooltip">Overtime</div>
@@ -114,15 +124,19 @@ if (isset($_SESSION['user_id'])) {
             <div class="tooltip">Analytics</div>
         </a>
 
+        <?php if ($_isPrivileged): ?>
         <div class="menu-title">HR &amp; Admin</div>
-        <a href="javascript:void(0)" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'hr_backend/index.php'; return false;"
-           class="menu-item" data-page="hr-corner" style="cursor:pointer; display:flex !important; align-items:center !important; width:100%;">
+        <a href="javascript:void(0)"
+            onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'hr_backend/index.php'; return false;"
+            class="menu-item" data-page="hr-corner"
+            style="cursor:pointer; display:flex !important; align-items:center !important; width:100%;">
             <i data-lucide="briefcase" class="menu-icon" style="width:17px;height:17px; flex-shrink:0;"></i>
             <span class="menu-text">HR Corner</span>
             <div class="tooltip">HR Corner</div>
         </a>
+        <?php endif; ?>
 
-        <?php if (isset($_SESSION['role']) && strtolower($_SESSION['role']) === 'relationship manager'): ?>
+        <?php if ($_isPrivileged): ?>
         <div class="menu-title">Management</div>
         <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'hierarchy.php'; return false;"
             class="menu-item" data-page="hierarchy">
@@ -130,11 +144,19 @@ if (isset($_SESSION['user_id'])) {
             <span class="menu-text">Team Hierarchy</span>
             <div class="tooltip">Hierarchy</div>
         </a>
-        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'manager_mapping.php'; return false;"
+        <a href="#"
+            onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'manager_mapping.php'; return false;"
             class="menu-item" data-page="manager-mapping">
             <i data-lucide="users-2" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Manager Mapping</span>
             <div class="tooltip">Manager Mapping</div>
+        </a>
+        <a href="#"
+            onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'overtime_mapping.php'; return false;"
+            class="menu-item" data-page="overtime-mapping">
+            <i data-lucide="git-merge" class="menu-icon" style="width:17px;height:17px;"></i>
+            <span class="menu-text">Overtime Mapping</span>
+            <div class="tooltip">Overtime Mapping</div>
         </a>
         <?php endif; ?>
 
@@ -151,7 +173,7 @@ if (isset($_SESSION['user_id'])) {
         </a>
 
         <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../logout.php'; return false;"
-           class="menu-item menu-item-logout" data-page="logout">
+            class="menu-item menu-item-logout" data-page="logout">
             <i data-lucide="power" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Logout</span>
             <div class="tooltip">Logout</div>

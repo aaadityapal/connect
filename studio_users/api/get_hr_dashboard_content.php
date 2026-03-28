@@ -2,21 +2,22 @@
 // ============================================
 // get_hr_dashboard_content.php — Fetch latest HR content for dashboard
 // ============================================
+session_start();
 header('Content-Type: application/json');
 require_once '../../config/db_connect.php';
 
 try {
     global $pdo;
 
-    // Get current logged-in user
-    $username = $_SESSION['username'] ?? '';
+    // Get current logged-in user and sanitize
+    $username = trim($_SESSION['username'] ?? '');
 
-    // Fetch latest 10 active policies, joining with the fresh unique table
+    // Fetch latest 10 active policies, joining with the fresh unique table (using case-insensitive comparison)
     $stmtP = $pdo->prepare("
         SELECT p.id, p.heading, p.short_desc, p.long_desc, p.is_mandatory, p.updated_at,
                (CASE WHEN a.record_id IS NOT NULL THEN 1 ELSE 0 END) as is_acknowledged
         FROM hr_policies p
-        LEFT JOIN hr_user_compliance_records a ON a.document_id = p.id AND a.document_type = 'policy' AND a.user_uid = :username
+        LEFT JOIN hr_user_compliance_records a ON a.document_id = p.id AND a.document_type = 'policy' AND LOWER(a.user_uid) = LOWER(:username)
         WHERE p.is_active = 1
         ORDER BY p.updated_at DESC
         LIMIT 10
@@ -29,7 +30,7 @@ try {
         SELECT n.id, n.title, n.short_desc, n.long_desc, n.attachment, n.is_mandatory, n.created_at,
                (CASE WHEN a.record_id IS NOT NULL THEN 1 ELSE 0 END) as is_acknowledged
         FROM hr_notices n
-        LEFT JOIN hr_user_compliance_records a ON a.document_id = n.id AND a.document_type = 'notice' AND a.user_uid = :username
+        LEFT JOIN hr_user_compliance_records a ON a.document_id = n.id AND a.document_type = 'notice' AND LOWER(a.user_uid) = LOWER(:username)
         WHERE n.is_active = 1
         ORDER BY n.created_at DESC
         LIMIT 10

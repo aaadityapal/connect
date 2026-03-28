@@ -1,0 +1,112 @@
+/*
+  mobile.css — Layout overrides for phones and small tablets (≤ 768px)
+  Loaded after style.css and desktop.css. Only applies below 769px.
+*/
+
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+/* =====================================================
+   TABLET-PORTRAIT (481px – 768px)
+   ===================================================== */
+@media screen and (max-width: 768px) {
+
+    .app-container {
+        padding: 20px 16px 56px;
+    }
+
+    /* Hide desktop elements on mobile (Kept for historical components if needed) */
+    .desktop-only { display: none !important; }
+    button.mobile-only { display: flex !important; }
+
+    .dark-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+
+    .header-left {
+        width: 100%;
+        padding-right: 0;
+    }
+
+    .header-right {
+        align-self: flex-end;
+    }
+
+    .modern-stats {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 12px;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none; /* Firefox */
+    }
+    
+    .modern-stats::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+
+    .modern-stats .modern-card {
+        flex: 0 0 85%; /* Perfect width to show a peek of the next card on iPhones */
+        max-width: 250px;
+        scroll-snap-align: start;
+    }
+
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-actions {
+        margin-top: 10px;
+    }
+
+    .table-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
+
+/* =====================================================
+   PHONE-ONLY (≤ 480px)
+   ===================================================== */
+@media screen and (max-width: 480px) {
+
+    .app-container {
+        padding: 16px 12px 48px;
+    }
+
+    .dark-header {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+
+    /* Further scale down title font on tiny screens to avoid squishing the side boxes */
+    .header-left p {
+        font-size: 0.75rem !important;
+        margin-top: 2px;
+        line-height: 1.3;
+    }
+
+    .dark-header h2 {
+        font-size: 1rem;
+    }
+
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .btn-orange {
+        width: 100%;
+        justify-content: center;
+    }
+}

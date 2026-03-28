@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 require_once '../../config/db_connect.php';
 
 $user_id = $_SESSION['user_id'];
-$attendance_id = isset($_POST['attendance_id']) ? (int) $_POST['attendance_id'] : 0;
+$attendance_id = isset($_POST['attendance_id']) ? (int)$_POST['attendance_id'] : 0;
 $report = isset($_POST['report']) ? trim($_POST['report']) : '';
 
 // Count exact words using regex to precisely match JS split(/\s+/) behavior
@@ -34,25 +34,25 @@ try {
     $dateCheck = $pdo->prepare("SELECT date, overtime_status FROM attendance WHERE id = :id AND user_id = :user_id");
     $dateCheck->execute([':id' => $attendance_id, ':user_id' => $user_id]);
     $record = $dateCheck->fetch(PDO::FETCH_ASSOC);
-
+    
     if (!$record) {
         $pdo->rollBack();
         echo json_encode(['status' => 'error', 'message' => 'Record not found.']);
         exit();
     }
-
+    
     $today = new DateTime();
     $attendanceDate = new DateTime($record['date']);
     $interval = $today->diff($attendanceDate);
-
+    
     if ($interval->days > 15 && ($record['overtime_status'] == 'pending' || empty($record['overtime_status']))) {
         $pdo->rollBack();
         echo json_encode(['status' => 'error', 'message' => 'This overtime request has expired (15-day limit).']);
         exit();
     }
 
-    $manager_id = isset($_POST['manager_id']) ? (int) $_POST['manager_id'] : 0;
-
+    $manager_id = isset($_POST['manager_id']) ? (int)$_POST['manager_id'] : 0;
+    
     if (!$manager_id) {
         $pdo->rollBack();
         echo json_encode(['status' => 'error', 'message' => 'Please select a manager for approval.']);
@@ -82,7 +82,7 @@ try {
             $diffMins = floor(($punchOut - $shiftEnd) / 60);
             if ($diffMins >= 90) {
                 $calculatedOt = floor($diffMins / 30) * 0.5;
-
+                
                 // Also prepare TIME string for attendance table
                 $hours = floor($calculatedOt);
                 $minutes = round(($calculatedOt - $hours) * 60);
@@ -97,7 +97,7 @@ try {
         SET overtime_reason = :report, overtime_status = 'submitted', overtime_manager_id = :mgr_id, overtime_hours = :ot_hours
         WHERE id = :id AND user_id = :user_id AND overtime_status IN ('pending', 'submitted', 'rejected')
     ");
-
+    
     $stmt->execute([
         ':report' => $report,
         ':id' => $attendance_id,
@@ -116,14 +116,14 @@ try {
                 $oreqRow = $checkOreq->fetch(PDO::FETCH_ASSOC);
 
                 if ($oreqRow) {
-                    $currentResubmits = (int) $oreqRow['resubmit_count'];
-
+                    $currentResubmits = (int)$oreqRow['resubmit_count'];
+                    
                     // Enforce the limit of 2 resubmissions (only for rejected requests)
                     if ($oreqRow['status'] === 'rejected') {
                         if ($currentResubmits >= 2) {
-                            $pdo->rollBack();
-                            echo json_encode(['status' => 'error', 'message' => 'This overtime request has already been resubmitted twice and cannot be submitted again.']);
-                            exit();
+                             $pdo->rollBack();
+                             echo json_encode(['status' => 'error', 'message' => 'This overtime request has already been resubmitted twice and cannot be submitted again.']);
+                             exit();
                         }
                         $currentResubmits++;
                     }
@@ -175,7 +175,7 @@ try {
                 INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata) 
                 VALUES (:uid, 'overtime_submitted', 'attendance', :eid, :description, :meta)
             ");
-
+            
             $logMeta = json_encode([
                 'report' => $report,
                 'manager_id' => $manager_id,
@@ -200,11 +200,11 @@ try {
         $check = $pdo->prepare("SELECT id FROM attendance WHERE id = :id AND user_id = :user_id");
         $check->execute([':id' => $attendance_id, ':user_id' => $user_id]);
         if ($check->rowCount() > 0) {
-            $pdo->commit();
-            echo json_encode(['status' => 'success', 'message' => 'Report saved.']);
+             $pdo->commit();
+             echo json_encode(['status' => 'success', 'message' => 'Report saved.']);
         } else {
-            $pdo->rollBack();
-            echo json_encode(['status' => 'error', 'message' => 'Could not submit report. Record might not exist.']);
+             $pdo->rollBack();
+             echo json_encode(['status' => 'error', 'message' => 'Could not submit report. Record might not exist.']);
         }
     }
 } catch (Exception $e) {

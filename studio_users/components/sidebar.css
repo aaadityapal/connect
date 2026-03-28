@@ -467,6 +467,12 @@
     background: #f1f5f9;
 }
 
+/* Overtime Mapping — Rose */
+.menu-item[data-page="overtime-mapping"] .menu-icon {
+    color: #e11d48;
+    background: #fff1f2;
+}
+
 /* Settings — Slate */
 .menu-item[data-page="settings"] .menu-icon {
     color: #475569;

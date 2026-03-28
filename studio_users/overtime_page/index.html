@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overtime Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Base Global Styles -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Component Specific Styles -->
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="filters.css">  
+    <link rel="stylesheet" href="stats.css">
+    <link rel="stylesheet" href="table.css">
+
+    <!-- Layout Overrides per Viewport -->
+    <link rel="stylesheet" href="desktop.css">
+    <link rel="stylesheet" href="mobile.css">
+</head>
+<body>
+    <div class="app-container" id="app-root">
+        <!-- Components will be loaded here dynamically to maintain separation of concerns -->
+    </div><!-- /.app-container -->
+
+    <script>
+        async function loadComponents() {
+            const components = ['header.html', 'filters.html', 'stats.html', 'table.html'];
+            const root = document.getElementById('app-root');
+            
+            for (const file of components) {
+                try {
+                    // Prevent caching of HTML files so updates reflect immediately
+                    const response = await fetch(file + '?v=' + Date.now(), { cache: "no-store" });
+                    const html = await response.text();
+                    root.insertAdjacentHTML('beforeend', html);
+                } catch (error) {
+                    console.error('Error loading component:', file, error);
+                }
+            }
+        }
+        
+        // Load the HTML partials upon page init
+        loadComponents().then(() => {
+            console.log("All components loaded natively.");
+            
+            // Initialize each individual component's JavaScript logic
+            if (typeof initHeader === 'function') initHeader();
+            if (typeof initFilters === 'function') initFilters();
+            if (typeof initStats === 'function') initStats();
+            if (typeof initTable === 'function') initTable();
+        });
+    </script>
+    
+    <!-- Component-specific JavaScript Files -->
+    <script src="header.js"></script>
+    <script src="filters.js"></script>
+    <script src="stats.js"></script>
+    <script src="table.js"></script>
+</body>
+</html>

@@ -1,14 +1,37 @@
 (function () {
   function $(id) { return document.getElementById(id); }
+  function isValidAlphanumericPassword(pwd) {
+    // At least 8 chars, must contain at least one letter and one number, only letters/numbers.
+    return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(pwd);
+  }
 
   async function checkRequired() {
     try {
       const res = await fetch('api/check_password_reset_required.php', { cache: 'no-store' });
       const data = await res.json();
-      return !!(data && data.success && data.required);
+      if (!data || !data.success) {
+        return { required: false, reason: null, maxAgeDays: 90 };
+      }
+      return {
+        required: !!data.required,
+        reason: data.reason || null,
+        maxAgeDays: Number(data.max_age_days || 90)
+      };
     } catch (_) {
-      return false;
+      return { required: false, reason: null, maxAgeDays: 90 };
     }
+  }
+
+  function setSubtitle(reason, maxAgeDays) {
+    const sub = $('fpcmSub');
+    if (!sub) return;
+
+    if (reason === 'age_policy') {
+      sub.textContent = `For security, passwords must be updated every ${maxAgeDays} days. Please change your password to continue.`;
+      return;
+    }
+
+    sub.textContent = 'For security, you must change your password before continuing.';
   }
 
   function show() {
@@ -71,6 +94,10 @@
       setError('New password and confirm password do not match.');
       return;
     }
+    if (!isValidAlphanumericPassword(next)) {
+      setError('Password must be alphanumeric and at least 8 characters.');
+      return;
+    }
 
     try {
       if (btn) btn.disabled = true;
@@ -88,8 +115,8 @@
       }
 
       // Re-check requirement; only hide once cleared.
-      const stillRequired = await checkRequired();
-      if (stillRequired) {
+      const status = await checkRequired();
+      if (status.required) {
         setError('Password update failed to unlock the account. Please try again.');
         return;
       }
@@ -106,8 +133,10 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    const required = await checkRequired();
-    if (!required) return;
+    const status = await checkRequired();
+    if (!status.required) return;
+
+    setSubtitle(status.reason, status.maxAgeDays);
 
     show();
 

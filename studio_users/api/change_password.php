@@ -41,6 +41,12 @@ if ($newPassword !== $confirmPassword) {
     exit();
 }
 
+// Password policy: alphanumeric and at least 8 characters
+if (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/', $newPassword)) {
+    echo json_encode(['status' => 'error', 'message' => 'Password must be alphanumeric and at least 8 characters']);
+    exit();
+}
+
 try {
     ensureMustChangePasswordColumns($pdo);
 

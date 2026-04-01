@@ -86,6 +86,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <link rel="stylesheet" href="components/modals/extend-deadline-modal.css">
     <link rel="stylesheet" href="components/modals/custom-alert-modal.css">
     <link rel="stylesheet" href="components/modals/upcoming-deadline-modal.css">
+    <link rel="stylesheet" href="components/modals/force-password-change-modal.css">
     <link rel="stylesheet" href="components/modals/task-assigned-alert.css">
     <link rel="stylesheet" href="components/modals/recurrence-expiry-modal.css">
 
@@ -1042,6 +1043,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <?php include __DIR__ . '/components/modals/edit-task-modal.html'; ?>
     <?php include __DIR__ . '/components/modals/custom-alert-modal.html'; ?>
     <?php include __DIR__ . '/components/modals/upcoming-deadline-modal.html'; ?>
+    <?php include __DIR__ . '/components/modals/force-password-change-modal.html'; ?>
     
     <div id="teamModal" class="modal-overlay el-597">
         <div class="modal-content team-modal-content el-598">
@@ -1391,6 +1393,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <script src="components/modals/edit-task-modal.js"></script>
     <script src="components/modals/task-assigned-alert.js"></script>
     <script src="components/modals/recurrence-expiry-modal.js"></script>
+    <script src="components/modals/force-password-change-modal.js"></script>
     <script>
         /**
          * Dynamic Task List Loader (Performance Optimization)

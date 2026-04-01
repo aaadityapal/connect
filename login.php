@@ -57,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'Sales',
                 'Maid Back Office',
                 'Relationship Manager'
+                
             ];
 
             if (in_array($user['role'], $senior_roles)) {
@@ -75,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         header('Location: studio_users/index.php');
                         break;
                     case 'Senior Manager (Marketing)':
-                        header('Location: marketing_manager_dashboard.php');
+                        header('Location: studio_users/index.php');
                         break;
                     case 'Senior Manager (Sales)':
                         header('Location: sales_manager_dashboard.php');

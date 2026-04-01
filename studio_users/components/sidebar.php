@@ -2,21 +2,33 @@
 session_start();
 $username = 'Design awesome';
 $email = 'design.awesome@gmail.com';
+$dbRole = null;
+
+function normalizeRoleName($role): string {
+    $role = (string)$role;
+    $role = trim($role);
+    $role = preg_replace('/\s+/u', ' ', $role);
+    return $role ?? '';
+}
 if (isset($_SESSION['user_id'])) {
     // Adjust the path to config depending on where the calling file is executing from.
     // If it's loaded from studio_users/index.php, the working dimen for fetch is studio_users/
     require_once '../../config/db_connect.php';
-    $stmt = $pdo->prepare("SELECT username, email FROM users WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT username, email, role FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['user_id']]);
     $user = $stmt->fetch();
     if ($user) {
         $username = $user['username'];
         $email = $user['email'];
+        $dbRole = normalizeRoleName($user['role'] ?? '');
+        if ($dbRole !== '') {
+            $_SESSION['role'] = $dbRole;
+        }
     }
 }
 
 // Role-based access: fetch dynamic permissions
-$_userRole = $_SESSION['role'] ?? ''; 
+$_userRole = $dbRole ?? normalizeRoleName($_SESSION['role'] ?? '');
 $_userRoleLower = strtolower($_userRole);
 $_isAdmin = ($_userRoleLower === 'admin');
 

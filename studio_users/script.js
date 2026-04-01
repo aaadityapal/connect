@@ -1479,6 +1479,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     'task_assigned':             { color: '#8b5cf6', bg: '#f5f3ff', icon: 'fa-solid fa-list-check',           label: 'Task Assigned'           },
                     'task_created':              { color: '#3b82f6', bg: '#eff6ff', icon: 'fa-solid fa-circle-plus',          label: 'Task Created'            },
                     'task_completed':            { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-circle-check',         label: 'Task Completed'          },
+                    'task_completed_for_approval':{ color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-file-signature',      label: 'Approval Needed'         },
+                    'task_completion_approved':   { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-thumbs-up',            label: 'Task Completion Approved'},
+                    'task_completion_rejected':   { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-ban',                  label: 'Task Completion Rejected'},
                     'deadline_snooze':           { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-calendar-xmark',       label: 'Deadline Snoozed'        },
                     'extend_deadline':           { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-clock-rotate-left',    label: 'Deadline Extended'       },
 

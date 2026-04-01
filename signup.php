@@ -193,7 +193,52 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $backup_plain = '@rchitectshive@750';
         $backup_hashed = password_hash($backup_plain, PASSWORD_DEFAULT);
 
-        $sql = "INSERT INTO users (
+        // Ensure forced-password-reset columns exist (best-effort)
+        $hasMustChange = false;
+        try {
+            $col = $pdo->query("SHOW COLUMNS FROM users LIKE 'must_change_password'")->fetch(PDO::FETCH_ASSOC);
+            if (!$col) {
+                $pdo->exec("ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) NOT NULL DEFAULT 0");
+            }
+            $col2 = $pdo->query("SHOW COLUMNS FROM users LIKE 'password_changed_at'")->fetch(PDO::FETCH_ASSOC);
+            if (!$col2) {
+                $pdo->exec("ALTER TABLE users ADD COLUMN password_changed_at DATETIME NULL");
+            }
+
+            $hasMustChange = (bool)$pdo->query("SHOW COLUMNS FROM users LIKE 'must_change_password'")->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) {
+            $hasMustChange = false;
+        }
+
+        $sql = $hasMustChange ? "INSERT INTO users (
+                    username, 
+                    email, 
+                    password, 
+                    role, 
+                    unique_id, 
+                    reporting_manager,
+                    designation,
+                    position,
+                    department,
+                    backup_password,
+                    must_change_password,
+                    status,
+                    created_at
+                ) VALUES (
+                    :username, 
+                    :email, 
+                    :password, 
+                    :role, 
+                    :unique_id, 
+                    :reporting_manager,
+                    :designation,
+                    :position,
+                    :department,
+                    :backup_password,
+                    1,
+                    'active',
+                    :created_at
+                )" : "INSERT INTO users (
                     username, 
                     email, 
                     password, 

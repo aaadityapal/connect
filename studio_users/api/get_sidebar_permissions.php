@@ -9,6 +9,14 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once '../../config/db_connect.php';
 
+function normalizeRoleName($role): string {
+    $role = (string)$role;
+    $role = trim($role);
+    // Collapse internal whitespace (handles tabs / multiple spaces)
+    $role = preg_replace('/\s+/u', ' ', $role);
+    return $role ?? '';
+}
+
 // Check if user is admin
 $stmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
 $stmt->execute([$_SESSION['user_id']]);
@@ -21,8 +29,19 @@ if (!$user || strtolower($user['role']) !== 'admin') {
 
 try {
     // Get all roles
-    $stmtRoles = $pdo->query("SELECT DISTINCT role FROM users ORDER BY role ASC");
-    $roles = $stmtRoles->fetchAll(PDO::FETCH_COLUMN);
+    $stmtRoles = $pdo->query("SELECT DISTINCT role FROM users WHERE role IS NOT NULL ORDER BY role ASC");
+    $rolesRaw = $stmtRoles->fetchAll(PDO::FETCH_COLUMN);
+
+    $roles = [];
+    foreach ($rolesRaw as $r) {
+        $nr = normalizeRoleName($r);
+        if ($nr === '') {
+            continue;
+        }
+        $roles[$nr] = true;
+    }
+    $roles = array_keys($roles);
+    sort($roles, SORT_NATURAL | SORT_FLAG_CASE);
 
     // Get all permissions
     $stmtPerms = $pdo->query("SELECT * FROM sidebar_permissions");
@@ -35,8 +54,10 @@ try {
     }
     
     foreach ($perms as $p) {
-        if (isset($structured[$p['role']])) {
-            $structured[$p['role']][$p['menu_id']] = (int)$p['can_access'];
+        $roleKey = normalizeRoleName($p['role'] ?? '');
+        $menuId = trim((string)($p['menu_id'] ?? ''));
+        if ($roleKey !== '' && $menuId !== '' && isset($structured[$roleKey])) {
+            $structured[$roleKey][$menuId] = (int)$p['can_access'];
         }
     }
 

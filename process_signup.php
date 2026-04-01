@@ -2,8 +2,30 @@
 session_start();
 require_once 'config.php';
 
+function ensureMustChangePasswordColumns(PDO $pdo): void {
+    try {
+        $col = $pdo->query("SHOW COLUMNS FROM users LIKE 'must_change_password'")->fetch(PDO::FETCH_ASSOC);
+        if (!$col) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) NOT NULL DEFAULT 0");
+        }
+
+        $col2 = $pdo->query("SHOW COLUMNS FROM users LIKE 'password_changed_at'")->fetch(PDO::FETCH_ASSOC);
+        if (!$col2) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN password_changed_at DATETIME NULL");
+        }
+    } catch (Throwable $e) {
+        // ignore
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
+        ensureMustChangePasswordColumns($pdo);
+
+        $hasMustChange = false;
+        try {
+            $hasMustChange = (bool)$pdo->query("SHOW COLUMNS FROM users LIKE 'must_change_password'")->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) { $hasMustChange = false; }
         // Validate and sanitize inputs
         $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING);
         $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
@@ -45,8 +67,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $unique_id = $prefix . str_pad($next_id, 3, '0', STR_PAD_LEFT);
 
         // Insert new user
-        $stmt = $pdo->prepare("INSERT INTO users (unique_id, username, email, password, role, reporting_manager) 
-                              VALUES (?, ?, ?, ?, ?, ?)");
+        if ($hasMustChange) {
+            $stmt = $pdo->prepare("INSERT INTO users (unique_id, username, email, password, role, reporting_manager, must_change_password)
+                                  VALUES (?, ?, ?, ?, ?, ?, 1)");
+        } else {
+            $stmt = $pdo->prepare("INSERT INTO users (unique_id, username, email, password, role, reporting_manager)
+                                  VALUES (?, ?, ?, ?, ?, ?)");
+        }
         
         $stmt->execute([
             $unique_id,

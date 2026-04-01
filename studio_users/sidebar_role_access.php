@@ -399,6 +399,25 @@ $menu_items = [
             let roles = [];
             const menuStructure = <?php echo json_encode($menu_items); ?>;
 
+            function escapeHtml(str) {
+                return String(str)
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#039;');
+            }
+
+            function ensureRolePermObject(role) {
+                if (!allPermissions || typeof allPermissions !== 'object') {
+                    allPermissions = {};
+                }
+                if (!allPermissions[role] || Array.isArray(allPermissions[role]) || typeof allPermissions[role] !== 'object') {
+                    allPermissions[role] = {};
+                }
+                return allPermissions[role];
+            }
+
             function showToast(msg, type = 'success') {
                 toast.textContent = msg;
                 toast.style.background = type === 'success' ? '#1e293b' : '#ef4444';
@@ -413,12 +432,16 @@ $menu_items = [
                     
                     if (data.success) {
                         roles = data.roles;
-                        allPermissions = data.permissions;
+                        allPermissions = data.permissions || {};
+
+                        // Normalize empty role buckets to plain objects (not arrays)
+                        roles.forEach(r => ensureRolePermObject(r));
                         
                         // Populate roles dropdown
-                        roleSelector.innerHTML = roles.map(role => 
-                            `<option value="${role}">${role}</option>`
-                        ).join('');
+                        roleSelector.innerHTML = roles.map(role => {
+                            const safeRole = escapeHtml(role);
+                            return `<option value="${safeRole}">${safeRole}</option>`;
+                        }).join('');
                         
                         // Set current role to first one or admin if exists
                         const defaultRole = roles.includes('admin') ? 'admin' : roles[0];
@@ -435,7 +458,7 @@ $menu_items = [
 
             function renderPermissions(role) {
                 let html = '';
-                const rolePerms = allPermissions[role] || {};
+                const rolePerms = ensureRolePermObject(role);
 
                 for (const category in menuStructure) {
                     html += `
@@ -475,10 +498,8 @@ $menu_items = [
                 document.querySelectorAll('.perm-checkbox').forEach(cb => {
                     cb.addEventListener('change', function() {
                         const mid = this.dataset.menu;
-                        if (!allPermissions[roleSelector.value]) {
-                            allPermissions[roleSelector.value] = {};
-                        }
-                        allPermissions[roleSelector.value][mid] = this.checked ? 1 : 0;
+                        const bucket = ensureRolePermObject(roleSelector.value);
+                        bucket[mid] = this.checked ? 1 : 0;
                     });
                 });
             }
@@ -492,10 +513,13 @@ $menu_items = [
                 saveBtn.disabled = true;
                 
                 try {
+                    const selectedRole = roleSelector.value;
+                    const selectedPerms = ensureRolePermObject(selectedRole);
                     const response = await fetch('api/save_sidebar_permissions.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ permissions: allPermissions })
+                        // Send only the currently selected role to avoid unrelated-role failures.
+                        body: JSON.stringify({ role: selectedRole, permissions: selectedPerms })
                     });
                     
                     const data = await response.json();

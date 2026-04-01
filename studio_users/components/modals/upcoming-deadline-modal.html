@@ -1,15 +1,45 @@
 <div class="udm-overlay" id="upcomingDeadlineModalOverlay" style="display: none;">
     <div class="udm-box">
         <div class="udm-header">
-            <h3 class="udm-title">Deadline Approaching <span>⏱️</span></h3>
-            <!-- Manual close button removed to enforce priority handling -->
+            <h3 class="udm-title">Deadlines Approaching <span>⏱️</span></h3>
         </div>
-        <div class="udm-body">
-            <div id="udmTaskList" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
-                <!-- Tasks dynamically injected here -->
+
+        <!-- Tablet tabs (shown via CSS breakpoints) -->
+        <div class="udm-tabs" role="tablist" aria-label="Upcoming Deadline Tabs">
+            <button type="button" class="udm-tab" id="udmTabAction" role="tab" aria-selected="true" data-tab="action">
+                Action Required <span class="udm-tab-count" id="udmTabActionCount">0</span>
+            </button>
+            <button type="button" class="udm-tab" id="udmTabApproval" role="tab" aria-selected="false" data-tab="approvals">
+                Approvals <span class="udm-tab-count" id="udmTabApprovalCount">0</span>
+            </button>
+        </div>
+
+        <div class="udm-split">
+            <!-- Left: Action Required (my approaching/overdue tasks) -->
+            <div class="udm-pane udm-pane--action">
+                <div class="udm-pane-header">
+                    <div class="udm-pane-title">Action Required</div>
+                    <div class="udm-pane-sub" id="udmActionCount">(0)</div>
+                </div>
+                <div id="udmActionList" class="udm-list">
+                    <!-- Tasks dynamically injected here -->
+                </div>
+                <div class="udm-empty" id="udmActionEmpty" style="display:none;">No urgent tasks right now.</div>
             </div>
-            
-            <!-- Snooze button removed to enforce priority handling -->
+
+            <div class="udm-divider" aria-hidden="true"></div>
+
+            <!-- Right: Approvals (tasks I assigned, completed by others) -->
+            <div class="udm-pane udm-pane--approvals">
+                <div class="udm-pane-header">
+                    <div class="udm-pane-title">Approvals</div>
+                    <div class="udm-pane-sub" id="udmApprovalCount">(0)</div>
+                </div>
+                <div id="udmApprovalList" class="udm-list">
+                    <!-- Tasks dynamically injected here -->
+                </div>
+                <div class="udm-empty" id="udmApprovalEmpty" style="display:none;">No approvals pending.</div>
+            </div>
         </div>
     </div>
 </div>

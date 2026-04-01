@@ -6,6 +6,7 @@
 // =====================================================
 session_start();
 require_once '../../config/db_connect.php';
+require_once __DIR__ . '/activity_helper.php';
 
 // ── Force IST timezone so all timestamps are consistent ──
 date_default_timezone_set('Asia/Kolkata');
@@ -102,7 +103,17 @@ try {
     // ─────────────────────────────────────────────────────────────────
     // Make sure the task is actually assigned to this user before updating
     $check = $pdo->prepare("
-        SELECT id, project_name, stage_number, assigned_to, completed_by, completion_history, status 
+                SELECT id,
+                             project_name,
+                             stage_number,
+                             task_description,
+                             created_by,
+                             assigned_to,
+                             assigned_names,
+                             completed_by,
+                             completed_at,
+                             completion_history,
+                             status
         FROM studio_assigned_tasks
         WHERE id = :id
           AND deleted_at IS NULL
@@ -115,6 +126,8 @@ try {
         echo json_encode(['success' => false, 'error' => 'Task not found or access denied']);
         exit();
     }
+
+    $previousGlobalStatus = $taskRow['status'] ?? null;
 
     $assignedToArr = array_filter(array_map('trim', explode(',', $taskRow['assigned_to'])));
     $completedByArr = array_filter(array_map('trim', explode(',', $taskRow['completed_by'] ?? '')));
@@ -174,20 +187,41 @@ try {
     $descPrefix = ($status === 'Completed') ? 'Task completed: ' : "Task marked as {$status}: ";
 
     try {
-        $logStmt = $pdo->prepare("
-            INSERT INTO global_activity_logs
-            (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read)
-            VALUES
-            (:user_id, :action_type, 'task', :entity_id, :description, :metadata, NOW(), 0)
-        ");
-        $logStmt->execute([
-            ':user_id'     => $userId,
-            ':action_type' => $actionType,
-            ':entity_id'   => $taskId,
-            ':description' => $descPrefix . '"' . $title . '"',
-            ':metadata'    => json_encode(['status' => $status, 'title' => $title])
+        logUserActivity($pdo, $userId, $actionType, 'task', $descPrefix . '"' . $title . '"', $taskId, [
+            'task_id' => $taskId,
+            'title' => $title,
+            'requested_status' => $status,
+            'previous_global_status' => $previousGlobalStatus,
+            'new_global_status' => $newGlobalStatus,
+            'all_assignees_completed' => $allCompleted,
+            'created_by' => isset($taskRow['created_by']) ? (int)$taskRow['created_by'] : null,
+            'assigned_to' => array_values(array_filter(array_map('intval', $assignedToArr), fn($v) => $v > 0)),
+            'assigned_names' => $taskRow['assigned_names'] ?? null,
+            'completed_by' => $completedStr,
+            'completed_at' => $allCompleted ? $nowIst : null,
+            'completion_history' => $history,
         ]);
     } catch (Exception $e) {} // non-fatal
+
+    // If the task just became fully completed, log an "awaiting approval" activity for the creator
+    $creatorId = isset($taskRow['created_by']) ? (int)$taskRow['created_by'] : 0;
+    if ($creatorId > 0 && $creatorId !== $userId && $previousGlobalStatus !== 'Completed' && $newGlobalStatus === 'Completed') {
+        try {
+            logUserActivity($pdo, $creatorId, 'task_completed_for_approval', 'task', 'Task completed and awaiting your approval: ' . '"' . $title . '"', $taskId, [
+                'task_id' => $taskId,
+                'title' => $title,
+                'event' => 'needs_approval',
+                'previous_global_status' => $previousGlobalStatus,
+                'new_global_status' => $newGlobalStatus,
+                'created_by' => $creatorId,
+                'assigned_to' => array_values(array_filter(array_map('intval', $assignedToArr), fn($v) => $v > 0)),
+                'assigned_names' => $taskRow['assigned_names'] ?? null,
+                'completed_by' => $completedStr,
+                'completed_at' => $nowIst,
+                'completion_history' => $history,
+            ]);
+        } catch (Exception $e) {} // non-fatal
+    }
     // ────────────────────────────────────────────────────────────────────────
 
     echo json_encode([

@@ -2,8 +2,30 @@
 session_start();
 require_once 'config.php';
 
+function ensureMustChangePasswordColumns(PDO $pdo): void {
+    try {
+        $col = $pdo->query("SHOW COLUMNS FROM users LIKE 'must_change_password'")->fetch(PDO::FETCH_ASSOC);
+        if (!$col) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) NOT NULL DEFAULT 0");
+        }
+
+        $col2 = $pdo->query("SHOW COLUMNS FROM users LIKE 'password_changed_at'")->fetch(PDO::FETCH_ASSOC);
+        if (!$col2) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN password_changed_at DATETIME NULL");
+        }
+    } catch (Throwable $e) {
+        // ignore
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     try {
+        ensureMustChangePasswordColumns($pdo);
+
+        $hasMustChange = false;
+        try {
+            $hasMustChange = (bool)$pdo->query("SHOW COLUMNS FROM users LIKE 'must_change_password'")->fetch(PDO::FETCH_ASSOC);
+        } catch (Throwable $e) { $hasMustChange = false; }
         // Debug: Log all POST data
         error_log("POST Data: " . print_r($_POST, true));
 
@@ -42,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         error_log("Weekly Off: " . $weekly_off);
 
         // Update the database query
-        $sql = "INSERT INTO users (
+        $sql = $hasMustChange ? "INSERT INTO users (
             username, 
             email, 
             password, 
@@ -51,6 +73,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             role, 
             shift_start, 
             shift_end, 
+            weekly_off,
+            must_change_password
+        ) VALUES (
+            :username,
+            :email,
+            :password,
+            :department,
+            :designation,
+            :role,
+            :shift_start,
+            :shift_end,
+            :weekly_off,
+            1
+        )" : "INSERT INTO users (
+            username,
+            email,
+            password,
+            department,
+            designation,
+            role,
+            shift_start,
+            shift_end,
             weekly_off
         ) VALUES (
             :username,

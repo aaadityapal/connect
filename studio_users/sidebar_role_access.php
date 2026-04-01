@@ -50,7 +50,8 @@ $menu_items = [
         'manager-mapping' => ['label' => 'Manager Mapping', 'icon' => 'users-2'],
         'overtime-mapping' => ['label' => 'Overtime Mapping', 'icon' => 'git-merge'],
         'travel-exp-mapping' => ['label' => 'Travel Expense Mapping', 'icon' => 'git-branch'],
-        'travel-exp-settings' => ['label' => 'Travel Expense Settings', 'icon' => 'settings']
+        'travel-exp-settings' => ['label' => 'Travel Expense Settings', 'icon' => 'settings'],
+        'password-reset-mng' => ['label' => 'Password Reset', 'icon' => 'key-round']
     ],
     'System' => [
         'settings' => ['label' => 'Settings', 'icon' => 'settings-2'],

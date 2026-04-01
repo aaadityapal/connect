@@ -214,7 +214,8 @@ function canShow($menuId, $perms) {
         $showMngMap = canShow('manager-mapping', $_permissions);
         $showOtMap = canShow('overtime-mapping', $_permissions);
         $showTxMap = canShow('travel-exp-mapping', $_permissions);
-        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap):
+        $showPwReset = canShow('password-reset-mng', $_permissions);
+        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset):
         ?>
             <div class="menu-title">Management</div>
             <?php if ($showLeaveApp): ?>
@@ -277,6 +278,15 @@ function canShow($menuId, $perms) {
                 <i data-lucide="settings" class="menu-icon" style="width:17px;height:17px;"></i>
                 <span class="menu-text">Travel Exp Settings</span>
                 <div class="tooltip">Travel Exp Settings</div>
+            </a>
+            <?php endif; ?>
+            <?php if ($showPwReset): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/password_reset/index.php'; return false;"
+                class="menu-item" data-page="password-reset-mng">
+                <i data-lucide="key-round" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Password Reset</span>
+                <div class="tooltip">Password Reset</div>
             </a>
             <?php endif; ?>
         <?php endif; ?>

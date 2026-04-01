@@ -43,6 +43,7 @@
         if (path.includes('/manager_mapping'))    return 'manager-mapping';
         if (path.includes('/manager_pages/leave_approval/')) return 'leave-approval-mng';
         if (path.includes('/manager_pages/travel_expenses_approval/')) return 'travel-exp-approval-mng';
+        if (path.includes('/manager_pages/password_reset/')) return 'password-reset-mng';
         if (path.includes('/projects'))           return 'projects';
         if (path.includes('/site-updates'))       return 'site-updates';
         if (path.includes('/my-tasks'))           return 'my-tasks';

@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'Sales',
                 'Maid Back Office',
                 'Relationship Manager'
-                
+
             ];
 
             if (in_array($user['role'], $senior_roles)) {

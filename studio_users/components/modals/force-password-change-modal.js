@@ -1,8 +1,67 @@
 (function () {
   function $(id) { return document.getElementById(id); }
+
   function isValidAlphanumericPassword(pwd) {
     // At least 8 chars, must contain at least one letter and one number, only letters/numbers.
     return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(pwd);
+  }
+
+  function generateAlphanumericPassword(length = 10) {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    const digits = '0123456789';
+    const all = letters + digits;
+
+    const chars = [];
+    chars.push(letters[Math.floor(Math.random() * letters.length)]);
+    chars.push(digits[Math.floor(Math.random() * digits.length)]);
+
+    for (let i = chars.length; i < length; i++) {
+      chars.push(all[Math.floor(Math.random() * all.length)]);
+    }
+
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [chars[i], chars[j]] = [chars[j], chars[i]];
+    }
+
+    return chars.join('');
+  }
+
+  function bindPasswordVisibility() {
+    document.querySelectorAll('.fpcm-icon-btn[data-target]').forEach((btn) => {
+      if (btn.dataset.bound === '1') return;
+      btn.dataset.bound = '1';
+
+      btn.addEventListener('click', () => {
+        const targetId = btn.getAttribute('data-target');
+        const input = targetId ? $(targetId) : null;
+        if (!input) return;
+
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+
+        const icon = btn.querySelector('i');
+        if (icon) {
+          icon.className = show ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+        }
+      });
+    });
+  }
+
+  function bindGenerator() {
+    const btn = $('fpcmGenerateBtn');
+    if (!btn || btn.dataset.bound === '1') return;
+    btn.dataset.bound = '1';
+
+    btn.addEventListener('click', () => {
+      const generated = generateAlphanumericPassword(10);
+      const newInput = $('fpcmNew');
+      const confirmInput = $('fpcmConfirm');
+
+      if (newInput) newInput.value = generated;
+      if (confirmInput) confirmInput.value = generated;
+      setError('');
+    });
   }
 
   async function checkRequired() {
@@ -133,6 +192,9 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
+    bindPasswordVisibility();
+    bindGenerator();
+
     const status = await checkRequired();
     if (!status.required) return;
 

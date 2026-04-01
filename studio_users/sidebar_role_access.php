@@ -51,7 +51,8 @@ $menu_items = [
         'overtime-mapping' => ['label' => 'Overtime Mapping', 'icon' => 'git-merge'],
         'travel-exp-mapping' => ['label' => 'Travel Expense Mapping', 'icon' => 'git-branch'],
         'travel-exp-settings' => ['label' => 'Travel Expense Settings', 'icon' => 'settings'],
-        'password-reset-mng' => ['label' => 'Password Reset', 'icon' => 'key-round']
+        'password-reset-mng' => ['label' => 'Password Reset', 'icon' => 'key-round'],
+        'employee-work-report' => ['label' => 'Employee Work Report', 'icon' => 'file-text']
     ],
     'System' => [
         'settings' => ['label' => 'Settings', 'icon' => 'settings-2'],

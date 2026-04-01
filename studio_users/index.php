@@ -1383,7 +1383,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <script src="header.js"></script>
     <script src="components/schedule-loader.js"></script>
     <script src="components/modals/task-modal-loader.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=<?= time() ?>"></script>
     <script src="components/my-tasks.js"></script>
     <script src="components/modals/extend-deadline-modal.js"></script>
     <script src="components/modals/custom-alert-modal.js"></script>

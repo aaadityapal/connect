@@ -1471,13 +1471,42 @@ document.addEventListener("DOMContentLoaded", () => {
             function buildLogHTML(log) {
                 // Color + icon mapping per action type
                 const typeConfig = {
-                    'punch_in':        { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-fingerprint',        label: 'Punched In'        },
-                    'punch_out':       { color: '#ef4444', bg: '#fff5f5', icon: 'fa-solid fa-right-from-bracket', label: 'Punched Out'       },
-                    'task_assigned':   { color: '#8b5cf6', bg: '#f5f3ff', icon: 'fa-solid fa-list-check',         label: 'Task Assigned'     },
-                    'deadline_snooze': { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-calendar-xmark',     label: 'Deadline Snoozed'  },
-                    'extend_deadline': { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-clock-rotate-left',  label: 'Deadline Extended' },
-                    'task_created':    { color: '#3b82f6', bg: '#eff6ff', icon: 'fa-solid fa-circle-plus',        label: 'Task Created'      },
-                    'task_completed':  { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-circle-check',       label: 'Task Completed'    },
+                    // ── Attendance ─────────────────────────────────────────────────────
+                    'punch_in':                  { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-fingerprint',          label: 'Punched In'              },
+                    'punch_out':                 { color: '#ef4444', bg: '#fff5f5', icon: 'fa-solid fa-right-from-bracket',   label: 'Punched Out'             },
+
+                    // ── Tasks ──────────────────────────────────────────────────────────
+                    'task_assigned':             { color: '#8b5cf6', bg: '#f5f3ff', icon: 'fa-solid fa-list-check',           label: 'Task Assigned'           },
+                    'task_created':              { color: '#3b82f6', bg: '#eff6ff', icon: 'fa-solid fa-circle-plus',          label: 'Task Created'            },
+                    'task_completed':            { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-circle-check',         label: 'Task Completed'          },
+                    'deadline_snooze':           { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-calendar-xmark',       label: 'Deadline Snoozed'        },
+                    'extend_deadline':           { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-clock-rotate-left',    label: 'Deadline Extended'       },
+
+                    // ── Travel Expenses ────────────────────────────────────────────────
+                    'travel_added':              { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-plane-departure',      label: 'Travel Added'            },
+                    'travel_updated':            { color: '#6366f1', bg: '#eef2ff', icon: 'fa-solid fa-file-pen',             label: 'Travel Updated'          },
+                    'travel_deleted':            { color: '#f43f5e', bg: '#fff1f2', icon: 'fa-solid fa-plane-slash',          label: 'Travel Deleted'          },
+                    'travel_approved':           { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-plane-circle-check',   label: 'Travel Approved'         },
+                    'travel_rejected':           { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-plane-circle-xmark',   label: 'Travel Rejected'         },
+                    'travel_paid':               { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-money-bill-transfer',  label: 'Travel Paid'             },
+                    // aliases (kept for safety)
+                    'travel_expense_added':      { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-plane-departure',      label: 'Travel Added'            },
+                    'travel_expense_edited':     { color: '#6366f1', bg: '#eef2ff', icon: 'fa-solid fa-file-pen',             label: 'Travel Updated'          },
+                    'travel_expense_deleted':    { color: '#f43f5e', bg: '#fff1f2', icon: 'fa-solid fa-plane-slash',          label: 'Travel Deleted'          },
+
+                    // ── Overtime ───────────────────────────────────────────────────────
+                    'overtime_submitted':        { color: '#f97316', bg: '#fff7ed', icon: 'fa-solid fa-business-time',        label: 'Overtime Submitted'      },
+                    'overtime_added':            { color: '#f97316', bg: '#fff7ed', icon: 'fa-solid fa-business-time',        label: 'Overtime Submitted'      },
+                    'overtime_approved':         { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-user-check',           label: 'Overtime Approved'       },
+                    'overtime_rejected':         { color: '#dc2626', bg: '#fef2f2', icon: 'fa-solid fa-user-xmark',           label: 'Overtime Rejected'       },
+                    'overtime_edited':           { color: '#d97706', bg: '#fffbeb', icon: 'fa-solid fa-pen-ruler',            label: 'Overtime Edited'         },
+
+                    // ── Leave ──────────────────────────────────────────────────────────
+                    'leave_applied':             { color: '#22c55e', bg: '#f0fdf4', icon: 'fa-solid fa-calendar-check',       label: 'Leave Applied'           },
+                    'leave_approved':            { color: '#22c55e', bg: '#f0fdf4', icon: 'fa-solid fa-calendar-check',       label: 'Leave Approved'          },
+                    'leave_edited':              { color: '#a855f7', bg: '#faf5ff', icon: 'fa-solid fa-pen-to-square',        label: 'Leave Edited'            },
+                    'leave_rejected':            { color: '#e11d48', bg: '#fff1f2', icon: 'fa-solid fa-calendar-xmark',       label: 'Leave Rejected'          },
+                    'leave_deleted':             { color: '#6b7280', bg: '#f9fafb', icon: 'fa-solid fa-calendar-minus',       label: 'Leave Deleted'           },
                 };
                 const cfg = typeConfig[log.action_type] || { color: '#64748b', bg: '', icon: 'fa-solid fa-bell', label: formatActionType(log.action_type) };
 
@@ -1829,6 +1858,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if (data.success) {
                 dynamicHRItems = [];
+                window.dynamicHRItems = dynamicHRItems;
                 
                 // --- Add Hardcoded Policies to general rotation for visibility ---
                 mandatoryPolicies.forEach(p => {
@@ -1886,6 +1916,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     dynamicHRItems.push(noticeText);
                 });
 
+                // Keep global reference fresh for rotation restart
+                window.dynamicHRItems = dynamicHRItems;
+
                 // Update the compliance display immediately after syncing
                 if (typeof updateHRCornerDisplay === 'function') updateHRCornerDisplay();
 
@@ -1899,6 +1932,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     if (hrPolicyText) hrPolicyText.textContent = "No recent HR updates.";
                 }
+            } else {
+                const msg = (data && data.message) ? String(data.message) : 'Unable to load HR updates.';
+                console.error('[HR Corner] API returned error:', msg, data);
+                if (hrPolicyText) hrPolicyText.textContent = msg;
             }
         } catch (e) {
             console.error("[HR Corner] Error fetching data:", e);
@@ -2037,6 +2074,15 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderPolicySteps() {
         if (!policyStepsList) return;
         policyStepsList.innerHTML = '';
+
+        if (!mandatoryPolicies || mandatoryPolicies.length === 0) {
+            if (policyStepText) policyStepText.textContent = '0 of 0';
+            if (policyProgressPercent) policyProgressPercent.textContent = '0%';
+            if (policyProgressFill) policyProgressFill.style.width = '0%';
+            if (policyBadge) policyBadge.style.display = 'none';
+            return;
+        }
+
         mandatoryPolicies.forEach((p, index) => {
             const el = document.createElement('div');
             el.className = `policy-step-item ${index === currentPolicyIndex ? 'active' : ''} ${p.accepted ? 'completed' : ''}`;
@@ -2057,7 +2103,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Update Progress Bar
         const acceptedCount = mandatoryPolicies.filter(p => p.accepted).length;
         const total = mandatoryPolicies.length;
-        const pct = Math.round((acceptedCount / total) * 100);
+        const pct = total > 0 ? Math.round((acceptedCount / total) * 100) : 0;
 
         if (policyStepText) policyStepText.textContent = `Step ${currentPolicyIndex + 1} of ${total}`;
         if (policyProgressPercent) policyProgressPercent.textContent = `${pct}%`;
@@ -2200,6 +2246,12 @@ document.addEventListener("DOMContentLoaded", () => {
         openPolicyBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
+
+            if (!mandatoryPolicies || mandatoryPolicies.length === 0) {
+                alert('No pending HR policies/notices to acknowledge.');
+                return;
+            }
+
             // Find first unaccepted or start at 0
             const firstPending = mandatoryPolicies.findIndex(p => !p.accepted);
             loadPolicy(firstPending !== -1 ? firstPending : 0);

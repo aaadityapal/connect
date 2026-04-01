@@ -40,6 +40,11 @@ try {
                 'manager_status' => $row['manager_status'],
                 'accountant_status' => $row['accountant_status'],
                 'hr_status' => $row['hr_status'],
+                'manager_reason' => $row['manager_reason'],
+                'accountant_reason' => $row['accountant_reason'],
+                'hr_reason' => $row['hr_reason'],
+                'resubmission_count' => $row['resubmission_count'],
+                'max_resubmissions'  => $row['max_resubmissions'] ?? 3,
                 'payment_status' => $row['payment_status'] ?? 'Pending',
                 'attachments' => []
             ];

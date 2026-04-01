@@ -24,10 +24,16 @@ try {
     $rStmt->execute([$userRole]);
     $requireMeters = $rStmt->fetchColumn();
 
+    $mStmt = $pdo->prepare("SELECT meter_mode FROM travel_meter_mode_config WHERE user_id = ?");
+    $mStmt->execute([$user_id]);
+    $meterMode = $mStmt->fetchColumn();
+    if ($meterMode === false) $meterMode = 0; // Default to Attendance (0)
+
     echo json_encode([
         'success' => true,
         'configs' => $configs,
         'user_requirement' => $requireMeters == 1,
+        'meter_mode' => (int)$meterMode,
         'user_role' => $userRole
     ]);
 } catch (PDOException $e) {

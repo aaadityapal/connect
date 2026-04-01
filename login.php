@@ -66,13 +66,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         header('Location: studio_users/index.php');
                         break;
                     case 'HR':
-                        header('Location: hr_dashboard.php');
+                        header('Location: studio_users/index.php');
                         break;
                     case 'Senior Manager (Studio)':
-                        header('Location: real.php');
+                        header('Location: studio_users/index.php');
                         break;
                     case 'Senior Manager (Site)':
-                        header('Location: site_manager_dashboard.php');
+                        header('Location: studio_users/index.php');
                         break;
                     case 'Senior Manager (Marketing)':
                         header('Location: marketing_manager_dashboard.php');
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             } else {
                 // All other roles go to similar_dashboard.php
-                header('Location: similar_dashboard.php');
+                header('Location: studio_users/index.php');
             }
             exit();
         } else {

@@ -473,6 +473,12 @@
     background: #fff1f2;
 }
 
+/* Leave Approval (Manager) — Blue/Indigo */
+.menu-item[data-page="leave-approval-mng"] .menu-icon {
+    color: #3b82f6;
+    background: #eff6ff;
+}
+
 /* Settings — Slate */
 .menu-item[data-page="settings"] .menu-icon {
     color: #475569;

@@ -206,10 +206,12 @@ body {
   font-size: 12px;
   font-weight: 500;
 }
-.badge-pending  { background: var(--clr-amber-light);  color: var(--clr-amber);  }
-.badge-approved { background: var(--clr-green-light);  color: var(--clr-green);  }
-.badge-paid     { background: var(--clr-purple-light); color: var(--clr-purple); }
-.badge-rejected { background: var(--clr-red-light);    color: var(--clr-red);    }
+.badge-pending   { background: var(--clr-amber-light);  color: var(--clr-amber);  }
+.badge-partially { background: var(--clr-purple-light); color: var(--clr-purple); }
+.badge-approved  { background: var(--clr-green-light);  color: var(--clr-green);  }
+.badge-paid      { background: var(--clr-teal-light);   color: var(--clr-teal);   }
+.badge-rejected  { background: var(--clr-red-light);    color: var(--clr-red);    }
+.badge-resubmit  { background: #e0f2fe;                 color: #0284c7;           }
 
 /* ─── General Utilities ──────────────────── */
 .flex-between {

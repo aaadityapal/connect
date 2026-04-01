@@ -34,6 +34,7 @@ async function fetchExpenses() {
         const roleData = await roleResp.json();
         if (roleData.success) {
             userRequiresMeters = roleData.user_requirement;
+            userMeterMode = roleData.meter_mode;
         }
 
         // 2. Fetch transport rates
@@ -109,6 +110,7 @@ function showStatusAlert(msg, title = "Attention") {
 let routingControl = null;
 let leafletMap = null;
 let userRequiresMeters = false; 
+let userMeterMode = 0; // 0 = Attendance, 1 = Manual
 let transportRates = {}; // { 'Car': 10, 'Bike': 5, ... }
 
 /* ═══════════════════════════════════════════════
@@ -357,7 +359,7 @@ function renderTable(dataArray) {
 
     if (dataArray.length === 0) {
         tbody.innerHTML = `
-            <tr><td colspan="10" style="padding:0;">
+            <tr><td colspan="11" style="padding:0;">
                 <div class="empty-state">
                     <div class="empty-state-icon"><i class="fa-solid fa-car-side"></i></div>
                     <div class="empty-state-title">No travel expenses found</div>
@@ -368,19 +370,46 @@ function renderTable(dataArray) {
     }
 
     tbody.innerHTML = dataArray.map(item => {
-        let finalStatus = item.status;
+        let finalStatus = (item.status || 'pending').toLowerCase();
+        let displayStatus = finalStatus.charAt(0).toUpperCase() + finalStatus.slice(1);
+        
+        if (finalStatus === 'pending') {
+            const m = (item.manager_status || 'pending').toLowerCase();
+            const h = (item.hr_status || 'pending').toLowerCase();
+            const a = (item.accountant_status || 'pending').toLowerCase();
+            if (m === 'approved' || h === 'approved' || a === 'approved') {
+                finalStatus = 'partially';
+                displayStatus = 'Partially Approved';
+            }
+        }
+
+        // Resubmit overrides
+        if (finalStatus === 'resubmit') {
+            displayStatus = 'Resubmitted';
+        }
+
         if (item.payment_status && item.payment_status.toLowerCase() === 'paid') {
             finalStatus = 'paid';
+            displayStatus = 'Paid';
         }
+
         const badgeClass = `badge badge-${finalStatus}`;
-        const statusText = finalStatus.charAt(0).toUpperCase() + finalStatus.slice(1);
+        const statusText = displayStatus;
         const isLocked = item.manager_status === 'approved' || 
                          item.accountant_status === 'approved' || 
                          item.hr_status === 'approved' || 
                          item.status === 'approved';
 
+        let rowBgColor = '';
+        if (finalStatus === 'rejected') rowBgColor = '#fef2f2';         // light red
+        else if (finalStatus === 'approved') rowBgColor = '#f0fdf4';    // light green
+        else if (finalStatus === 'partially') rowBgColor = '#faf5ff';   // light purple
+        else if (finalStatus === 'pending') rowBgColor = '#fefce8';     // light yellow
+        else if (finalStatus === 'resubmit') rowBgColor = '#f0f9ff';    // powder blue
+        else if (finalStatus === 'paid') rowBgColor = '#f0fdfa';        // light teal
+
         return `
-            <tr>
+            <tr style="background-color: ${rowBgColor};">
                 <td><strong>${item.id}</strong></td>
                 <td>${item.date}</td>
                 <td>${item.purpose}</td>
@@ -391,14 +420,21 @@ function renderTable(dataArray) {
                 <td><strong>${fmt(item.amount)}</strong></td>
                 <td><span class="${badgeClass}">${statusText}</span></td>
                 <td>
+                    <span class="badge ${item.payment_status && item.payment_status.toLowerCase() === 'paid' ? 'badge-approved' : 'badge-pending'}" style="${item.payment_status && item.payment_status.toLowerCase() === 'paid' ? 'background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0;' : 'background:#fffbe6; color:#f59e0b; border:1px solid #ffe58f;'}">
+                        ${item.payment_status || 'Unpaid'}
+                    </span>
+                </td>
+                <td>
                     <div class="actions-cell">
                         <button class="action-btn-custom view" title="View Details" data-id="${item.id}"><i class="fa-solid fa-eye"></i></button>
-                        ${!isLocked ? `
+                        ${!isLocked && finalStatus !== 'rejected' ? `
                             <button class="action-btn-custom edit" title="Edit" data-id="${item.id}"><i class="fa-solid fa-pen" style="color:#ff8b45;"></i></button>
                             <button class="action-btn-custom del"  title="Delete" data-id="${item.id}"><i class="fa-solid fa-trash-can" style="color:#aba2c5;"></i></button>
+                        ` : (finalStatus === 'rejected' ? `
+                            <button class="action-btn-custom resubmit" title="Resubmit" data-id="${item.id}"><i class="fa-solid fa-rotate-right" style="color:#3b82f6;"></i></button>
                         ` : `
-                            <button class="action-btn-custom" title="Locked (Approved)" style="opacity:0.4; cursor:not-allowed;" disabled><i class="fa-solid fa-lock"></i></button>
-                        `}
+                            <button class="action-btn-custom" title="Locked" style="opacity:0.4; cursor:not-allowed;" disabled><i class="fa-solid fa-lock"></i></button>
+                        `)}
                     </div>
                 </td>
             </tr>`;
@@ -406,7 +442,8 @@ function renderTable(dataArray) {
 
     // Attach row-level action events
     tbody.querySelectorAll(".action-btn-custom.view").forEach(b => b.addEventListener("click", () => openViewModal(b.dataset.id)));
-    tbody.querySelectorAll(".action-btn-custom.edit").forEach(b => b.addEventListener("click", () => openEditModal(b.dataset.id)));
+    tbody.querySelectorAll(".action-btn-custom.edit").forEach(b => b.addEventListener("click", () => openEditModal(b.dataset.id, false)));
+    tbody.querySelectorAll(".action-btn-custom.resubmit").forEach(b => b.addEventListener("click", () => openEditModal(b.dataset.id, true)));
     tbody.querySelectorAll(".action-btn-custom.del") .forEach(b => b.addEventListener("click", () => openDeleteModal(b.dataset.id)));
 }
 
@@ -462,10 +499,11 @@ function initModals() {
                 const isMeterMode = userRequiresMeters;
                 const mode = e.target.value;
                 const isVehicle = ['Bike', 'Car', 'E-Rickshaw'].includes(mode);
-                const showMeters = userRequiresMeters && isVehicle;
+                // If INDIVIDUAL mode is Manual (1), show meters. OR if Role requires it AND mode is not explicitly Attendance.
+                const showMeters = isVehicle && (userMeterMode === 1 || (userRequiresMeters && userMeterMode !== 0));
 
                 form.querySelectorAll(".meter-photo-field").forEach(el => el.style.display = showMeters ? "flex" : "none");
-                form.querySelectorAll(".bill-photo-field").forEach(el => el.style.display = showMeters ? "none" : "flex");
+                form.querySelectorAll(".bill-photo-field").forEach(el => el.style.display = (isVehicle && (userMeterMode === 1 || userRequiresMeters)) ? "none" : "flex");
 
                 // Asterisk logic: vehicle modes are optional ONLY for bill-based users. 
                 // All other combinations require a photo.
@@ -565,12 +603,64 @@ function openViewModal(id) {
     // Number part of ID
     const numId = item.id.replace('EXP-', '');
 
+    const getTierMarkup = (statusStr) => {
+        const s = (statusStr || 'pending').toLowerCase();
+        let c = '#f59e0b'; let t = 'Pending';
+        if (s === 'approved') { c = '#10b981'; t = 'Approved'; }
+        if (s === 'rejected') { c = '#ef4444'; t = 'Rejected'; }
+        return `<div class="ev-status-pill" style="background: ${c}15; color: ${c}; font-size:10px; font-weight:800; padding: 4px 10px; text-transform:uppercase;">${t}</div>`;
+    };
+
+    let mStat = item.manager_status || 'pending';
+    let hStat = item.hr_status || 'pending';
+    let aStat = item.accountant_status || 'pending';
+
+    // Cascade Rejection UI
+    if (item.status.toLowerCase() === 'rejected') {
+        if (mStat.toLowerCase() === 'rejected') {
+            hStat = 'rejected'; aStat = 'rejected';
+        } else if (hStat.toLowerCase() === 'rejected') {
+            aStat = 'rejected';
+        }
+    }
+
+    const managerMarkup = getTierMarkup(mStat);
+    const hrMarkup = getTierMarkup(hStat);
+    const acctMarkup = getTierMarkup(aStat);
+
+    // Build Rejection Banner
+    let rejectionBanner = '';
+    if (item.status.toLowerCase() === 'rejected') {
+        let rejecterRole = 'Unknown';
+        let rejectReason = 'No reason provided.';
+        
+        if (mStat.toLowerCase() === 'rejected') {
+            rejecterRole = 'Manager'; rejectReason = item.manager_reason;
+        } else if (hStat.toLowerCase() === 'rejected') {
+            rejecterRole = 'HR'; rejectReason = item.hr_reason;
+        } else if (aStat.toLowerCase() === 'rejected') {
+            rejecterRole = 'Sr. Manager'; rejectReason = item.accountant_reason;
+        }
+
+        rejectionBanner = `
+            <div style="margin-bottom: 24px; padding: 16px; background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; color: #ef4444;">
+                <div style="font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 1.05rem;">
+                    <i class="fa-solid fa-circle-xmark" style="font-size: 18px;"></i>
+                    Claim Rejected by ${rejecterRole}
+                </div>
+                <div style="font-size: 0.9rem; padding-left: 26px; color: #b91c1c;">
+                    <strong>Reason:</strong> ${rejectReason || 'No details provided.'}
+                </div>
+            </div>
+        `;
+    }
+
     document.getElementById("view-modal-dynamic-content").innerHTML = `
         <!-- Minimalist Header -->
         <div class="ev-header">
             <div class="ev-header-left">
-                <h2>Expense #${numId}</h2>
-                <p>${item.purpose || 'No purpose provided'}</p>
+                <h2>${item.purpose || 'No purpose provided'}</h2>
+                <p>Expense #${numId}</p>
             </div>
             <div style="display:flex; gap:12px; align-items:center;">
                 <div class="ev-status-pill" style="background: ${bgCol}20; color: ${bgCol};">
@@ -582,18 +672,19 @@ function openViewModal(id) {
 
         <!-- Minimalist Body -->
         <div class="ev-body">
+            ${rejectionBanner}
             <!-- Stats Grid -->
             <div class="ev-grid">
                 <div class="ev-stat-box">
-                    <span class="ev-stat-label">Transport</span>
+                    <span class="ev-stat-label"><i class="fa-solid fa-car-side" style="margin-right:5px; opacity:0.8;"></i> Transport</span>
                     <span class="ev-stat-value">${item.mode}</span>
                 </div>
                 <div class="ev-stat-box">
-                    <span class="ev-stat-label">Distance</span>
+                    <span class="ev-stat-label"><i class="fa-solid fa-route" style="margin-right:5px; opacity:0.8;"></i> Distance</span>
                     <span class="ev-stat-value">${item.distance}</span>
                 </div>
                 <div class="ev-stat-box" style="background: #f0fdf4; border: 1px solid #dcfce7;">
-                    <span class="ev-stat-label" style="color:#16a34a">Total Amount</span>
+                    <span class="ev-stat-label" style="color:#16a34a"><i class="fa-solid fa-wallet" style="margin-right:5px; opacity:0.9;"></i> Total Amount</span>
                     <span class="ev-stat-value amount" style="color:#16a34a">₹${parseFloat(item.amount).toFixed(2)}</span>
                 </div>
             </div>
@@ -603,23 +694,33 @@ function openViewModal(id) {
                 <div class="ev-card-bordered">
                     <h5 class="ev-section-title">Trip Details</h5>
                     <div class="ev-info-row">
-                        <span class="ev-info-label">From</span>
+                        <span class="ev-info-label"><i class="fa-solid fa-location-dot" style="margin-right:6px; color:#94a3b8;"></i> From</span>
                         <span class="ev-info-value">${item.from}</span>
                     </div>
                     <div class="ev-info-row">
-                        <span class="ev-info-label">To</span>
+                        <span class="ev-info-label"><i class="fa-solid fa-location-crosshairs" style="margin-right:6px; color:#94a3b8;"></i> To</span>
                         <span class="ev-info-value">${item.to}</span>
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
                         <div class="ev-info-row">
-                            <span class="ev-info-label">Travel Date</span>
+                            <span class="ev-info-label"><i class="fa-solid fa-calendar-day" style="margin-right:6px; color:#94a3b8;"></i> Travel Date</span>
                             <span class="ev-info-value">${dateStr}</span>
                         </div>
                         <div class="ev-info-row">
-                            <span class="ev-info-label">Created On</span>
+                            <span class="ev-info-label"><i class="fa-solid fa-clock" style="margin-right:6px; color:#94a3b8;"></i> Created On</span>
                             <span class="ev-info-value">${dateStr}</span>
                         </div>
                     </div>
+                    ${item.resubmission_count > 0 ? `
+                    <div class="ev-info-row" style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e2e8f0;">
+                        <span class="ev-info-label" style="display:flex; align-items:center; gap:6px;">
+                            <i class="fa-solid fa-rotate-right" style="font-size: 10px;"></i> Resubmissions
+                        </span>
+                        <span class="ev-info-value" style="color: #3b82f6; font-weight: 700; font-size: 13px;">
+                            ${item.resubmission_count} / ${item.max_resubmissions || 3}
+                        </span>
+                    </div>
+                    ` : ''}
                 </div>
 
                 <!-- Right: Workflow status -->
@@ -631,21 +732,21 @@ function openViewModal(id) {
                                 <div class="ev-user-icon"><i class="fa-solid fa-user-tie"></i></div>
                                 <span class="ev-workflow-name">Manager</span>
                             </div>
-                            <div class="ev-status-pill" style="background: ${bgCol}15; color: ${bgCol}; font-size:10px; font-weight:800; padding: 4px 10px;">${statusText}</div>
-                        </div>
-                        <div class="ev-workflow-item">
-                            <div class="ev-workflow-user">
-                                <div class="ev-user-icon"><i class="fa-solid fa-file-invoice"></i></div>
-                                <span class="ev-workflow-name">Accountant</span>
-                            </div>
-                            <div class="ev-status-pill" style="background: ${bgCol}15; color: ${bgCol}; font-size:10px; font-weight:800; padding: 4px 10px;">${statusText}</div>
+                            ${managerMarkup}
                         </div>
                         <div class="ev-workflow-item">
                             <div class="ev-workflow-user">
                                 <div class="ev-user-icon"><i class="fa-solid fa-users-gear"></i></div>
-                                <span class="ev-workflow-name">HR Department</span>
+                                <span class="ev-workflow-name">HR</span>
                             </div>
-                            <div class="ev-status-pill" style="background: ${bgCol}15; color: ${bgCol}; font-size:10px; font-weight:800; padding: 4px 10px;">${statusText}</div>
+                            ${hrMarkup}
+                        </div>
+                        <div class="ev-workflow-item">
+                            <div class="ev-workflow-user">
+                                <div class="ev-user-icon"><i class="fa-solid fa-user-shield"></i></div>
+                                <span class="ev-workflow-name">Sr. Manager</span>
+                            </div>
+                            ${acctMarkup}
                         </div>
                     </div>
                 </div>
@@ -695,11 +796,23 @@ function openViewModal(id) {
     openModal("view-modal");
 }
 
-// ── EDIT
-function openEditModal(id) {
+// ── EDIT & RESUBMIT
+let isEditModeResubmit = false;
+
+function openEditModal(id, isResubmit = false) {
     const item = tableData.find(r => r.id === id);
     if (!item) return;
     activeEditId = id;
+    isEditModeResubmit = isResubmit;
+    
+    if (isResubmit) {
+        const curr = parseInt(item.resubmission_count) || 0;
+        const maxR = parseInt(item.max_resubmissions) || 3;
+        if (curr >= maxR) {
+            showStatusAlert(`Maximum resubmissions reached (${maxR}).`, 'Limit Exceeded');
+            return;
+        }
+    }
     
     // UI Helpers
     const statusText = item.status.charAt(0).toUpperCase() + item.status.slice(1);
@@ -708,18 +821,32 @@ function openEditModal(id) {
     // Number part of ID
     const numId = item.id.replace('EXP-', '');
 
+    const resubmitBanner = isResubmit ? `
+        <div style="margin-bottom: 24px; padding: 16px; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; color: #b45309;">
+            <div style="font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 1.05rem;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 18px;"></i>
+                Caution: Resubmission Review
+            </div>
+            <div style="font-size: 0.9rem; padding-left: 26px; color: #92400e;">
+                Make sure everything is correct before resubmitting. You can only resubmit up to <strong>${item.max_resubmissions || 3}</strong> times. 
+                <br>Current resubmissions: <strong>${item.resubmission_count || 0}</strong>.
+            </div>
+        </div>
+    ` : '';
+
     document.getElementById("edit-modal-dynamic-content").innerHTML = `
         <!-- Minimalist Header -->
         <div class="ev-header">
             <div class="ev-header-left">
-                <h2>Edit Expense #${numId}</h2>
-                <p>Update your travel claim details</p>
+                <h2>${isResubmit ? 'Resubmit Expense' : 'Edit Expense'} #${numId}</h2>
+                <p>${isResubmit ? 'Correct your details below to resubmit' : 'Update your travel claim details'}</p>
             </div>
             <button class="ev-close-x" id="edit-modal-close-new"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
         <!-- Minimalist Body -->
         <div class="ev-body">
+            ${resubmitBanner}
             <!-- Section 1: Basics -->
             <div class="ev-card-bordered">
                 <h5 class="ev-section-title">General Details</h5>
@@ -858,7 +985,7 @@ function openEditModal(id) {
         <div class="ev-footer">
             <button class="btn-minimal" id="edit-modal-cancel-new">Discard Changes</button>
             <button class="btn-primary-minimal" id="edit-modal-save-new">
-                <i class="fa-solid fa-floppy-disk"></i> Update Expense
+                <i class="fa-solid fa-${isResubmit ? 'rotate-right' : 'floppy-disk'}"></i> ${isResubmit ? 'Resubmit Expense' : 'Update Expense'}
             </button>
         </div>
     `;
@@ -956,7 +1083,9 @@ async function saveEdit() {
         if (startInput && startInput.files[0]) formData.append('meter_start', startInput.files[0]);
         if (endInput && endInput.files[0]) formData.append('meter_end', endInput.files[0]);
 
-        const resp = await fetch('../api/update_travel_expense.php', {
+        const apiUrl = isEditModeResubmit ? '../api/resubmit_travel_expense.php' : '../api/update_travel_expense.php';
+
+        const resp = await fetch(apiUrl, {
             method: 'POST',
             body: formData
         });

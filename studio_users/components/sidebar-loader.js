@@ -41,10 +41,13 @@
         if (path.includes('/hierarchy'))          return 'hierarchy';
         if (path.includes('/overtime_mapping'))   return 'overtime-mapping';
         if (path.includes('/manager_mapping'))    return 'manager-mapping';
+        if (path.includes('/manager_pages/leave_approval/')) return 'leave-approval-mng';
+        if (path.includes('/manager_pages/travel_expenses_approval/')) return 'travel-exp-approval-mng';
         if (path.includes('/projects'))           return 'projects';
         if (path.includes('/site-updates'))       return 'site-updates';
         if (path.includes('/my-tasks'))           return 'my-tasks';
         if (path.includes('/analytics'))          return 'analytics';
+        if (path.includes('/travel_exp/settings')) return 'travel-exp-settings';
         if (path.includes('/settings'))           return 'settings';
         if (path.includes('/help'))               return 'help';
 
@@ -65,6 +68,8 @@
             'help'            : 'help',
             'hierarchy'       : 'hierarchy',
             'manager_mapping' : 'manager-mapping',
+            'sidebar_role_access' : 'sidebar-role-access',
+            'travel_expenses_mapping' : 'travel-exp-mapping',
         };
 
         return fileMap[file] || file;

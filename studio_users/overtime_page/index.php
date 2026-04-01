@@ -99,7 +99,7 @@ include __DIR__ . '/table.html';
     <script src="filters.js"></script>
     <script src="stats.js"></script>
     <script src="table.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=<?= time() ?>"></script>
 
     <script>
         // Initialize components if they exist

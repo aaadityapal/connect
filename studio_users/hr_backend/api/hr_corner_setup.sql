@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS `hr_policies` (
     `created_by`    VARCHAR(100)  DEFAULT 'HR Admin',
     `created_at`    DATETIME      DEFAULT CURRENT_TIMESTAMP,
     `updated_at`    DATETIME      DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `is_mandatory`  TINYINT(1)    DEFAULT 1,
     `is_active`     TINYINT(1)    DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -23,7 +24,20 @@ CREATE TABLE IF NOT EXISTS `hr_notices` (
     `attachment`    VARCHAR(500)  DEFAULT NULL,
     `created_by`    VARCHAR(100)  DEFAULT 'HR Admin',
     `created_at`    DATETIME      DEFAULT CURRENT_TIMESTAMP,
+    `is_mandatory`  TINYINT(1)    DEFAULT 0,
     `is_active`     TINYINT(1)    DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `hr_user_compliance_records` (
+    `record_id`       INT AUTO_INCREMENT PRIMARY KEY,
+    `user_uid`        VARCHAR(191) NOT NULL,
+    `document_type`   VARCHAR(16)  NOT NULL,
+    `document_id`     INT          NOT NULL,
+    `document_version` DATETIME    NULL,
+    `acknowledged_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY `uniq_user_doc` (`user_uid`, `document_type`, `document_id`),
+    KEY `idx_doc` (`document_type`, `document_id`),
+    KEY `idx_user` (`user_uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `hr_customs` (

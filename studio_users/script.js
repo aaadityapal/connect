@@ -38,6 +38,25 @@ document.addEventListener("DOMContentLoaded", () => {
     // ══════════════════════════════════════════════════════
     // Load Recently Assigned Tasks (filtered by date)
     // ══════════════════════════════════════════════════════
+    function isAssignedTaskLocked(taskLike) {
+        const status = String(taskLike?.status || taskLike?.taskStatus || '').trim().toLowerCase();
+        const completedByRaw = String(taskLike?.completed_by || taskLike?.taskCompletedBy || '').trim();
+        const completedByList = completedByRaw
+            ? completedByRaw.split(',').map(v => v.trim()).filter(Boolean)
+            : [];
+
+        let historyCount = 0;
+        try {
+            const historyRaw = taskLike?.completion_history ?? taskLike?.taskCompletionHistory ?? '{}';
+            const historyObj = typeof historyRaw === 'string' ? JSON.parse(historyRaw || '{}') : (historyRaw || {});
+            if (historyObj && typeof historyObj === 'object' && !Array.isArray(historyObj)) {
+                historyCount = Object.keys(historyObj).length;
+            }
+        } catch (_) {}
+
+        return status === 'completed' || completedByList.length > 0 || historyCount > 0;
+    }
+
     function loadRecentTasks(dateStr) {
         const list = document.getElementById('assignedTasksList');
         const counter = document.getElementById('assignedTasksCount');
@@ -84,9 +103,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     const time = task.due_time_formatted || '';
                     const status = task.status || 'Pending';
                     const priority = task.priority || 'Low';
+                    const isLocked = isAssignedTaskLocked(task);
 
                     const card = document.createElement('div');
                     card.className = 'assigned-task-item';
+                    if (isLocked) card.classList.add('assigned-task-locked');
                     card.dataset.taskId = task.id;
                     card.dataset.taskName = title;
                     card.dataset.taskProjectId = task.project_id || '';
@@ -114,10 +135,10 @@ document.addEventListener("DOMContentLoaded", () => {
                             </div>
                         </div>
                         <div class="atl-right">
-                            <button class="atl-edit-btn assigned-edit-btn unique-edit-assigned-btn" title="Edit Task">
+                            <button class="atl-edit-btn assigned-edit-btn unique-edit-assigned-btn" title="${isLocked ? 'Task cannot be edited after partial/full completion' : 'Edit Task'}" ${isLocked ? 'disabled' : ''}>
                                 <i class="fa-solid fa-pen-to-square"></i> Edit
                             </button>
-                            <button class="atl-delete-btn unique-delete-assigned-btn" title="Delete Task">
+                            <button class="atl-delete-btn unique-delete-assigned-btn" title="${isLocked ? 'Task cannot be deleted after partial/full completion' : 'Delete Task'}" ${isLocked ? 'disabled' : ''}>
                                 <i class="fa-solid fa-trash-can"></i> Delete
                             </button>
                         </div>
@@ -616,6 +637,9 @@ document.addEventListener("DOMContentLoaded", () => {
             card.dataset.taskDate = dateVal || '';
             card.dataset.taskTime = formattedTime || '';
             card.dataset.taskStatus = 'Pending';
+            card.dataset.taskCompletedBy = '';
+            card.dataset.taskCompletionHistory = '{}';
+            card.dataset.taskAssignedTo = assignedIds.join(',');
             card.dataset.taskAssigneeNames = selectedAssignees.join(',');
             card.innerHTML = `
                 <div class="atl-left">
@@ -1351,6 +1375,69 @@ document.addEventListener("DOMContentLoaded", () => {
         let audioUnlocked = false;   // browsers block audio until first user interaction
         let pendingSound = false;    // play sound on next interaction if blocked
         let isDrawerOpen = false;
+        let initialNotifScanDone = false;
+        let loginBacklogAlertTimer = null;
+
+        function parseAssigneeNames(raw) {
+            if (Array.isArray(raw)) return raw.map(n => String(n || '').trim()).filter(Boolean);
+            if (typeof raw === 'string') return raw.split(',').map(n => n.trim()).filter(Boolean);
+            return [];
+        }
+
+        function isTaskAssignedForCurrentUser(log) {
+            if (!log || log.action_type !== 'task_assigned') return false;
+
+            const desc = String(log.description || '');
+            const isCreatorLog = /^\s*you assigned\s*:/i.test(desc);
+            if (isCreatorLog) return true;
+
+            const meta = (typeof log._meta === 'object' && log._meta)
+                ? log._meta
+                : (typeof log.metadata === 'object' ? log.metadata : {});
+
+            const names = parseAssigneeNames(meta.assigned_names || meta.assignees || meta.team_members);
+            const me = String(window.loggedUserName || '').trim().toLowerCase();
+
+            if (!me) return true;
+            if (!names.length) {
+                // Fallback heuristic for older metadata payloads
+                return /been assigned|assigned a task/i.test(desc);
+            }
+            return names.some(n => n.toLowerCase() === me);
+        }
+
+        function toTaskAlertLog(log) {
+            if (!log) return null;
+            const c = { ...log };
+            if (typeof c.metadata === 'string') {
+                try { c.metadata = JSON.parse(c.metadata); } catch (_) { c.metadata = {}; }
+            } else if (!c.metadata || typeof c.metadata !== 'object') {
+                c.metadata = {};
+            }
+            return c;
+        }
+
+        async function showOfflineAssignedTaskAlertAfterDelay() {
+            try {
+                const res = await fetch('api/fetch_activity_logs.php');
+                const result = await res.json();
+                const rows = (result && result.status === 'success' && Array.isArray(result.data)) ? result.data : [];
+                if (!rows.length) return;
+
+                const pendingOfflineTask = rows.find(log =>
+                    log &&
+                    log.action_type === 'task_assigned' &&
+                    String(log.is_read) === '0' &&
+                    isTaskAssignedForCurrentUser(log)
+                );
+
+                if (pendingOfflineTask && typeof TaskAssignedAlert !== 'undefined') {
+                    TaskAssignedAlert.show(toTaskAlertLog(pendingOfflineTask));
+                }
+            } catch (_) {
+                // Non-blocking
+            }
+        }
 
         // Unlock audio engine on first user gesture (click or keydown)
         function unlockAudio() {
@@ -1387,6 +1474,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error("Failed to load notifications", e);
             }
         }
+        window.fetchNotifications = fetchNotifications;
 
         function renderNotifications(logs) {
             if(!notifContent) return;
@@ -1417,6 +1505,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 notifContent.innerHTML = '<div style="padding: 20px; text-align: center; color: #94a3b8;"><i class="fa-regular fa-bell-slash" style="font-size:1.5rem; margin-bottom:8px; display:block;"></i> No recent notifications</div>';
                 if(notifBadge) { notifBadge.style.display = 'none'; notifBadge.textContent = '0'; }
                 lastSeenMaxId = 0;
+                initialNotifScanDone = true;
                 return;
             }
 
@@ -1456,6 +1545,22 @@ document.addEventListener("DOMContentLoaded", () => {
             if (lastSeenMaxId === 0) {
                 // First load — register silently, queue sound if there are unread ones
                 if (unreadCount > 0) pendingSound = true;
+
+                // If user was offline and already has unread task assignments,
+                // show one onboarding reminder modal after 120 seconds.
+                if (!initialNotifScanDone && !loginBacklogAlertTimer) {
+                    const hasOfflineTaskAssigned = logs.some(log =>
+                        log &&
+                        String(log.is_read) === '0' &&
+                        isTaskAssignedForCurrentUser(log)
+                    );
+
+                    if (hasOfflineTaskAssigned) {
+                        loginBacklogAlertTimer = setTimeout(() => {
+                            showOfflineAssignedTaskAlertAfterDelay();
+                        }, 30000);
+                    }
+                }
             } else if (batchMaxId > lastSeenMaxId) {
                 // Genuinely new notification arrived since last poll
                 playNotifSound();
@@ -1463,19 +1568,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Find the newest task_assigned log in this batch that's truly new
                 const newTaskLog = logs.find(log =>
                     log.action_type === 'task_assigned' &&
-                    (parseInt(log.id) || 0) > lastSeenMaxId
+                    (parseInt(log.id) || 0) > lastSeenMaxId &&
+                    isTaskAssignedForCurrentUser(log)
                 );
                 if (newTaskLog && typeof TaskAssignedAlert !== 'undefined') {
-                    // Parse metadata JSON string before passing to modal
-                    try {
-                        newTaskLog.metadata = typeof newTaskLog.metadata === 'string'
-                            ? JSON.parse(newTaskLog.metadata)
-                            : (newTaskLog.metadata || {});
-                    } catch(_) { newTaskLog.metadata = {}; }
-                    TaskAssignedAlert.show(newTaskLog);
+                    TaskAssignedAlert.show(toTaskAlertLog(newTaskLog));
                 }
             }
             lastSeenMaxId = batchMaxId;
+            initialNotifScanDone = true;
             // ------------------------------------------------
 
             // Update badge

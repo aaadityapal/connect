@@ -38,6 +38,18 @@ try {
     $custom_freq_value  = !empty($input['custom_freq_value']) ? intval($input['custom_freq_value']) : null;
     $custom_freq_unit   = !empty($input['custom_freq_unit']) ? trim($input['custom_freq_unit']) : null;
     $created_by         = intval($_SESSION['user_id']);
+    $created_by_name    = 'System Admin';
+
+    try {
+        $uStmt = $pdo->prepare("SELECT username FROM users WHERE id = ? LIMIT 1");
+        $uStmt->execute([$created_by]);
+        $uRow = $uStmt->fetch(PDO::FETCH_ASSOC);
+        if (!empty($uRow['username'])) {
+            $created_by_name = trim((string)$uRow['username']);
+        }
+    } catch (Exception $nameEx) {
+        // non-fatal fallback
+    }
 
     if (empty($task_description)) {
         echo json_encode(['success' => false, 'error' => 'Task description is required']);
@@ -89,6 +101,9 @@ try {
         'stage_number'     => $stage_number,
         'task_description' => $task_description,
         'priority'         => $priority,
+        'created_by'       => $created_by,
+        'created_by_name'  => $created_by_name,
+        'assigned_to'      => $assigned_to,
         'assigned_names'   => $assigned_names,
         'due_date'         => $due_date,
     ]);

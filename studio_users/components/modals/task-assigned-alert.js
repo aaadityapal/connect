@@ -41,10 +41,66 @@ const TaskAssignedAlert = (() => {
                 : (log.metadata || {});
         } catch (_) {}
 
+        const currentUser = String(window.loggedUserName || '').trim().toLowerCase();
+
+        const parseNames = (val) => {
+            const dedup = (arr) => {
+                const seen = new Set();
+                return arr.filter(name => {
+                    const key = String(name || '').trim().toLowerCase();
+                    if (!key || seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+            };
+
+            if (Array.isArray(val)) {
+                return dedup(val.map(v => String(v || '').trim()).filter(Boolean));
+            }
+            if (typeof val === 'string') {
+                return dedup(val.split(',').map(v => v.trim()).filter(Boolean));
+            }
+            return [];
+        };
+
+        const assignedNames = parseNames(meta.assigned_names || meta.team_members || meta.assignees);
+        const isTeamTask = assignedNames.length > 1;
+
+        // Avoid showing current user name redundantly in long team strings
+        const smartTeamText = assignedNames.length
+            ? assignedNames.map(n => (currentUser && n.toLowerCase() === currentUser ? `${n} (You)` : n)).join(', ')
+            : 'Only you';
+
+        const assignedBy =
+            (meta.assigned_by_name || meta.created_by_name || meta.assigned_by || meta.created_by || '').toString().trim() ||
+            'System Admin';
+        const isCreatorLog = /^\s*you assigned\s*:/i.test(String(log.description || ''));
+
         // --- Populate fields ---
         setText('taaProject',     meta.project_name     || '—');
         setText('taaStage',       meta.stage_number     ? 'Stage ' + meta.stage_number : '—');
         setText('taaDescription', meta.task_description || log.description || '—');
+        setText('taaAssignedBy', assignedBy);
+        setText('taaTeamMembers', smartTeamText);
+
+        // Smart title/subtitle for creator vs assignee
+        if (isCreatorLog) {
+            setText('taaTitle', 'Task assignment sent!');
+            setText('taaSubtitle', isTeamTask
+                ? `You assigned this task to ${assignedNames.length} team members.`
+                : 'You assigned this task successfully.');
+        } else {
+            setText('taaTitle', isTeamTask ? "You've been assigned a team task!" : "You've been assigned a task!");
+            setText('taaSubtitle', isTeamTask
+                ? `This task is assigned to ${assignedNames.length} team members including you.`
+                : 'Here are the details of your new assignment:');
+        }
+
+        const teamRow = document.getElementById('taaTeamRow');
+        if (teamRow) teamRow.style.display = assignedNames.length ? 'flex' : 'none';
+
+        const assignedByRow = document.getElementById('taaAssignedByRow');
+        if (assignedByRow) assignedByRow.style.display = assignedBy ? 'flex' : 'none';
 
         // Due date
         const dueDateRow = document.getElementById('taaDueDateRow');
@@ -85,6 +141,8 @@ const TaskAssignedAlert = (() => {
         // Refresh the notification list to reflect read status
         if (typeof fetchNotifications === 'function') {
             fetchNotifications();
+        } else if (typeof window.fetchNotifications === 'function') {
+            window.fetchNotifications();
         }
     }
 

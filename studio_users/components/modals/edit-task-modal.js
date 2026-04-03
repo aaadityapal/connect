@@ -694,6 +694,7 @@ document.addEventListener('DOMContentLoaded', function () {
             assignedList2.addEventListener('click', function (e) {
                 var editBtn2 = e.target.closest('.unique-edit-assigned-btn');
                 if (!editBtn2) return;
+                if (editBtn2.disabled) return;
                 e.stopPropagation();
 
                 var card = editBtn2.closest('.assigned-task-item');
@@ -769,6 +770,7 @@ document.addEventListener('DOMContentLoaded', function () {
             assignedList2.addEventListener('click', async function (e) {
                 const deleteBtn = e.target.closest('.unique-delete-assigned-btn');
                 if (!deleteBtn) return;
+                if (deleteBtn.disabled) return;
                 e.stopPropagation();
 
                 const card = deleteBtn.closest('.assigned-task-item');

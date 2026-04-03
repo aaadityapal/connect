@@ -217,7 +217,21 @@
     }
 
     // ─── Generic pill builder (shared across all views) ───────
+    function isCompletedScheduleTask(rawEvent) {
+        if (!rawEvent) return false;
+
+        const status = String(rawEvent.status || '').trim().toLowerCase();
+        const completedBy = String(rawEvent.completed_by || '').trim();
+
+        return status === 'completed'
+            || status === 'done'
+            || status === 'complete'
+            || !!rawEvent.completed_at
+            || completedBy.length > 0;
+    }
+
     function makePill({ leftPx, topPx, height, label, title, dotColor, delay, person, persons, dateFrom, dateTo, assignedBy, rawEvent, hideAssignedTo }) {
+        const isCompleted = isCompletedScheduleTask(rawEvent);
         const block = document.createElement('div');
         Object.assign(block.style, {
             position:   'absolute',
@@ -326,7 +340,8 @@
         Object.assign(titleEl.style, {
             fontSize:     '0.74rem',
             fontWeight:   '500',
-            color:        '#1e293b',
+            color:        isCompleted ? '#94a3b8' : '#1e293b',
+            textDecoration: isCompleted ? 'line-through' : 'none',
             overflow:     'hidden',
             textOverflow: 'ellipsis',
             whiteSpace:   'nowrap',

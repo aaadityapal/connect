@@ -6687,6 +6687,18 @@ button {
     transform: translateX(3px);
 }
 
+.assigned-task-item.assigned-task-locked {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.assigned-task-item.assigned-task-locked:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    box-shadow: none;
+    transform: none;
+}
+
 @keyframes atlFadeIn {
     from {
         opacity: 0;
@@ -6834,6 +6846,24 @@ button {
 
 .atl-edit-btn:active {
     transform: translateY(0);
+}
+
+.atl-edit-btn:disabled,
+.atl-delete-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    filter: grayscale(0.2);
+    box-shadow: none;
+    transform: none;
+}
+
+.atl-edit-btn:disabled:hover,
+.atl-delete-btn:disabled:hover {
+    background: inherit;
+    color: inherit;
+    border-color: inherit;
+    box-shadow: none;
+    transform: none;
 }
 
 /* Custom Task Toggle Options */

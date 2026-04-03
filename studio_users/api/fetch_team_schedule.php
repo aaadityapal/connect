@@ -63,7 +63,9 @@ try {
     $allowedUserIds = array_values(array_unique(array_map('intval', $allowedUserIds)));
 
     // 2. See if the frontend is requesting a specific user within that tree
-    $targetUserId = isset($_GET['target_user_id']) ? intval($_GET['target_user_id']) : $userId;
+    // If explicitly provided from hierarchy click, we should show ONLY that user's tasks.
+    $hasExplicitTarget = isset($_GET['target_user_id']) && $_GET['target_user_id'] !== '';
+    $targetUserId = $hasExplicitTarget ? intval($_GET['target_user_id']) : $userId;
 
     // Security check: Make sure they aren't trying to view someone outside their tree
     if (!in_array($targetUserId, $allowedUserIds)) {
@@ -71,8 +73,12 @@ try {
         exit();
     }
 
-    // 3. The actual items to show are the target user and their subordinates
-    $targetTreeIds = getSubordinates($pdo, $targetUserId);
+    // 3. Filtering rule:
+    //    - Explicit hierarchy click  -> selected user only
+    //    - Default view (no click)   -> keep existing behaviour (target tree)
+    $targetTreeIds = $hasExplicitTarget
+        ? [$targetUserId]
+        : getSubordinates($pdo, $targetUserId);
 
     $query = "
         SELECT sat.*, u.username as assigned_by_name

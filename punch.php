@@ -110,6 +110,90 @@ function calculateWorkingHours($punch_in, $punch_out, $shift_end_time)
     ];
 }
 
+// Ensure table exists for storing project usage inside work reports
+function ensureProjectWorkReportMentionsTable($conn)
+{
+    $sql = "CREATE TABLE IF NOT EXISTS project_work_report_mentions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        attendance_id INT NOT NULL,
+        user_id INT NOT NULL,
+        project_id INT NOT NULL,
+        project_title VARCHAR(255) NOT NULL,
+        report_date DATE NOT NULL,
+        work_report TEXT NOT NULL,
+        mention_text VARCHAR(300) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_attendance_project (attendance_id, project_id),
+        KEY idx_project_date (project_id, report_date),
+        KEY idx_user_date (user_id, report_date)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+    return $conn->query($sql);
+}
+
+// Save one record per mentioned project hashtag in the work report
+function saveProjectWorkReportMentions($conn, $attendance_id, $user_id, $report_date, $work_report)
+{
+    if (empty($work_report) || strpos($work_report, '#') === false) {
+        return;
+    }
+
+    if (!ensureProjectWorkReportMentionsTable($conn)) {
+        error_log("Could not ensure project_work_report_mentions table: " . $conn->error);
+        return;
+    }
+
+    $project_sql = "SELECT id, title FROM projects WHERE deleted_at IS NULL";
+    $project_rs = $conn->query($project_sql);
+    if (!$project_rs) {
+        error_log("Could not fetch projects for hashtag tracking: " . $conn->error);
+        return;
+    }
+
+    $insert_sql = "INSERT INTO project_work_report_mentions
+        (attendance_id, user_id, project_id, project_title, report_date, work_report, mention_text)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            project_title = VALUES(project_title),
+            work_report = VALUES(work_report),
+            mention_text = VALUES(mention_text),
+            updated_at = CURRENT_TIMESTAMP";
+    $insert_stmt = $conn->prepare($insert_sql);
+    if (!$insert_stmt) {
+        error_log("Prepare failed for project hashtag tracking: " . $conn->error);
+        return;
+    }
+
+    while ($p = $project_rs->fetch_assoc()) {
+        $project_id = (int)$p['id'];
+        $project_title = trim((string)$p['title']);
+        if ($project_title === '') continue;
+
+        // Matches exact hashtag phrase like: #Project Name
+        $pattern = '/(?:^|\s)#' . preg_quote($project_title, '/') . '(?=$|[\s\.,;:!\?\)\]\}])/iu';
+        if (!preg_match($pattern, $work_report)) {
+            continue;
+        }
+
+        $mention_text = '#' . $project_title;
+
+        $insert_stmt->bind_param(
+            "iiissss",
+            $attendance_id,
+            $user_id,
+            $project_id,
+            $project_title,
+            $report_date,
+            $work_report,
+            $mention_text
+        );
+        $insert_stmt->execute();
+    }
+
+    $insert_stmt->close();
+}
+
 // Function to get user's current shift and weekly offs
 function getUserShiftDetails($conn, $user_id)
 {
@@ -752,6 +836,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $log_stmt->execute();
                 } catch(Exception $logError) {
                     error_log("Activity log error (Punch Out): " . $logError->getMessage());
+                }
+
+                // Track which project hashtags were used in this work report
+                try {
+                    $attendance_id = (int)$attendance['id'];
+                    saveProjectWorkReportMentions($conn, $attendance_id, $user_id, $current_date, $work_report);
+                } catch (Exception $mentionError) {
+                    error_log("Project hashtag tracking error: " . $mentionError->getMessage());
                 }
 
                 // Check if punch-out location differs significantly from punch-in location

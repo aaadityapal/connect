@@ -1,11 +1,26 @@
 <?php
-// CRITICAL: Ensure no whitespace or output before this tag
+// Keep errors logged, never printed into PDF response
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
 
 session_start();
-require_once 'config.php';
-require_once 'vendor/autoload.php';
+require_once __DIR__ . '/config/db_connect.php';
+
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Database connection is not available.';
+    exit();
+}
+
+$autoloadPath = __DIR__ . '/vendor/autoload.php';
+$canGeneratePdf = (PHP_VERSION_ID >= 80100) && file_exists($autoloadPath);
+$tcpdfPath = __DIR__ . '/tcpdf/tcpdf.php';
+
+if ($canGeneratePdf) {
+    require_once $autoloadPath;
+}
 
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -18,11 +33,21 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $current_user_id = $_SESSION['user_id'];
-$is_admin = in_array($_SESSION['role'], ['admin', 'HR', 'Senior Manager (Studio)']);
+$session_role = $_SESSION['role'] ?? '';
+$is_admin = in_array($session_role, ['admin', 'HR', 'Senior Manager (Studio)'], true);
 
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
-$filter_user_id = isset($_GET['user_id']) ? $_GET['user_id'] : $current_user_id;
+$requested_user_id = $_GET['user_id'] ?? $current_user_id;
+
+if ($is_admin && $requested_user_id === 'all') {
+    $filter_user_id = 'all';
+} else {
+    $filter_user_id = (int)$requested_user_id;
+    if ($filter_user_id <= 0) {
+        $filter_user_id = (int)$current_user_id;
+    }
+}
 
 foreach ([&$start_date, &$end_date] as &$d) {
     $dt = DateTime::createFromFormat('Y-m-d', $d);
@@ -47,7 +72,7 @@ $query = "
 ";
 $params = [$start_date, $end_date];
 
-if ($is_admin && $filter_user_id != 'all') {
+if ($is_admin && $filter_user_id !== 'all') {
     $query .= " AND a.user_id = ?";
     $params[] = $filter_user_id;
 } else if (!$is_admin) {
@@ -104,7 +129,7 @@ $leaves_query = "
 
 $leaves_params = [$start_date, $end_date, $start_date, $end_date, $start_date, $end_date];
 
-if ($is_admin && $filter_user_id != 'all') {
+if ($is_admin && $filter_user_id !== 'all') {
     $leaves_query .= " AND lr.user_id = ?";
     $leaves_params[] = $filter_user_id;
 } else if (!$is_admin) {
@@ -148,7 +173,7 @@ foreach ($period as $date) {
 }
 
 $user_info = null;
-if ($filter_user_id != 'all' && $filter_user_id) {
+if ($filter_user_id !== 'all' && $filter_user_id) {
     $user_query = "SELECT username, unique_id, role FROM users WHERE id = ?";
     $user_stmt = $pdo->prepare($user_query);
     $user_stmt->execute([$filter_user_id]);
@@ -156,7 +181,7 @@ if ($filter_user_id != 'all' && $filter_user_id) {
 }
 
 $month_name = date('F', strtotime($start_date));
-if ($filter_user_id == 'all' || !$filter_user_id) {
+if ($filter_user_id === 'all' || !$filter_user_id) {
     $filename = "AllUsers_{$month_name}_workreport.pdf";
 } else {
     $safe_username = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $user_info['username'] ?? 'User');
@@ -186,7 +211,7 @@ ob_start();
     <div class="header">Work Reports</div>
     <?php
     $userText = '';
-    if ($filter_user_id == 'all') {
+    if ($filter_user_id === 'all') {
         $userText = 'All Employees';
     } elseif ($user_info) {
         $userText = $user_info['username'] . ' (' . $user_info['unique_id'] . ')';
@@ -296,22 +321,49 @@ ob_start();
 <?php
 $html = ob_get_clean();
 
-// Clear any accidental output
-if (ob_get_length()) ob_end_clean();
-
-$options = new Options();
-$options->set('defaultFont', 'Helvetica');
-$options->set('isHtml5ParserEnabled', true);
-$options->set('isRemoteEnabled', true);
+// Clear any accidental output before binary stream
+while (ob_get_level() > 0) {
+    ob_end_clean();
+}
 
 try {
-    $dompdf = new Dompdf($options);
-    $dompdf->loadHtml($html);
-    $dompdf->setPaper('A4', 'landscape');
-    $dompdf->render();
-    $dompdf->stream($filename, ["Attachment" => true]);
+    if ($canGeneratePdf) {
+        $options = new Options();
+        $options->set('defaultFont', 'Helvetica');
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->render();
+        $dompdf->stream($filename, ["Attachment" => true]);
+    } else {
+        if (!file_exists($tcpdfPath)) {
+            throw new Exception('TCPDF library not found for PDF fallback');
+        }
+
+        require_once $tcpdfPath;
+
+        $pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->SetCreator('Connect');
+        $pdf->SetAuthor('Connect');
+        $pdf->SetTitle('Work Reports');
+        $pdf->SetSubject('Employee Work Report');
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetMargins(8, 8, 8);
+        $pdf->SetAutoPageBreak(true, 8);
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->AddPage();
+        $pdf->writeHTML($html, true, false, true, false, '');
+        $pdf->Output($filename, 'D');
+    }
 } catch (Exception $e) {
-    echo "PDF Generation Error: " . $e->getMessage();
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Failed to generate PDF report.';
+    error_log('PDF Generation Error: ' . $e->getMessage());
 }
 exit();
 ?>

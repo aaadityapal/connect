@@ -777,10 +777,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 const taskId = card.dataset.taskId;
                 if (!taskId) return;
 
-                // Simple confirmation
-                if (!confirm("Are you sure you want to delete this assigned task? This action cannot be undone.")) {
-                    return;
+                // Professional confirmation modal (fallback to native confirm if unavailable)
+                let proceedDelete = false;
+                if (typeof window.showCustomConfirm === 'function') {
+                    proceedDelete = await window.showCustomConfirm({
+                        title: 'Delete Assigned Task?',
+                        message: 'This action cannot be undone. The task will be permanently removed from active task lists.',
+                        confirmText: 'Delete Task',
+                        cancelText: 'Cancel'
+                    });
+                } else {
+                    proceedDelete = confirm("Are you sure you want to delete this assigned task? This action cannot be undone.");
                 }
+
+                if (!proceedDelete) return;
 
                 // Show loading state on button
                 const originalHTML = deleteBtn.innerHTML;
@@ -799,8 +809,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         // Success toast if available
                         if (typeof showToast === 'function') {
                             showToast("Task deleted successfully");
+                        } else if (typeof showCustomAlert === 'function') {
+                            showCustomAlert('Task deleted successfully.', 'Success', 'success');
                         } else {
-                            alert("Task deleted successfully");
+                            console.log('Task deleted successfully');
                         }
 
                         // Remove from UI with a small fade animation
@@ -824,7 +836,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 } catch (error) {
                     console.error("Deletion error:", error);
-                    alert("Error: " + error.message);
+                    if (typeof showCustomAlert === 'function') {
+                        const safeMsg = String(error && error.message ? error.message : 'Failed to delete task')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;');
+                        showCustomAlert(safeMsg, 'Delete Not Allowed', 'warning');
+                    } else if (typeof showToast === 'function') {
+                        showToast(String(error && error.message ? error.message : 'Failed to delete task'), 'error');
+                    }
                     // Reset button
                     deleteBtn.disabled = false;
                     deleteBtn.innerHTML = originalHTML;

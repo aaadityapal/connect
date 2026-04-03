@@ -41,9 +41,10 @@ if ($newPassword !== $confirmPassword) {
     exit();
 }
 
-// Password policy: alphanumeric and at least 8 characters
-if (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/', $newPassword)) {
-    echo json_encode(['status' => 'error', 'message' => 'Password must be alphanumeric and at least 8 characters']);
+// Password policy: at least 8 characters, at least one letter and one number.
+// Special characters are allowed; spaces are not.
+if (!preg_match('/^(?=.*[A-Za-z])(?=.*\d)\S{8,}$/', $newPassword)) {
+    echo json_encode(['status' => 'error', 'message' => 'Password must be at least 8 characters, include a letter and a number, and contain no spaces']);
     exit();
 }
 

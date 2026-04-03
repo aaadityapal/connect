@@ -1,0 +1,128 @@
+/* ================================================
+   CUSTOM CONFIRM MODAL — Styles
+   File: components/modals/custom-confirm-modal.css
+   ================================================ */
+
+.ccm-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    z-index: 31000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.ccm-overlay.ccm-open {
+    display: flex;
+    animation: ccmFade 0.18s ease;
+}
+
+@keyframes ccmFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.ccm-card {
+    width: 100%;
+    max-width: 520px;
+    border-radius: 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 20px 45px -14px rgba(15, 23, 42, 0.35);
+    overflow: hidden;
+    animation: ccmPop 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes ccmPop {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ccm-body {
+    display: flex;
+    gap: 0.95rem;
+    padding: 1.25rem 1.35rem;
+    align-items: flex-start;
+}
+
+.ccm-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #fef2f2;
+    color: #dc2626;
+    font-size: 1rem;
+    box-shadow: inset 0 0 0 1px #fecaca;
+}
+
+.ccm-content {
+    min-width: 0;
+}
+
+.ccm-title {
+    margin: 0 0 0.2rem 0;
+    font-size: 1.03rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.ccm-message {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #475569;
+}
+
+.ccm-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    padding: 0.95rem 1.35rem 1.15rem;
+    border-top: 1px solid #f1f5f9;
+    background: #f8fafc;
+}
+
+.ccm-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 0.52rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.ccm-btn-cancel {
+    background: #ffffff;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.ccm-btn-cancel:hover {
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.ccm-btn-confirm {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.28);
+}
+
+.ccm-btn-confirm:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(220, 38, 38, 0.35);
+}
+
+.ccm-btn:active {
+    transform: scale(0.98);
+}

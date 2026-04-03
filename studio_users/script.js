@@ -117,10 +117,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             <button class="atl-edit-btn assigned-edit-btn unique-edit-assigned-btn" title="Edit Task">
                                 <i class="fa-solid fa-pen-to-square"></i> Edit
                             </button>
-                            ${(window.loggedUserDesignation || "").toLowerCase().includes("manager") ? `
                             <button class="atl-delete-btn unique-delete-assigned-btn" title="Delete Task">
                                 <i class="fa-solid fa-trash-can"></i> Delete
-                            </button>` : ""}
+                            </button>
                         </div>
                     `;
                     list.appendChild(card);
@@ -630,10 +629,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 <div class="atl-right">
                     <button class="atl-edit-btn assigned-edit-btn unique-edit-assigned-btn" title="Edit Task"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-                    ${(window.loggedUserDesignation || "").toLowerCase().includes("manager") ? `
                     <button class="atl-delete-btn unique-delete-assigned-btn" title="Delete Task">
                         <i class="fa-solid fa-trash-can"></i> Delete
-                    </button>` : ""}
+                    </button>
                 </div>
             `;
             assignedList.insertBefore(card, assignedList.firstChild);
@@ -1482,6 +1480,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     'task_completed_for_approval':{ color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-file-signature',      label: 'Approval Needed'         },
                     'task_completion_approved':   { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-thumbs-up',            label: 'Task Completion Approved'},
                     'task_completion_rejected':   { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-ban',                  label: 'Task Completion Rejected'},
+                    'task_deleted':              { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-trash-can',             label: 'Task Deleted'            },
                     'deadline_snooze':           { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-calendar-xmark',       label: 'Deadline Snoozed'        },
                     'extend_deadline':           { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-clock-rotate-left',    label: 'Deadline Extended'       },
 
@@ -4128,6 +4127,109 @@ document.addEventListener("DOMContentLoaded", () => {
         const punchOutSummary = document.getElementById('punchOutSummary');
         const submitPunchOutBtn = document.getElementById('submitPunchOutBtn');
         const wordCountSpan = document.getElementById('wordCount');
+        const workReportProjectMenu = document.getElementById('workReportProjectMenu');
+
+        let wrProjectItems = [];
+        let wrActiveIdx = -1;
+
+        function hideWorkReportProjectMenu() {
+            if (!workReportProjectMenu) return;
+            workReportProjectMenu.style.display = 'none';
+            workReportProjectMenu.innerHTML = '';
+            wrProjectItems = [];
+            wrActiveIdx = -1;
+        }
+
+        function parseCurrentHashToken() {
+            if (!punchOutSummary) return null;
+            const text = punchOutSummary.value || '';
+            const caret = punchOutSummary.selectionStart || 0;
+            const before = text.slice(0, caret);
+            const hashIndex = before.lastIndexOf('#');
+            if (hashIndex === -1) return null;
+
+            const prevChar = hashIndex > 0 ? before[hashIndex - 1] : ' ';
+            if (!/\s/.test(prevChar) && hashIndex !== 0) return null;
+
+            const token = before.slice(hashIndex + 1);
+            if (/\s/.test(token)) return null;
+
+            return {
+                query: token,
+                hashIndex,
+                caret
+            };
+        }
+
+        async function fetchWorkReportProjects(query) {
+            try {
+                const res = await fetch(`api/search_project_hashtags.php?q=${encodeURIComponent(query || '')}`);
+                const data = await res.json();
+                if (!data || !data.success || !Array.isArray(data.projects)) return [];
+                return data.projects;
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function renderWorkReportProjectMenu(items) {
+            if (!workReportProjectMenu) return;
+            workReportProjectMenu.innerHTML = '';
+
+            if (!items.length) {
+                hideWorkReportProjectMenu();
+                return;
+            }
+
+            items.forEach((p, idx) => {
+                const row = document.createElement('div');
+                row.className = 'wr-hashtag-item';
+                row.dataset.idx = String(idx);
+                row.innerHTML = `<span class="wr-hashtag-hash">#</span><span>${p.title || ''}</span>`;
+                row.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    applyProjectHashtag(p.title || '');
+                });
+                workReportProjectMenu.appendChild(row);
+            });
+
+            workReportProjectMenu.style.display = 'block';
+            wrActiveIdx = -1;
+        }
+
+        function applyProjectHashtag(projectTitle) {
+            if (!punchOutSummary || !projectTitle) return;
+            const info = parseCurrentHashToken();
+            if (!info) return;
+
+            const text = punchOutSummary.value || '';
+            const beforeHash = text.slice(0, info.hashIndex);
+            const afterCaret = text.slice(info.caret);
+            const inserted = `#${projectTitle}`;
+            const needsSpaceAfter = afterCaret.length > 0 && !/^\s/.test(afterCaret);
+            const nextText = beforeHash + inserted + (needsSpaceAfter ? ' ' : '') + afterCaret;
+
+            punchOutSummary.value = nextText;
+            const newCaret = (beforeHash + inserted + (needsSpaceAfter ? ' ' : '')).length;
+            punchOutSummary.focus();
+            punchOutSummary.setSelectionRange(newCaret, newCaret);
+
+            hideWorkReportProjectMenu();
+            checkPunchOutValidity();
+        }
+
+        async function maybeShowWorkReportProjects() {
+            if (!punchOutSummary || !workReportProjectMenu) return;
+            const info = parseCurrentHashToken();
+            if (!info) {
+                hideWorkReportProjectMenu();
+                return;
+            }
+
+            const list = await fetchWorkReportProjects(info.query || '');
+            wrProjectItems = list;
+            renderWorkReportProjectMenu(wrProjectItems);
+        }
 
         function checkPunchOutValidity() {
             if (!punchOutSummary || !submitPunchOutBtn) return;
@@ -4170,8 +4272,57 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (punchOutSummary) {
-            punchOutSummary.addEventListener('input', checkPunchOutValidity);
+            punchOutSummary.addEventListener('input', () => {
+                checkPunchOutValidity();
+                maybeShowWorkReportProjects();
+            });
+
+            punchOutSummary.addEventListener('click', () => {
+                maybeShowWorkReportProjects();
+            });
+
+            punchOutSummary.addEventListener('keydown', (e) => {
+                if (!workReportProjectMenu || workReportProjectMenu.style.display !== 'block') return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (!wrProjectItems.length) return;
+                    wrActiveIdx = (wrActiveIdx + 1) % wrProjectItems.length;
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (!wrProjectItems.length) return;
+                    wrActiveIdx = (wrActiveIdx - 1 + wrProjectItems.length) % wrProjectItems.length;
+                } else if (e.key === 'Enter') {
+                    if (wrActiveIdx >= 0 && wrProjectItems[wrActiveIdx]) {
+                        e.preventDefault();
+                        applyProjectHashtag(wrProjectItems[wrActiveIdx].title || '');
+                    }
+                    return;
+                } else if (e.key === 'Escape') {
+                    hideWorkReportProjectMenu();
+                    return;
+                } else {
+                    return;
+                }
+
+                const rows = workReportProjectMenu.querySelectorAll('.wr-hashtag-item');
+                rows.forEach((row, i) => {
+                    if (i === wrActiveIdx) row.classList.add('active');
+                    else row.classList.remove('active');
+                });
+            });
+
+            punchOutSummary.addEventListener('blur', () => {
+                setTimeout(() => hideWorkReportProjectMenu(), 120);
+            });
         }
+
+        document.addEventListener('click', (e) => {
+            if (!workReportProjectMenu || !punchOutSummary) return;
+            if (e.target === punchOutSummary) return;
+            if (workReportProjectMenu.contains(e.target)) return;
+            hideWorkReportProjectMenu();
+        });
 
         if (submitPunchOutBtn) {
             submitPunchOutBtn.addEventListener('click', async () => {

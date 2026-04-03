@@ -85,6 +85,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <link rel="stylesheet" href="components/modals/edit-task-modal.css">
     <link rel="stylesheet" href="components/modals/extend-deadline-modal.css">
     <link rel="stylesheet" href="components/modals/custom-alert-modal.css">
+    <link rel="stylesheet" href="components/modals/custom-confirm-modal.css">
     <link rel="stylesheet" href="components/modals/upcoming-deadline-modal.css">
     <link rel="stylesheet" href="components/modals/force-password-change-modal.css">
     <link rel="stylesheet" href="components/modals/task-assigned-alert.css">
@@ -1042,6 +1043,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <?php include __DIR__ . '/components/modals/extend-deadline-modal.html'; ?>
     <?php include __DIR__ . '/components/modals/edit-task-modal.html'; ?>
     <?php include __DIR__ . '/components/modals/custom-alert-modal.html'; ?>
+    <?php include __DIR__ . '/components/modals/custom-confirm-modal.html'; ?>
     <?php include __DIR__ . '/components/modals/upcoming-deadline-modal.html'; ?>
     <?php include __DIR__ . '/components/modals/force-password-change-modal.html'; ?>
     
@@ -1389,6 +1391,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <script src="components/my-tasks.js"></script>
     <script src="components/modals/extend-deadline-modal.js"></script>
     <script src="components/modals/custom-alert-modal.js"></script>
+    <script src="components/modals/custom-confirm-modal.js"></script>
     <script src="components/modals/upcoming-deadline-modal.js"></script>
     <script src="components/modals/edit-task-modal.js"></script>
     <script src="components/modals/task-assigned-alert.js"></script>

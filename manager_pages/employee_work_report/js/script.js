@@ -12,6 +12,41 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const monthFilter = document.getElementById('monthFilter');
     const yearFilter = document.getElementById('yearFilter');
+    const searchInput = document.getElementById('searchInput');
+    const roleFilter = document.getElementById('roleFilter');
+
+    // Main employee list rows (exclude modal rows)
+    const employeeRows = Array.from(document.querySelectorAll('.btn-view'))
+        .map(btn => btn.closest('tr'))
+        .filter(Boolean);
+
+    // Search + role filter for employee list
+    const applyEmployeeFilters = () => {
+        const query = (searchInput?.value || '').trim().toLowerCase();
+        const selectedRole = (roleFilter?.value || '').trim().toLowerCase();
+
+        let visibleSerial = 0;
+
+        employeeRows.forEach(row => {
+            const viewBtn = row.querySelector('.btn-view');
+            const username = (viewBtn?.getAttribute('data-username') || '').toLowerCase();
+            const userRole = (viewBtn?.getAttribute('data-role') || '').toLowerCase();
+            const searchableText = `${row.textContent || ''} ${username}`.toLowerCase();
+
+            const matchesSearch = query === '' || searchableText.includes(query);
+            const matchesRole = selectedRole === '' || userRole === selectedRole;
+            const shouldShow = matchesSearch && matchesRole;
+
+            row.style.display = shouldShow ? '' : 'none';
+
+            // Keep S.No continuous after filtering
+            if (shouldShow) {
+                visibleSerial += 1;
+                const serialCell = row.querySelector('td:first-child');
+                if (serialCell) serialCell.textContent = visibleSerial;
+            }
+        });
+    };
 
     // Open Modal Function
     const openModal = async (userId, username, role) => {
@@ -136,4 +171,15 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = `../../export_user_work_reports_pdf.php?user_id=${userId}&start_date=${startDate}&end_date=${endDate}`;
         });
     });
+
+    // Filter bindings
+    if (searchInput) {
+        searchInput.addEventListener('input', applyEmployeeFilters);
+    }
+    if (roleFilter) {
+        roleFilter.addEventListener('change', applyEmployeeFilters);
+    }
+
+    // Initial filter pass
+    applyEmployeeFilters();
 });

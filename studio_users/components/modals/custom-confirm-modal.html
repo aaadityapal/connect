@@ -1,0 +1,22 @@
+<!-- ================================================
+     CUSTOM CONFIRM MODAL
+     File: components/modals/custom-confirm-modal.html
+     ================================================ -->
+<div id="customConfirmModal" class="ccm-overlay" role="dialog" aria-modal="true" aria-labelledby="ccmTitle" aria-describedby="ccmMessage">
+    <div class="ccm-card" role="document">
+        <div class="ccm-body">
+            <div class="ccm-icon" id="ccmIconWrap">
+                <i id="ccmIcon" class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="ccm-content">
+                <h3 id="ccmTitle" class="ccm-title">Confirm Action</h3>
+                <p id="ccmMessage" class="ccm-message">Are you sure?</p>
+            </div>
+        </div>
+
+        <div class="ccm-footer">
+            <button type="button" id="ccmCancelBtn" class="ccm-btn ccm-btn-cancel">Cancel</button>
+            <button type="button" id="ccmConfirmBtn" class="ccm-btn ccm-btn-confirm">Delete Task</button>
+        </div>
+    </div>
+</div>

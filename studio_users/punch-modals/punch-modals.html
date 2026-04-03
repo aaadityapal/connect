@@ -256,6 +256,50 @@
         color: #1e293b !important;
     }
 
+    .wr-hashtag-wrap {
+        position: relative;
+    }
+
+    .wr-hashtag-menu {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 6px);
+        z-index: 30;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        box-shadow: 0 10px 24px rgba(2, 6, 23, 0.12);
+        max-height: 220px;
+        overflow-y: auto;
+        display: none;
+    }
+
+    .wr-hashtag-item {
+        padding: 10px 12px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        color: #1e293b;
+        border-bottom: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .wr-hashtag-item:last-child {
+        border-bottom: none;
+    }
+
+    .wr-hashtag-item:hover,
+    .wr-hashtag-item.active {
+        background: #eff6ff;
+    }
+
+    .wr-hashtag-hash {
+        color: #2563eb;
+        font-weight: 700;
+    }
+
     @keyframes pulseCam {
         0% {
             transform: scale(1);
@@ -431,9 +475,12 @@
                 <label
                     style="font-weight: 600; color: #1e293b; display: block; margin-bottom: 8px; font-size: 0.9rem;">Work
                     Summary (Min 20 Words)</label>
-                <textarea id="punchOutSummary"
-                    style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: vertical; box-sizing: border-box;"
-                    rows="3" placeholder="Describe your tasks completed today..."></textarea>
+                <div class="wr-hashtag-wrap">
+                    <textarea id="punchOutSummary"
+                        style="width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-family: inherit; font-size: 0.9rem; resize: vertical; box-sizing: border-box;"
+                        rows="3" placeholder="Describe your tasks completed today..."></textarea>
+                    <div id="workReportProjectMenu" class="wr-hashtag-menu"></div>
+                </div>
 
                 <div
                     style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.8rem; color: #64748b;">

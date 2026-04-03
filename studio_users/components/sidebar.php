@@ -216,7 +216,8 @@ function canShow($menuId, $perms) {
         $showTxMap = canShow('travel-exp-mapping', $_permissions);
         $showPwReset = canShow('password-reset-mng', $_permissions);
         $showWorkReport = canShow('employee-work-report', $_permissions);
-        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport):
+        $showEmployeesProfile = canShow('employees-profile', $_permissions);
+        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile):
         ?>
             <div class="menu-title">Management</div>
             <?php if ($showLeaveApp): ?>
@@ -297,6 +298,15 @@ function canShow($menuId, $perms) {
                 <i data-lucide="file-text" class="menu-icon" style="width:17px;height:17px;"></i>
                 <span class="menu-text">Employee Work Report</span>
                 <div class="tooltip">Work Report</div>
+            </a>
+            <?php endif; ?>
+            <?php if ($showEmployeesProfile): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/employees_profile/index.php'; return false;"
+                class="menu-item" data-page="employees-profile">
+                <i data-lucide="users" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Employees Profile</span>
+                <div class="tooltip">Employees Profile</div>
             </a>
             <?php endif; ?>
         <?php endif; ?>

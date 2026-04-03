@@ -1,9 +1,10 @@
 (function () {
   function $(id) { return document.getElementById(id); }
 
-  function isValidAlphanumericPassword(pwd) {
-    // At least 8 chars, must contain at least one letter and one number, only letters/numbers.
-    return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/.test(pwd);
+  function isValidPassword(pwd) {
+    // At least 8 chars, must contain at least one letter and one number.
+    // Special characters are allowed; spaces are not.
+    return /^(?=.*[A-Za-z])(?=.*\d)\S{8,}$/.test(pwd);
   }
 
   function generateAlphanumericPassword(length = 10) {
@@ -153,8 +154,8 @@
       setError('New password and confirm password do not match.');
       return;
     }
-    if (!isValidAlphanumericPassword(next)) {
-      setError('Password must be alphanumeric and at least 8 characters.');
+    if (!isValidPassword(next)) {
+      setError('Password must be at least 8 characters, include a letter and a number, and contain no spaces.');
       return;
     }
 

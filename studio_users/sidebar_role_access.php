@@ -52,7 +52,8 @@ $menu_items = [
         'travel-exp-mapping' => ['label' => 'Travel Expense Mapping', 'icon' => 'git-branch'],
         'travel-exp-settings' => ['label' => 'Travel Expense Settings', 'icon' => 'settings'],
         'password-reset-mng' => ['label' => 'Password Reset', 'icon' => 'key-round'],
-        'employee-work-report' => ['label' => 'Employee Work Report', 'icon' => 'file-text']
+        'employee-work-report' => ['label' => 'Employee Work Report', 'icon' => 'file-text'],
+        'employees-profile' => ['label' => 'Employees Profile', 'icon' => 'users']
     ],
     'System' => [
         'settings' => ['label' => 'Settings', 'icon' => 'settings-2'],

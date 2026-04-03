@@ -47,6 +47,24 @@ function getInitials($username) {
 }
 
 /**
+ * Return colleague IDs: users who share at least one manager with $userId.
+ */
+function getPeerIds($pdo, $userId) {
+    $stmt = $pdo->prepare(
+        "SELECT DISTINCT ur2.subordinate_id
+         FROM user_reporting ur1
+         INNER JOIN user_reporting ur2 ON ur1.manager_id = ur2.manager_id
+         INNER JOIN users u ON u.id = ur2.subordinate_id
+         WHERE ur1.subordinate_id = ?
+           AND ur2.subordinate_id <> ?
+           AND u.deleted_at IS NULL
+           AND u.status = 'Active'"
+    );
+    $stmt->execute([$userId, $userId]);
+    return array_values(array_unique(array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN))));
+}
+
+/**
  * Recursively build the subtree for a given manager.
  * $visited prevents infinite loops in case of circular references.
  */
@@ -97,6 +115,43 @@ try {
     }
 
     // 2. Build the recursive tree starting from the logged-in user
+    $myChildren = buildSubtree($pdo, $logged_in_id, []);
+
+    // 3. Also include colleague trees (same manager level) so peers can be explored
+    $peerIds = getPeerIds($pdo, $logged_in_id);
+    $peerNodes = [];
+    foreach ($peerIds as $peerId) {
+        $p = $pdo->prepare(
+            "SELECT id, username, position, role
+             FROM users
+             WHERE id = ? AND deleted_at IS NULL AND status = 'Active'
+             LIMIT 1"
+        );
+        $p->execute([$peerId]);
+        $peer = $p->fetch(PDO::FETCH_ASSOC);
+        if (!$peer) continue;
+
+        $peerNodes[] = [
+            'id'       => (int) $peer['id'],
+            'name'     => $peer['username'],
+            'position' => $peer['position'] ?? '',
+            'role'     => $peer['role'] ?? '',
+            'initials' => getInitials($peer['username']),
+            'color'    => stringToColor($peer['username']),
+            'children' => buildSubtree($pdo, (int)$peer['id'], [$logged_in_id]),
+        ];
+    }
+
+    // Merge own descendants + peer nodes, deduplicated by user id
+    $mergedChildren = [];
+    $seenIds = [];
+    foreach (array_merge($myChildren, $peerNodes) as $node) {
+        $nid = (int)($node['id'] ?? 0);
+        if ($nid <= 0 || isset($seenIds[$nid])) continue;
+        $seenIds[$nid] = true;
+        $mergedChildren[] = $node;
+    }
+
     $tree = [
         'id'       => (int) $me['id'],
         'name'     => $me['username'],
@@ -104,7 +159,7 @@ try {
         'role'     => $me['role'] ?? '',
         'initials' => getInitials($me['username']),
         'color'    => stringToColor($me['username']),
-        'children' => buildSubtree($pdo, $logged_in_id, []),
+        'children' => $mergedChildren,
     ];
 
     echo json_encode([

@@ -44,6 +44,7 @@
         if (path.includes('/manager_pages/leave_approval/')) return 'leave-approval-mng';
         if (path.includes('/manager_pages/travel_expenses_approval/')) return 'travel-exp-approval-mng';
         if (path.includes('/manager_pages/password_reset/')) return 'password-reset-mng';
+        if (path.includes('/manager_pages/employees_profile/')) return 'employees-profile';
         if (path.includes('/projects'))           return 'projects';
         if (path.includes('/site-updates'))       return 'site-updates';
         if (path.includes('/my-tasks'))           return 'my-tasks';
@@ -59,6 +60,7 @@
         // Map bare filenames that differ from data-page values
         const fileMap = {
             'index'           : 'index',
+            'employees-profile' : 'employees-profile',
             'travel-expenses' : 'travel-expenses',
             'overtime'        : 'overtime',
             'projects'        : 'projects',

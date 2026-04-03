@@ -38,9 +38,29 @@ function getSubordinates($pdo, $managerId) {
     return $ids;
 }
 
+function getPeerIds($pdo, $userId) {
+    $stmt = $pdo->prepare(
+        "SELECT DISTINCT ur2.subordinate_id
+         FROM user_reporting ur1
+         INNER JOIN user_reporting ur2 ON ur1.manager_id = ur2.manager_id
+         INNER JOIN users u ON u.id = ur2.subordinate_id
+         WHERE ur1.subordinate_id = ?
+           AND ur2.subordinate_id <> ?
+           AND u.deleted_at IS NULL
+           AND u.status = 'Active'"
+    );
+    $stmt->execute([$userId, $userId]);
+    return array_values(array_unique(array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN))));
+}
+
 try {
-    // 1. Get the base recursive tree for the logged-in user 
-    $allowedUserIds = getSubordinates($pdo, $userId);
+    // 1. Build authority scope: self tree + colleague trees (same manager level)
+    $rootIds = array_values(array_unique(array_merge([$userId], getPeerIds($pdo, $userId))));
+    $allowedUserIds = [];
+    foreach ($rootIds as $rid) {
+        $allowedUserIds = array_merge($allowedUserIds, getSubordinates($pdo, (int)$rid));
+    }
+    $allowedUserIds = array_values(array_unique(array_map('intval', $allowedUserIds)));
 
     // 2. See if the frontend is requesting a specific user within that tree
     $targetUserId = isset($_GET['target_user_id']) ? intval($_GET['target_user_id']) : $userId;

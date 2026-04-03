@@ -38,7 +38,7 @@ if ($dueTime && !preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $dueTime)) {
 try {
     // Verify task is assigned to this user
     $check = $pdo->prepare("
-        SELECT sat.id, sat.due_date, sat.due_time, sat.extended_by,
+        SELECT sat.id, sat.created_by, sat.due_date, sat.due_time, sat.extended_by,
                sat.extension_count, sat.extension_history,
                u.username as my_username
         FROM studio_assigned_tasks sat
@@ -138,12 +138,24 @@ try {
         INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata)
         VALUES (:uid, 'extend_deadline', 'task', :eid, :desc, :meta)
     ");
-    $logStmt->execute([
-        ':uid'  => $userId,
-        ':eid'  => $taskId,
-        ':desc' => $logDesc,
-        ':meta' => $meta,
-    ]);
+
+    $recipientIds = array_unique([(int)$userId, (int)($task['created_by'] ?? 0)]);
+    foreach ($recipientIds as $recipientId) {
+        if ($recipientId <= 0) continue;
+
+        $descForRecipient = ($recipientId === (int)$userId)
+            ? $logDesc
+            : "{$userName} has extended the task deadline from {$oldDeadlineStr} to {$newDeadlineStr}"
+                . ($daysAdded !== null ? " (+{$daysAdded} day" . (abs($daysAdded) !== 1 ? 's' : '') . ')' : '')
+                . '.';
+
+        $logStmt->execute([
+            ':uid'  => $recipientId,
+            ':eid'  => $taskId,
+            ':desc' => $descForRecipient,
+            ':meta' => $meta,
+        ]);
+    }
 
     echo json_encode([
         'success'  => true,

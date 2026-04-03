@@ -51,6 +51,21 @@
             return;
         }
 
+        // Permission gate: only assigned users can perform task actions.
+        // Prefer backend-provided flag; fallback to username match when needed.
+        let canActOnTask = true;
+        if (typeof taskData.can_act === 'boolean') {
+            canActOnTask = taskData.can_act;
+        } else if (Array.isArray(taskData.assignee_statuses) && window.loggedUserName) {
+            const me = String(window.loggedUserName).trim().toLowerCase();
+            canActOnTask = taskData.assignee_statuses.some(a => String(a.name || '').trim().toLowerCase() === me);
+        }
+
+        const readOnlyHint = document.getElementById('taskModalReadOnlyHint');
+        if (readOnlyHint) {
+            readOnlyHint.style.display = canActOnTask ? 'none' : 'inline-flex';
+        }
+
         // Hydrate data
         document.getElementById('tModalTitle').textContent = taskData.projectStage || taskData.title || 'Untitled Task';
         
@@ -223,6 +238,11 @@
         // Setup the Mark as Done button
         const markDoneBtn = document.getElementById('taskModalMarkDone');
         if (markDoneBtn) {
+            if (!canActOnTask) {
+                const hiddenBtn = markDoneBtn.cloneNode(true);
+                markDoneBtn.parentNode.replaceChild(hiddenBtn, markDoneBtn);
+                hiddenBtn.style.display = 'none';
+            } else {
             let disableUndo = false;
             let isCompleted = (taskData.status === 'Completed');
             // Use individual completion time for the undo timer
@@ -348,11 +368,17 @@
                 })
                 .catch(err => console.warn('[TaskModal] Status update failed:', err));
             });
+            }
         }
 
         // Setup the Extend button
         const extendBtn = document.getElementById('taskModalExtend');
         if (extendBtn) {
+            if (!canActOnTask) {
+                const hiddenExt = extendBtn.cloneNode(true);
+                extendBtn.parentNode.replaceChild(hiddenExt, extendBtn);
+                hiddenExt.style.display = 'none';
+            } else {
             let isUserDone = (taskData.status === 'Completed');
             
             // If there's a list of assignee statuses, check the logged-in user specifically
@@ -398,6 +424,7 @@
                         alert("Extend deadline modal is not loaded.");
                     }
                 });
+            }
             }
         }
 

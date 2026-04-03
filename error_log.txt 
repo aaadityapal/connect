@@ -1,0 +1,5 @@
+[03-Apr-2026 10:53:19 Asia/Kolkata] PHP Warning:  Undefined array key "user_id" in /Applications/XAMPP/xamppfiles/htdocs/connect/punch.php on line 291
+[03-Apr-2026 10:53:19 Asia/Kolkata] PHP Warning:  Undefined array key "REMOTE_ADDR" in /Applications/XAMPP/xamppfiles/htdocs/connect/punch.php on line 17
+[03-Apr-2026 10:53:19 Asia/Kolkata] PHP Warning:  Undefined array key "HTTP_USER_AGENT" in /Applications/XAMPP/xamppfiles/htdocs/connect/punch.php on line 24
+[03-Apr-2026 10:53:19 Asia/Kolkata] No punch_out_photo data received in request
+[03-Apr-2026 10:53:19 Asia/Kolkata] No punch-in record found to update. Make sure you punched in first.

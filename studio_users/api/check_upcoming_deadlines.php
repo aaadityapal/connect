@@ -17,9 +17,19 @@ if (!isset($_SESSION['user_id'])) {
 $userId = (int)$_SESSION['user_id'];
 date_default_timezone_set('Asia/Kolkata');
 
+function ensureRejectCountColumn(PDO $pdo): void {
+    $q = $pdo->query("SHOW COLUMNS FROM studio_assigned_tasks LIKE 'completion_reject_count'");
+    $exists = $q && $q->fetch(PDO::FETCH_ASSOC);
+    if (!$exists) {
+        $pdo->exec("ALTER TABLE studio_assigned_tasks ADD COLUMN completion_reject_count INT NOT NULL DEFAULT 0");
+    }
+}
+
 $now = time();
 
 try {
+    ensureRejectCountColumn($pdo);
+
     // Select active tasks where user is assignee and not completed
     $query = "
         SELECT sat.*, u.username as assigned_by_name
@@ -56,6 +66,9 @@ try {
         $isOverdue  = ($diffSeconds < 0);
 
         if ($isUpcoming || $isOverdue) {
+            $rejectCount = (int)($task['completion_reject_count'] ?? 0);
+            $mustExtendBeforeDone = $rejectCount >= 2;
+
             if ($isOverdue) {
                 $absDiff = abs($diffSeconds);
                 $d = floor($absDiff / 86400);
@@ -75,6 +88,13 @@ try {
                 $color = '#e11d48';
                 $bgColor = '#fff1f2';
                 $titlePrefix = "Deadline Approaching ⏱️";
+            }
+
+            if ($mustExtendBeforeDone) {
+                $color = '#b45309';
+                $bgColor = '#fffbeb';
+                $titlePrefix = 'Extension Required ⚠️';
+                $timeLabel = 'Please extend deadline before marking done';
             }
 
             // Carried-over (from Incomplete) gets distinct orange styling
@@ -162,6 +182,8 @@ try {
                 'bgColor'              => $bgColor,
                 'titlePrefix'          => $titlePrefix,
                 'time_remaining_label' => $timeLabel,
+                'completion_reject_count' => $rejectCount,
+                'requires_extension_before_completion' => $mustExtendBeforeDone,
                 'is_carried_over'      => !empty($task['carried_over_from']),
                 'carried_over_from'    => $task['carried_over_from'] ?? null,
             ];

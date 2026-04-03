@@ -112,6 +112,7 @@ try {
             'dotColor' => $pColor,
             'person' => !empty($assignees) ? $assignees[0] : 'Unassigned',
             'assignees' => $assignees,
+            'can_act' => true,
             'assignedBy' => $row['creator_name'] ?: 'System Manager',
             'dateFrom' => date('M j, Y - g:i A', strtotime($row['created_at'])),
             'dateTo' => ($row['due_date'] ? date('M j, Y', strtotime($row['due_date'])) . ' - ' . ($row['due_time'] ? date('g:i A', strtotime($row['due_time'])) : '11:59 PM') : 'No Deadline'),

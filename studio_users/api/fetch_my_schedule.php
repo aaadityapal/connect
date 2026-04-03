@@ -156,6 +156,7 @@ try {
             'person' => $myAssignedName ?? (count($personsMap) > 0 ? $personsMap[0] : 'Unassigned'),
             'assignedBy' => $task['assigned_by_name'] ?? 'System Admin',
             'persons' => $personsMap,
+            'can_act' => true,
             'assignee_statuses' => $assigneeStatuses,
             'modalDateFrom' => $created,
             'modalDateTo' => $due,

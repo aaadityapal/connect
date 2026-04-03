@@ -501,6 +501,9 @@ $menu_items = [
                 document.querySelectorAll('.perm-checkbox').forEach(cb => {
                     cb.addEventListener('change', function() {
                         const mid = this.dataset.menu;
+
+
+                        
                         const bucket = ensureRolePermObject(roleSelector.value);
                         bucket[mid] = this.checked ? 1 : 0;
                     });

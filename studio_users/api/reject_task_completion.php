@@ -8,7 +8,17 @@ header('Content-Type: application/json');
 // Keep timestamps consistent across the app
 date_default_timezone_set('Asia/Kolkata');
 
+function ensureRejectCountColumn(PDO $pdo): void {
+    $q = $pdo->query("SHOW COLUMNS FROM studio_assigned_tasks LIKE 'completion_reject_count'");
+    $exists = $q && $q->fetch(PDO::FETCH_ASSOC);
+    if (!$exists) {
+        $pdo->exec("ALTER TABLE studio_assigned_tasks ADD COLUMN completion_reject_count INT NOT NULL DEFAULT 0");
+    }
+}
+
 try {
+    ensureRejectCountColumn($pdo);
+
     $input = json_decode(file_get_contents('php://input'), true);
     $taskId = isset($input['task_id']) ? (int)$input['task_id'] : 0;
 
@@ -44,6 +54,7 @@ try {
                                   created_by,
                                   completed_by,
                                   completion_history,
+                                      completion_reject_count,
                                   completed_at
                            FROM studio_assigned_tasks
                            WHERE id = ? AND deleted_at IS NULL
@@ -61,19 +72,21 @@ try {
         exit;
     }
 
-    if (($task['status'] ?? '') !== 'Completed') {
-        echo json_encode(['success' => false, 'error' => 'Task is not in Completed status']);
+    $completedByRaw = trim((string)($task['completed_by'] ?? ''));
+    if ($completedByRaw === '') {
+        echo json_encode(['success' => false, 'error' => 'No assignee completion to reject']);
         exit;
     }
 
     $pdo->beginTransaction();
 
-    // Revert to Pending and clear completion fields
+    // Revert to Pending and clear completion fields; increment rejection counter
     $upd = $pdo->prepare("UPDATE studio_assigned_tasks
                           SET status = 'Pending',
                               completed_by = NULL,
                               completed_at = NULL,
                               completion_history = NULL,
+                              completion_reject_count = COALESCE(completion_reject_count, 0) + 1,
                               updated_at = NOW(),
                               updated_by = :user_id
                           WHERE id = :id");
@@ -98,6 +111,8 @@ try {
     $assignedToRaw = (string)($task['assigned_to'] ?? '');
     $assigneeIds = array_values(array_filter(array_map('intval', array_map('trim', explode(',', $assignedToRaw))), fn($v) => $v > 0));
 
+    $newRejectCount = ((int)($task['completion_reject_count'] ?? 0)) + 1;
+
     $metadata = [
         'task_id' => $taskId,
         'task_description' => $task['task_description'] ?? null,
@@ -109,7 +124,8 @@ try {
         'completed_by' => $task['completed_by'] ?? null,
         'completed_at' => $task['completed_at'] ?? null,
         'completion_history' => $task['completion_history'] ? json_decode($task['completion_history'], true) : null,
-        'decision' => 'rejected'
+        'decision' => 'rejected',
+        'completion_reject_count' => $newRejectCount
     ];
 
     logUserActivity(

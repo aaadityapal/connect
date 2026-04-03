@@ -1392,6 +1392,26 @@ document.addEventListener("DOMContentLoaded", () => {
             if(!notifContent) return;
             notifContent.innerHTML = '';
             let unreadCount = 0;
+
+            function safeParseMetadata(raw) {
+                if (!raw) return {};
+                if (typeof raw === 'object') return raw;
+                if (typeof raw !== 'string') return {};
+                try {
+                    return JSON.parse(raw);
+                } catch (_) {
+                    return {};
+                }
+            }
+
+            function escapeHtml(str) {
+                return String(str)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
             
             if(!logs || logs.length === 0) {
                 notifContent.innerHTML = '<div style="padding: 20px; text-align: center; color: #94a3b8;"><i class="fa-regular fa-bell-slash" style="font-size:1.5rem; margin-bottom:8px; display:block;"></i> No recent notifications</div>';
@@ -1417,6 +1437,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const logId = parseInt(log.id) || 0;
                 if(logId > batchMaxId) batchMaxId = logId;
                 if(log.is_read == 0) unreadCount++;
+
+                // Parse metadata once for each log (used by UI rendering)
+                log._meta = safeParseMetadata(log.metadata);
 
                 const logDate = new Date(log.created_at);
                 logDate.setHours(0,0,0,0);
@@ -1477,6 +1500,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     'task_assigned':             { color: '#8b5cf6', bg: '#f5f3ff', icon: 'fa-solid fa-list-check',           label: 'Task Assigned'           },
                     'task_created':              { color: '#3b82f6', bg: '#eff6ff', icon: 'fa-solid fa-circle-plus',          label: 'Task Created'            },
                     'task_completed':            { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-circle-check',         label: 'Task Completed'          },
+                    'task_partially_completed':  { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-users-between-lines',  label: 'Task Partially Completed'},
+                    'task_still_pending':        { color: '#fb7185', bg: '#fff1f2', icon: 'fa-solid fa-hourglass-half',       label: 'Pending Your Completion' },
                     'task_completed_for_approval':{ color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-file-signature',      label: 'Approval Needed'         },
                     'task_completion_approved':   { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-thumbs-up',            label: 'Task Completion Approved'},
                     'task_completion_rejected':   { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-ban',                  label: 'Task Completion Rejected'},
@@ -1510,12 +1535,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     'leave_rejected':            { color: '#e11d48', bg: '#fff1f2', icon: 'fa-solid fa-calendar-xmark',       label: 'Leave Rejected'          },
                     'leave_deleted':             { color: '#6b7280', bg: '#f9fafb', icon: 'fa-solid fa-calendar-minus',       label: 'Leave Deleted'           },
                 };
-                const cfg = typeConfig[log.action_type] || { color: '#64748b', bg: '', icon: 'fa-solid fa-bell', label: formatActionType(log.action_type) };
+                const hasOvertimeReport = log.action_type === 'punch_out' && !!(log._meta && log._meta.overtime_report);
+                const cfg = hasOvertimeReport
+                    ? typeConfig['overtime_submitted']
+                    : (typeConfig[log.action_type] || { color: '#64748b', bg: '', icon: 'fa-solid fa-bell', label: formatActionType(log.action_type) });
 
                 const logDate = new Date(log.created_at);
                 const timeStr = logDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 const dateStr = logDate.toLocaleDateString([], {month:'short', day:'numeric'});
                 const fullTimeStr = `${dateStr} at ${timeStr}`;
+
+                const overtimeText = hasOvertimeReport
+                    ? `<br><span style="display:block; margin-top:4px; color:#9a3412;"><i class="fa-solid fa-business-time" style="margin-right:4px;"></i>Overtime: ${escapeHtml(log._meta.overtime_report)}</span>`
+                    : '';
 
                 const unreadDot = log.is_read == 0
                     ? `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${cfg.color}; margin-left:6px; vertical-align:middle;"></span>`
@@ -1528,7 +1560,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <i class="${cfg.icon}" style="color:${cfg.color}; font-size:0.85rem;"></i>
                         <h4 style="margin:0; color:#1e293b; font-size:0.88rem; font-weight:600;">${cfg.label}${unreadDot}</h4>
                     </div>
-                    <p style="margin:0 0 6px; font-size:0.8rem; color:#475569; line-height:1.4;">${log.description}</p>
+                    <p style="margin:0 0 6px; font-size:0.8rem; color:#475569; line-height:1.4;">${log.description}${overtimeText}</p>
                     <span class="notif-time" style="font-size:0.7rem; color:#94a3b8;"><i class="fa-regular fa-clock"></i> ${fullTimeStr}</span>
                 </div>`;
             }

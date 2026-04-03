@@ -74,8 +74,9 @@ try {
         exit();
     }
 
-    if (($row['status'] ?? '') !== 'Completed') {
-        echo json_encode(['success' => false, 'error' => 'Task is not completed yet']);
+    $completedByRaw = trim((string)($row['completed_by'] ?? ''));
+    if ($completedByRaw === '') {
+        echo json_encode(['success' => false, 'error' => 'No assignee completion to approve yet']);
         exit();
     }
 
@@ -102,11 +103,70 @@ try {
         $title = 'Task #' . $taskId;
     }
 
+    // Resolve approver (creator) username for richer notification text
+    $approverName = 'User ' . $userId;
+    try {
+        $uStmt = $pdo->prepare("SELECT username FROM users WHERE id = ? LIMIT 1");
+        $uStmt->execute([$userId]);
+        $uName = $uStmt->fetchColumn();
+        if (!empty($uName)) $approverName = (string)$uName;
+    } catch (Exception $e) {
+        // non-fatal fallback to User <id>
+    }
+
     $assignedToRaw = (string)($row['assigned_to'] ?? '');
     $assigneeIds = array_values(array_filter(
         array_map('intval', array_map('trim', explode(',', $assignedToRaw))),
         fn($v) => $v > 0
     ));
+
+    // Build a reliable id -> username map from users table (fallback to snapshot/fallback label)
+    $assigneeNameById = [];
+    if (!empty($assigneeIds)) {
+        try {
+            $ph = implode(',', array_fill(0, count($assigneeIds), '?'));
+            $nStmt = $pdo->prepare("SELECT id, username FROM users WHERE id IN ($ph)");
+            $nStmt->execute($assigneeIds);
+            foreach ($nStmt->fetchAll(PDO::FETCH_ASSOC) as $u) {
+                $assigneeNameById[(int)$u['id']] = (string)$u['username'];
+            }
+        } catch (Exception $e) {
+            // non-fatal
+        }
+    }
+
+    // Snapshot fallback for any unresolved names
+    $assignedNamesArr = array_values(array_filter(array_map('trim', explode(',', (string)($row['assigned_names'] ?? '')))));
+    for ($i = 0; $i < count($assigneeIds); $i++) {
+        $id = $assigneeIds[$i];
+        if (!isset($assigneeNameById[$id])) {
+            $assigneeNameById[$id] = $assignedNamesArr[$i] ?? ('User ' . $id);
+        }
+    }
+
+    // Resolve who completed (prefer latest completion from history)
+    $completedIds = array_values(array_filter(
+        array_map('intval', array_map('trim', explode(',', (string)($row['completed_by'] ?? '')))),
+        fn($v) => $v > 0
+    ));
+    $history = $row['completion_history'] ? json_decode($row['completion_history'], true) : [];
+    if (!is_array($history)) $history = [];
+
+    $latestCompleterId = null;
+    $latestTs = 0;
+    foreach ($completedIds as $cid) {
+        $rawTs = $history[(string)$cid] ?? ($history[$cid] ?? null);
+        $ts = $rawTs ? strtotime($rawTs) : 0;
+        if ($ts > $latestTs) {
+            $latestTs = $ts;
+            $latestCompleterId = $cid;
+        }
+    }
+    if ($latestCompleterId === null && !empty($completedIds)) {
+        $latestCompleterId = end($completedIds);
+    }
+
+    $latestCompleterName = $latestCompleterId ? ($assigneeNameById[$latestCompleterId] ?? ('User ' . $latestCompleterId)) : 'Assignee';
 
     $metadata = [
         'task_id' => $taskId,
@@ -120,7 +180,10 @@ try {
         'completion_history' => $row['completion_history'] ? json_decode($row['completion_history'], true) : null,
         'decision' => 'approved',
         'approved_by' => $userId,
-        'approved_at' => date('Y-m-d H:i:s')
+        'approved_by_name' => $approverName,
+        'approved_at' => date('Y-m-d H:i:s'),
+        'latest_completed_by_user_id' => $latestCompleterId,
+        'latest_completed_by_user_name' => $latestCompleterName
     ];
 
     logUserActivity(
@@ -128,7 +191,7 @@ try {
         $userId,
         'task_completion_approved',
         'task',
-        'Approved completion: ' . '"' . $title . '"',
+        'Approved completion: ' . '"' . $title . '" (completed by ' . $latestCompleterName . ') by ' . $approverName . '.',
         $taskId,
         $metadata
     );
@@ -140,7 +203,7 @@ try {
             $assigneeId,
             'task_completion_approved',
             'task',
-            'Completion approved by creator: ' . '"' . $title . '"',
+            'Completion approved by ' . $approverName . ': ' . '"' . $title . '" (completed by ' . $latestCompleterName . ').',
             $taskId,
             $metadata
         );

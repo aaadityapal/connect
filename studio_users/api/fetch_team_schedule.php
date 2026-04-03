@@ -224,6 +224,7 @@ try {
             'person' => count($personsMap) > 0 ? $personsMap[0] : 'Unassigned',
             'assignedBy' => $task['assigned_by_name'] ?? 'System Admin',
             'persons' => $personsMap,
+            'can_act' => in_array((string)$userId, array_map('strval', $assignedIds), true),
             'assignee_statuses' => $assigneeStatuses,
             'modalDateFrom' => $created,
             'modalDateTo' => $due,

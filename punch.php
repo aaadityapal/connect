@@ -710,6 +710,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ? trim($data['out_of_geofence_reason'])
                 : null;
 
+            // Extract overtime reason submitted from OT modal (if any)
+            $overtime_report = isset($data['overtime_report']) && !empty(trim($data['overtime_report']))
+                ? trim($data['overtime_report'])
+                : null;
+
             // Update attendance record with punch out details
             $query = "UPDATE attendance SET
                 punch_out = ?,
@@ -747,6 +752,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log("Punch Out Debug - Query: " . $query);
             error_log("Punch Out Debug - Current Time: " . $current_time);
             error_log("Punch Out Debug - Outside Reason: " . ($punch_out_outside_reason ?? 'None'));
+            error_log("Punch Out Debug - Overtime Report: " . ($overtime_report ?? 'None'));
             error_log("Punch Out Debug - Values: current_time=" . $current_time .
                 ", total_time=" . $time_details['total_time'] .
                 ", overtime=" . $time_details['overtime'] .
@@ -828,6 +834,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!empty($punch_out_outside_reason)) {
                         $log_desc .= " (Outside Geofence. Reason: " . $punch_out_outside_reason . ")";
                         $log_meta_data['outside_geofence_reason'] = $punch_out_outside_reason;
+                    }
+
+                    if (!empty($overtime_report)) {
+                        $log_meta_data['overtime_report'] = $overtime_report;
+                        $log_meta_data['overtime_hours'] = $time_details['overtime'];
                     }
                     
                     $log_meta = json_encode($log_meta_data);

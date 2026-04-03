@@ -54,7 +54,17 @@ if (!$taskId || !in_array($status, $allowed)) {
     exit();
 }
 
+function ensureRejectCountColumn(PDO $pdo): void {
+    $q = $pdo->query("SHOW COLUMNS FROM studio_assigned_tasks LIKE 'completion_reject_count'");
+    $exists = $q && $q->fetch(PDO::FETCH_ASSOC);
+    if (!$exists) {
+        $pdo->exec("ALTER TABLE studio_assigned_tasks ADD COLUMN completion_reject_count INT NOT NULL DEFAULT 0");
+    }
+}
+
 try {
+    ensureRejectCountColumn($pdo);
+
     // ── Handle Virtual Task Materialisation ──────────────────────────
     if ($isVirtual) {
         // First, check if a REAL task for this date already exists to avoid duplicates
@@ -113,6 +123,7 @@ try {
                              completed_by,
                              completed_at,
                              completion_history,
+                                                         completion_reject_count,
                              status
         FROM studio_assigned_tasks
         WHERE id = :id
@@ -132,6 +143,16 @@ try {
     $assignedToArr = array_filter(array_map('trim', explode(',', $taskRow['assigned_to'])));
     $completedByArr = array_filter(array_map('trim', explode(',', $taskRow['completed_by'] ?? '')));
     $history = json_decode($taskRow['completion_history'] ?? '{}', true);
+    $rejectCount = (int)($taskRow['completion_reject_count'] ?? 0);
+
+    // Policy: after 2 creator rejections, assignee must extend deadline before marking done again.
+    if ($status === 'Completed' && $rejectCount >= 2) {
+        echo json_encode([
+            'success' => false,
+            'error' => 'Completion blocked: Please extend the task deadline before marking this task as done again.'
+        ]);
+        exit();
+    }
 
     // If 'Completed' was requested by frontend, mark it done for THIS user
     if ($status === 'Completed') {
@@ -203,21 +224,89 @@ try {
         ]);
     } catch (Exception $e) {} // non-fatal
 
-    // If the task just became fully completed, log an "awaiting approval" activity for the creator
+    // If an assignee marked this task completed, notify creator and teammates.
+    // - Partial completion: creator gets partial update; pending assignees get "still pending" update.
+    // - Every completion (partial or full): creator also gets approval-needed update.
     $creatorId = isset($taskRow['created_by']) ? (int)$taskRow['created_by'] : 0;
-    if ($creatorId > 0 && $creatorId !== $userId && $previousGlobalStatus !== 'Completed' && $newGlobalStatus === 'Completed') {
+    if ($creatorId > 0 && $creatorId !== $userId && $status === 'Completed') {
+        $assignedIdsInt = array_values(array_filter(array_map('intval', $assignedToArr), fn($v) => $v > 0));
+        $completedIdsInt = array_values(array_filter(array_map('intval', $completedByArr), fn($v) => $v > 0));
+        $pendingIdsInt = array_values(array_filter($assignedIdsInt, fn($v) => !in_array($v, $completedIdsInt, true)));
+
+        $assignedNamesArr = array_values(array_filter(array_map('trim', explode(',', (string)($taskRow['assigned_names'] ?? '')))));
+        $idToName = [];
+        for ($i = 0; $i < count($assignedIdsInt); $i++) {
+            $idToName[(string)$assignedIdsInt[$i]] = $assignedNamesArr[$i] ?? ('User ' . $assignedIdsInt[$i]);
+        }
+
+        $actorName = $idToName[(string)$userId] ?? ('User ' . $userId);
+        $pendingNames = array_map(function ($pid) use ($idToName) {
+            return $idToName[(string)$pid] ?? ('User ' . $pid);
+        }, $pendingIdsInt);
+        $pendingNamesText = !empty($pendingNames) ? implode(', ', $pendingNames) : 'None';
+
+        if (count($pendingIdsInt) > 0) {
+            // Creator notification: partial completion update
+            try {
+                logUserActivity($pdo, $creatorId, 'task_partially_completed', 'task', 'Task partially done: ' . '"' . $title . '" — ' . $actorName . ' completed; pending: ' . $pendingNamesText . '.', $taskId, [
+                    'task_id' => $taskId,
+                    'title' => $title,
+                    'event' => 'partial_completion',
+                    'completed_by_user_id' => $userId,
+                    'completed_by_user_name' => $actorName,
+                    'previous_global_status' => $previousGlobalStatus,
+                    'new_global_status' => $newGlobalStatus,
+                    'created_by' => $creatorId,
+                    'assigned_to' => $assignedIdsInt,
+                    'assigned_names' => $taskRow['assigned_names'] ?? null,
+                    'completed_by' => $completedStr,
+                    'completed_at' => $nowIst,
+                    'pending_user_ids' => $pendingIdsInt,
+                    'pending_user_names' => $pendingNames,
+                    'completion_history' => $history,
+                ]);
+            } catch (Exception $e) {} // non-fatal
+
+            // Pending teammates notification: your part is still pending
+            foreach ($pendingIdsInt as $pendingUserId) {
+                if ($pendingUserId === $userId) continue;
+                try {
+                    logUserActivity($pdo, $pendingUserId, 'task_still_pending', 'task', 'Team update: ' . '"' . $title . '" partially completed — ' . $actorName . ' completed. Your part is still pending.', $taskId, [
+                        'task_id' => $taskId,
+                        'title' => $title,
+                        'event' => 'pending_after_teammate_completion',
+                        'completed_by_user_id' => $userId,
+                        'completed_by_user_name' => $actorName,
+                        'pending_user_id' => $pendingUserId,
+                        'assigned_to' => $assignedIdsInt,
+                        'assigned_names' => $taskRow['assigned_names'] ?? null,
+                        'completed_by' => $completedStr,
+                        'completion_history' => $history,
+                    ]);
+                } catch (Exception $e) {} // non-fatal
+            }
+        }
+
+        // Creator approval-needed event for each assignee completion
+        $approvalDesc = (count($pendingIdsInt) > 0)
+            ? ('Task partially completed and awaiting your approval: ' . '"' . $title . '"')
+            : ('Task completed and awaiting your approval: ' . '"' . $title . '"');
         try {
-            logUserActivity($pdo, $creatorId, 'task_completed_for_approval', 'task', 'Task completed and awaiting your approval: ' . '"' . $title . '"', $taskId, [
+            logUserActivity($pdo, $creatorId, 'task_completed_for_approval', 'task', $approvalDesc, $taskId, [
                 'task_id' => $taskId,
                 'title' => $title,
                 'event' => 'needs_approval',
+                'completed_by_user_id' => $userId,
+                'completed_by_user_name' => $actorName,
                 'previous_global_status' => $previousGlobalStatus,
                 'new_global_status' => $newGlobalStatus,
                 'created_by' => $creatorId,
-                'assigned_to' => array_values(array_filter(array_map('intval', $assignedToArr), fn($v) => $v > 0)),
+                'assigned_to' => $assignedIdsInt,
                 'assigned_names' => $taskRow['assigned_names'] ?? null,
                 'completed_by' => $completedStr,
                 'completed_at' => $nowIst,
+                'pending_user_ids' => $pendingIdsInt,
+                'pending_user_names' => $pendingNames,
                 'completion_history' => $history,
             ]);
         } catch (Exception $e) {} // non-fatal

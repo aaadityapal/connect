@@ -22,18 +22,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Search + role filter for employee list
     const applyEmployeeFilters = () => {
-        const query = (searchInput?.value || '').trim().toLowerCase();
-        const selectedRole = (roleFilter?.value || '').trim().toLowerCase();
+        const query = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+        const roleSel = document.getElementById('roleFilter')?.value || '';
+        const selectedRole = roleSel.trim().toLowerCase();
 
         let visibleSerial = 0;
+        
+        // Grab rows freshly to ensure we don't hold a stale reference
+        const currentRows = document.querySelectorAll('table tbody tr');
 
-        employeeRows.forEach(row => {
+        currentRows.forEach(row => {
+            // Ignore modal rows
+            if (row.closest('#viewReportModal') || row.closest('.modal-overlay')) return;
+
+            const textC = (row.textContent || '').toLowerCase();
             const viewBtn = row.querySelector('.btn-view');
-            const username = (viewBtn?.getAttribute('data-username') || '').toLowerCase();
+            
+            // If it's a data row without a view button for some reason, maybe skip or use text
             const userRole = (viewBtn?.getAttribute('data-role') || '').toLowerCase();
-            const searchableText = `${row.textContent || ''} ${username}`.toLowerCase();
 
-            const matchesSearch = query === '' || searchableText.includes(query);
+            const matchesSearch = query === '' || textC.includes(query);
             const matchesRole = selectedRole === '' || userRole === selectedRole;
             const shouldShow = matchesSearch && matchesRole;
 
@@ -42,8 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Keep S.No continuous after filtering
             if (shouldShow) {
                 visibleSerial += 1;
-                const serialCell = row.querySelector('td:first-child');
-                if (serialCell) serialCell.textContent = visibleSerial;
+                const serialCell = row.firstElementChild;
+                if (serialCell && viewBtn) { // only update serial for valid rows
+                    serialCell.textContent = visibleSerial;
+                }
             }
         });
     };

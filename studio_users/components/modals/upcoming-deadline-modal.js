@@ -107,6 +107,8 @@
         // Render left pane (Action Required)
         actionContainer.innerHTML = '';
         (actionTasks || []).forEach(task => {
+            const mustExtendFirst = !!task.requires_extension_before_completion || Number(task.completion_reject_count || 0) >= 2;
+
             const item = document.createElement('div');
             item.className = 'udm-task-item';
             item.style.borderLeft = `4px solid ${task.dotColor || '#e11d48'}`;
@@ -117,14 +119,20 @@
                     <div class="udm-task-badge" style="background:${task.bgColor || '#fff1f2'}; color:${task.dotColor || '#e11d48'};">
                         <i class="fa-regular fa-clock" style="margin-right:4px;"></i>${task.time_remaining_label || ''}
                     </div>
+                    ${mustExtendFirst ? `
+                    <div class="udm-task-badge" style="margin-top:6px; background:#fff7ed; color:#9a3412; border-color:#fed7aa;">
+                        <i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i>
+                        Mandatory: Extend deadline first (rejected ${Number(task.completion_reject_count || 0)} times)
+                    </div>` : ''}
                 </div>
                 <div class="udm-task-actions">
                     <button class="udm-action-btn udm-secondary-btn" data-action="extend">
                         <i class="fa-solid fa-clock-rotate-left"></i> Extend
                     </button>
+                    ${mustExtendFirst ? '' : `
                     <button class="udm-action-btn udm-primary-btn" data-action="finish">
                         <i class="fa-solid fa-check"></i> Mark as Done
-                    </button>
+                    </button>`}
                 </div>
             `;
 
@@ -134,11 +142,14 @@
                 }
             };
 
-            item.querySelector('[data-action="finish"]').onclick = () => {
-                if (window.TaskModal && typeof window.TaskModal.open === 'function') {
-                    window.TaskModal.open(task);
-                }
-            };
+            const finishBtn = item.querySelector('[data-action="finish"]');
+            if (finishBtn) {
+                finishBtn.onclick = () => {
+                    if (window.TaskModal && typeof window.TaskModal.open === 'function') {
+                        window.TaskModal.open(task);
+                    }
+                };
+            }
 
             actionContainer.appendChild(item);
         });

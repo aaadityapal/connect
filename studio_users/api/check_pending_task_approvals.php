@@ -1,8 +1,8 @@
 <?php
 /**
  * check_pending_task_approvals.php
- * Returns tasks created by the logged-in user that are completed by assignees
- * and waiting for the creator's approval.
+ * Returns tasks created by the logged-in user that have at least one assignee
+ * completion and are waiting for (or re-waiting for) the creator's approval.
  *
  * Storage:
  * - Uses a lightweight table `studio_task_completion_approvals` to persist approvals
@@ -39,18 +39,21 @@ function ensureApprovalTable(PDO $pdo): void {
 try {
     ensureApprovalTable($pdo);
 
-    // 1) Get completed tasks created by me (assigned to others) that are not yet approved
+        // 1) Get tasks created by me (assigned to others) where at least one assignee
+        //    has completed. We include approval timestamp so we can re-trigger approvals
+        //    whenever a new assignee completes after a previous approval.
     $stmt = $pdo->prepare("
         SELECT 
             sat.*,
-            u.username as creator_name
+                        u.username as creator_name,
+                        a.approved_at as approved_at
         FROM studio_assigned_tasks sat
         LEFT JOIN users u ON sat.created_by = u.id
         LEFT JOIN studio_task_completion_approvals a ON a.task_id = sat.id
         WHERE sat.deleted_at IS NULL
           AND sat.created_by = :uid
-          AND sat.status = 'Completed'
-          AND a.task_id IS NULL
+                    AND sat.status IN ('In Progress', 'Completed')
+                    AND IFNULL(TRIM(sat.completed_by), '') <> ''
           AND (sat.assigned_to IS NULL OR FIND_IN_SET(:uid_not_assignee, REPLACE(sat.assigned_to, ' ', '')) = 0)
         ORDER BY sat.completed_at DESC, sat.updated_at DESC, sat.id DESC
         LIMIT 50
@@ -75,17 +78,26 @@ try {
         if (!is_array($completionHistory)) $completionHistory = [];
 
         $assigneeStatuses = [];
-        $firstCompleterName = null;
-        $firstCompleterAt = null;
+        $latestCompleterName = null;
+        $latestCompleterAtTs = 0;
+        $latestCompletionAtRaw = null;
+
+        // Latest approval timestamp for this task (if any)
+        $approvedAtTs = !empty($task['approved_at']) ? strtotime($task['approved_at']) : 0;
 
         for ($i = 0; $i < count($assignedIds); $i++) {
             $cId = $assignedIds[$i];
             $cName = $names[$i] ?? ("User " . $cId);
             $isDone = in_array($cId, $completedIds);
 
-            if ($isDone && !$firstCompleterName) {
-                $firstCompleterName = $cName;
-                $firstCompleterAt = $completionHistory[$cId] ?? null;
+            if ($isDone) {
+                $completedAtRaw = $completionHistory[$cId] ?? null;
+                $completedAtTs = $completedAtRaw ? strtotime($completedAtRaw) : 0;
+                if ($completedAtTs > $latestCompleterAtTs) {
+                    $latestCompleterAtTs = $completedAtTs;
+                    $latestCompletionAtRaw = $completedAtRaw;
+                    $latestCompleterName = $cName;
+                }
             }
 
             $assigneeStatuses[] = [
@@ -95,6 +107,27 @@ try {
                 'extension_count' => 0,
                 'completed_at' => $completionHistory[$cId] ?? null
             ];
+        }
+
+        // Fallback: if completion history is missing timestamps, use completed_at from row
+        if ($latestCompleterAtTs <= 0 && !empty($task['completed_at'])) {
+            $latestCompleterAtTs = strtotime($task['completed_at']) ?: 0;
+            $latestCompletionAtRaw = $task['completed_at'];
+            if (!$latestCompleterName) {
+                // Best-effort fallback name from first completed assignee
+                for ($i = 0; $i < count($assignedIds); $i++) {
+                    if (in_array($assignedIds[$i], $completedIds)) {
+                        $latestCompleterName = $names[$i] ?? ("User " . $assignedIds[$i]);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // If already approved after latest completion, do NOT show in approval list.
+        // If a new completion happened after approval, show again.
+        if ($latestCompleterAtTs > 0 && $approvedAtTs > 0 && $approvedAtTs >= $latestCompleterAtTs) {
+            continue;
         }
 
         $projectStageTitle = trim(($task['project_name'] ?? '') . (!empty($task['stage_number']) ? ' - Stage ' . $task['stage_number'] : ''));
@@ -126,12 +159,12 @@ try {
             $durationStr = implode(' ', $parts);
         }
 
-        $badgeLabel = $firstCompleterName
-            ? ('Completed by ' . $firstCompleterName)
+        $badgeLabel = $latestCompleterName
+            ? ('Completed by ' . $latestCompleterName)
             : 'Completed';
 
-        if ($firstCompleterAt) {
-            $ts = strtotime($firstCompleterAt);
+        if ($latestCompletionAtRaw) {
+            $ts = strtotime($latestCompletionAtRaw);
             if ($ts) $badgeLabel .= ' • ' . date('g:i A', $ts);
         }
 
@@ -142,7 +175,7 @@ try {
             'desc' => $task['task_description'],
             'due_date' => $task['due_date'] ?? null,
             'due_time_24' => !empty($task['due_time']) ? date('H:i', strtotime($task['due_time'])) : null,
-            'status' => 'Completed',
+            'status' => $task['status'] ?? 'In Progress',
             'assignedBy' => $task['creator_name'] ?? 'You',
             'persons' => $names,
             'assignee_statuses' => $assigneeStatuses,

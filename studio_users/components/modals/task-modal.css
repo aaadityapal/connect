@@ -74,6 +74,22 @@
 .task-modal-body p { margin: 0; font-size: 0.95rem; line-height: 1.5; color: #334155; }
 
 .task-modal-footer { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 24px; border-top: 1px solid #f8fafc; padding-top: 20px; flex-wrap: wrap; }
+.task-modal-readonly-hint {
+    margin-right: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+.task-modal-readonly-hint i {
+    color: #94a3b8;
+}
 .task-btn-secondary { background: #ffffff; border: 1px solid #e2e8f0; color: #475569; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .task-btn-secondary:hover { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
 

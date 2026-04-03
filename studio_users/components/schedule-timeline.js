@@ -347,6 +347,7 @@
                 window.TaskModal.open({
                     title, person, label, dotColor,
                     id: rawEvent ? rawEvent.id : null,
+                    can_act: rawEvent ? rawEvent.can_act : true,
                     duration: rawEvent ? rawEvent.duration : null,
                     durationDays: rawEvent ? rawEvent.durationDays : null,
                     durationStr: rawEvent ? rawEvent.durationStr : null,
@@ -992,37 +993,90 @@
                 row.appendChild(item);
             });
         } else {
-            // Team legend items (dynamic from real hierarchy)
-            let teamNames = [];
-            
-            function extractNames(node) {
-                if (!node) return;
-                teamNames.push({ name: node.name, dot: getColorForPerson(node.name) });
-                if (node.children) node.children.forEach(extractNames);
-            }
-            
-            if (_lastHierarchyData && (_lastHierarchyData.tree || _lastHierarchyData.manager)) {
-                extractNames(_lastHierarchyData.tree || _lastHierarchyData.manager);
-            }
+            // Team legend items: show ALL active users (not only hierarchy subset)
+            const source = (Array.isArray(_allUsersLegend) && _allUsersLegend.length > 0)
+                ? _allUsersLegend
+                : [];
 
-            // Deduplicate to avoid multiple dots for same person
-            const seen = new Set();
-            const unique = [];
-            for (let t of teamNames) {
-                if (!seen.has(t.name)) {
-                    seen.add(t.name);
-                    unique.push(t);
+            // Fallback to hierarchy names if all-users list is unavailable
+            if (source.length === 0) {
+                let teamNames = [];
+
+                function extractNames(node) {
+                    if (!node) return;
+                    teamNames.push({ name: node.name, dot: getColorForPerson(node.name) });
+                    if (node.children) node.children.forEach(extractNames);
                 }
-            }
 
-            unique.forEach(p => {
-                const item = document.createElement('div');
-                item.className = 'tl-legend-item';
-                item.innerHTML = `<div class="tl-legend-dot" style="background:${p.dot}"></div><span>${p.name}</span>`;
-                row.appendChild(item);
-            });
+                if (_lastHierarchyData && (_lastHierarchyData.tree || _lastHierarchyData.manager)) {
+                    extractNames(_lastHierarchyData.tree || _lastHierarchyData.manager);
+                }
+
+                // Deduplicate to avoid multiple dots for same person
+                const seen = new Set();
+                const unique = [];
+                for (let t of teamNames) {
+                    if (!seen.has(t.name)) {
+                        seen.add(t.name);
+                        unique.push(t);
+                    }
+                }
+
+                unique.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'tl-legend-item';
+                    item.innerHTML = `<div class="tl-legend-dot" style="background:${p.dot}"></div><span>${p.name}</span>`;
+                    row.appendChild(item);
+                });
+            } else {
+                source.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'tl-legend-item';
+                    item.innerHTML = `<div class="tl-legend-dot" style="background:${p.dot}"></div><span>${p.name}</span>`;
+                    row.appendChild(item);
+                });
+            }
         }
         target.appendChild(row);
+    }
+
+    function _normalizeLegendUsers(users) {
+        if (!Array.isArray(users)) return [];
+        const seen = new Set();
+        const out = [];
+        users.forEach(u => {
+            const name = String(u && (u.username || u.name || '')).trim();
+            if (!name) return;
+            const key = name.toLowerCase();
+            if (seen.has(key)) return;
+            seen.add(key);
+            out.push({ name, dot: getColorForPerson(name) });
+        });
+        out.sort((a, b) => a.name.localeCompare(b.name));
+        return out;
+    }
+
+    function _refreshTeamLegendIfVisible() {
+        const target = document.getElementById('teamScheduleLegendContainer');
+        if (!target) return;
+        _drawLegend(target, [], false);
+    }
+
+    function loadAllLegendUsers() {
+        return fetch('api/fetch_hierarchy.php')
+            .then(res => {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(data => {
+                if (data && data.success && Array.isArray(data.users)) {
+                    _allUsersLegend = _normalizeLegendUsers(data.users);
+                    _refreshTeamLegendIfVisible();
+                }
+            })
+            .catch(err => {
+                console.warn('[TeamLegend] Could not load all users:', err);
+            });
     }
 
     function _wireButtons(left, right, wrapper, step) {
@@ -1439,6 +1493,7 @@
 
     let _lastHierarchyData = null;
     let _selectedHierarchyUserId = null;
+    let _allUsersLegend = [];
 
     function handleHierarchyClick(userId) {
         _selectedHierarchyUserId = userId;
@@ -1680,6 +1735,7 @@
 
         // Load real Team Hierarchy from DB
         loadTeamHierarchy();
+        loadAllLegendUsers();
         initHierarchyModal();
     }
 

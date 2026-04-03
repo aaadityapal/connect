@@ -35,11 +35,22 @@ if ($dueTime && !preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $dueTime)) {
     exit();
 }
 
+function ensureRejectCountColumn(PDO $pdo): void {
+    $q = $pdo->query("SHOW COLUMNS FROM studio_assigned_tasks LIKE 'completion_reject_count'");
+    $exists = $q && $q->fetch(PDO::FETCH_ASSOC);
+    if (!$exists) {
+        $pdo->exec("ALTER TABLE studio_assigned_tasks ADD COLUMN completion_reject_count INT NOT NULL DEFAULT 0");
+    }
+}
+
 try {
+    ensureRejectCountColumn($pdo);
+
     // Verify task is assigned to this user
     $check = $pdo->prepare("
-        SELECT sat.id, sat.created_by, sat.due_date, sat.due_time, sat.extended_by,
+         SELECT sat.id, sat.created_by, sat.due_date, sat.due_time, sat.extended_by,
                sat.extension_count, sat.extension_history,
+             sat.completion_reject_count,
                u.username as my_username
         FROM studio_assigned_tasks sat
         LEFT JOIN users u ON u.id = :userId
@@ -99,6 +110,7 @@ try {
             extension_count    = extension_count + 1,
             extended_by        = :extendedBy,
             extension_history  = :extensionHistory,
+            completion_reject_count = 0,
             updated_at         = NOW(),
             updated_by         = :userId
         WHERE id = :id

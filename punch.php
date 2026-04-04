@@ -857,6 +857,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     error_log("Project hashtag tracking error: " . $mentionError->getMessage());
                 }
 
+                // Send WhatsApp notification after successful punch out
+                try {
+                    global $pdo; // Use the PDO connection from db_connect.php
+                    if ($pdo) {
+                        $notificationSent = sendPunchOutNotification($user_id, $pdo);
+                        if ($notificationSent) {
+                            error_log("WhatsApp punch out notification sent successfully for user ID: $user_id");
+                        } else {
+                            error_log("WhatsApp punch out notification failed for user ID: $user_id");
+                        }
+                    } else {
+                        error_log("PDO connection not available for WhatsApp punch out notification");
+                    }
+                } catch (Exception $whatsappError) {
+                    // Log the error but don't fail the punch out
+                    error_log("WhatsApp punch out notification error: " . $whatsappError->getMessage());
+                }
+
                 // Check if punch-out location differs significantly from punch-in location
                 $location_changed = false;
                 $distance_km = 0;

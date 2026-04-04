@@ -434,6 +434,15 @@
                     style="display:none; width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; margin: 0; padding: 0;"></canvas>
             </div>
 
+            <div id="cameraControlsGrpOut" style="display: flex; gap: 12px; margin-bottom: 20px;">
+                <button id="switchCameraBtnOut" class="lm-btn lm-btn-outline" style="display:none; padding: 10px;">
+                    <i class="fa-solid fa-rotate"></i> Rotate
+                </button>
+                <button id="capturePicBtnOut" class="lm-btn lm-btn-danger" style="display:none; padding: 10px;">
+                    <i class="fa-solid fa-camera"></i> Capture Image
+                </button>
+            </div>
+
             <div id="retakeWrapperOut" style="display:none; margin-bottom: 20px;">
                 <button id="retakePicBtnOut" class="lm-btn lm-btn-outline" style="padding: 10px;">
                     <i class="fa-solid fa-rotate-left"></i> Retake Photo
@@ -515,9 +524,6 @@
         <div class="lm-footer">
             <button id="grantAccessBtnOut" class="lm-btn lm-btn-primary">
                 <i class="fa-solid fa-shield-halved"></i> Allow Camera & Location
-            </button>
-            <button id="capturePicBtnOut" class="lm-btn lm-btn-danger" style="display:none;">
-                <i class="fa-solid fa-camera"></i> Capture Image
             </button>
 
             <button id="submitPunchOutBtn" class="lm-btn lm-btn-danger" style="display:none;" disabled>

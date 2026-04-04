@@ -5,7 +5,7 @@
         if (modalsInjected) return;
         modalsInjected = true;
 
-        fetch('punch-modals/punch-modals.html')
+        fetch(`punch-modals/punch-modals.html?v=${Date.now()}`, { cache: 'no-store' })
             .then(res => {
                 if (!res.ok) throw new Error("Failed to fetch punch modals HTML");
                 return res.text();

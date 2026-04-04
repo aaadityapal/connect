@@ -3299,6 +3299,18 @@ button {
     .modal-header h3 {
         font-size: 1.25rem;
     }
+
+    /* Keep Daily Agenda modal higher on phones (not bottom-sheet) */
+    #dailyTasksModal.modal-overlay.open {
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 3.5rem;
+    }
+
+    #dailyTasksModal .modal-content {
+        margin: 0 auto;
+        width: min(92vw, 31.25rem);
+    }
 }
 
 

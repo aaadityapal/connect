@@ -2651,6 +2651,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const video = document.getElementById('cameraPreviewOut');
                     const canvas = document.getElementById('cameraCanvasOut');
                     const grantBtn = document.getElementById('grantAccessBtnOut');
+                    const switchCameraBtnOut = document.getElementById('switchCameraBtnOut');
                     const capturePicBtnOut = document.getElementById('capturePicBtnOut');
                     const retakeWrapperOut = document.getElementById('retakeWrapperOut');
                     const submitBtn = document.getElementById('submitPunchOutBtn');
@@ -2667,6 +2668,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (canvas) canvas.style.display = 'none';
                     if (retakeWrapperOut) retakeWrapperOut.style.display = 'none';
                     if (capturePicBtnOut) capturePicBtnOut.style.display = 'none';
+                    if (switchCameraBtnOut) switchCameraBtnOut.style.display = 'flex';
+                    if (grantBtn) grantBtn.textContent = 'Grant Camera & Location Access';
 
                     if (submitBtn) {
                         submitBtn.style.display = 'none';
@@ -3072,6 +3075,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const statusText = document.getElementById('punchOutStatus');
         const video = document.getElementById('cameraPreviewOut');
         const grantBtn = document.getElementById('grantAccessBtnOut');
+        const switchCameraBtnOut = document.getElementById('switchCameraBtnOut');
 
         const geoCoordsText = document.getElementById('geoCoordsTextOut');
         const geoAddressText = document.getElementById('geoAddressTextOut');
@@ -3087,14 +3091,16 @@ document.addEventListener("DOMContentLoaded", () => {
             statusText.textContent = 'Requesting camera and location...';
         }
         if (grantBtn) grantBtn.style.display = 'none';
+        if (switchCameraBtnOut) switchCameraBtnOut.style.display = 'flex';
 
         try {
             const locationPromise = new Promise((resolve, reject) => {
                 if (!navigator.geolocation) reject(new Error("Geolocation not supported."));
                 else navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
             });
+            const activeFacingModeOut = window._punchOutFacingMode || 'user';
             const cameraPromise = navigator.mediaDevices && navigator.mediaDevices.getUserMedia
-                ? navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+                ? navigator.mediaDevices.getUserMedia({ video: { facingMode: activeFacingModeOut } })
                 : Promise.reject(new Error("Camera API not supported."));
 
             // Display camera immediately so UI feels snappier
@@ -3103,6 +3109,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 video.srcObject = stream;
                 video.style.display = 'block';
             }
+            if (switchCameraBtnOut) switchCameraBtnOut.style.display = 'flex';
             localStorage.setItem('punchInAccessGranted', 'true');
 
             // Wait for location in the background
@@ -3147,6 +3154,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const rDivFree = document.getElementById('outOfRangeReasonOutDiv');
                     if (rDivFree) rDivFree.style.display = 'none';
                     if (capturePicBtnOut) capturePicBtnOut.style.display = 'flex';
+                    if (switchCameraBtnOut) switchCameraBtnOut.style.display = 'flex';
                     if (retakeWrapperOut) retakeWrapperOut.style.display = 'none';
                     if (submitBtn) { submitBtn.style.display = 'block'; checkPunchOutValidity(); }
                 } else {
@@ -3168,6 +3176,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         const rDivIn = document.getElementById('outOfRangeReasonOutDiv');
                         if (rDivIn) rDivIn.style.display = 'none';
                         if (capturePicBtnOut) capturePicBtnOut.style.display = 'flex';
+                        if (switchCameraBtnOut) switchCameraBtnOut.style.display = 'flex';
                         if (retakeWrapperOut) retakeWrapperOut.style.display = 'none';
                         if (submitBtn) { submitBtn.style.display = 'block'; checkPunchOutValidity(); }
                     } else {
@@ -3181,6 +3190,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         const rDivOut2 = document.getElementById('outOfRangeReasonOutDiv');
                         if (rDivOut2) rDivOut2.style.display = 'block';
                         if (capturePicBtnOut) capturePicBtnOut.style.display = 'flex';
+                        if (switchCameraBtnOut) switchCameraBtnOut.style.display = 'flex';
                         if (retakeWrapperOut) retakeWrapperOut.style.display = 'none';
                         if (submitBtn) { submitBtn.style.display = 'block'; checkPunchOutValidity(); }
                     }
@@ -3197,6 +3207,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 grantBtn.style.display = 'flex';
                 grantBtn.textContent = 'Try Again';
             }
+            if (switchCameraBtnOut) switchCameraBtnOut.style.display = 'flex';
             localStorage.removeItem('punchInAccessGranted');
         }
     }
@@ -3231,34 +3242,47 @@ document.addEventListener("DOMContentLoaded", () => {
         panel.style.display = 'block';
 
         const count = allCompleted.length;
-        const titleList = allCompleted.map(t => `"${t.title}"`).join(', ');
-        const detailList = allCompleted.map(t => `${t.title} (${t.desc})`).join('; ');
-        const briefList = allCompleted.map(t => t.title).join(', ');
+        const shortWords = (text, maxWords = 3) => {
+            const words = String(text || '').trim().split(/\s+/).filter(Boolean);
+            return words.slice(0, maxWords).join(' ');
+        };
 
-        // 3 tone-varied combined reports covering ALL completed tasks
+        const cleanTitle = (t) => String(t?.title || 'Task').trim();
+        const conciseBullets = allCompleted.map(t => {
+            const title = cleanTitle(t);
+            const mini = shortWords(t?.desc, 3);
+            return mini ? `• ${title} — ${mini}` : `• ${title}`;
+        }).join('\n');
+
+        const standardBullets = allCompleted.map(t => {
+            const title = cleanTitle(t);
+            const detail = shortWords(t?.desc, 8);
+            return detail ? `• ${title} — ${detail}` : `• ${title}`;
+        }).join('\n');
+
+        const titleOnlyBullets = allCompleted
+            .map(t => `• ${cleanTitle(t)}`)
+            .join('\n');
+
+        // 3 concise, professional variations using only completed-task data
         const variations = [
             {
                 label: '📝 Formal',
                 badge: '#1e40af',
                 badgeBg: '#dbeafe',
-                text: `Today I successfully completed ${count} assigned task${count > 1 ? 's' : ''}: ${titleList}. `
-                    + `All deliverables were met as planned and no blockers were encountered during the shift. `
-                    + `Each task was carried out in accordance with project requirements and quality standards.`
+                text: `Today I completed ${count} assigned task${count > 1 ? 's' : ''}:\n${conciseBullets}`
             },
             {
                 label: '📋 Detailed',
                 badge: '#065f46',
                 badgeBg: '#d1fae5',
-                text: `During today's shift, I completed a total of ${count} task${count > 1 ? 's' : ''}. `
-                    + `The tasks completed are as follows: ${detailList}. `
-                    + `All work was completed within the scheduled timeframe and relevant stakeholders were kept informed throughout the process.`
+                text: `Work completed today (${count}):\n${standardBullets}`
             },
             {
                 label: '⚡ Brief',
                 badge: '#92400e',
                 badgeBg: '#fef3c7',
-                text: `Completed ${count} task${count > 1 ? 's' : ''} today — ${briefList}. `
-                    + `Shift completed successfully with all assigned work finished on time.`
+                text: `Completed ${count} task${count > 1 ? 's' : ''}:\n${titleOnlyBullets}`
             }
         ];
 
@@ -3286,7 +3310,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <i class="fa-solid fa-hand-pointer" style="color:#a5b4fc; font-size:0.7rem; margin-left:auto;"></i>
                     <span style="font-size:0.7rem; color:#a5b4fc;">click to use</span>
                 </div>
-                <span style="color:#374151;">${v.text}</span>
+                <span style="color:#374151; white-space:pre-line;">${v.text}</span>
             `;
 
             // Hover
@@ -4115,10 +4139,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     canvas.width = video.videoWidth || 640;
                     canvas.height = video.videoHeight || 480;
 
-                    context.translate(canvas.width, 0);
-                    context.scale(-1, 1);
+                    // Front camera stream can appear mirrored on some devices.
+                    // Normalize saved image orientation only for user-facing camera.
+                    if (currentFacingMode === 'user') {
+                        context.translate(canvas.width, 0);
+                        context.scale(-1, 1);
+                    }
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    context.setTransform(1, 0, 0, 1, 0, 0);
+                    if (currentFacingMode === 'user') {
+                        context.setTransform(1, 0, 0, 1, 0, 0);
+                    }
 
                     video.style.display = 'none';
                     canvas.style.display = 'block';
@@ -4198,6 +4228,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const punchOutModal = document.getElementById('punchOutModal');
         const closePunchOutModal = document.getElementById('closePunchOutModal');
         const grantAccessBtnOut = document.getElementById('grantAccessBtnOut');
+        const switchCameraBtnOut = document.getElementById('switchCameraBtnOut');
 
         function closePunchOut() {
             if (punchOutModal) {
@@ -4214,6 +4245,25 @@ document.addEventListener("DOMContentLoaded", () => {
         if (closePunchOutModal) closePunchOutModal.addEventListener('click', closePunchOut);
         if (punchOutModal) punchOutModal.addEventListener('click', (e) => { if (e.target === punchOutModal) closePunchOut(); });
         if (grantAccessBtnOut) grantAccessBtnOut.addEventListener('click', requestPunchOutAccess);
+
+        let currentFacingModeOut = window._punchOutFacingMode || 'user';
+        if (switchCameraBtnOut) {
+            switchCameraBtnOut.addEventListener('click', async () => {
+                const video = document.getElementById('cameraPreviewOut');
+                const canvas = document.getElementById('cameraCanvasOut');
+                if (canvas) canvas.style.display = 'none';
+                if (video) video.style.display = 'none';
+
+                if (video && video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+
+                currentFacingModeOut = currentFacingModeOut === 'user' ? 'environment' : 'user';
+                window._punchOutFacingMode = currentFacingModeOut;
+                await requestPunchOutAccess();
+            });
+        }
 
         const retakePicBtnOut = document.getElementById('retakePicBtnOut');
         if (retakePicBtnOut) {
@@ -4236,15 +4286,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     const context = canvas.getContext('2d');
                     canvas.width = video.videoWidth;
                     canvas.height = video.videoHeight;
-                    context.translate(canvas.width, 0);
-                    context.scale(-1, 1);
+
+                    // Front camera stream can appear mirrored on some devices.
+                    // Normalize saved image orientation only for user-facing camera.
+                    if (currentFacingModeOut === 'user') {
+                        context.translate(canvas.width, 0);
+                        context.scale(-1, 1);
+                    }
                     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    context.setTransform(1, 0, 0, 1, 0, 0);
+                    if (currentFacingModeOut === 'user') {
+                        context.setTransform(1, 0, 0, 1, 0, 0);
+                    }
 
                     video.style.display = 'none';
                     canvas.style.display = 'block';
 
                     capturePicBtnOut.style.display = 'none';
+                    const switchBtnOut = document.getElementById('switchCameraBtnOut');
+                    if (switchBtnOut) switchBtnOut.style.display = 'none';
                     if (retakeWrapperOut) retakeWrapperOut.style.display = 'flex';
 
                     if (statusText) {
@@ -4364,13 +4423,18 @@ document.addEventListener("DOMContentLoaded", () => {
             renderWorkReportProjectMenu(wrProjectItems);
         }
 
+        function countAlnumOnlyWords(text) {
+            const tokens = String(text || '').trim().split(/\s+/).filter(Boolean);
+            // Count only plain alphanumeric words. Emojis/special-char tokens are ignored.
+            return tokens.filter(token => /^[A-Za-z0-9]+$/.test(token)).length;
+        }
+
         function checkPunchOutValidity() {
             if (!punchOutSummary || !submitPunchOutBtn) return;
 
             let minWords = 20;
             let text = punchOutSummary.value.trim();
-            let words = text.split(/\s+/).filter(word => word.match(/[a-zA-Z0-9]/));
-            let count = text === '' ? 0 : words.length;
+            let count = text === '' ? 0 : countAlnumOnlyWords(text);
 
             if (wordCountSpan) wordCountSpan.textContent = count;
 
@@ -4405,6 +4469,22 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (punchOutSummary) {
+            // Prevent copy/paste style shortcuts in work summary
+            ['paste', 'copy', 'cut', 'drop'].forEach(evt => {
+                punchOutSummary.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                });
+            });
+
+            punchOutSummary.addEventListener('keydown', (e) => {
+                const isMacCmd = e.metaKey;
+                const isCtrl = e.ctrlKey;
+                const k = String(e.key || '').toLowerCase();
+                if ((isMacCmd || isCtrl) && (k === 'v' || k === 'c' || k === 'x' || k === 'insert')) {
+                    e.preventDefault();
+                }
+            });
+
             punchOutSummary.addEventListener('input', () => {
                 checkPunchOutValidity();
                 maybeShowWorkReportProjects();

@@ -16,7 +16,23 @@ if (!isset($_SESSION['user_id'])) {
 $userId = intval($_SESSION['user_id']);
 // We assume we want tasks within the current loaded timeframe, but for simplicity we fetch the user's active/completed tasks
 
+function ensureTaskUserProgressTable(PDO $pdo): void {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS studio_task_user_progress (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        task_id INT NOT NULL,
+        user_id INT NOT NULL,
+        progress_percent TINYINT UNSIGNED NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_task_user (task_id, user_id),
+        INDEX idx_task (task_id),
+        INDEX idx_user (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
 try {
+    ensureTaskUserProgressTable($pdo);
+
     $query = "
         SELECT sat.*, u.username as assigned_by_name
         FROM studio_assigned_tasks sat
@@ -35,6 +51,26 @@ try {
     $expandStart = date('Y-m-d', strtotime('-30 days'));
     $expandEnd   = date('Y-m-d', strtotime('+120 days'));
     $tasks = expandRecurringTasks($rawTasks, $expandStart, $expandEnd);
+
+    $taskIds = [];
+    foreach ($tasks as $t) {
+        if (isset($t['id']) && is_numeric($t['id'])) {
+            $taskIds[] = (int)$t['id'];
+        }
+    }
+    $taskIds = array_values(array_unique($taskIds));
+
+    $myProgressByTask = [];
+    if (!empty($taskIds)) {
+        $ph = implode(',', array_fill(0, count($taskIds), '?'));
+        $sql = "SELECT task_id, progress_percent FROM studio_task_user_progress WHERE user_id = ? AND task_id IN ($ph)";
+        $params = array_merge([$userId], $taskIds);
+        $pst = $pdo->prepare($sql);
+        $pst->execute($params);
+        foreach ($pst->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $myProgressByTask[(int)$r['task_id']] = (int)$r['progress_percent'];
+        }
+    }
 
     $formatted = [];
     foreach ($tasks as $task) {
@@ -89,8 +125,14 @@ try {
         }
 
         // Time logic: use due_time as start, or '09:00' default. duration 60.
-        $timeStr = $task['due_time'] ? date('H:i', strtotime($task['due_time'])) : '09:00';
-        $timeStrRaw = $task['due_time'] ? date('g:i A', strtotime($task['due_time'])) : '11:59 PM';
+        // Safety: old virtual-recurring rows may have been materialized at 00:00:00;
+        // show them at business default so they remain visible in day lanes.
+        $rawDueTime = $task['due_time'] ?? null;
+        if (!empty($task['recurrence_parent_id']) && $rawDueTime === '00:00:00') {
+            $rawDueTime = null;
+        }
+        $timeStr = $rawDueTime ? date('H:i', strtotime($rawDueTime)) : '09:00';
+        $timeStrRaw = $rawDueTime ? date('g:i A', strtotime($rawDueTime)) : '9:00 AM';
 
         $title = $task['task_description'];
         $projectStageTitle = trim(($task['project_name'] ?? '') . ($task['stage_number'] ? ' - Stage ' . $task['stage_number'] : ''));
@@ -123,11 +165,18 @@ try {
             $durationStr = 'No time limit';
         }
 
+        $taskIdInt = is_numeric($task['id']) ? (int)$task['id'] : 0;
+        $displayProgress = array_key_exists($taskIdInt, $myProgressByTask)
+            ? (int)$myProgressByTask[$taskIdInt]
+            : 0;
+
         $formatted[] = [
             'id' => $task['id'],
             'title' => $title,
             'projectStage' => $projectStageTitle,
             'desc' => $task['task_description'],
+            'progress' => $displayProgress,
+            'progress_percent' => $displayProgress,
             'due_date' => $task['due_date'],
             'due_time_24' => $task['due_time'] ? date('H:i', strtotime($task['due_time'])) : null,
             'extension_count' => $task['extension_count'] ?? 0,

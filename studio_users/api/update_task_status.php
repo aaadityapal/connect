@@ -29,6 +29,7 @@ $status    = isset($input['status'])  ? trim($input['status'])    : '';
 $allowed   = ['Pending', 'In Progress', 'Completed', 'Cancelled'];
 $isVirtual = false;
 $virtualDate = null;
+$virtualHasExplicitTime = false;
 if (is_string($rawTaskId) && strpos($rawTaskId, '_') !== false) {
     list($taskId, $dateTimeStr) = explode('_', $rawTaskId);
     $taskId = intval($taskId);
@@ -36,7 +37,11 @@ if (is_string($rawTaskId) && strpos($rawTaskId, '_') !== false) {
     
     // Attempt YmdHi first (Hourly), fallback to Ymd (Daily+)
     $dt = DateTime::createFromFormat('YmdHi', $dateTimeStr);
-    if (!$dt) $dt = DateTime::createFromFormat('Ymd', $dateTimeStr);
+    if ($dt) {
+        $virtualHasExplicitTime = true;
+    } else {
+        $dt = DateTime::createFromFormat('Ymd', $dateTimeStr);
+    }
     
     if ($dt) {
         $virtualDate = $dt->format('Y-m-d');
@@ -62,21 +67,46 @@ function ensureRejectCountColumn(PDO $pdo): void {
     }
 }
 
+function ensureTaskUserProgressTable(PDO $pdo): void {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS studio_task_user_progress (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        task_id INT NOT NULL,
+        user_id INT NOT NULL,
+        progress_percent TINYINT UNSIGNED NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_task_user (task_id, user_id),
+        INDEX idx_task (task_id),
+        INDEX idx_user (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
 try {
     ensureRejectCountColumn($pdo);
+    ensureTaskUserProgressTable($pdo);
 
     // ── Handle Virtual Task Materialisation ──────────────────────────
     if ($isVirtual) {
         // First, check if a REAL task for this date already exists to avoid duplicates
         // (This happens if someone else already completed this recurring instance)
-        $checkExisting = $pdo->prepare("
-            SELECT id FROM studio_assigned_tasks 
-            WHERE recurrence_parent_id = ? 
-              AND due_date = ? 
-              AND (due_time = ? OR (due_time IS NULL AND ? = '00:00:00'))
-              AND deleted_at IS NULL
-        ");
-        $checkExisting->execute([$taskId, $virtualDate, $virtualTime, $virtualTime]);
+            if ($virtualHasExplicitTime) {
+                $checkExisting = $pdo->prepare("
+                    SELECT id FROM studio_assigned_tasks 
+                    WHERE recurrence_parent_id = ? 
+                      AND due_date = ? 
+                      AND (due_time = ? OR (due_time IS NULL AND ? = '00:00:00'))
+                      AND deleted_at IS NULL
+                ");
+                $checkExisting->execute([$taskId, $virtualDate, $virtualTime, $virtualTime]);
+            } else {
+                $checkExisting = $pdo->prepare("
+                    SELECT id FROM studio_assigned_tasks 
+                    WHERE recurrence_parent_id = ? 
+                      AND due_date = ? 
+                      AND deleted_at IS NULL
+                ");
+                $checkExisting->execute([$taskId, $virtualDate]);
+            }
         $existingId = $checkExisting->fetchColumn();
 
         if ($existingId) {
@@ -90,7 +120,7 @@ try {
             if ($orig) {
                 unset($orig['id']);
                 $orig['due_date']             = $virtualDate;
-                $orig['due_time']             = $virtualTime;
+                $orig['due_time']             = $virtualHasExplicitTime ? $virtualTime : ($orig['due_time'] ?? null);
                 $orig['is_recurring']         = 0; // The instance itself isn't a master template
                 $orig['recurrence_parent_id'] = $taskId; // Link to master
                 $orig['created_at']           = date('Y-m-d H:i:s');
@@ -201,6 +231,99 @@ try {
         ':userId'      => $userId, 
         ':id'          => $taskId
     ]);
+
+    // Auto-progress rule: when a user marks task as completed,
+    // set that specific user's progress to 100%.
+    // IMPORTANT: reverse is intentionally not applied (100% progress should not auto-complete,
+    // and undoing completion does not force progress back).
+    if ($status === 'Completed') {
+        $oldProgressStmt = $pdo->prepare("SELECT progress_percent FROM studio_task_user_progress WHERE task_id = ? AND user_id = ? LIMIT 1");
+        $oldProgressStmt->execute([(int)$taskId, (int)$userId]);
+        $oldProgressRaw = $oldProgressStmt->fetchColumn();
+        $oldProgress = ($oldProgressRaw === false) ? 0 : (int)$oldProgressRaw;
+
+        $upsertProgress = $pdo->prepare("\n            INSERT INTO studio_task_user_progress (task_id, user_id, progress_percent)\n            VALUES (:task_id, :user_id, 100)\n            ON DUPLICATE KEY UPDATE\n                progress_percent = 100,\n                updated_at = CURRENT_TIMESTAMP\n        ");
+        $upsertProgress->execute([
+            ':task_id' => (int)$taskId,
+            ':user_id' => (int)$userId,
+        ]);
+
+        // Log progress transition caused by mark-done flow (from old -> 100)
+        if ($oldProgress !== 100) {
+            $actorName = 'User ' . $userId;
+            try {
+                $uStmt = $pdo->prepare("SELECT username FROM users WHERE id = ? LIMIT 1");
+                $uStmt->execute([$userId]);
+                $uRow = $uStmt->fetch(PDO::FETCH_ASSOC);
+                if (!empty($uRow['username'])) {
+                    $actorName = trim((string)$uRow['username']);
+                }
+            } catch (Exception $e) {}
+
+            $progressTitle = trim(($taskRow['project_name'] ?: 'General Task') . ($taskRow['stage_number'] ? ' — Stage ' . $taskRow['stage_number'] : ''));
+            if ($progressTitle === '') $progressTitle = 'General Task';
+            $delta = 100 - $oldProgress;
+            $deltaStr = ($delta > 0 ? '+' : '') . $delta;
+
+            $progressMeta = [
+                'task_id' => (int)$taskId,
+                'title' => $progressTitle,
+                'task_description' => $taskRow['task_description'] ?? null,
+                'old_progress' => $oldProgress,
+                'new_progress' => 100,
+                'delta' => $delta,
+                'updated_by' => $userId,
+                'updated_by_name' => $actorName,
+                'source' => 'mark_done_auto',
+            ];
+
+            try {
+                logUserActivity(
+                    $pdo,
+                    $userId,
+                    'task_progress_updated',
+                    'task',
+                    "You updated task progress: \"{$progressTitle}\" {$oldProgress}% → 100% ({$deltaStr}%) [auto via Mark Done]",
+                    (int)$taskId,
+                    array_merge($progressMeta, ['audience' => 'actor'])
+                );
+            } catch (Exception $e) {}
+
+            $creatorIdForProgress = isset($taskRow['created_by']) ? (int)$taskRow['created_by'] : 0;
+            if ($creatorIdForProgress > 0 && $creatorIdForProgress !== $userId) {
+                try {
+                    logUserActivity(
+                        $pdo,
+                        $creatorIdForProgress,
+                        'task_progress_updated',
+                        'task',
+                        "{$actorName} updated task progress: \"{$progressTitle}\" {$oldProgress}% → 100% ({$deltaStr}%) [auto via Mark Done]",
+                        (int)$taskId,
+                        array_merge($progressMeta, ['audience' => 'creator'])
+                    );
+                } catch (Exception $e) {}
+            }
+        }
+
+        // Keep legacy aggregate in sync for consumers that still fallback to task-level progress.
+        $aggregateProgress = 0;
+        if (!empty($assignedToArr)) {
+            $sumProgress = 0;
+            foreach ($assignedToArr as $aid) {
+                $pStmt = $pdo->prepare("SELECT progress_percent FROM studio_task_user_progress WHERE task_id = ? AND user_id = ? LIMIT 1");
+                $pStmt->execute([(int)$taskId, (int)$aid]);
+                $pVal = $pStmt->fetchColumn();
+                $sumProgress += ($pVal === false) ? 0 : (int)$pVal;
+            }
+            $aggregateProgress = (int)round($sumProgress / count($assignedToArr));
+        }
+
+        $aggStmt = $pdo->prepare("UPDATE studio_assigned_tasks SET progress_percent = :p WHERE id = :id");
+        $aggStmt->execute([
+            ':p' => $aggregateProgress,
+            ':id' => (int)$taskId,
+        ]);
+    }
 
     // ── Log Activity ────────────────────────────────────────────────────────
     $title = trim(($taskRow['project_name'] ?: 'General Task') . ($taskRow['stage_number'] ? ' — Stage ' . $taskRow['stage_number'] : ''));

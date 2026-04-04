@@ -42,6 +42,34 @@
             </button>
         </div>
 
+        <div class="task-modal-progress" id="tModalProgressSection">
+            <div class="task-modal-progress-head">
+                <h4>Progress</h4>
+                <span id="tModalProgressValue">0%</span>
+            </div>
+            <div class="task-modal-progress-row">
+                <button type="button" class="task-progress-btn" id="tModalProgressMinus" aria-label="Decrease progress by 5 percent">
+                    <i class="fa-solid fa-minus"></i>
+                </button>
+                <div class="task-modal-progress-track">
+                    <div class="task-modal-progress-fill" id="tModalProgressBarFill" style="width:0%;"></div>
+                <input
+                    id="tModalProgressRange"
+                    class="task-progress-range"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value="0"
+                    aria-label="Task progress"
+                />
+                </div>
+                <button type="button" class="task-progress-btn" id="tModalProgressPlus" aria-label="Increase progress by 5 percent">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+        </div>
+
         <!-- ── Extension History Panel (collapsed by default) ──────────── -->
         <div id="tModalHistoryPanel" class="tl-history-panel" style="display:none;">
             <div class="tl-history-header">
@@ -64,7 +92,7 @@
         <div class="task-modal-footer">
             <div id="taskModalReadOnlyHint" class="task-modal-readonly-hint" style="display:none;">
                 <i class="fa-solid fa-lock"></i>
-                View only — only assigned users can extend or complete this task.
+                View only — only assigned users can update progress, extend, or complete this task.
             </div>
             <div style="position: relative;">
                 <button class="task-btn-snooze" id="taskModalExtend"><i class="fa-regular fa-calendar-plus"></i> Extend</button>

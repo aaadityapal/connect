@@ -1,5 +1,256 @@
 (function(global) {
     let modalInjected = false;
+    let taskCountdownTimer = null;
+    let progressSaveTimer = null;
+
+    function clearTaskCountdown() {
+        if (taskCountdownTimer) {
+            clearInterval(taskCountdownTimer);
+            taskCountdownTimer = null;
+        }
+    }
+
+    function getFallbackDurationText(taskData) {
+        let durStr = '1 hr';
+        if (taskData.durationStr) {
+            durStr = taskData.durationStr;
+        } else if (taskData.duration) {
+            const h = Math.floor(taskData.duration / 60);
+            const m = taskData.duration % 60;
+            if (h > 0 && m > 0) durStr = `${h} hr ${m} mins`;
+            else if (h > 0) durStr = `${h} hr`;
+            else durStr = `${m} mins`;
+        } else if (taskData.durationDays) {
+            durStr = taskData.durationDays + ' Day' + (taskData.durationDays > 1 ? 's' : '');
+        }
+        return durStr;
+    }
+
+    function parseDueDateTime(taskData) {
+        if (taskData && taskData.due_date) {
+            const timePart = taskData.due_time_24 ? String(taskData.due_time_24).slice(0, 8) : '23:59:59';
+            const isoLike = `${taskData.due_date}T${timePart.length === 5 ? timePart + ':00' : timePart}`;
+            const due = new Date(isoLike);
+            if (!isNaN(due.getTime())) return due;
+        }
+
+        if (taskData && taskData.dateTo) {
+            const parsed = new Date(String(taskData.dateTo).replace(' - ', ' '));
+            if (!isNaN(parsed.getTime())) return parsed;
+        }
+
+        return null;
+    }
+
+    function formatRemaining(ms) {
+        const total = Math.max(0, Math.floor(ms / 1000));
+        let remaining = total;
+
+        const yearSec = 365 * 24 * 60 * 60;
+        const monthSec = 30 * 24 * 60 * 60;
+        const weekSec = 7 * 24 * 60 * 60;
+        const daySec = 24 * 60 * 60;
+        const hourSec = 60 * 60;
+
+        const y = Math.floor(remaining / yearSec); remaining %= yearSec;
+        const mo = Math.floor(remaining / monthSec); remaining %= monthSec;
+        const w = Math.floor(remaining / weekSec); remaining %= weekSec;
+        const d = Math.floor(remaining / daySec); remaining %= daySec;
+        const h = Math.floor(remaining / hourSec); remaining %= hourSec;
+        const m = Math.floor(remaining / 60);
+        const s = remaining % 60;
+
+        const parts = [];
+        if (y > 0) parts.push(`${y}y`);
+        if (mo > 0) parts.push(`${mo}mo`);
+        if (w > 0) parts.push(`${w}w`);
+        if (d > 0) parts.push(`${d}d`);
+        if (h > 0 || parts.length) parts.push(`${h}h`);
+        if (m > 0 || parts.length) parts.push(`${m}m`);
+        parts.push(`${String(s).padStart(2, '0')}s`);
+
+        return `${parts.join(' ')} left`;
+    }
+
+    function getCountdownTheme(diffMs) {
+        if (diffMs <= 0) {
+            return { bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' }; // expired
+        }
+        if (diffMs <= 60 * 60 * 1000) {
+            return { bg: '#fff1f2', color: '#be123c', border: '#fecdd3' }; // <1h
+        }
+        if (diffMs <= 24 * 60 * 60 * 1000) {
+            return { bg: '#fff7ed', color: '#c2410c', border: '#fed7aa' }; // <24h
+        }
+        if (diffMs <= 7 * 24 * 60 * 60 * 1000) {
+            return { bg: '#fffbeb', color: '#a16207', border: '#fde68a' }; // <7d
+        }
+        return { bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' }; // safe
+    }
+
+    function applyDurationTheme(el, theme) {
+        if (!el || !theme) return;
+        el.style.padding = '2px 8px';
+        el.style.borderRadius = '999px';
+        el.style.fontWeight = '700';
+        el.style.border = `1px solid ${theme.border}`;
+        el.style.background = theme.bg;
+        el.style.color = theme.color;
+    }
+
+    function normalizeProgress(val) {
+        const n = Number(val);
+        if (!Number.isFinite(n)) return 0;
+        const clamped = Math.max(0, Math.min(100, n));
+        return Math.round(clamped / 5) * 5;
+    }
+
+    function getProgressTheme(progress) {
+        if (progress >= 100) return { bar: 'linear-gradient(90deg, #22c55e 0%, #16a34a 100%)', text: '#166534' };
+        if (progress >= 75) return { bar: 'linear-gradient(90deg, #14b8a6 0%, #0f766e 100%)', text: '#0f766e' };
+        if (progress >= 50) return { bar: 'linear-gradient(90deg, #60a5fa 0%, #2563eb 100%)', text: '#1d4ed8' };
+        if (progress >= 25) return { bar: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)', text: '#b45309' };
+        return { bar: 'linear-gradient(90deg, #fda4af 0%, #ef4444 100%)', text: '#b91c1c' };
+    }
+
+    function persistTaskProgress(taskData, progress) {
+        if (!taskData || !taskData.id) return;
+        fetch('api/update_task_progress.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ task_id: taskData.id, progress_percent: progress })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data || !data.success) {
+                console.warn('[TaskModal] Progress save failed:', data?.error || 'Unknown');
+            }
+        })
+        .catch(err => console.warn('[TaskModal] Progress network error:', err));
+    }
+
+    function initProgressUI(taskData, canActOnTask) {
+        const section = document.getElementById('tModalProgressSection');
+        const fill = document.getElementById('tModalProgressBarFill');
+        const valueEl = document.getElementById('tModalProgressValue');
+        const range = document.getElementById('tModalProgressRange');
+        const minus = document.getElementById('tModalProgressMinus');
+        const plus = document.getElementById('tModalProgressPlus');
+
+        if (!section || !fill || !valueEl || !range || !minus || !plus) return;
+
+        const rawInitial = Number(taskData?.progress ?? taskData?.progress_percent ?? taskData?.completion_percent ?? 0);
+        let progress = Number.isFinite(rawInitial) ? Math.max(0, Math.min(100, rawInitial)) : 0;
+        if (canActOnTask) {
+            progress = normalizeProgress(progress);
+        }
+
+        const freshMinus = minus.cloneNode(true);
+        const freshPlus = plus.cloneNode(true);
+        const freshRange = range.cloneNode(true);
+        minus.parentNode.replaceChild(freshMinus, minus);
+        plus.parentNode.replaceChild(freshPlus, plus);
+        range.parentNode.replaceChild(freshRange, range);
+
+        freshRange.min = '0';
+        freshRange.max = '100';
+        freshRange.step = '5';
+
+        const schedulePersist = () => {
+            if (!canActOnTask) return;
+            if (progressSaveTimer) clearTimeout(progressSaveTimer);
+            progressSaveTimer = setTimeout(() => {
+                persistTaskProgress(taskData, progress);
+            }, 220);
+        };
+
+        const render = () => {
+            if (canActOnTask) {
+                progress = normalizeProgress(progress);
+            } else {
+                progress = Math.max(0, Math.min(100, Number(progress) || 0));
+            }
+
+            const theme = getProgressTheme(progress);
+            fill.style.width = `${progress}%`;
+            fill.style.background = theme.bar;
+            const displayText = Number.isInteger(progress) ? String(progress) : String(Math.round(progress * 100) / 100).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+            valueEl.textContent = `${displayText}%`;
+            valueEl.style.color = theme.text;
+            freshRange.value = String(canActOnTask ? progress : normalizeProgress(progress));
+            taskData.progress = progress; // keep latest locally for UI flow
+
+            freshMinus.disabled = !canActOnTask || progress <= 0;
+            freshPlus.disabled = !canActOnTask || progress >= 100;
+            freshRange.disabled = !canActOnTask;
+            section.classList.toggle('readonly', !canActOnTask);
+        };
+
+        freshMinus.addEventListener('click', () => {
+            if (!canActOnTask) return;
+            progress = normalizeProgress(progress - 5);
+            render();
+            schedulePersist();
+        });
+
+        freshPlus.addEventListener('click', () => {
+            if (!canActOnTask) return;
+            progress = normalizeProgress(progress + 5);
+            render();
+            schedulePersist();
+        });
+
+        freshRange.addEventListener('input', () => {
+            if (!canActOnTask) return;
+            progress = normalizeProgress(freshRange.value);
+            render();
+            schedulePersist();
+        });
+
+        render();
+    }
+
+    function attachTaskCountdown(taskData) {
+        const durEl = document.getElementById('tModalDuration');
+        if (!durEl) return;
+
+        clearTaskCountdown();
+
+        const status = String(taskData?.status || '').trim().toLowerCase();
+        if (status === 'completed') {
+            durEl.textContent = 'Completed';
+            applyDurationTheme(durEl, { bg: '#dcfce7', color: '#166534', border: '#bbf7d0' });
+            return;
+        }
+        if (status === 'cancelled') {
+            durEl.textContent = 'Cancelled';
+            applyDurationTheme(durEl, { bg: '#fee2e2', color: '#b91c1c', border: '#fecaca' });
+            return;
+        }
+
+        const due = parseDueDateTime(taskData);
+        if (!due) {
+            durEl.textContent = getFallbackDurationText(taskData);
+            applyDurationTheme(durEl, { bg: '#eef2ff', color: '#4338ca', border: '#c7d2fe' });
+            return;
+        }
+
+        const tick = () => {
+            const now = new Date();
+            const diff = due.getTime() - now.getTime();
+            if (diff <= 0) {
+                durEl.textContent = 'Time up';
+                applyDurationTheme(durEl, getCountdownTheme(diff));
+                clearTaskCountdown();
+                return;
+            }
+            durEl.textContent = formatRemaining(diff);
+            applyDurationTheme(durEl, getCountdownTheme(diff));
+        };
+
+        tick();
+        taskCountdownTimer = setInterval(tick, 1000);
+    }
 
     function injectTaskModal() {
         if (modalInjected) return;
@@ -29,6 +280,11 @@
         const cancelBtn = document.getElementById('taskModalCancel');
 
         function close() {
+            clearTaskCountdown();
+            if (progressSaveTimer) {
+                clearTimeout(progressSaveTimer);
+                progressSaveTimer = null;
+            }
             overlay.classList.remove('open');
             // Hide dropdowns too
             document.querySelectorAll('.task-dropdown').forEach(d => d.classList.remove('show'));
@@ -51,14 +307,23 @@
             return;
         }
 
+        clearTaskCountdown();
+        if (progressSaveTimer) {
+            clearTimeout(progressSaveTimer);
+            progressSaveTimer = null;
+        }
+
         // Permission gate: only assigned users can perform task actions.
         // Prefer backend-provided flag; fallback to username match when needed.
-        let canActOnTask = true;
+        let canActOnTask = false;
         if (typeof taskData.can_act === 'boolean') {
             canActOnTask = taskData.can_act;
         } else if (Array.isArray(taskData.assignee_statuses) && window.loggedUserName) {
             const me = String(window.loggedUserName).trim().toLowerCase();
             canActOnTask = taskData.assignee_statuses.some(a => String(a.name || '').trim().toLowerCase() === me);
+        } else if (Array.isArray(taskData.assignees) && window.loggedUserName) {
+            const me = String(window.loggedUserName).trim().toLowerCase();
+            canActOnTask = taskData.assignees.some(n => String(n || '').trim().toLowerCase() === me);
         }
 
         const readOnlyHint = document.getElementById('taskModalReadOnlyHint');
@@ -109,23 +374,14 @@
             toEl.textContent = taskData.dateTo || taskData.dateFrom || 'Not set';
         }
 
-        let durStr = '1 hr';
-        if (taskData.durationStr) {
-            durStr = taskData.durationStr;
-        } else if (taskData.duration) {
-            const h = Math.floor(taskData.duration / 60);
-            const m = taskData.duration % 60;
-            if (h > 0 && m > 0) durStr = `${h} hr ${m} mins`;
-            else if (h > 0) durStr = `${h} hr`;
-            else durStr = `${m} mins`;
-        }
-        else if (taskData.durationDays) durStr = taskData.durationDays + ' Day' + (taskData.durationDays > 1 ? 's' : '');
-        document.getElementById('tModalDuration').textContent = durStr;
+        attachTaskCountdown(taskData);
 
         const descEl = document.getElementById('tModalDesc');
         if (descEl) {
             descEl.textContent = taskData.desc || 'No description provided for this task.';
         }
+
+        initProgressUI(taskData, canActOnTask);
 
         // ── Extension History toggle & panel ──────────────────────────────
         const histPanel  = document.getElementById('tModalHistoryPanel');
@@ -341,6 +597,7 @@
                         // Close modal after a delay and refresh tasks if on tasks page
                         setTimeout(() => {
                             const overlay = document.getElementById('taskModalOverlay');
+                            clearTaskCountdown();
                             overlay.classList.remove('open');
                             setTimeout(() => { overlay.style.display = 'none'; }, 200);
 
@@ -402,6 +659,7 @@
                     e.stopPropagation();
                     if (typeof window.openExtendDeadlineModal === 'function') {
                         // Close the current modal first to prevent overlapping UI bugs
+                        clearTaskCountdown();
                         overlay.classList.remove('open');
                         setTimeout(() => { 
                             overlay.style.display = 'none'; 

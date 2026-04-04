@@ -21,6 +21,35 @@ if (!isset($_SESSION['user_id'])) {
 $userId = intval($_SESSION['user_id']);
 $dateParam = isset($_GET['date']) ? trim($_GET['date']) : date('Y-m-d');
 
+function ensureTaskUserProgressTable(PDO $pdo): void {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS studio_task_user_progress (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        task_id INT NOT NULL,
+        user_id INT NOT NULL,
+        progress_percent TINYINT UNSIGNED NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_task_user (task_id, user_id),
+        INDEX idx_task (task_id),
+        INDEX idx_user (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
+function resolveProgressTaskId($task): int {
+    if (isset($task['id']) && is_numeric($task['id'])) {
+        return (int)$task['id'];
+    }
+
+    if (!empty($task['id']) && is_string($task['id']) && strpos($task['id'], '_') !== false) {
+        $parts = explode('_', $task['id'], 2);
+        if (isset($parts[0]) && is_numeric($parts[0])) {
+            return (int)$parts[0];
+        }
+    }
+
+    return 0;
+}
+
 // ── Date window: Fetch exact date matches OR recurring tasks starting before/on this date ─────
 $dateWhere = "AND (
     sat.due_date = :queryDate1 
@@ -29,6 +58,8 @@ $dateWhere = "AND (
 )";
 
 try {
+    ensureTaskUserProgressTable($pdo);
+
     // Match user ID inside comma-separated assigned_to column
     $query = "
         SELECT
@@ -54,6 +85,7 @@ try {
             sat.recurrence_parent_id,
             sat.recurrence_freq,
             sat.recurrence_extra,
+            sat.progress_percent,
             sat.created_at,
             sat.completed_at as global_completed_at,
             u.username AS created_by_name
@@ -79,6 +111,24 @@ try {
 
     // ── Expand recurring tasks for the specific query day ──
     $tasks = expandRecurringTasks($rawTasks, $dateParam, $dateParam);
+
+    $progressTaskIds = [];
+    foreach ($tasks as $t) {
+        $rid = resolveProgressTaskId($t);
+        if ($rid > 0) $progressTaskIds[] = $rid;
+    }
+    $progressTaskIds = array_values(array_unique($progressTaskIds));
+
+    $myProgressByTask = [];
+    if (!empty($progressTaskIds)) {
+        $ph = implode(',', array_fill(0, count($progressTaskIds), '?'));
+        $pst = $pdo->prepare("SELECT task_id, progress_percent FROM studio_task_user_progress WHERE user_id = ? AND task_id IN ($ph)");
+        $params = array_merge([$userId], $progressTaskIds);
+        $pst->execute($params);
+        foreach ($pst->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $myProgressByTask[(int)$r['task_id']] = (int)$r['progress_percent'];
+        }
+    }
 
     // ── Format for JS consumption ─────────────────────────────────────────────
     $formatted = [];
@@ -145,10 +195,17 @@ try {
         // Badge: map DB enum to JS badge tokens
         $badgeMap = ['High' => 'High', 'Medium' => 'Med', 'Low' => 'Low'];
 
+        $progressTaskId = resolveProgressTaskId($task);
+        $displayProgress = array_key_exists($progressTaskId, $myProgressByTask)
+            ? (int)$myProgressByTask[$progressTaskId]
+            : 0;
+
         $formatted[] = [
             'id'                => (int)$task['id'],
             'title'             => $task['task_description'] ?? 'General Task',
             'desc'              => $task['task_description'] ?? '',
+            'progress'          => $displayProgress,
+            'progress_percent'  => $displayProgress,
             'projectStage'      => $projectStageTitle,
             'badge'             => $badgeMap[$task['priority']] ?? 'Low',
             'time'              => $isUserDone ? 'Completed' : ($task['due_time'] ? date('h:i A', strtotime($task['due_time'])) : ($task['due_date'] ? date('M j', strtotime($task['due_date'])) : 'No Deadline')),
@@ -159,6 +216,7 @@ try {
             'completed_at'      => $isoCompAt,
             'my_completed_at'   => $isoCompAt,
             'assignees'         => array_values($assignedNames),
+            'can_act'           => true,
             'assignee_statuses' => $assigneeStatuses,
             'assignedBy'        => $task['created_by_name'] ?? 'System Admin',
             'modalDateFrom'     => $modalDateFrom,

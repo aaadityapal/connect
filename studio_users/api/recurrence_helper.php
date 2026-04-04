@@ -23,24 +23,64 @@
 function expandRecurringTasks($tasks, $startDate, $endDate) {
     $expanded          = [];
     $existingInstances = []; // [parent_id => ['Y-m-d_H:i:s', ...]]
+    $existingDates     = []; // [parent_id => ['Y-m-d', ...]]
     $startTs = strtotime($startDate);
     $endTs   = strtotime($endDate);
+
+    $normalizeTime = function ($time) {
+        if (!$time) return '00:00:00';
+        $ts = strtotime((string)$time);
+        if ($ts === false) return '00:00:00';
+        return date('H:i:s', $ts);
+    };
 
     // ── Pass 1: catalogue already-materialised (completed) instances ─────
     foreach ($tasks as $task) {
         if ($task['recurrence_parent_id']) {
-            $key = $task['due_date'] . '_' . ($task['due_time'] ?: '00:00:00');
+            $key = $task['due_date'] . '_' . $normalizeTime($task['due_time'] ?? null);
             $existingInstances[$task['recurrence_parent_id']][] = $key;
+            if (!empty($task['due_date'])) {
+                $existingDates[$task['recurrence_parent_id']][] = $task['due_date'];
+            }
         }
     }
 
     // ── Pass 2: expand master tasks ──────────────────────────────────────
     foreach ($tasks as $task) {
-        if ($task['recurrence_parent_id']) continue; // skip child instances
+        // Include materialized child instances directly (these carry persisted
+        // per-instance fields like progress/status/history).
+        if (!empty($task['recurrence_parent_id'])) {
+            $taskDueTs = $task['due_date'] ? strtotime($task['due_date']) : null;
+            if ($taskDueTs && $taskDueTs >= $startTs && $taskDueTs <= $endTs) {
+                $expanded[] = $task;
+            }
+            continue;
+        }
 
-        // Add the original task if it falls in the requested window
+        // Add the original task if it falls in the requested window.
+        // For recurring masters, if a materialized child instance exists at
+        // the same due date/time slot, skip the master so persisted child data
+        // (progress/status/etc.) is used consistently.
         $taskDueTs = $task['due_date'] ? strtotime($task['due_date']) : null;
-        if ($taskDueTs && $taskDueTs >= $startTs && $taskDueTs <= $endTs) {
+        $baseKey = ($task['due_date'] ?: '') . '_' . $normalizeTime($task['due_time'] ?? null);
+        $hasMaterializedExact = !empty($task['is_recurring'])
+            && isset($existingInstances[$task['id']])
+            && in_array($baseKey, $existingInstances[$task['id']], true);
+
+        // Legacy safety: for non-hourly recurrences, older materialized rows may
+        // have NULL/00:00 due_time. If any child exists on the same date, prefer
+        // that child over the master for that day.
+        $freq = $task['recurrence_freq'] ?? null;
+        $isHourlyMaster = ($freq === 'Hourly') || (is_string($freq) && stripos($freq, 'Every ') === 0 && stripos($freq, 'hour') !== false);
+        $hasMaterializedSameDate = !$isHourlyMaster
+            && !empty($task['is_recurring'])
+            && !empty($task['due_date'])
+            && isset($existingDates[$task['id']])
+            && in_array($task['due_date'], $existingDates[$task['id']], true);
+
+        $hasMaterializedBase = $hasMaterializedExact || $hasMaterializedSameDate;
+
+        if ($taskDueTs && $taskDueTs >= $startTs && $taskDueTs <= $endTs && !$hasMaterializedBase) {
             $expanded[] = $task;
         }
 

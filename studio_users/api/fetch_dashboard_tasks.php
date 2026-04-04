@@ -18,6 +18,20 @@ $user_id = intval($_SESSION['user_id']);
 $fromDate = $_GET['from'] ?? date('Y-m-d', strtotime('monday this week'));
 $toDate   = $_GET['to']   ?? date('Y-m-d', strtotime('sunday this week'));
 
+function ensureTaskUserProgressTable(PDO $pdo): void {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS studio_task_user_progress (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        task_id INT NOT NULL,
+        user_id INT NOT NULL,
+        progress_percent TINYINT UNSIGNED NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_task_user (task_id, user_id),
+        INDEX idx_task (task_id),
+        INDEX idx_user (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
 // --- Helper Functions from index.php ---
 function getPersonColorLocal($name) {
     if (!$name) return '#94a3b8';
@@ -36,6 +50,8 @@ function getPersonColorLocal($name) {
 }
 
 try {
+    ensureTaskUserProgressTable($pdo);
+
     // Fetch user's tasks for the dynamic board
     $tlQuery = "SELECT sat.*, u.username as creator_name 
                 FROM studio_assigned_tasks sat
@@ -48,6 +64,25 @@ try {
     $tlStmt = $pdo->prepare($tlQuery);
     $tlStmt->execute(['uid' => $user_id, 'from' => $fromDate, 'to' => $toDate]);
     $rows = $tlStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $taskIds = [];
+    foreach ($rows as $r) {
+        if (isset($r['id']) && is_numeric($r['id'])) {
+            $taskIds[] = (int)$r['id'];
+        }
+    }
+    $taskIds = array_values(array_unique($taskIds));
+
+    $myProgressByTask = [];
+    if (!empty($taskIds)) {
+        $ph = implode(',', array_fill(0, count($taskIds), '?'));
+        $pstmt = $pdo->prepare("SELECT task_id, progress_percent FROM studio_task_user_progress WHERE user_id = ? AND task_id IN ($ph)");
+        $params = array_merge([$user_id], $taskIds);
+        $pstmt->execute($params);
+        foreach ($pstmt->fetchAll(PDO::FETCH_ASSOC) as $pr) {
+            $myProgressByTask[(int)$pr['task_id']] = (int)$pr['progress_percent'];
+        }
+    }
 
     if (empty($rows)) {
         echo '<tr><td colspan="7" style="text-align:center; padding: 2rem; color: #94a3b8;">No tasks found for you.</td></tr>';
@@ -101,11 +136,18 @@ try {
         }
 
         $myStatus = in_array((string)$user_id, $completedIdsList) ? 'Completed' : ($row['status'] === 'Cancelled' ? 'Cancelled' : ($row['status'] === 'Completed' ? 'Completed' : 'Pending'));
+        $taskIdInt = (int)$row['id'];
+        $displayProgress = array_key_exists($taskIdInt, $myProgressByTask)
+            ? (int)$myProgressByTask[$taskIdInt]
+            : 0;
+
         $tmObject = [
             'id' => (int)$row['id'],
             'projectStage' => trim($row['project_name'] . ($row['stage_number'] ? " - Stage " . $row['stage_number'] : "")),
             'title' => $row['task_description'],
             'desc' => $row['task_description'],
+            'progress' => $displayProgress,
+            'progress_percent' => $displayProgress,
             'status' => $myStatus,
             'global_status' => $row['status'],
             'priority' => $priority,

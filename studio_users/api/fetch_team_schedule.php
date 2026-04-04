@@ -15,6 +15,20 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = intval($_SESSION['user_id']);
 
+function ensureTaskUserProgressTable(PDO $pdo): void {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS studio_task_user_progress (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        task_id INT NOT NULL,
+        user_id INT NOT NULL,
+        progress_percent TINYINT UNSIGNED NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_task_user (task_id, user_id),
+        INDEX idx_task (task_id),
+        INDEX idx_user (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
 function getSubordinates($pdo, $managerId) {
     $ids = [$managerId];
     $toProcess = [$managerId];
@@ -53,7 +67,24 @@ function getPeerIds($pdo, $userId) {
     return array_values(array_unique(array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN))));
 }
 
+function resolveProgressTaskId($task): int {
+    if (isset($task['id']) && is_numeric($task['id'])) {
+        return (int)$task['id'];
+    }
+
+    if (!empty($task['id']) && is_string($task['id']) && strpos($task['id'], '_') !== false) {
+        $parts = explode('_', $task['id'], 2);
+        if (isset($parts[0]) && is_numeric($parts[0])) {
+            return (int)$parts[0];
+        }
+    }
+
+    return 0;
+}
+
 try {
+    ensureTaskUserProgressTable($pdo);
+
     // 1. Build authority scope: self tree + colleague trees (same manager level)
     $rootIds = array_values(array_unique(array_merge([$userId], getPeerIds($pdo, $userId))));
     $allowedUserIds = [];
@@ -96,6 +127,27 @@ try {
     $expandStart = date('Y-m-d', strtotime('-30 days'));
     $expandEnd   = date('Y-m-d', strtotime('+120 days'));
     $tasks = expandRecurringTasks($rawTasks, $expandStart, $expandEnd);
+
+    $taskIds = [];
+    foreach ($tasks as $t) {
+        if (isset($t['id']) && is_numeric($t['id'])) {
+            $taskIds[] = (int)$t['id'];
+        }
+    }
+    $taskIds = array_values(array_unique($taskIds));
+
+    $progressByTaskUser = [];
+    if (!empty($taskIds)) {
+        $ph = implode(',', array_fill(0, count($taskIds), '?'));
+        $pstmt = $pdo->prepare("SELECT task_id, user_id, progress_percent FROM studio_task_user_progress WHERE task_id IN ($ph)");
+        $pstmt->execute($taskIds);
+        foreach ($pstmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $tid = (int)$r['task_id'];
+            $uid = (int)$r['user_id'];
+            if (!isset($progressByTaskUser[$tid])) $progressByTaskUser[$tid] = [];
+            $progressByTaskUser[$tid][$uid] = (int)$r['progress_percent'];
+        }
+    }
 
     $formatted = [];
     foreach ($tasks as $task) {
@@ -159,8 +211,14 @@ try {
         }
 
         // Time logic: use due_time as start, or '09:00' default. duration 60.
-        $timeStr = $task['due_time'] ? date('H:i', strtotime($task['due_time'])) : '09:00';
-        $timeStrRaw = $task['due_time'] ? date('g:i A', strtotime($task['due_time'])) : '11:59 PM';
+        // Safety: old virtual-recurring rows may have been materialized at 00:00:00;
+        // show them at business default so they remain visible in day lanes.
+        $rawDueTime = $task['due_time'] ?? null;
+        if (!empty($task['recurrence_parent_id']) && $rawDueTime === '00:00:00') {
+            $rawDueTime = null;
+        }
+        $timeStr = $rawDueTime ? date('H:i', strtotime($rawDueTime)) : '09:00';
+        $timeStrRaw = $rawDueTime ? date('g:i A', strtotime($rawDueTime)) : '9:00 AM';
 
         $title = $task['task_description'];
         $projectStageTitle = trim(($task['project_name'] ?? '') . ($task['stage_number'] ? ' - Stage ' . $task['stage_number'] : ''));
@@ -198,11 +256,42 @@ try {
         $isUserDone = in_array((string)$userId, $completedByArr);
         $myStatus = $isUserDone ? 'Completed' : ($task['status'] === 'Cancelled' ? 'Cancelled' : ($task['status'] === 'Completed' ? 'Completed' : 'Pending'));
 
+        $taskIdInt = resolveProgressTaskId($task);
+        $isViewerAssignee = in_array((string)$userId, array_map('strval', $assignedIds), true);
+
+        $combinedProgress = 0.0;
+        if (!empty($assignedIds)) {
+            $sumProgress = 0;
+            foreach ($assignedIds as $aid) {
+                $aidInt = (int)$aid;
+                $sumProgress += isset($progressByTaskUser[$taskIdInt][$aidInt])
+                    ? (int)$progressByTaskUser[$taskIdInt][$aidInt]
+                    : 0;
+            }
+            $combinedProgress = $sumProgress / count($assignedIds);
+        }
+
+        $myProgress = isset($progressByTaskUser[$taskIdInt][$userId])
+            ? (int)$progressByTaskUser[$taskIdInt][$userId]
+            : 0;
+
+        $displayProgress = $isViewerAssignee ? $myProgress : $combinedProgress;
+
+        // Fallback for non-assignee/manager view when per-user rows are not present
+        // (e.g. legacy tasks before per-user table backfill).
+        if (!$isViewerAssignee && $combinedProgress === 0 && isset($task['progress_percent'])) {
+            $displayProgress = (int)$task['progress_percent'];
+        }
+
         $formatted[] = [
             'id' => $task['id'],
             'title' => $title,
             'projectStage' => $projectStageTitle,
             'desc' => $task['task_description'],
+            'progress' => $displayProgress,
+            'progress_percent' => $displayProgress,
+            'my_progress_percent' => $myProgress,
+            'combined_progress_percent' => $combinedProgress,
             'due_date' => $task['due_date'],
             'due_time_24' => $task['due_time'] ? date('H:i', strtotime($task['due_time'])) : null,
             'extension_count' => $task['extension_count'] ?? 0,
@@ -230,7 +319,7 @@ try {
             'person' => count($personsMap) > 0 ? $personsMap[0] : 'Unassigned',
             'assignedBy' => $task['assigned_by_name'] ?? 'System Admin',
             'persons' => $personsMap,
-            'can_act' => in_array((string)$userId, array_map('strval', $assignedIds), true),
+            'can_act' => $isViewerAssignee,
             'assignee_statuses' => $assigneeStatuses,
             'modalDateFrom' => $created,
             'modalDateTo' => $due,

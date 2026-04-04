@@ -362,7 +362,9 @@
                 window.TaskModal.open({
                     title, person, label, dotColor,
                     id: rawEvent ? rawEvent.id : null,
-                    can_act: rawEvent ? rawEvent.can_act : true,
+                    progress: rawEvent ? rawEvent.progress : 0,
+                    progress_percent: rawEvent ? rawEvent.progress_percent : 0,
+                    can_act: rawEvent ? rawEvent.can_act : false,
                     duration: rawEvent ? rawEvent.duration : null,
                     durationDays: rawEvent ? rawEvent.durationDays : null,
                     durationStr: rawEvent ? rawEvent.durationStr : null,

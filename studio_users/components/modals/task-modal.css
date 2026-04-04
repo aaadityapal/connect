@@ -70,6 +70,129 @@
 .task-meta-item i { color: #94a3b8; text-align: center; }
 .status-badge { background: #e0f2fe; color: #0284c7; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; border: 1px solid #bae6fd; }
 
+.task-modal-progress {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 14px;
+}
+.task-modal-progress-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.task-modal-progress-head h4 {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+#tModalProgressValue {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #475569;
+    font-variant-numeric: tabular-nums;
+}
+.task-modal-progress-track {
+    position: relative;
+    flex: 1;
+    height: 10px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    overflow: hidden;
+}
+.task-modal-progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: #64748b;
+    transition: width 0.25s ease, background 0.25s ease;
+}
+.task-modal-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.task-progress-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #6b7280;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.task-progress-btn:hover {
+    background: #f9fafb;
+    color: #374151;
+    border-color: #9ca3af;
+}
+.task-progress-range {
+    position: absolute;
+    inset: -10px 0;
+    width: 100%;
+    margin: 0;
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+}
+.task-progress-range::-webkit-slider-runnable-track {
+    height: 10px;
+    background: transparent;
+    border: none;
+}
+.task-progress-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    margin-top: -6px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #1d4ed8;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.25), 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+.task-progress-range::-moz-range-track {
+    height: 10px;
+    background: transparent;
+    border: none;
+}
+.task-progress-range::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #1d4ed8;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.25), 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+.task-progress-range:active::-webkit-slider-thumb {
+    transform: scale(1.1);
+}
+.task-progress-range:active::-moz-range-thumb {
+    transform: scale(1.1);
+}
+.task-modal-progress.readonly {
+    opacity: 0.8;
+}
+.task-modal-progress.readonly .task-progress-btn,
+.task-modal-progress.readonly .task-progress-range {
+    cursor: not-allowed;
+}
+.task-progress-btn:disabled {
+    opacity: 0.45;
+}
+
 .task-modal-body h4 { font-size: 0.8rem; font-weight: 700; color: #94a3b8; margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 0.05em; }
 .task-modal-body p { margin: 0; font-size: 0.95rem; line-height: 1.5; color: #334155; }
 

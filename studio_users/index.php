@@ -28,11 +28,13 @@ function getPersonColor($name) {
 require_once '../config/db_connect.php';
 
 $user_id = $_SESSION['user_id'];
-$stmt = $pdo->prepare("SELECT username, designation FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT username, designation, role FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 $username = $user ? $user['username'] : 'User';
 $designation = $user ? $user['designation'] : '';
+$userRole = $_SESSION['role'] ?? ($user['role'] ?? '');
+$isAdminUser = stripos((string)$userRole, 'admin') !== false;
 
 // ── Fetch dynamic stats for KPI cards ───────────────────────────────
 $fromDate = $_GET['from'] ?? date('Y-m-d', strtotime('monday this week'));
@@ -359,7 +361,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                             </div>
                             <div class="dh-greeting el-433">
                                 <span class="dh-greeting-text el-434">Good Afternoon ,</span>
-                                <span class="dh-greeting-name el-435"><?php echo htmlspecialchars($username); ?></span>
+                                <span class="dh-greeting-name <?php echo $isAdminUser ? 'is-admin' : ''; ?> el-435"><?php echo htmlspecialchars($username); ?></span>
                             </div>
                         </div>
                         <div class="dh-nav-datetime el-436">

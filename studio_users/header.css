@@ -274,8 +274,13 @@
 }
 
 .dh-greeting-name {
+    color: #ffffff;
+    /* White for non-admin users */
+}
+
+.dh-greeting-name.is-admin {
     color: #ef4444;
-    /* Red */
+    /* Red for admin users */
 }
 
 .dh-nav-datetime {

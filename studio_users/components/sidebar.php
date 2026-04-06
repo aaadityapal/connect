@@ -155,7 +155,9 @@ function canShow($menuId, $perms) {
         ?>
         <div class="menu-title">Work</div>
         <?php if ($showProjects): ?>
-        <a href="projects.php" class="menu-item" data-page="projects">
+        <a href="#"
+            onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/projects/index.php'; return false;"
+            class="menu-item" data-page="projects">
             <i data-lucide="folder-kanban" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Projects</span>
             <div class="tooltip">Projects</div>
@@ -325,7 +327,16 @@ function canShow($menuId, $perms) {
             class="menu-item" data-page="sidebar-role-access">
             <i data-lucide="lock" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Sidebar Access</span>
-            <div class="tooltip">Access Role</div>
+            <div class="tooltip">Sidebar Access</div>
+        </a>
+        <?php endif; ?>
+
+        <?php if (canShow('project-permissions', $_permissions)): ?>
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'project_permissions_access.php'; return false;"
+            class="menu-item" data-page="project-permissions">
+            <i data-lucide="shield-check" class="menu-icon" style="width:17px;height:17px;"></i>
+            <span class="menu-text">Project Permission</span>
+            <div class="tooltip">Project Permission</div>
         </a>
         <?php endif; ?>
 

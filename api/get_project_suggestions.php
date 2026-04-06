@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Kolkata');
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -7,7 +8,37 @@ header('Content-Type: application/json');
 
 require_once '../config/db_connect.php';
 
+function tableExists(PDO $pdo, string $table): bool {
+    $stmt = $pdo->query("SHOW TABLES LIKE " . $pdo->quote($table));
+    return (bool)$stmt->fetchColumn();
+}
+
+function hasColumn(PDO $pdo, string $table, string $column): bool {
+    $safeColumn = $pdo->quote($column);
+    $stmt = $pdo->query("SHOW COLUMNS FROM {$table} LIKE {$safeColumn}");
+    return $stmt ? (bool)$stmt->fetchColumn() : false;
+}
+
 try {
+    $pdo->exec("SET time_zone = '+05:30'");
+
+    $contactColumnSql = 'NULL AS contact_number';
+    if (hasColumn($pdo, 'projects', 'contact_number')) {
+        $contactColumnSql = 'p.contact_number';
+    } elseif (hasColumn($pdo, 'projects', 'contact_numbe')) {
+        $contactColumnSql = 'p.contact_numbe AS contact_number';
+    }
+
+    $substageTable = null;
+    if (tableExists($pdo, 'project_substages')) {
+        $substageTable = 'project_substages';
+    } elseif (tableExists($pdo, 'project_susbatges')) {
+        $substageTable = 'project_susbatges';
+    }
+
+    $hasStageFiles = tableExists($pdo, 'stage_files');
+    $hasSubstageFiles = tableExists($pdo, 'substage_files');
+
     // First get projects with basic info
     $query = "SELECT 
         p.id,
@@ -24,7 +55,7 @@ try {
         p.client_address,
         p.project_location,
         p.plot_area,
-        p.contact_number,
+        {$contactColumnSql},
         CASE WHEN p.assigned_to IS NULL THEN 'Unassigned' ELSE u.username END as assigned_to_name
     FROM projects p
     LEFT JOIN project_categories pc ON p.category_id = pc.id
@@ -75,25 +106,28 @@ try {
             }
             
             // Get substages
-            $substageQuery = "SELECT 
-                id,
-                substage_number,
-                title,
-                assigned_to,
-                CASE WHEN assigned_to IS NULL THEN 'Unassigned' ELSE (SELECT username FROM users WHERE id = assigned_to) END as assigned_to_name,
-                start_date,
-                end_date,
-                status,
-                substage_identifier,
-                drawing_number
-            FROM project_substages 
-            WHERE stage_id = :stage_id 
-            AND deleted_at IS NULL 
-            ORDER BY substage_number";
-            
-            $substageStmt = $pdo->prepare($substageQuery);
-            $substageStmt->execute([':stage_id' => $stage['id']]);
-            $substages = $substageStmt->fetchAll(PDO::FETCH_ASSOC);
+            $substages = [];
+            if ($substageTable !== null) {
+                $substageQuery = "SELECT 
+                    id,
+                    substage_number,
+                    title,
+                    assigned_to,
+                    CASE WHEN assigned_to IS NULL THEN 'Unassigned' ELSE (SELECT username FROM users WHERE id = assigned_to) END as assigned_to_name,
+                    start_date,
+                    end_date,
+                    status,
+                    substage_identifier,
+                    drawing_number
+                FROM {$substageTable}
+                WHERE stage_id = :stage_id 
+                AND deleted_at IS NULL 
+                ORDER BY substage_number";
+                
+                $substageStmt = $pdo->prepare($substageQuery);
+                $substageStmt->execute([':stage_id' => $stage['id']]);
+                $substages = $substageStmt->fetchAll(PDO::FETCH_ASSOC);
+            }
             
             // Ensure substage assigned_to is properly formatted
             foreach ($substages as &$substage) {
@@ -107,34 +141,42 @@ try {
             $stage['substages'] = $substages;
             
             // Get stage files
-            $stageFileQuery = "SELECT 
-                id,
-                file_name,
-                file_path,
-                original_name,
-                file_type,
-                file_size
-            FROM stage_files 
-            WHERE stage_id = :stage_id";
-            
-            $stageFileStmt = $pdo->prepare($stageFileQuery);
-            $stageFileStmt->execute([':stage_id' => $stage['id']]);
-            $stage['files'] = $stageFileStmt->fetchAll(PDO::FETCH_ASSOC);
-            
-            // Get substage files
-            foreach ($stage['substages'] as &$substage) {
-                $substageFileQuery = "SELECT 
+            if ($hasStageFiles) {
+                $stageFileQuery = "SELECT 
                     id,
                     file_name,
                     file_path,
-                    type
-                FROM substage_files 
-                WHERE substage_id = :substage_id 
-                AND deleted_at IS NULL";
+                    original_name,
+                    file_type,
+                    file_size
+                FROM stage_files 
+                WHERE stage_id = :stage_id";
                 
-                $substageFileStmt = $pdo->prepare($substageFileQuery);
-                $substageFileStmt->execute([':substage_id' => $substage['id']]);
-                $substage['files'] = $substageFileStmt->fetchAll(PDO::FETCH_ASSOC);
+                $stageFileStmt = $pdo->prepare($stageFileQuery);
+                $stageFileStmt->execute([':stage_id' => $stage['id']]);
+                $stage['files'] = $stageFileStmt->fetchAll(PDO::FETCH_ASSOC);
+            } else {
+                $stage['files'] = [];
+            }
+            
+            // Get substage files
+            foreach ($stage['substages'] as &$substage) {
+                if ($hasSubstageFiles) {
+                    $substageFileQuery = "SELECT 
+                        id,
+                        file_name,
+                        file_path,
+                        type
+                    FROM substage_files 
+                    WHERE substage_id = :substage_id 
+                    AND deleted_at IS NULL";
+                    
+                    $substageFileStmt = $pdo->prepare($substageFileQuery);
+                    $substageFileStmt->execute([':substage_id' => $substage['id']]);
+                    $substage['files'] = $substageFileStmt->fetchAll(PDO::FETCH_ASSOC);
+                } else {
+                    $substage['files'] = [];
+                }
             }
             unset($substage); // Clear reference
         }

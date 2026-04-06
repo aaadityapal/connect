@@ -14,6 +14,42 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+// Permission check: can_upload_substage_media must be granted
+$permTableResult = $conn->query("SHOW TABLES LIKE 'project_permissions'");
+$hasPermTable = $permTableResult && $permTableResult->num_rows > 0;
+if (!$hasPermTable) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Upload permission table missing']);
+    exit;
+}
+
+$permColResult = $conn->query("SHOW COLUMNS FROM project_permissions LIKE 'can_upload_substage_media'");
+$hasMediaPermColumn = $permColResult && $permColResult->num_rows > 0;
+if (!$hasMediaPermColumn) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Missing can_upload_substage_media permission column. Please run migration file.']);
+    exit;
+}
+
+$permStmt = $conn->prepare("SELECT can_upload_substage_media FROM project_permissions WHERE user_id = ? LIMIT 1");
+if (!$permStmt) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Permission check failed']);
+    exit;
+}
+
+$permStmt->bind_param('i', $_SESSION['user_id']);
+$permStmt->execute();
+$permResult = $permStmt->get_result();
+$permRow = $permResult ? $permResult->fetch_assoc() : null;
+$canUploadMedia = $permRow && isset($permRow['can_upload_substage_media']) && (int)$permRow['can_upload_substage_media'] === 1;
+
+if (!$canUploadMedia) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'You do not have permission to upload media files']);
+    exit;
+}
+
 // Validate inputs
 if (!isset($_POST['substageId']) || !isset($_POST['fileName']) || !isset($_FILES['file'])) {
     echo json_encode(['success' => false, 'message' => 'Missing required fields']);
@@ -21,17 +57,26 @@ if (!isset($_POST['substageId']) || !isset($_POST['fileName']) || !isset($_FILES
 }
 
 try {
-    $substageId = $_POST['substageId'];
-    $fileName = $_POST['fileName'];
-    $columnType = $_POST['columnType'];
+    $substageId = (int)$_POST['substageId'];
+    $fileName = trim((string)$_POST['fileName']);
+    $columnType = isset($_POST['columnType']) ? trim((string)$_POST['columnType']) : 'general';
     $file = $_FILES['file'];
     $currentDateTime = date('Y-m-d H:i:s');
 
     // First verify that the substage exists
     $checkStmt = $conn->prepare(
-        "SELECT s.project_id, ps.status, ps.deleted_at 
-         FROM project_substages ps 
-         JOIN project_stages s ON ps.stage_id = s.id 
+        "SELECT
+            s.project_id,
+            s.stage_number,
+            p.title AS project_title,
+            ps.stage_id,
+            ps.substage_number,
+            ps.title AS substage_title,
+            ps.status,
+            ps.deleted_at
+         FROM project_substages ps
+         JOIN project_stages s ON ps.stage_id = s.id
+         JOIN projects p ON s.project_id = p.id
          WHERE ps.id = ?"
     );
     
@@ -58,7 +103,12 @@ try {
         throw new Exception('Cannot upload files to completed substage');
     }
 
-    $projectId = $substageData['project_id'];
+    $projectId = (int)$substageData['project_id'];
+    $stageId = (int)$substageData['stage_id'];
+    $stageNumber = isset($substageData['stage_number']) ? (int)$substageData['stage_number'] : 0;
+    $substageNumber = isset($substageData['substage_number']) ? (int)$substageData['substage_number'] : 0;
+    $projectTitle = (string)($substageData['project_title'] ?? '');
+    $substageTitle = (string)($substageData['substage_title'] ?? '');
 
     // Validate file
     if ($file['error'] !== UPLOAD_ERR_OK) {
@@ -116,6 +166,8 @@ try {
         throw new Exception('Database error: ' . $stmt->error);
     }
 
+    $uploadedFileId = (int)$conn->insert_id;
+
     // Update the substage status to in_progress if it was pending
     $updateStmt = $conn->prepare(
         "UPDATE project_substages 
@@ -128,6 +180,64 @@ try {
     if ($updateStmt) {
         $updateStmt->bind_param('si', $currentDateTime, $substageId);
         $updateStmt->execute();
+    }
+
+    // Log detailed upload activity in global_activity_logs
+    try {
+        $metadata = [
+            'event' => 'substage_media_uploaded',
+            'project_id' => $projectId,
+            'project_title' => $projectTitle,
+            'stage_id' => $stageId,
+            'stage_number' => $stageNumber,
+            'substage_id' => $substageId,
+            'substage_number' => $substageNumber,
+            'substage_title' => $substageTitle,
+            'upload' => [
+                'substage_file_id' => $uploadedFileId,
+                'custom_file_name' => $fileName,
+                'original_file_name' => (string)($file['name'] ?? ''),
+                'stored_file_name' => $uniqueFileName,
+                'relative_path' => $relativePath,
+                'mime_type' => (string)($file['type'] ?? ''),
+                'category' => $columnType,
+                'size_bytes' => isset($file['size']) ? (int)$file['size'] : 0,
+                'uploaded_at' => $currentDateTime
+            ]
+        ];
+
+        $description = sprintf(
+            'Media uploaded to %s (Project: %s, Stage %d, Substage %d): %s',
+            ($substageTitle !== '' ? $substageTitle : ('Substage #' . $substageId)),
+            ($projectTitle !== '' ? $projectTitle : ('Project #' . $projectId)),
+            $stageNumber,
+            $substageNumber,
+            $fileName
+        );
+
+        $logStmt = $conn->prepare(
+            "INSERT INTO global_activity_logs (
+                user_id,
+                action_type,
+                entity_type,
+                entity_id,
+                description,
+                metadata,
+                created_at,
+                is_read,
+                is_dismissed
+            ) VALUES (?, 'substage_media_uploaded', 'substage_file', ?, ?, ?, NOW(), 0, 0)"
+        );
+
+        if ($logStmt) {
+            $metadataJson = json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $actorId = (int)$_SESSION['user_id'];
+            $entityId = $uploadedFileId > 0 ? $uploadedFileId : $substageId;
+            $logStmt->bind_param('iiss', $actorId, $entityId, $description, $metadataJson);
+            $logStmt->execute();
+        }
+    } catch (Throwable $logError) {
+        error_log('Activity log insert failed for substage upload: ' . $logError->getMessage());
     }
 
     echo json_encode([

@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Kolkata');
 // Add these lines at the very top for debugging
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -27,6 +28,12 @@ if (!$projectId) {
 }
 
 try {
+    if (isset($pdo)) {
+        $pdo->exec("SET time_zone = '+05:30'");
+    } elseif (isset($conn) && method_exists($conn, 'query')) {
+        $conn->query("SET time_zone = '+05:30'");
+    }
+
     // Determine which connection to use (PDO or MySQLi)
     $usePdo = isset($pdo);
     $connection = $usePdo ? 'PDO' : (isset($conn) ? 'MySQLi' : 'None');

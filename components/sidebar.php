@@ -110,6 +110,12 @@
                 <span class="sidebar-text">Settings</span>
             </a>
         </li>
+        <li <?php echo basename($_SERVER['PHP_SELF']) == 'project_permissions_access.php' ? 'class="active"' : ''; ?>>
+            <a href="studio_users/project_permissions_access.php">
+                <i class="fas fa-user-shield"></i>
+                <span class="sidebar-text">Permission Control</span>
+            </a>
+        </li>
         <li>
             <a href="reset_password.php">
                 <i class="fas fa-lock"></i>

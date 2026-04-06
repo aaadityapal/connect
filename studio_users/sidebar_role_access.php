@@ -57,6 +57,7 @@ $menu_items = [
     ],
     'System' => [
         'settings' => ['label' => 'Settings', 'icon' => 'settings-2'],
+        'project-permissions' => ['label' => 'Project Permission', 'icon' => 'shield-check'],
         'help' => ['label' => 'Help & Support', 'icon' => 'help-circle'],
         'logout' => ['label' => 'Logout', 'icon' => 'power']
     ]
@@ -120,6 +121,14 @@ $menu_items = [
         
         .tab-content {
             padding: 2rem;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
         }
         
         .role-selector-wrap {
@@ -315,6 +324,109 @@ $menu_items = [
         #toast.show {
             transform: translateY(0);
         }
+
+        .project-access-toolbar {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #f1f5f9;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+        }
+
+        .project-access-search {
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 0.62rem 0.8rem;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.92rem;
+        }
+
+        .project-perm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .user-perm-card {
+            border: 1px solid #e5eaf1;
+            border-radius: 14px;
+            padding: 0.9rem;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.9rem;
+        }
+
+        .user-perm-right {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            align-items: flex-end;
+            flex-shrink: 0;
+        }
+
+        .perm-switch-row {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.76rem;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        .user-perm-meta {
+            min-width: 0;
+        }
+
+        .user-perm-name {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1e293b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-perm-sub {
+            margin: 0.2rem 0 0;
+            font-size: 0.8rem;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pill-role {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #eef2ff;
+            color: #4f46e5;
+            border: 1px solid #dde3ff;
+            border-radius: 999px;
+            padding: 0.12rem 0.45rem;
+            margin-top: 0.35rem;
+            font-size: 0.74rem;
+            font-weight: 600;
+        }
+
+        .empty-box {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 2rem;
+            border: 1px dashed #d6e0eb;
+            border-radius: 12px;
+            color: #6b7f93;
+            background: #fbfdff;
+        }
     </style>
 </head>
 <body class="el-1">
@@ -354,10 +466,9 @@ $menu_items = [
                 <div class="admin-card">
                     <nav class="tab-nav">
                         <button class="tab-btn active" data-tab="sidebar-access">Sidebar Access Role</button>
-                        <!-- Other tabs can be added here -->
                     </nav>
 
-                    <div class="tab-content" id="sidebar-access-tab">
+                    <div class="tab-content tab-pane active" id="sidebar-access-tab">
                         <div class="role-selector-wrap">
                             <label for="roleSelector" style="font-weight: 600; color: #475569;">Select Role to Configure:</label>
                             <select id="roleSelector" class="role-select">
@@ -380,6 +491,7 @@ $menu_items = [
                             </button>
                         </div>
                     </div>
+
                 </div>
             </div>
         </main>

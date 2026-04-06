@@ -1,0 +1,475 @@
+
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <style>
+        table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            font-family: 'Calibri', 'Segoe UI', sans-serif;
+            font-size: 11pt;
+        }
+        th, td { 
+            border: 1px solid #d0d7de; 
+            padding: 8px 12px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #f6f8fa; 
+            color: #1f2328; 
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 10pt;
+        }
+        .header { 
+            font-size: 14pt; 
+            font-weight: 600; 
+            margin-bottom: 15px;
+            color: #1f2328;
+        }
+        .subtitle { 
+            font-size: 10pt; 
+            color: #656d76; 
+            margin-bottom: 20px;
+            border-bottom: 1px solid #d0d7de;
+            padding-bottom: 10px;
+        }
+        .footer {
+            font-size: 9pt;
+            color: #656d76;
+            margin-top: 20px;
+            font-style: italic;
+        }
+        .no-report {
+            background-color: #fff5f5;
+            color: #c53030;
+            font-style: italic;
+        }
+        .holiday {
+            background-color: #fffbeb;
+            color: #d97706;
+            font-weight: 600;
+        }
+        .leave-approved {
+            background-color: #f0f9ff;
+            color: #0369a1;
+        }
+        .leave-pending {
+            background-color: #fffbeb;
+            color: #b45309;
+        }
+    </style>
+    <!--[if gte mso 9]>
+    <xml>
+        <x:ExcelWorkbook>
+            <x:ExcelWorksheets>
+                <x:ExcelWorksheet>
+                    <x:Name>Work Reports</x:Name>
+                    <x:WorksheetOptions>
+                        <x:DisplayGridlines/>
+                    </x:WorksheetOptions>
+                </x:ExcelWorksheet>
+            </x:ExcelWorksheets>
+        </x:ExcelWorkbook>
+    </xml>
+    <![endif]-->
+    <title>Work Reports Export</title>
+</head>
+<body>
+    <div class="header">Work Reports</div>
+    
+        <div class="subtitle">Report Period: 01 Apr 2026 to 30 Apr 2026 | Aditya Kumar Pal (DT002)</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Day</th>
+                <th>Employee ID</th>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Holiday</th>
+                <th>Leave Type</th>
+                <th>Leave Status</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+                                                                        <tr class="no-report">
+                            <td>30 Apr 2026</td>
+                            <td>Thursday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>29 Apr 2026</td>
+                            <td>Wednesday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>28 Apr 2026</td>
+                            <td>Tuesday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>27 Apr 2026</td>
+                            <td>Monday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>26 Apr 2026</td>
+                            <td>Sunday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>25 Apr 2026</td>
+                            <td>Saturday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>24 Apr 2026</td>
+                            <td>Friday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>23 Apr 2026</td>
+                            <td>Thursday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>22 Apr 2026</td>
+                            <td>Wednesday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>21 Apr 2026</td>
+                            <td>Tuesday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>20 Apr 2026</td>
+                            <td>Monday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>19 Apr 2026</td>
+                            <td>Sunday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>18 Apr 2026</td>
+                            <td>Saturday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>17 Apr 2026</td>
+                            <td>Friday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>16 Apr 2026</td>
+                            <td>Thursday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>15 Apr 2026</td>
+                            <td>Wednesday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>14 Apr 2026</td>
+                            <td>Tuesday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>13 Apr 2026</td>
+                            <td>Monday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>12 Apr 2026</td>
+                            <td>Sunday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>11 Apr 2026</td>
+                            <td>Saturday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>10 Apr 2026</td>
+                            <td>Friday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>09 Apr 2026</td>
+                            <td>Thursday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>08 Apr 2026</td>
+                            <td>Wednesday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>07 Apr 2026</td>
+                            <td>Tuesday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>06 Apr 2026</td>
+                            <td>Monday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>05 Apr 2026</td>
+                            <td>Sunday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>04 Apr 2026</td>
+                            <td>Saturday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>03 Apr 2026</td>
+                            <td>Friday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>02 Apr 2026</td>
+                            <td>Thursday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                                                <tr class="no-report">
+                            <td>01 Apr 2026</td>
+                            <td>Wednesday</td>
+                            <td>DT002</td>
+                            <td>Aditya Kumar Pal</td>
+                            <td>Relationship Manager</td>
+                            <td>Absent</td>
+                            <td>No</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>Missing report</td>
+                        </tr>
+                                                    
+                                    <tr>
+                        <td colspan="10" style="text-align: center; font-style: italic; color: #656d76;">
+                                                            No work reports found for the selected criteria.
+                                                    </td>
+                    </tr>
+                                    </tbody>
+    </table>
+    
+    <div class="footer">
+        Generated on 02 Apr 2026 16:14:40 | 
+        Total Days: 30 | 
+        Reports Submitted: 0 | 
+        Holidays: 0 |
+        Leave Days: 0    </div>
+</body>
+</html>

@@ -2,6 +2,27 @@ console.log('Script loaded');
 console.log('Modal element:', document.getElementById('projectModal'));
 console.log('Open button:', document.querySelector('.add-project-btn'));
 
+const PROJECT_FORM_BASE_PATH = window.PROJECT_FORM_BASE_PATH || '';
+function apiUrl(path) {
+    return `${PROJECT_FORM_BASE_PATH}${path}`;
+}
+
+function onDomReady(callback) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callback);
+    } else {
+        callback();
+    }
+}
+
+function safeNotify(message, type = 'error') {
+    if (typeof showNotification === 'function') {
+        showNotification(message, type);
+    } else {
+        console[type === 'error' ? 'error' : 'log'](message);
+    }
+}
+
 // First, let's store users globally so we can access them throughout the code
 let globalUsers = [];
 
@@ -22,7 +43,7 @@ let currentProjectId = null;
 async function fetchProjectSuggestions() {
     try {
         console.log('Fetching project suggestions...');
-        const response = await fetch('api/get_project_suggestions.php');
+        const response = await fetch(apiUrl('api/get_project_suggestions.php'));
         const data = await response.json();
         
         if (data.status === 'success') {
@@ -48,7 +69,7 @@ async function fetchProjectSuggestions() {
 async function fetchUsers() {
     try {
         console.log('Fetching users...');
-        const response = await fetch('api/get_users.php');
+        const response = await fetch(apiUrl('api/get_users.php'));
         const data = await response.json();
         console.log('Received users data:', data);
         
@@ -70,7 +91,7 @@ async function fetchUsers() {
 async function fetchCategories() {
     try {
         console.log('Fetching categories...');
-        const response = await fetch('api/get_project_categories.php');
+        const response = await fetch(apiUrl('api/get_project_categories.php'));
         
         // Log the raw response for debugging
         console.log('Raw response:', response);
@@ -88,12 +109,12 @@ async function fetchCategories() {
             return data.data;
         } else {
             console.error('Error fetching categories:', data.message);
-            showNotification('Error loading categories: ' + data.message, 'error');
+            safeNotify('Error loading categories: ' + data.message, 'error');
             return [];
         }
     } catch (error) {
         console.error('Failed to fetch categories:', error);
-        showNotification('Failed to load categories. Please check console for details.', 'error');
+        safeNotify('Failed to load categories. Please check console for details.', 'error');
         return [];
     }
 }
@@ -101,7 +122,7 @@ async function fetchCategories() {
 // Add function to fetch current user
 async function fetchCurrentUser() {
     try {
-        const response = await fetch('api/get_current_user.php');
+        const response = await fetch(apiUrl('api/get_current_user.php'));
         const data = await response.json();
         
         if (data.status === 'success') {
@@ -112,7 +133,7 @@ async function fetchCurrentUser() {
         }
     } catch (error) {
         console.error('Failed to fetch current user:', error);
-        showNotification('Error: Please log in again', 'error');
+        safeNotify('Error: Please log in again', 'error');
         // Optionally redirect to login page
         // window.location.href = '/login.php';
         return null;
@@ -1027,7 +1048,7 @@ async function uploadFile(file) {
         const formData = new FormData();
         formData.append('file', file);
         
-        const response = await fetch('api/upload_files.php', {
+        const response = await fetch(apiUrl('api/upload_files.php'), {
             method: 'POST',
             body: formData
         });
@@ -1053,7 +1074,7 @@ async function uploadFile(file) {
 }
 
 // Update the DOMContentLoaded event listener
-document.addEventListener('DOMContentLoaded', async function() {
+onDomReady(async function() {
     try {
         // Fetch all necessary data
         await Promise.all([
@@ -1072,8 +1093,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
         
         if (!currentUser) {
-            console.error('No user logged in');
-            return;
+            const fallbackUserId = Number(window.CURRENT_USER_ID || 0);
+            currentUser = { id: fallbackUserId || 0, username: 'User', role: '' };
+            console.warn('Using fallback current user for modal:', currentUser);
         }
 
         // Initialize project title input
@@ -1104,7 +1126,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             openModal();
         });
     } else {
-        console.error('Add Project button not found!');
+        console.log('Add Project button not found in this context (expected for injected modal usage).');
     }
 
     if (closeModalBtn) {
@@ -1279,6 +1301,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             modal.classList.add('active');
             // Initialize autocomplete after modal is visible
             initializeProjectTitleAutocomplete();
+            fetchProjectSuggestions();
         }, 10);
         document.body.style.overflow = 'hidden';
     }
@@ -1299,6 +1322,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         setTimeout(() => {
         modal.style.display = 'none';
         createProjectForm.reset();
+            const stagesContainer = document.getElementById('stagesContainer');
+            if (stagesContainer) {
+                stagesContainer.innerHTML = '';
+            }
             document.body.style.overflow = ''; // Restore background scrolling
             
             // Reset project type selection
@@ -1429,13 +1456,13 @@ document.addEventListener('DOMContentLoaded', async function() {
             startDate: formData.get('startDate'),
             dueDate: formData.get('dueDate'),
             assignTo: formData.get('assignTo'),
-            created_by: currentUser.id
+            created_by: Number(currentUser?.id || 0)
         };
 
         // Debug log
         console.log('Sending project data:', projectData);
 
-        const response = await fetch('api/create_project.php', {
+        const response = await fetch(apiUrl('api/create_project.php'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1484,7 +1511,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             stages.push(stageData);
         }
         
-        const response = await fetch('api/create_project_stages.php', {
+        const response = await fetch(apiUrl('api/create_project_stages.php'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1492,7 +1519,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             body: JSON.stringify({
                 project_id: projectId,
                 stages: stages,
-                user_id: currentUser.id
+                user_id: Number(currentUser?.id || 0)
             })
         });
         
@@ -1658,7 +1685,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     });
 
+    // Core bindings are ready at this point
+    window.__PROJECT_FORM_HANDLER_READY = true;
+
+    console.log('Project form handler initialized');
+
     } catch (error) {
+        window.__PROJECT_FORM_HANDLER_READY = false;
         console.error('Error initializing form:', error);
         showNotification('Error loading form data', 'error');
     }
@@ -1901,8 +1934,7 @@ function handleProjectTitleInput(input) {
         
         suggestionsContainer.innerHTML = displayMatches.map(project => `
             <div class="suggestion-item" 
-                 data-project-id="${project.id}" 
-                 onclick="selectProject('${project.id}')">
+                 data-project-id="${project.id}">
                 <div class="suggestion-title">
                     <i class="fas fa-project-diagram"></i>
                     ${highlightMatch(project.title, value)}
@@ -2154,12 +2186,26 @@ function formatDateForInput(dateString) {
     if (!dateString) return '';
     
     try {
-        const date = new Date(dateString);
+        const raw = String(dateString).trim();
+
+        if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?$/.test(raw)) {
+            return raw.replace(' ', 'T').slice(0, 16);
+        }
+
+        const date = new Date(raw);
         if (isNaN(date.getTime())) {
             console.error('Invalid date:', dateString);
             return '';
         }
-        return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDThh:mm
+
+        const pad = (n) => String(n).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        const mm = pad(date.getMonth() + 1);
+        const dd = pad(date.getDate());
+        const hh = pad(date.getHours());
+        const mi = pad(date.getMinutes());
+
+        return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
     } catch (error) {
         console.error('Error formatting date:', error);
         return '';
@@ -2201,12 +2247,31 @@ function initializeProjectTitleAutocomplete() {
     // Add input event listener
     projectTitleInput.addEventListener('input', handleInput);
 
+    bindProjectSuggestionClicks();
+
     // Click outside listener
     document.addEventListener('click', function(e) {
         if (suggestionsContainer && !e.target.closest('.autocomplete-wrapper')) {
             suggestionsContainer.style.display = 'none';
         }
     });
+}
+
+function bindProjectSuggestionClicks() {
+    const suggestionsContainer = document.getElementById('projectSuggestions');
+    if (!suggestionsContainer) return;
+
+    if (!suggestionsContainer.dataset.boundClick) {
+        suggestionsContainer.addEventListener('click', function(e) {
+            const item = e.target.closest('.suggestion-item');
+            if (!item) return;
+            const projectId = item.dataset.projectId;
+            if (projectId) {
+                selectProject(projectId);
+            }
+        });
+        suggestionsContainer.dataset.boundClick = '1';
+    }
 }
 
 function handleInput(e) {
@@ -2219,6 +2284,15 @@ function handleInput(e) {
     if (!value) {
         suggestionsContainer.innerHTML = '';
         suggestionsContainer.style.display = 'none';
+        return;
+    }
+
+    if (!Array.isArray(globalProjects) || globalProjects.length === 0) {
+        fetchProjectSuggestions().then(() => {
+            if (globalProjects.length > 0) {
+                handleInput({ target: e.target });
+            }
+        });
         return;
     }
 
@@ -2254,8 +2328,7 @@ function handleInput(e) {
         
         suggestionsContainer.innerHTML = displayMatches.map(project => `
             <div class="suggestion-item" 
-                 data-project-id="${project.id}" 
-                 onclick="selectProject('${project.id}')">
+                 data-project-id="${project.id}">
                 <div class="suggestion-title">
                     <i class="fas fa-project-diagram"></i>
                     ${highlightMatch(project.title, value)}
@@ -2309,13 +2382,23 @@ async function updateProject(e, projectId) {
 
         console.log('Sending update data:', projectData);
 
-        const response = await fetch('ajax_handlers/update_projects.php', {
+        const response = await fetch(apiUrl('ajax_handlers/update_projects.php'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(projectData)
         });
 
-        const result = await response.json();
+        const raw = await response.text();
+        let result = null;
+        try {
+            result = JSON.parse(raw);
+        } catch (parseError) {
+            throw new Error(`Update API returned non-JSON response (HTTP ${response.status}).`);
+        }
+
+        if (!response.ok) {
+            throw new Error(result?.message || `Update request failed with HTTP ${response.status}`);
+        }
         console.log('Update response:', result);
         
         if (result.status !== 'success') {
@@ -2665,7 +2748,7 @@ function switchToDrawingDropdown(stageNum, substageCount) {
 }
 
 // In the document ready function
-document.addEventListener('DOMContentLoaded', function() {
+onDomReady(function() {
     // ... existing code ...
     
     // Integrate with substage layout fix system

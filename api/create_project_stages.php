@@ -7,10 +7,78 @@ error_reporting(E_ALL);
 header('Content-Type: application/json');
 
 require_once '../config/db_connect.php';
+session_start();
+
+function normalizeDateTimeLocalToIst(?string $value): ?string {
+    $raw = trim((string)($value ?? ''));
+    if ($raw === '') {
+        return null;
+    }
+
+    $tz = new DateTimeZone('Asia/Kolkata');
+    $formats = ['Y-m-d\\TH:i:s', 'Y-m-d\\TH:i', 'Y-m-d H:i:s', 'Y-m-d H:i'];
+
+    foreach ($formats as $format) {
+        $dt = DateTime::createFromFormat($format, $raw, $tz);
+        if ($dt instanceof DateTime) {
+            return $dt->format('Y-m-d H:i:s');
+        }
+    }
+
+    try {
+        $dt = new DateTime($raw, $tz);
+        return $dt->format('Y-m-d H:i:s');
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
+function tableExists(PDO $pdo, string $table): bool {
+    $stmt = $pdo->query("SHOW TABLES LIKE " . $pdo->quote($table));
+    return (bool)$stmt->fetchColumn();
+}
+
+function hasCreateProjectPermission(PDO $pdo, int $userId): bool {
+    if (!tableExists($pdo, 'project_permissions')) {
+        return false;
+    }
+
+    $stmt = $pdo->prepare("SELECT can_create_project FROM project_permissions WHERE user_id = ? LIMIT 1");
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return isset($row['can_create_project']) && (int)$row['can_create_project'] === 1;
+}
+
+function getColumnsMap(PDO $pdo, string $table): array {
+    $stmt = $pdo->query("SHOW COLUMNS FROM {$table}");
+    $map = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $col) {
+        if (!empty($col['Field'])) {
+            $map[$col['Field']] = $col;
+        }
+    }
+    return $map;
+}
 
 try {
+    $pdo->exec("SET time_zone = '+05:30'");
+
     // Get POST data
     $data = json_decode(file_get_contents('php://input'), true);
+
+    if (!isset($_SESSION['user_id'])) {
+        throw new Exception('User not logged in');
+    }
+
+    if (!hasCreateProjectPermission($pdo, (int)$_SESSION['user_id'])) {
+        http_response_code(403);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'You do not have permission to create projects.'
+        ]);
+        exit;
+    }
     
     if (!isset($data['project_id']) || !isset($data['stages'])) {
         throw new Exception('Missing required data');
@@ -20,6 +88,19 @@ try {
     $userId = isset($data['user_id']) ? $data['user_id'] : ($_SESSION['user_id'] ?? 1);
 
     $pdo->beginTransaction();
+
+    $substageTable = null;
+    if (tableExists($pdo, 'project_substages')) {
+        $substageTable = 'project_substages';
+    } elseif (tableExists($pdo, 'project_susbatges')) {
+        $substageTable = 'project_susbatges';
+    }
+    if ($substageTable === null) {
+        throw new Exception('Substage table not found');
+    }
+    $substageCols = getColumnsMap($pdo, $substageTable);
+    $substageIdentifierWritable = isset($substageCols['substage_identifier'])
+        && stripos((string)($substageCols['substage_identifier']['Extra'] ?? ''), 'GENERATED') === false;
     
     // --- TASK INTEGRATION ADDITIONS ---
     // Fetch project name for the task
@@ -43,6 +124,8 @@ try {
     foreach ($data['stages'] as $stageIndex => $stage) {
         // Convert assignTo value 0 to NULL for database storage
         $stageAssignedTo = (!empty($stage['assignTo']) && $stage['assignTo'] !== '0') ? $stage['assignTo'] : null;
+        $stageStartDate = normalizeDateTimeLocalToIst($stage['startDate'] ?? null);
+        $stageDueDate = normalizeDateTimeLocalToIst($stage['dueDate'] ?? null);
         
         // Insert stage
         $stageQuery = "INSERT INTO project_stages (
@@ -72,8 +155,8 @@ try {
             ':project_id' => $data['project_id'],
             ':stage_number' => $stageIndex + 1,
             ':assigned_to' => $stageAssignedTo,
-            ':start_date' => $stage['startDate'],
-            ':end_date' => $stage['dueDate'],
+            ':start_date' => $stageStartDate,
+            ':end_date' => $stageDueDate,
             ':created_by' => $userId,
             ':updated_by' => $userId
         ]);
@@ -121,50 +204,51 @@ try {
             foreach ($stage['substages'] as $substageIndex => $substage) {
                 // Convert assignTo value 0 to NULL for database storage
                 $substageAssignedTo = (!empty($substage['assignTo']) && $substage['assignTo'] !== '0') ? $substage['assignTo'] : null;
-                
-                $substageQuery = "INSERT INTO project_substages (
-                    stage_id,
-                    substage_number,
-                    title,
-                    assigned_to,
-                    start_date,
-                    end_date,
-                    status,
-                    created_at,
-                    created_by,
-                    substage_identifier,
-                    drawing_number,
-                    updated_by
-                ) VALUES (
-                    :stage_id,
-                    :substage_number,
-                    :title,
-                    :assigned_to,
-                    :start_date,
-                    :end_date,
-                    'pending',
-                    NOW(),
-                    :created_by,
-                    :substage_identifier,
-                    :drawing_number,
-                    :updated_by
-                )";
+                $substageStartDate = normalizeDateTimeLocalToIst($substage['startDate'] ?? null);
+                $substageDueDate = normalizeDateTimeLocalToIst($substage['dueDate'] ?? null);
                 
                 $substageIdentifier = "S{$stageIndex}SS{$substageIndex}";
-                
+
+                $insertData = [
+                    'stage_id' => $stageId,
+                    'substage_number' => $substageIndex + 1,
+                    'title' => $substage['title'] ?? null,
+                    'assigned_to' => $substageAssignedTo,
+                    'start_date' => $substageStartDate,
+                    'end_date' => $substageDueDate,
+                    'status' => 'pending',
+                    'created_by' => $userId,
+                    'drawing_number' => $substage['drawingNumber'] ?? null,
+                    'updated_by' => $userId,
+                    'is_task_created' => 0
+                ];
+
+                if ($substageIdentifierWritable) {
+                    $insertData['substage_identifier'] = $substageIdentifier;
+                }
+
+                $insertColumns = [];
+                $insertValues = [];
+                $params = [];
+                foreach ($insertData as $col => $val) {
+                    if (!isset($substageCols[$col])) continue;
+                    $insertColumns[] = "`{$col}`";
+                    $insertValues[] = ':' . $col;
+                    $params[':' . $col] = $val;
+                }
+                if (isset($substageCols['created_at'])) {
+                    $insertColumns[] = '`created_at`';
+                    $insertValues[] = 'NOW()';
+                }
+                if (isset($substageCols['updated_at'])) {
+                    $insertColumns[] = '`updated_at`';
+                    $insertValues[] = 'NOW()';
+                }
+
+                $substageQuery = "INSERT INTO {$substageTable} (" . implode(', ', $insertColumns) . ") VALUES (" . implode(', ', $insertValues) . ")";
+
                 $stmt = $pdo->prepare($substageQuery);
-                $stmt->execute([
-                    ':stage_id' => $stageId,
-                    ':substage_number' => $substageIndex + 1,
-                    ':title' => $substage['title'],
-                    ':assigned_to' => $substageAssignedTo,
-                    ':start_date' => $substage['startDate'],
-                    ':end_date' => $substage['dueDate'],
-                    ':created_by' => $userId,
-                    ':substage_identifier' => $substageIdentifier,
-                    ':drawing_number' => $substage['drawingNumber'] ?? null,
-                    ':updated_by' => $userId
-                ]);
+                $stmt->execute($params);
                 
                 $substageId = $pdo->lastInsertId();
                 
@@ -173,7 +257,9 @@ try {
                     $stmtUser->execute([$substageAssignedTo]);
                     $assignedName = $stmtUser->fetchColumn() ?: 'Unknown';
                     
-                    $dueDateTime = !empty($substage['dueDate']) ? new DateTime($substage['dueDate']) : null;
+                    $dueDateTime = !empty($substageDueDate)
+                        ? new DateTime($substageDueDate, new DateTimeZone('Asia/Kolkata'))
+                        : null;
                     $dueDateStr = $dueDateTime ? $dueDateTime->format('Y-m-d') : null;
                     $dueTimeStr = $dueDateTime ? $dueDateTime->format('H:i') : null;
                     
@@ -225,8 +311,10 @@ try {
                     ]);
                     
                     // Mark as task created to prevent reassignment on future updates
-                    $stmtUpdateFlag = $pdo->prepare("UPDATE project_substages SET is_task_created = 1 WHERE id = ?");
-                    $stmtUpdateFlag->execute([$substageId]);
+                    if (isset($substageCols['is_task_created'])) {
+                        $stmtUpdateFlag = $pdo->prepare("UPDATE {$substageTable} SET is_task_created = 1 WHERE id = ?");
+                        $stmtUpdateFlag->execute([$substageId]);
+                    }
                 }
                 // ----------------------------------------
                 

@@ -10,13 +10,15 @@ header('Content-Type: application/json');
 $json_data = file_get_contents('php://input');
 $data = json_decode($json_data, true);
 
-// RBAC: Only HR and Senior Manager (Studio) can update projects
-$allowed_roles = ['HR', 'Senior Manager (Studio)'];
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
+// RBAC: Allow HR, Senior Manager (Studio), and Admin roles
+$allowed_roles = ['hr', 'senior manager (studio)', 'admin', 'administrator'];
+$session_role = strtolower(trim((string)($_SESSION['role'] ?? '')));
+if (!isset($_SESSION['user_id']) || $session_role === '' || !in_array($session_role, $allowed_roles, true)) {
     http_response_code(403);
     echo json_encode([
         'status' => 'error',
-        'message' => 'Access denied. You do not have permission to update projects.'
+        'message' => 'Access denied. You do not have permission to update projects.',
+        'debug_role' => $_SESSION['role'] ?? null
     ]);
     exit;
 }

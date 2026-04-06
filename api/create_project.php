@@ -1,5 +1,6 @@
 <?php
 session_start();
+date_default_timezone_set('Asia/Kolkata');
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -8,10 +9,62 @@ header('Content-Type: application/json');
 
 require_once '../config/db_connect.php';
 
+function tableExists(PDO $pdo, string $table): bool {
+    $stmt = $pdo->query("SHOW TABLES LIKE " . $pdo->quote($table));
+    return (bool)$stmt->fetchColumn();
+}
+
+function hasCreateProjectPermission(PDO $pdo, int $userId): bool {
+    if (!tableExists($pdo, 'project_permissions')) {
+        return false;
+    }
+
+    $stmt = $pdo->prepare("SELECT can_create_project FROM project_permissions WHERE user_id = ? LIMIT 1");
+    $stmt->execute([$userId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return isset($row['can_create_project']) && (int)$row['can_create_project'] === 1;
+}
+
+function normalizeDateTimeLocalToIst(?string $value): ?string {
+    $raw = trim((string)($value ?? ''));
+    if ($raw === '') {
+        return null;
+    }
+
+    $tz = new DateTimeZone('Asia/Kolkata');
+    $formats = ['Y-m-d\\TH:i:s', 'Y-m-d\\TH:i', 'Y-m-d H:i:s', 'Y-m-d H:i'];
+
+    foreach ($formats as $format) {
+        $dt = DateTime::createFromFormat($format, $raw, $tz);
+        if ($dt instanceof DateTime) {
+            return $dt->format('Y-m-d H:i:s');
+        }
+    }
+
+    try {
+        $dt = new DateTime($raw, $tz);
+        return $dt->format('Y-m-d H:i:s');
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
 try {
+    $pdo->exec("SET time_zone = '+05:30'");
+
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
         throw new Exception('User not logged in');
+    }
+
+    if (!hasCreateProjectPermission($pdo, (int)$_SESSION['user_id'])) {
+        http_response_code(403);
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'You do not have permission to create projects.'
+        ]);
+        exit;
     }
 
     // Get POST data
@@ -74,6 +127,8 @@ try {
 
     // Convert assignTo value 0 to NULL for database storage
     $assignedTo = (!empty($data['assignTo']) && $data['assignTo'] !== '0') ? $data['assignTo'] : null;
+    $projectStartDate = normalizeDateTimeLocalToIst($data['startDate'] ?? null);
+    $projectDueDate = normalizeDateTimeLocalToIst($data['dueDate'] ?? null);
 
     $stmt = $pdo->prepare($projectQuery);
     $result = $stmt->execute([
@@ -81,8 +136,8 @@ try {
         ':description' => $data['projectDescription'],
         ':project_type' => $data['projectType'],
         ':category_id' => $data['projectCategory'],
-        ':start_date' => $data['startDate'],
-        ':end_date' => $data['dueDate'],
+        ':start_date' => $projectStartDate,
+        ':end_date' => $projectDueDate,
         ':created_by' => $_SESSION['user_id'] ?? 1,
         ':assigned_to' => $assignedTo,
         ':client_name' => $data['client_name'] ?? null,

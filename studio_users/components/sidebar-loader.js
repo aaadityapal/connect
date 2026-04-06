@@ -30,6 +30,16 @@
      */
     function resolveCurrentPage() {
         const path = window.location.pathname;
+        const search = new URLSearchParams(window.location.search || '');
+
+        if (path.includes('/sidebar_role_access.php')) {
+            const tab = (search.get('tab') || '').toLowerCase();
+            if (tab === 'project-create-access') {
+                return 'project-create-permission';
+            }
+            return 'sidebar-role-access';
+        }
+        if (path.includes('/project_permissions_access.php')) return 'project-permissions';
 
         // ── Sub-directory matches (checked before filename) ──
         if (path.includes('/profile/'))           return 'profile';
@@ -45,6 +55,7 @@
         if (path.includes('/manager_pages/travel_expenses_approval/')) return 'travel-exp-approval-mng';
         if (path.includes('/manager_pages/password_reset/')) return 'password-reset-mng';
         if (path.includes('/manager_pages/employees_profile/')) return 'employees-profile';
+        if (path.includes('/manager_pages/projects/')) return 'projects';
         if (path.includes('/projects'))           return 'projects';
         if (path.includes('/site-updates'))       return 'site-updates';
         if (path.includes('/my-tasks'))           return 'my-tasks';
@@ -72,6 +83,8 @@
             'hierarchy'       : 'hierarchy',
             'manager_mapping' : 'manager-mapping',
             'sidebar_role_access' : 'sidebar-role-access',
+            'project_permissions' : 'project-permissions',
+            'project_permissions_access' : 'project-permissions',
             'travel_expenses_mapping' : 'travel-exp-mapping',
         };
 

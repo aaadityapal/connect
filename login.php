@@ -24,6 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
 
         if ($valid_password) {
+            $userStatus = strtolower(trim((string)($user['status'] ?? 'active')));
+            if ($userStatus !== 'active') {
+                $_SESSION['error'] = "Your account is inactive. Please contact HR/Admin.";
+                header('Location: login.php');
+                exit();
+            }
+
             // Set session variables
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];

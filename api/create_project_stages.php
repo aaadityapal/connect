@@ -61,6 +61,51 @@ function getColumnsMap(PDO $pdo, string $table): array {
     return $map;
 }
 
+function insertGlobalActivityLog(PDO $pdo, array $log): void {
+    if (!tableExists($pdo, 'global_activity_logs')) {
+        return;
+    }
+
+    $colsMap = getColumnsMap($pdo, 'global_activity_logs');
+
+    $insertData = [
+        'user_id' => (int)($log['user_id'] ?? 0),
+        'action_type' => (string)($log['action_type'] ?? 'project_created'),
+        'entity_type' => (string)($log['entity_type'] ?? 'project'),
+        'entity_id' => isset($log['entity_id']) ? (int)$log['entity_id'] : null,
+        'description' => (string)($log['description'] ?? 'Project activity'),
+        'metadata' => isset($log['metadata'])
+            ? json_encode($log['metadata'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            : null,
+        'is_read' => 0,
+        'is_dismissed' => 0
+    ];
+
+    $columns = [];
+    $values = [];
+    $params = [];
+
+    foreach ($insertData as $col => $val) {
+        if (!isset($colsMap[$col])) continue;
+        $columns[] = "`{$col}`";
+        $values[] = ':' . $col;
+        $params[':' . $col] = $val;
+    }
+
+    if (isset($colsMap['created_at'])) {
+        $columns[] = '`created_at`';
+        $values[] = 'NOW()';
+    }
+
+    if (empty($columns)) {
+        return;
+    }
+
+    $sql = 'INSERT INTO global_activity_logs (' . implode(', ', $columns) . ') VALUES (' . implode(', ', $values) . ')';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+}
+
 try {
     $pdo->exec("SET time_zone = '+05:30'");
 
@@ -355,6 +400,32 @@ try {
         }
     }
     
+    // Detailed global activity log for project structure creation
+    try {
+        $totalSubstages = 0;
+        foreach (($data['stages'] ?? []) as $stageItem) {
+            $totalSubstages += is_array($stageItem['substages'] ?? null) ? count($stageItem['substages']) : 0;
+        }
+
+        insertGlobalActivityLog($pdo, [
+            'user_id' => (int)$userId,
+            'action_type' => 'project_created',
+            'entity_type' => 'project',
+            'entity_id' => (int)$data['project_id'],
+            'description' => 'Project structure created/attached (stages & substages)',
+            'metadata' => [
+                'project_id' => (int)$data['project_id'],
+                'stages_count' => count($data['stages'] ?? []),
+                'substages_count' => $totalSubstages,
+                'payload' => $data['stages'] ?? [],
+                'created_by' => (int)$userId,
+                'source' => 'api/create_project_stages.php'
+            ]
+        ]);
+    } catch (Throwable $logError) {
+        error_log('Project stages activity log failed: ' . $logError->getMessage());
+    }
+
     $pdo->commit();
     
     echo json_encode([

@@ -6,6 +6,55 @@ session_start();
 
 header('Content-Type: application/json');
 
+function tableExistsMysqli(mysqli $conn, string $table): bool {
+    $safeTable = $conn->real_escape_string($table);
+    $result = $conn->query("SHOW TABLES LIKE '{$safeTable}'");
+    return $result instanceof mysqli_result && $result->num_rows > 0;
+}
+
+function insertGlobalActivityLogMysqli(mysqli $conn, array $log): void {
+    if (!tableExistsMysqli($conn, 'global_activity_logs')) {
+        return;
+    }
+
+    $userId = (int)($log['user_id'] ?? 0);
+    $actionType = (string)($log['action_type'] ?? 'project_updated');
+    $entityType = (string)($log['entity_type'] ?? 'project');
+    $entityId = isset($log['entity_id']) ? (int)$log['entity_id'] : null;
+    $description = (string)($log['description'] ?? 'Project updated');
+    $metadata = isset($log['metadata'])
+        ? json_encode($log['metadata'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        : null;
+
+    $stmt = $conn->prepare("INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read, is_dismissed) VALUES (?, ?, ?, ?, ?, ?, NOW(), 0, 0)");
+    if (!$stmt) {
+        return;
+    }
+
+    $stmt->bind_param('ississ', $userId, $actionType, $entityType, $entityId, $description, $metadata);
+    $stmt->execute();
+}
+
+function diffProjectFields(?array $before, ?array $after, array $fields): array {
+    $changes = [];
+    $before = is_array($before) ? $before : [];
+    $after = is_array($after) ? $after : [];
+
+    foreach ($fields as $field) {
+        $oldVal = array_key_exists($field, $before) ? $before[$field] : null;
+        $newVal = array_key_exists($field, $after) ? $after[$field] : null;
+
+        if ((string)$oldVal !== (string)$newVal) {
+            $changes[$field] = [
+                'from' => $oldVal,
+                'to' => $newVal
+            ];
+        }
+    }
+
+    return $changes;
+}
+
 // Get JSON data from POST request
 $json_data = file_get_contents('php://input');
 $data = json_decode($json_data, true);
@@ -108,6 +157,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $project_id = (int)$data['projectId'];
+
+        // Snapshot before update for detailed audit trail
+        $projectBefore = null;
+        $beforeStmt = $conn->prepare("SELECT * FROM projects WHERE id = ? LIMIT 1");
+        if ($beforeStmt) {
+            $beforeStmt->bind_param('i', $project_id);
+            $beforeStmt->execute();
+            $beforeResult = $beforeStmt->get_result();
+            $projectBefore = $beforeResult ? $beforeResult->fetch_assoc() : null;
+        }
 
         // First, get all existing stage IDs for this project
         $existing_stages_query = "SELECT id FROM project_stages WHERE project_id = ?";
@@ -449,6 +508,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare($delete_stages_sql);
             $stmt->bind_param($types, ...$params);
             $stmt->execute();
+        }
+
+        // Detailed global activity log for project update
+        try {
+            $projectAfter = null;
+            $afterStmt = $conn->prepare("SELECT * FROM projects WHERE id = ? LIMIT 1");
+            if ($afterStmt) {
+                $afterStmt->bind_param('i', $project_id);
+                $afterStmt->execute();
+                $afterResult = $afterStmt->get_result();
+                $projectAfter = $afterResult ? $afterResult->fetch_assoc() : null;
+            }
+
+            $dbStageCount = 0;
+            $dbSubstageCount = 0;
+
+            $countStageStmt = $conn->prepare("SELECT COUNT(*) AS c FROM project_stages WHERE project_id = ? AND deleted_at IS NULL");
+            if ($countStageStmt) {
+                $countStageStmt->bind_param('i', $project_id);
+                $countStageStmt->execute();
+                $countStageRes = $countStageStmt->get_result();
+                $dbStageCount = (int)(($countStageRes ? $countStageRes->fetch_assoc()['c'] : 0) ?? 0);
+            }
+
+            $countSubStmt = $conn->prepare("SELECT COUNT(*) AS c FROM project_substages psu INNER JOIN project_stages ps ON ps.id = psu.stage_id WHERE ps.project_id = ? AND ps.deleted_at IS NULL AND psu.deleted_at IS NULL");
+            if ($countSubStmt) {
+                $countSubStmt->bind_param('i', $project_id);
+                $countSubStmt->execute();
+                $countSubRes = $countSubStmt->get_result();
+                $dbSubstageCount = (int)(($countSubRes ? $countSubRes->fetch_assoc()['c'] : 0) ?? 0);
+            }
+
+            $submittedStages = (isset($data['stages']) && is_array($data['stages'])) ? $data['stages'] : [];
+            $submittedSubstagesCount = 0;
+            foreach ($submittedStages as $s) {
+                if (isset($s['substages']) && is_array($s['substages'])) {
+                    $submittedSubstagesCount += count($s['substages']);
+                }
+            }
+
+            $projectFieldChanges = diffProjectFields($projectBefore, $projectAfter, [
+                'title', 'description', 'project_type', 'category_id', 'start_date', 'end_date',
+                'assigned_to', 'assignment_status', 'status', 'client_name', 'client_address',
+                'project_location', 'plot_area', 'contact_number'
+            ]);
+
+            $actorId = (int)$_SESSION['user_id'];
+            $actor = [
+                'user_id' => $actorId,
+                'role' => $_SESSION['role'] ?? null,
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
+            ];
+
+            $deletedStageIds = array_values(array_map('intval', $stages_to_delete ?? []));
+
+            insertGlobalActivityLogMysqli($conn, [
+                'user_id' => $actorId,
+                'action_type' => 'project_updated',
+                'entity_type' => 'project',
+                'entity_id' => $project_id,
+                'description' => 'Project updated: ' . (string)($data['projectTitle'] ?? ('Project #' . $project_id)),
+                'metadata' => [
+                    'project_id' => $project_id,
+                    'project_title' => $projectAfter['title'] ?? ($data['projectTitle'] ?? null),
+                    'project_field_changes' => $projectFieldChanges,
+                    'before_project' => $projectBefore,
+                    'after_project' => $projectAfter,
+                    'submitted_payload' => $data,
+                    'submitted_stages_count' => count($submittedStages),
+                    'submitted_substages_count' => $submittedSubstagesCount,
+                    'db_stages_count' => $dbStageCount,
+                    'db_substages_count' => $dbSubstageCount,
+                    'deleted_stage_ids' => $deletedStageIds,
+                    'updated_by' => $actorId,
+                    'actor' => $actor,
+                    'source' => 'ajax_handlers/update_projects.php'
+                ]
+            ]);
+        } catch (Throwable $logError) {
+            error_log('Project update global activity log failed: ' . $logError->getMessage());
         }
 
         $conn->commit();

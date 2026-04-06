@@ -38,6 +38,111 @@ let globalProjects = [];
 // Add a variable to track if we're editing a project
 let isEditMode = false;
 let currentProjectId = null;
+let isSubmittingProject = false;
+
+function ensureProjectSubmitLoaderStyles() {
+    if (document.getElementById('projectSubmitLoaderStyles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'projectSubmitLoaderStyles';
+    style.textContent = `
+        .project-submit-overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(1px);
+            z-index: 40;
+            border-radius: 16px;
+            pointer-events: all;
+        }
+
+        .project-submit-overlay.active {
+            display: flex;
+        }
+
+        .project-submit-loader {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #111827;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function ensureProjectSubmitOverlay() {
+    ensureProjectSubmitLoaderStyles();
+
+    const modalContainer = document.querySelector('#projectModal .modal-container');
+    if (!modalContainer) return null;
+
+    let overlay = modalContainer.querySelector('.project-submit-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'project-submit-overlay';
+        overlay.innerHTML = `
+            <div class="project-submit-loader">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span class="project-submit-text">Saving project...</span>
+            </div>
+        `;
+
+        const computedPosition = window.getComputedStyle(modalContainer).position;
+        if (!computedPosition || computedPosition === 'static') {
+            modalContainer.style.position = 'relative';
+        }
+        modalContainer.appendChild(overlay);
+    }
+
+    return overlay;
+}
+
+function setProjectSubmittingState(isSubmitting, mode = 'create') {
+    isSubmittingProject = isSubmitting;
+
+    const submitBtn = document.querySelector('#createProjectForm button[type="submit"]');
+    const closeBtn = document.getElementById('closeModal');
+    const cancelBtn = document.getElementById('cancelProject');
+    const overlay = ensureProjectSubmitOverlay();
+
+    if (submitBtn) {
+        if (!submitBtn.dataset.defaultHtml) {
+            submitBtn.dataset.defaultHtml = submitBtn.innerHTML;
+        }
+
+        submitBtn.disabled = isSubmitting;
+        if (isSubmitting) {
+            submitBtn.innerHTML = mode === 'update'
+                ? '<i class="fas fa-spinner fa-spin"></i> Updating Project...'
+                : '<i class="fas fa-spinner fa-spin"></i> Creating Project...';
+        } else {
+            submitBtn.innerHTML = submitBtn.dataset.defaultHtml;
+        }
+    }
+
+    if (closeBtn) closeBtn.disabled = isSubmitting;
+    if (cancelBtn) cancelBtn.disabled = isSubmitting;
+
+    if (overlay) {
+        const textEl = overlay.querySelector('.project-submit-text');
+        if (textEl) {
+            textEl.textContent = mode === 'update'
+                ? 'Project is updating. Please wait...'
+                : 'Project is adding. Please wait...';
+        }
+
+        overlay.classList.toggle('active', isSubmitting);
+    }
+}
 
 // Function to fetch project suggestions
 async function fetchProjectSuggestions() {
@@ -1306,12 +1411,18 @@ onDomReady(async function() {
         document.body.style.overflow = 'hidden';
     }
 
-    function closeModal(e) {
+    function closeModal(e, forceClose = false) {
         if (e) e.preventDefault();
+
+        if (isSubmittingProject && !forceClose) {
+            showNotification('Project save is in progress. Please wait...', 'error');
+            return;
+        }
         
         // Reset edit mode
         isEditMode = false;
         currentProjectId = null;
+        setProjectSubmittingState(false);
         
         // Reset form button and title
         const submitBtn = document.querySelector('#createProjectForm button[type="submit"]');
@@ -1400,9 +1511,13 @@ onDomReady(async function() {
     // Update the handleSubmit function
     async function handleSubmit(e) {
         e.preventDefault();
-        
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalBtnText = submitBtn.innerHTML;
+
+        if (isSubmittingProject) {
+            return;
+        }
+
+        const submitMode = (isEditMode && currentProjectId) ? 'update' : 'create';
+        setProjectSubmittingState(true, submitMode);
         
         try {
             if (isEditMode && currentProjectId) {
@@ -1421,15 +1536,16 @@ onDomReady(async function() {
                 await createStagesAndSubstages(projectData.project_id);
                 showNotification('Project created successfully!', 'success');
             }
-            
-        closeModal();
+
+            // Release submit lock before closing so modal closes automatically on success
+            setProjectSubmittingState(false, submitMode);
+            closeModal(null, true);
             
         } catch (error) {
             console.error('Error:', error);
             showNotification(error.message, 'error');
         } finally {
-            submitBtn.innerHTML = originalBtnText;
-            submitBtn.disabled = false;
+            setProjectSubmittingState(false, submitMode);
         }
     }
 
@@ -2187,9 +2303,31 @@ function formatDateForInput(dateString) {
     
     try {
         const raw = String(dateString).trim();
+        const pad = (n) => String(n).padStart(2, '0');
 
+        // Keep SQL-style datetime values as-is (already in IST from backend/session timezone)
         if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?$/.test(raw)) {
             return raw.replace(' ', 'T').slice(0, 16);
+        }
+
+        // Handle timezone-aware strings explicitly in IST to avoid browser local-time drift
+        if (/(Z|[+-]\d{2}:?\d{2})$/i.test(raw)) {
+            const utcDate = new Date(raw);
+            if (isNaN(utcDate.getTime())) {
+                console.error('Invalid timezone-aware date:', dateString);
+                return '';
+            }
+
+            const istOffsetMinutes = 330; // Asia/Kolkata UTC+05:30
+            const istDate = new Date(utcDate.getTime() + istOffsetMinutes * 60 * 1000);
+
+            const yyyy = istDate.getUTCFullYear();
+            const mm = pad(istDate.getUTCMonth() + 1);
+            const dd = pad(istDate.getUTCDate());
+            const hh = pad(istDate.getUTCHours());
+            const mi = pad(istDate.getUTCMinutes());
+
+            return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
         }
 
         const date = new Date(raw);
@@ -2198,7 +2336,6 @@ function formatDateForInput(dateString) {
             return '';
         }
 
-        const pad = (n) => String(n).padStart(2, '0');
         const yyyy = date.getFullYear();
         const mm = pad(date.getMonth() + 1);
         const dd = pad(date.getDate());

@@ -355,8 +355,26 @@ document.addEventListener('DOMContentLoaded', function() {
     // Helper function to format date
     function formatDate(dateString) {
         if (!dateString) return null;
-        const date = new Date(dateString);
-        return date.toISOString().slice(0, 19).replace('T', ' ');
+
+        const raw = String(dateString).trim();
+
+        // Preserve datetime-local values in local/IST wall time (no UTC shift)
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(raw)) {
+            const normalized = raw.slice(0, 16).replace('T', ' ');
+            return `${normalized}:00`;
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2})?$/.test(raw)) {
+            const normalized = raw.replace('T', ' ');
+            return normalized.length === 16 ? `${normalized}:00` : normalized;
+        }
+
+        // Fallback for other formats
+        const parsed = new Date(raw);
+        if (Number.isNaN(parsed.getTime())) return null;
+
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())} ${pad(parsed.getHours())}:${pad(parsed.getMinutes())}:00`;
     }
 
     // Validate dates

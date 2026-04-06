@@ -50,6 +50,55 @@ function normalizeDateTimeLocalToIst(?string $value): ?string {
     }
 }
 
+function insertGlobalActivityLog(PDO $pdo, array $log): void {
+    if (!tableExists($pdo, 'global_activity_logs')) {
+        return;
+    }
+
+    $availableCols = [];
+    $colsStmt = $pdo->query('SHOW COLUMNS FROM global_activity_logs');
+    foreach ($colsStmt->fetchAll(PDO::FETCH_ASSOC) as $col) {
+        if (!empty($col['Field'])) {
+            $availableCols[$col['Field']] = true;
+        }
+    }
+
+    $insertData = [
+        'user_id' => (int)($log['user_id'] ?? 0),
+        'action_type' => (string)($log['action_type'] ?? 'project_created'),
+        'entity_type' => (string)($log['entity_type'] ?? 'project'),
+        'entity_id' => isset($log['entity_id']) ? (int)$log['entity_id'] : null,
+        'description' => (string)($log['description'] ?? 'Project activity'),
+        'metadata' => isset($log['metadata'])
+            ? json_encode($log['metadata'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            : null,
+        'is_read' => 0,
+        'is_dismissed' => 0
+    ];
+
+    $cols = [];
+    $vals = [];
+    $params = [];
+    foreach ($insertData as $col => $val) {
+        if (!isset($availableCols[$col])) continue;
+        $cols[] = "`{$col}`";
+        $vals[] = '?';
+        $params[] = $val;
+    }
+    if (isset($availableCols['created_at'])) {
+        $cols[] = '`created_at`';
+        $vals[] = 'NOW()';
+    }
+
+    if (empty($cols)) {
+        return;
+    }
+
+    $sql = 'INSERT INTO global_activity_logs (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $vals) . ')';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+}
+
 try {
     $pdo->exec("SET time_zone = '+05:30'");
 
@@ -195,6 +244,38 @@ try {
         ':new_value' => json_encode($data),
         ':changed_by' => $_SESSION['user_id']  // Use session user ID
     ]);
+
+    // Log detailed create event in global_activity_logs
+    try {
+        insertGlobalActivityLog($pdo, [
+            'user_id' => (int)$_SESSION['user_id'],
+            'action_type' => 'project_created',
+            'entity_type' => 'project',
+            'entity_id' => (int)$projectId,
+            'description' => 'Project created: ' . (string)($data['projectTitle'] ?? ('Project #' . $projectId)),
+            'metadata' => [
+                'project_id' => (int)$projectId,
+                'project' => [
+                    'title' => $data['projectTitle'] ?? null,
+                    'description' => $data['projectDescription'] ?? null,
+                    'project_type' => $data['projectType'] ?? null,
+                    'category_id' => $data['projectCategory'] ?? null,
+                    'start_date' => $projectStartDate,
+                    'end_date' => $projectDueDate,
+                    'assigned_to' => $assignedTo,
+                    'client_name' => $data['client_name'] ?? null,
+                    'client_address' => $data['client_address'] ?? null,
+                    'project_location' => $data['project_location'] ?? null,
+                    'plot_area' => $data['plot_area'] ?? null,
+                    'contact_number' => $data['contact_number'] ?? null
+                ],
+                'created_by' => (int)$_SESSION['user_id'],
+                'source' => 'api/create_project.php'
+            ]
+        ]);
+    } catch (Throwable $logError) {
+        error_log('Project create activity log failed: ' . $logError->getMessage());
+    }
 
     // Commit transaction
     $pdo->commit();

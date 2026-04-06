@@ -15,6 +15,28 @@ header('Content-Type: application/json');
 // Include the correct database connection file
 require_once '../config/db_connect.php';
 
+function normalizeDateTimeForClient($value): ?string {
+    $raw = trim((string)($value ?? ''));
+    if ($raw === '' || $raw === '0000-00-00 00:00:00') {
+        return null;
+    }
+
+    if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/', $raw)) {
+        return strlen($raw) === 16 ? $raw . ':00' : $raw;
+    }
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
+        return $raw . ' 00:00:00';
+    }
+
+    try {
+        $dt = new DateTime($raw);
+        $dt->setTimezone(new DateTimeZone('Asia/Kolkata'));
+        return $dt->format('Y-m-d H:i:s');
+    } catch (Exception $e) {
+        return $raw;
+    }
+}
+
 // Get project ID from request
 $projectId = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
@@ -53,6 +75,8 @@ try {
         }
         
         error_log("Project assigned_to before conversion: " . var_export($project['assigned_to'], true));
+        $project['start_date'] = normalizeDateTimeForClient($project['start_date'] ?? null);
+        $project['end_date'] = normalizeDateTimeForClient($project['end_date'] ?? null);
         
         // Get stages
         $stageQuery = "SELECT * FROM project_stages WHERE project_id = :project_id AND deleted_at IS NULL ORDER BY stage_number";
@@ -64,6 +88,8 @@ try {
         // Get substages for each stage
         foreach ($stages as &$stage) {
             error_log("Stage ID " . $stage['id'] . " assigned_to before conversion: " . var_export($stage['assigned_to'], true));
+            $stage['start_date'] = normalizeDateTimeForClient($stage['start_date'] ?? null);
+            $stage['end_date'] = normalizeDateTimeForClient($stage['end_date'] ?? null);
             
             $substageQuery = "SELECT * FROM project_substages WHERE stage_id = :stage_id AND deleted_at IS NULL ORDER BY substage_number";
             $substageStmt = $pdo->prepare($substageQuery);
@@ -74,6 +100,8 @@ try {
             // Ensure assigned_to is always a string
             foreach ($substages as &$substage) {
                 error_log("Substage ID " . $substage['id'] . " assigned_to before conversion: " . var_export($substage['assigned_to'], true));
+                $substage['start_date'] = normalizeDateTimeForClient($substage['start_date'] ?? null);
+                $substage['end_date'] = normalizeDateTimeForClient($substage['end_date'] ?? null);
                 // Convert to string to prevent JS comparison issues
                 $substage['assigned_to'] = (string)$substage['assigned_to'];
                 error_log("Substage ID " . $substage['id'] . " assigned_to after conversion: " . var_export($substage['assigned_to'], true));
@@ -104,6 +132,8 @@ try {
         }
         
         error_log("Project assigned_to before conversion: " . var_export($project['assigned_to'], true));
+        $project['start_date'] = normalizeDateTimeForClient($project['start_date'] ?? null);
+        $project['end_date'] = normalizeDateTimeForClient($project['end_date'] ?? null);
         
         // Get stages
         $stageQuery = "SELECT * FROM project_stages WHERE project_id = ? AND deleted_at IS NULL ORDER BY stage_number";
@@ -115,6 +145,8 @@ try {
         $stages = [];
         while ($stage = $stageResult->fetch_assoc()) {
             error_log("Stage ID " . $stage['id'] . " assigned_to before conversion: " . var_export($stage['assigned_to'], true));
+            $stage['start_date'] = normalizeDateTimeForClient($stage['start_date'] ?? null);
+            $stage['end_date'] = normalizeDateTimeForClient($stage['end_date'] ?? null);
             
             // Ensure stage assigned_to is always a string
             $stage['assigned_to'] = (string)$stage['assigned_to'];
@@ -130,6 +162,8 @@ try {
             $substages = [];
             while ($substage = $substageResult->fetch_assoc()) {
                 error_log("Substage ID " . $substage['id'] . " assigned_to before conversion: " . var_export($substage['assigned_to'], true));
+                $substage['start_date'] = normalizeDateTimeForClient($substage['start_date'] ?? null);
+                $substage['end_date'] = normalizeDateTimeForClient($substage['end_date'] ?? null);
                 
                 // Ensure substage assigned_to is always a string
                 $substage['assigned_to'] = (string)$substage['assigned_to'];

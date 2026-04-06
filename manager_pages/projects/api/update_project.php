@@ -132,6 +132,57 @@ function removeMissingSubstagesForStage(PDO $pdo, string $table, array $columnsM
     $stmt->execute($params);
 }
 
+function fetchProjectSnapshot(PDO $pdo, int $projectId): ?array {
+    $stmt = $pdo->prepare('SELECT * FROM projects WHERE id = ? LIMIT 1');
+    $stmt->execute([$projectId]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+}
+
+function insertGlobalActivityLog(PDO $pdo, array $log): void {
+    if (!tableExists($pdo, 'global_activity_logs')) {
+        return;
+    }
+
+    $logCols = getColumnsMap($pdo, 'global_activity_logs');
+    $insertData = [
+        'user_id' => (int)($log['user_id'] ?? 0),
+        'action_type' => (string)($log['action_type'] ?? 'project_updated'),
+        'entity_type' => (string)($log['entity_type'] ?? 'project'),
+        'entity_id' => isset($log['entity_id']) ? (int)$log['entity_id'] : null,
+        'description' => (string)($log['description'] ?? 'Project updated'),
+        'metadata' => isset($log['metadata'])
+            ? json_encode($log['metadata'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            : null,
+        'is_read' => 0,
+        'is_dismissed' => 0
+    ];
+
+    $cols = [];
+    $vals = [];
+    $params = [];
+
+    foreach ($insertData as $col => $val) {
+        if (!isset($logCols[$col])) continue;
+        $cols[] = "`{$col}`";
+        $vals[] = ':' . $col;
+        $params[':' . $col] = $val;
+    }
+
+    if (isset($logCols['created_at'])) {
+        $cols[] = '`created_at`';
+        $vals[] = 'NOW()';
+    }
+
+    if (empty($cols)) {
+        return;
+    }
+
+    $sql = 'INSERT INTO global_activity_logs (' . implode(', ', $cols) . ') VALUES (' . implode(', ', $vals) . ')';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+}
+
 try {
     $payload = json_decode(file_get_contents('php://input'), true);
     if (!is_array($payload)) {
@@ -155,6 +206,7 @@ try {
     }
 
     $projectCols = getColumnsMap($pdo, 'projects');
+    $beforeProject = fetchProjectSnapshot($pdo, $projectId);
 
     $pdo->beginTransaction();
 
@@ -281,6 +333,46 @@ try {
                 );
             }
         }
+    }
+
+    // Detailed global activity log for project update
+    try {
+        $afterProject = fetchProjectSnapshot($pdo, $projectId);
+
+        $stageCount = 0;
+        $substageCount = 0;
+        if ($hasStagesTable) {
+            $stmtStageCount = $pdo->prepare('SELECT COUNT(*) FROM project_stages WHERE project_id = ?');
+            $stmtStageCount->execute([$projectId]);
+            $stageCount = (int)$stmtStageCount->fetchColumn();
+
+            if ($substageTable) {
+                $stmtSubCount = $pdo->prepare("SELECT COUNT(*) FROM {$substageTable} ss INNER JOIN project_stages ps ON ps.id = ss.stage_id WHERE ps.project_id = ?" . (isset($substageCols['deleted_at']) ? ' AND ss.deleted_at IS NULL' : ''));
+                $stmtSubCount->execute([$projectId]);
+                $substageCount = (int)$stmtSubCount->fetchColumn();
+            }
+        }
+
+        insertGlobalActivityLog($pdo, [
+            'user_id' => (int)$_SESSION['user_id'],
+            'action_type' => 'project_updated',
+            'entity_type' => 'project',
+            'entity_id' => $projectId,
+            'description' => 'Project updated: ' . (string)($project['title'] ?? ('Project #' . $projectId)),
+            'metadata' => [
+                'project_id' => $projectId,
+                'before_project' => $beforeProject,
+                'after_project' => $afterProject,
+                'submitted_project' => $project,
+                'submitted_stages' => $stages,
+                'stage_count' => $stageCount,
+                'substage_count' => $substageCount,
+                'updated_by' => (int)$_SESSION['user_id'],
+                'source' => 'manager_pages/projects/api/update_project.php'
+            ]
+        ]);
+    } catch (Throwable $logError) {
+        error_log('Project update activity log failed: ' . $logError->getMessage());
     }
 
     $pdo->commit();

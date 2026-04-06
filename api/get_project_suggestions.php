@@ -19,6 +19,30 @@ function hasColumn(PDO $pdo, string $table, string $column): bool {
     return $stmt ? (bool)$stmt->fetchColumn() : false;
 }
 
+function normalizeDateTimeForClient($value): ?string {
+    $raw = trim((string)($value ?? ''));
+    if ($raw === '' || $raw === '0000-00-00 00:00:00') {
+        return null;
+    }
+
+    // Preserve SQL DATETIME exactly as stored (already app-local time)
+    if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/', $raw)) {
+        return strlen($raw) === 16 ? $raw . ':00' : $raw;
+    }
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw)) {
+        return $raw . ' 00:00:00';
+    }
+
+    // ISO / timezone-aware fallback -> IST
+    try {
+        $dt = new DateTime($raw);
+        $dt->setTimezone(new DateTimeZone('Asia/Kolkata'));
+        return $dt->format('Y-m-d H:i:s');
+    } catch (Exception $e) {
+        return $raw;
+    }
+}
+
 try {
     $pdo->exec("SET time_zone = '+05:30'");
 
@@ -73,6 +97,9 @@ try {
     
     // For each project, get its stages and substages
     foreach ($projects as &$project) {
+        $project['start_date'] = normalizeDateTimeForClient($project['start_date'] ?? null);
+        $project['end_date'] = normalizeDateTimeForClient($project['end_date'] ?? null);
+
         // Ensure assigned_to is properly formatted
         if ($project['assigned_to'] === null) {
             $project['assigned_to'] = '0';
@@ -99,6 +126,9 @@ try {
         
         // For each stage, get its substages and files
         foreach ($stages as &$stage) {
+            $stage['start_date'] = normalizeDateTimeForClient($stage['start_date'] ?? null);
+            $stage['end_date'] = normalizeDateTimeForClient($stage['end_date'] ?? null);
+
             // Ensure assigned_to is properly formatted
             if ($stage['assigned_to'] === null) {
                 $stage['assigned_to'] = '0';
@@ -131,6 +161,9 @@ try {
             
             // Ensure substage assigned_to is properly formatted
             foreach ($substages as &$substage) {
+                $substage['start_date'] = normalizeDateTimeForClient($substage['start_date'] ?? null);
+                $substage['end_date'] = normalizeDateTimeForClient($substage['end_date'] ?? null);
+
                 if ($substage['assigned_to'] === null) {
                     $substage['assigned_to'] = '0';
                     $substage['assigned_to_name'] = 'Unassigned';

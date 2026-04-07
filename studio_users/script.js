@@ -1596,6 +1596,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     // ── Attendance ─────────────────────────────────────────────────────
                     'punch_in':                  { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-fingerprint',          label: 'Punched In'              },
                     'punch_out':                 { color: '#ef4444', bg: '#fff5f5', icon: 'fa-solid fa-right-from-bracket',   label: 'Punched Out'             },
+                    'update_attendance':         { color: '#8b5cf6', bg: '#faf5ff', icon: 'fa-solid fa-user-pen',             label: 'Attendance Modified'     },
+                    'attendance_geofence_approved': { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-circle-check',      label: 'Geofence Approved'       },
+                    'attendance_geofence_rejected': { color: '#dc2626', bg: '#fef2f2', icon: 'fa-solid fa-ban',               label: 'Geofence Rejected'       },
 
                     // ── Tasks ──────────────────────────────────────────────────────────
                     'task_assigned':             { color: '#8b5cf6', bg: '#f5f3ff', icon: 'fa-solid fa-list-check',           label: 'Task Assigned'           },
@@ -1647,6 +1650,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 const dateStr = logDate.toLocaleDateString([], {month:'short', day:'numeric'});
                 const fullTimeStr = `${dateStr} at ${timeStr}`;
 
+                let displayDescription = log.description;
+                if (log.action_type === 'update_attendance' && log._meta && log._meta.admin_name) {
+                    const loggedInName = window.loggedUserName || '';
+                    const aName = log._meta.admin_name;
+                    const tName = log._meta.target_name;
+                    const dDate = log._meta.date || '';
+                    const updates = log._meta.updates_string || '';
+                    
+                    if (aName.toLowerCase() === loggedInName.toLowerCase()) {
+                        displayDescription = `You modified attendance for ${tName} on ${dDate}. Updates: ${updates}.`;
+                    } else if (tName.toLowerCase() === loggedInName.toLowerCase()) {
+                        displayDescription = `${aName} modified your attendance on ${dDate}. Updates: ${updates}.`;
+                    } else {
+                        displayDescription = `${aName} modified attendance for ${tName} on ${dDate}. Updates: ${updates}.`;
+                    }
+                }
+
                 const overtimeText = hasOvertimeReport
                     ? `<br><span style="display:block; margin-top:4px; color:#9a3412;"><i class="fa-solid fa-business-time" style="margin-right:4px;"></i>Overtime: ${escapeHtml(log._meta.overtime_report)}</span>`
                     : '';
@@ -1662,7 +1682,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <i class="${cfg.icon}" style="color:${cfg.color}; font-size:0.85rem;"></i>
                         <h4 style="margin:0; color:#1e293b; font-size:0.88rem; font-weight:600;">${cfg.label}${unreadDot}</h4>
                     </div>
-                    <p style="margin:0 0 6px; font-size:0.8rem; color:#475569; line-height:1.4;">${log.description}${overtimeText}</p>
+                    <p style="margin:0 0 6px; font-size:0.8rem; color:#475569; line-height:1.4;">${displayDescription}${overtimeText}</p>
                     <span class="notif-time" style="font-size:0.7rem; color:#94a3b8;"><i class="fa-regular fa-clock"></i> ${fullTimeStr}</span>
                 </div>`;
             }

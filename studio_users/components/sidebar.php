@@ -219,7 +219,8 @@ function canShow($menuId, $perms) {
         $showPwReset = canShow('password-reset-mng', $_permissions);
         $showWorkReport = canShow('employee-work-report', $_permissions);
         $showEmployeesProfile = canShow('employees-profile', $_permissions);
-        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile):
+        $showEmployeesAttendance = canShow('employees-attendance', $_permissions);
+        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesAttendance):
         ?>
             <div class="menu-title">Management</div>
             <?php if ($showLeaveApp): ?>
@@ -311,6 +312,15 @@ function canShow($menuId, $perms) {
                 <div class="tooltip">Employees Profile</div>
             </a>
             <?php endif; ?>
+            <?php if ($showEmployeesAttendance): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/employees_attendance/index.php'; return false;"
+                class="menu-item" data-page="employees-attendance">
+                <i data-lucide="user-check" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Employees Attendance</span>
+                <div class="tooltip">Employees Attendance</div>
+            </a>
+            <?php endif; ?>
         <?php endif; ?>
 
         <div class="menu-title">System</div>
@@ -337,6 +347,15 @@ function canShow($menuId, $perms) {
             <i data-lucide="shield-check" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Project Permission</span>
             <div class="tooltip">Project Permission</div>
+        </a>
+        <?php endif; ?>
+
+        <?php if (canShow('attendance-action-permissions', $_permissions)): ?>
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'attendance_permissions_access.php'; return false;"
+            class="menu-item" data-page="attendance-action-permissions">
+            <i data-lucide="user-check" class="menu-icon" style="width:17px;height:17px;"></i>
+            <span class="menu-text">Attendance Action Permission</span>
+            <div class="tooltip">Attendance Action Permission</div>
         </a>
         <?php endif; ?>
 

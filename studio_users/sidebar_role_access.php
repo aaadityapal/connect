@@ -53,11 +53,13 @@ $menu_items = [
         'travel-exp-settings' => ['label' => 'Travel Expense Settings', 'icon' => 'settings'],
         'password-reset-mng' => ['label' => 'Password Reset', 'icon' => 'key-round'],
         'employee-work-report' => ['label' => 'Employee Work Report', 'icon' => 'file-text'],
-        'employees-profile' => ['label' => 'Employees Profile', 'icon' => 'users']
+        'employees-profile' => ['label' => 'Employees Profile', 'icon' => 'users'],
+        'employees-attendance' => ['label' => 'Employees Attendance', 'icon' => 'user-check']
     ],
     'System' => [
         'settings' => ['label' => 'Settings', 'icon' => 'settings-2'],
         'project-permissions' => ['label' => 'Project Permission', 'icon' => 'shield-check'],
+        'attendance-action-permissions' => ['label' => 'Attendance Action Permission', 'icon' => 'user-check'],
         'help' => ['label' => 'Help & Support', 'icon' => 'help-circle'],
         'logout' => ['label' => 'Logout', 'icon' => 'power']
     ]

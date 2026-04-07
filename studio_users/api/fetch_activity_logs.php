@@ -15,10 +15,10 @@ $userId = $_SESSION['user_id'];
 try {
     $stmt = $pdo->prepare("SELECT id, action_type, description, created_at, is_read, metadata
                            FROM global_activity_logs 
-                           WHERE user_id = ? AND is_dismissed = 0
+                           WHERE (user_id = ? OR (entity_id = ? AND entity_type = 'attendance' AND action_type = 'update_attendance')) AND is_dismissed = 0
                            ORDER BY created_at DESC 
                            LIMIT 50");
-    $stmt->execute([$userId]);
+    $stmt->execute([$userId, $userId]);
     $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode(['status' => 'success', 'data' => $logs]);

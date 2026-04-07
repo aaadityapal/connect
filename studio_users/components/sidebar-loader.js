@@ -39,6 +39,7 @@
             }
             return 'sidebar-role-access';
         }
+        if (path.includes('/attendance_permissions_access.php')) return 'attendance-action-permissions';
         if (path.includes('/project_permissions_access.php')) return 'project-permissions';
 
         // ── Sub-directory matches (checked before filename) ──
@@ -55,6 +56,7 @@
         if (path.includes('/manager_pages/travel_expenses_approval/')) return 'travel-exp-approval-mng';
         if (path.includes('/manager_pages/password_reset/')) return 'password-reset-mng';
         if (path.includes('/manager_pages/employees_profile/')) return 'employees-profile';
+        if (path.includes('/manager_pages/employees_attendance/')) return 'employees-attendance';
         if (path.includes('/manager_pages/projects/')) return 'projects';
         if (path.includes('/projects'))           return 'projects';
         if (path.includes('/site-updates'))       return 'site-updates';
@@ -72,6 +74,7 @@
         const fileMap = {
             'index'           : 'index',
             'employees-profile' : 'employees-profile',
+            'employees-attendance': 'employees-attendance',
             'travel-expenses' : 'travel-expenses',
             'overtime'        : 'overtime',
             'projects'        : 'projects',
@@ -85,6 +88,7 @@
             'sidebar_role_access' : 'sidebar-role-access',
             'project_permissions' : 'project-permissions',
             'project_permissions_access' : 'project-permissions',
+            'attendance_permissions_access' : 'attendance-action-permissions',
             'travel_expenses_mapping' : 'travel-exp-mapping',
         };
 

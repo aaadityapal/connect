@@ -38,7 +38,8 @@ try {
     // Fetch active users based on user filter
     if (!empty($filterUserId)) {
         $stmtUsers = $pdo->prepare("
-            SELECT u.id, u.unique_id, u.username, u.email, u.role, s.shift_name, s.start_time, s.end_time 
+            SELECT u.id, u.unique_id, u.username, u.email, u.role, u.profile_picture,
+                   s.shift_name, s.start_time, s.end_time 
             FROM users u 
             LEFT JOIN (
                 SELECT user_id, shift_id 
@@ -51,7 +52,8 @@ try {
         $stmtUsers->execute([$filterUserId]);
     } else {
         $stmtUsers = $pdo->prepare("
-            SELECT u.id, u.unique_id, u.username, u.email, u.role, s.shift_name, s.start_time, s.end_time 
+            SELECT u.id, u.unique_id, u.username, u.email, u.role, u.profile_picture,
+                   s.shift_name, s.start_time, s.end_time 
             FROM users u 
             LEFT JOIN (
                 SELECT user_id, shift_id 
@@ -80,21 +82,31 @@ try {
         $attendanceData[$row['user_id']][$row['date']] = $row;
     }
 
-    // Fetch approved leaves overlapping the date
-    $stmtLeave = $pdo->prepare("SELECT user_id, start_date, end_date FROM leave_request WHERE start_date <= ? AND end_date >= ? AND LOWER(status) = 'approved'");
+    // Fetch approved leaves overlapping the date range, with leave type name
+    $stmtLeave = $pdo->prepare("
+        SELECT lr.user_id, lr.start_date, lr.end_date, 
+               COALESCE(lt.name, 'Leave') AS leave_type_name
+        FROM leave_request lr
+        LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+        WHERE lr.start_date <= ? AND lr.end_date >= ? AND LOWER(lr.status) = 'approved'
+    ");
     $stmtLeave->execute([$toDate, $fromDate]);
     $leaveData = [];
     while($row = $stmtLeave->fetch(PDO::FETCH_ASSOC)) {
         $leaveData[] = $row;
     }
 
+    $totalActiveUsers = count($users);   // raw active user count (not user × days)
+
     $augmentedUsers = [];
     $stats = [
-        'Total' => 0,
-        'On Time' => 0,
-        'Absent' => 0,
-        'Late' => 0,
-        'On Leave' => 0
+        'Total'           => 0,
+        'Present'         => 0,   // On Time + Late (anyone who punched in)
+        'On Time'         => 0,
+        'Late'            => 0,
+        'Absent'          => 0,
+        'On Leave'        => 0,
+        'Geofence Issues' => 0    // punch_in OR punch_out outside geofence
     ];
 
     $currentTime = date('H:i:s');
@@ -127,16 +139,25 @@ try {
                 $punchInTime = $att['punch_in'] ?: ($dateIter === $currentDateStr ? $currentTime : '00:00:00');
                 
                 $baseStart = $user['start_time'] ?: '10:00:00';
-                // Apply 15 minute grace period offset globally
-                $lateThreshold = date('H:i:s', strtotime('+15 minutes', strtotime($baseStart)));
+                // 15-minute grace period — compare at MINUTE granularity only.
+                // Stripping seconds ensures 09:15:59 is treated as 09:15 (on-time),
+                // and only 09:16:00+ (→ 09:16) is considered Late.
+                $lateThreshold = date('H:i', strtotime('+15 minutes', strtotime($baseStart)));
+                $punchInMinute = date('H:i', strtotime($punchInTime)); // strip seconds
                 
-                if ($punchInTime > $lateThreshold) {
+                if ($punchInMinute > $lateThreshold) {
                     $status = 'Late';
                     $stats['Late']++;
                 } else {
                     $status = 'On Time';
                     $stats['On Time']++;
                 }
+                $stats['Present']++;
+
+                // Count geofence issues (outside punch-in or punch-out)
+                $hasGeoIssue = !empty(trim((string)($att['punch_in_outside_reason'] ?? '')))
+                             || !empty(trim((string)($att['punch_out_outside_reason'] ?? '')));
+                if ($hasGeoIssue) $stats['Geofence Issues']++;
                 
                 $userRow['punch_in_location'] = $att['address'] ?? '-';
                 $userRow['punch_out_location'] = $att['punch_out_address'] ?? '-';
@@ -159,7 +180,16 @@ try {
                 }
                 
                 if ($onLeave) {
+                    // Find the matching leave row to extract the type name
+                    $leaveTypeName = 'On Leave';
+                    foreach($leaveData as $ld) {
+                        if ($ld['user_id'] == $uid && $dateIter >= $ld['start_date'] && $dateIter <= $ld['end_date']) {
+                            $leaveTypeName = $ld['leave_type_name'] ?: 'On Leave';
+                            break;
+                        }
+                    }
                     $status = 'On Leave';
+                    $userRow['leave_type_name'] = $leaveTypeName;
                     $stats['On Leave']++;
                 } else {
                     if ($dateIter > $currentDateStr) {
@@ -181,6 +211,9 @@ try {
                 $userRow['work_report'] = '-';
                 $userRow['punch_in_outside_reason'] = null;
                 $userRow['punch_out_outside_reason'] = null;
+                if (!isset($userRow['leave_type_name'])) {
+                    $userRow['leave_type_name'] = null;
+                }
             }
             
             $userRow['attendance_status'] = $status;
@@ -206,9 +239,10 @@ try {
     });
 
     echo json_encode([
-        'success' => true, 
-        'data' => $augmentedUsers,
-        'stats' => $stats,
+        'success'                  => true,
+        'data'                     => $augmentedUsers,
+        'stats'                    => $stats,
+        'total_active_users'       => $totalActiveUsers,
         'current_user_permissions' => $currentUserPermissions
     ]);
 

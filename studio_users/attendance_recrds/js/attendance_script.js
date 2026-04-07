@@ -208,8 +208,26 @@ document.addEventListener('DOMContentLoaded', () => {
                  statusBadge = `<span class="ws-status-badge" style="background:#f3f4f6;color:#374151">${r.status || 'N/A'}</span>`;
             }
 
-            const inPhoto = r.punch_in_photo ? `../../${r.punch_in_photo}` : 'https://placehold.co/400x400/e9ecef/4b5563?text=No+Photo';
-            const outPhoto = r.punch_out_photo ? `../../${r.punch_out_photo}` : 'https://placehold.co/400x400/e9ecef/4b5563?text=No+Photo';
+            // ── Three-level photo fallback (mirrors attendance_visualizer.php) ────────
+            // Root of connect/ is ../../ from this page's location.
+            // Level 1: primary path (new records: 'uploads/attendance/filename.jpg')
+            // Level 2: fallback path (old bare-filename records: prepend 'uploads/attendance/')
+            // Level 3: placeholder (if both 404)
+            const NO_PHOTO     = 'https://placehold.co/400x400/e9ecef/4b5563?text=No+Photo';
+            const ROOT         = '../../';
+
+            const inPrimary    = r.punch_in_photo_primary  ? (ROOT + r.punch_in_photo_primary)  : null;
+            const inFallback   = r.punch_in_photo_fallback ? (ROOT + r.punch_in_photo_fallback) : null;
+            const outPrimary   = r.punch_out_photo_primary  ? (ROOT + r.punch_out_photo_primary)  : null;
+            const outFallback  = r.punch_out_photo_fallback ? (ROOT + r.punch_out_photo_fallback) : null;
+
+            const inPhoto  = inPrimary  || NO_PHOTO;
+            const outPhoto = outPrimary || NO_PHOTO;
+
+            // Helper to build onerror chain identical to visualizer
+            const makeOnerror = (fallbackSrc) => fallbackSrc
+                ? `this.onerror=function(){this.src='${NO_PHOTO}';this.onerror=null;};this.src='${fallbackSrc}';`
+                : `this.src='${NO_PHOTO}';this.onerror=null;`;
             
             let inAddressFull = r.address || r.location || 'Unknown location';
             let outAddressFull = r.punch_out_address || r.address || r.location || 'Unknown location';
@@ -237,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="ws-punch-cell">
                                     <span class="ws-time">${formatTime(r.punch_in)}</span>
                                     <div class="ws-punch-image-wrapper ws-tooltip-trigger ws-in-img" data-img="${inPhoto}" data-time="${formatTime(r.punch_in)}">
-                                        <img src="${inPhoto}" alt="In" class="ws-punch-avatar">
+                                        <img src="${inPhoto}" alt="In" class="ws-punch-avatar" onerror="${makeOnerror(inFallback)}">
                                         <div class="ws-tooltip">View Punch In Selfie</div>
                                     </div>
                                 </div>
@@ -259,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 <div class="ws-punch-cell">
                                     <span class="ws-time">${formatTime(r.punch_out)}</span>
                                     <div class="ws-punch-image-wrapper ws-tooltip-trigger ws-out-img" data-img="${outPhoto}" data-time="${formatTime(r.punch_out)}">
-                                        <img src="${outPhoto}" alt="Out" class="ws-punch-avatar">
+                                        <img src="${outPhoto}" alt="Out" class="ws-punch-avatar" onerror="${makeOnerror(outFallback)}">
                                         <div class="ws-tooltip">View Punch Out Selfie</div>
                                     </div>
                                 </div>
@@ -283,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tr.innerHTML = `
                 <td class="ws-td ws-font-medium">${dateStr}</td>
-                <td class="ws-td ws-text-subtle">${r.shift_time || '09:00 AM - 06:00 PM'}</td>
+                <td class="ws-td ws-text-subtle">${r.shift_time || '<span style="color:#94a3b8;font-style:italic;">No Shift</span>'}</td>
                 ${inCell}
                 ${inLocCell}
                 ${outCell}
@@ -356,7 +374,12 @@ document.addEventListener('DOMContentLoaded', () => {
             el.addEventListener('click', function() {
                 const tr = this.closest('tr');
                 const locEl = tr.querySelector('.ws-in-loc');
-                openPunchModal('Punch In Selfie', this.dataset.time, this.dataset.img, {
+                // Use the actual resolved src from the thumbnail img (already corrected by onerror chain)
+                // This ensures the modal gets the URL that is KNOWN to work, not the failing primary URL
+                const thumbImg = this.querySelector('img');
+                const resolvedSrc = thumbImg ? thumbImg.src : this.dataset.img;
+                const fallbackSrc = this.dataset.imgFallback || null;
+                openPunchModal('Punch In Selfie', this.dataset.time, resolvedSrc, fallbackSrc, {
                     title: locEl ? locEl.dataset.title : 'Unknown',
                     desc: locEl ? locEl.dataset.desc : 'No data'
                 });
@@ -367,7 +390,10 @@ document.addEventListener('DOMContentLoaded', () => {
             el.addEventListener('click', function() {
                 const tr = this.closest('tr');
                 const locEl = tr.querySelector('.ws-out-loc');
-                openPunchModal('Punch Out Selfie', this.dataset.time, this.dataset.img, {
+                const thumbImg = this.querySelector('img');
+                const resolvedSrc = thumbImg ? thumbImg.src : this.dataset.img;
+                const fallbackSrc = this.dataset.imgFallback || null;
+                openPunchModal('Punch Out Selfie', this.dataset.time, resolvedSrc, fallbackSrc, {
                     title: locEl ? locEl.dataset.title : 'Unknown',
                     desc: locEl ? locEl.dataset.desc : 'No data'
                 });

@@ -191,9 +191,14 @@ try {
         if (!empty($rec['punch_in'])) {
             $shift_start = $rec['shift_start_time'] ?? null;
             if ($shift_start) {
-                $shiftStartTimestamp = strtotime($current_date_str . ' ' . $shift_start);
-                $punchInTimestamp = strtotime($current_date_str . ' ' . $rec['punch_in']);
-                if ($punchInTimestamp > ($shiftStartTimestamp + 900) && !$is_morning_leave_waived) {
+                // Compare at MINUTE granularity — strip seconds from both sides.
+                // This ensures 09:15:59 is treated the same as 09:15:00 (on-time).
+                // Only 09:16:xx+ (→ 09:16) exceeds the 15-min grace period and is Late.
+                $shiftStartMinute = date('H:i', strtotime($current_date_str . ' ' . $shift_start));
+                $lateAfterMinute  = date('H:i', strtotime('+15 minutes', strtotime($current_date_str . ' ' . $shift_start)));
+                $punchInMinute    = date('H:i', strtotime($current_date_str . ' ' . $rec['punch_in']));
+
+                if ($punchInMinute > $lateAfterMinute && !$is_morning_leave_waived) {
                     $rec['status'] = 'Late';
                 } elseif ($rec['status'] !== 'Leave' && $rec['status'] !== 'Holiday') {
                     $rec['status'] = 'On Time';
@@ -206,6 +211,38 @@ try {
             continue;
         }
         
+        // ── Build human-readable shift_time for the JS table column ─────────
+        if (!empty($rec['shift_start_time']) && !empty($rec['shift_end_time'])) {
+            $rec['shift_time'] = date('h:i A', strtotime($rec['shift_start_time']))
+                               . ' - '
+                               . date('h:i A', strtotime($rec['shift_end_time']));
+        } else {
+            $rec['shift_time'] = null; // JS will show its fallback placeholder
+        }
+
+        // ── Dual-path photo resolution (mirrors attendance_visualizer.php logic) ─
+        // New records store full path: 'uploads/attendance/filename.jpg' 
+        // Old records store just the filename: 'filename.jpg'
+        // Strategy: primary = raw DB value, fallback = 'uploads/attendance/' + raw DB value
+        // The JS tries primary first; if it fails (404), tries fallback; if that fails, shows placeholder.
+        if (!empty($rec['punch_in_photo'])) {
+            $rawIn = $rec['punch_in_photo'];
+            $rec['punch_in_photo_primary']  = $rawIn;  // works for new records (already has path)
+            $rec['punch_in_photo_fallback'] = 'uploads/attendance/' . basename($rawIn); // works for old bare-filename records
+        } else {
+            $rec['punch_in_photo_primary']  = null;
+            $rec['punch_in_photo_fallback'] = null;
+        }
+
+        if (!empty($rec['punch_out_photo'])) {
+            $rawOut = $rec['punch_out_photo'];
+            $rec['punch_out_photo_primary']  = $rawOut;
+            $rec['punch_out_photo_fallback'] = 'uploads/attendance/' . basename($rawOut);
+        } else {
+            $rec['punch_out_photo_primary']  = null;
+            $rec['punch_out_photo_fallback'] = null;
+        }
+
         $records[] = $rec;
     }
     
@@ -260,16 +297,18 @@ try {
     $chart_data = [];
 
     foreach ($records as &$record) { // Reference to modify $record
-        // Auto-calculate working hours if punch_in and punch_out exist but working_hours is empty
-        if ((empty($record['working_hours']) || $record['working_hours'] === '00:00:00') && !empty($record['punch_in']) && !empty($record['punch_out'])) {
-            $in = strtotime($record['punch_in']);
-            $out = strtotime($record['punch_out']);
-            if ($out > $in) {
-                $diff = $out - $in;
-                $h = floor($diff / 3600);
-                $m = floor(($diff / 60) % 60);
-                $record['working_hours'] = str_pad($h, 2, '0', STR_PAD_LEFT) . ':' . str_pad($m, 2, '0', STR_PAD_LEFT) . ':00';
-            }
+        // Always recalculate working hours from actual punch times (DB value can be stale/wrong)
+        if (!empty($record['punch_in']) && !empty($record['punch_out'])) {
+            // Anchor time strings to the record date for reliable strtotime parsing
+            $baseDate = $record['date'];
+            $in  = strtotime($baseDate . ' ' . $record['punch_in']);
+            $out = strtotime($baseDate . ' ' . $record['punch_out']);
+            // Handle midnight-crossing shifts (punch_out on next calendar day)
+            if ($out <= $in) $out += 86400;
+            $diff = $out - $in;
+            $h = floor($diff / 3600);
+            $m = floor(($diff % 3600) / 60);
+            $record['working_hours'] = str_pad($h, 2, '0', STR_PAD_LEFT) . ':' . str_pad($m, 2, '0', STR_PAD_LEFT) . ':00';
         }
         
         // FIX: Only count as present if they actually punched in 

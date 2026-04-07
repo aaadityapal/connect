@@ -439,10 +439,27 @@ if (!isset($_SESSION['user_id'])) {
 // --- Selfie Modal Setup ---
 const punchModalOverlay = document.getElementById('punchModal');
 const punchModalCloseBtn = document.querySelector('.ws-modal-close');
-window.openPunchModal = function(type, time, imgSrc, addressObj) {
+window.openPunchModal = function(type, time, imgSrc, fallbackSrc, addressObj) {
     document.getElementById('punchModalTitle').textContent = type;
     document.getElementById('punchModalTime').textContent = time;
-    document.getElementById('punchModalImg').src = imgSrc;
+
+    // Set modal image with same three-level fallback as thumbnails
+    const modalImg = document.getElementById('punchModalImg');
+    const NO_PHOTO = 'https://placehold.co/400x400/e9ecef/4b5563?text=No+Photo';
+    modalImg.src = imgSrc || NO_PHOTO;
+    modalImg.onerror = function() {
+        if (fallbackSrc && this.src !== fallbackSrc) {
+            this.src = fallbackSrc;
+            this.onerror = function() {
+                this.src = NO_PHOTO;
+                this.onerror = null;
+            };
+        } else {
+            this.src = NO_PHOTO;
+            this.onerror = null;
+        }
+    };
+
     document.getElementById('punchModalLocTitle').textContent = addressObj.title;
     document.getElementById('punchModalLocDesc').textContent = addressObj.desc;
     punchModalOverlay.classList.add('active');

@@ -474,42 +474,52 @@ $htmlDateValue = date('Y-m-d');
 
                 <!-- Statistics Grid -->
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon icon-total">
-                            <i data-lucide="users" style="width: 20px; height: 20px;"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 class="stat-value" id="statTotal">-</h3>
-                            <span class="stat-label">Total Staff</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
+
+                    <!-- Card 1: Present -->
+                    <div class="stat-card" onclick="openStatsModal('present')" style="cursor:pointer;" title="View present employees">
                         <div class="stat-icon icon-present">
-                            <i data-lucide="check-circle" style="width: 20px; height: 20px;"></i>
+                            <i data-lucide="user-check" style="width: 20px; height: 20px;"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 class="stat-value" id="statOnTime">-</h3>
-                            <span class="stat-label">On Time</span>
+                            <h3 class="stat-value" id="statPresent" style="font-size: 1.1rem;">-</h3>
+                            <span class="stat-label">Present</span>
+                            <span id="statPresentSub" style="font-size: 0.68rem; color: #94a3b8; margin-top: 1px; display: block;"></span>
                         </div>
                     </div>
-                    <div class="stat-card">
+
+                    <!-- Card 2: On Leave -->
+                    <div class="stat-card" onclick="openStatsModal('on-leave')" style="cursor:pointer;" title="View employees on leave">
+                        <div class="stat-icon icon-total" style="background: linear-gradient(135deg,#818cf8 0%,#6366f1 100%);">
+                            <i data-lucide="calendar-off" style="width: 20px; height: 20px;"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 class="stat-value" id="statOnLeave">-</h3>
+                            <span class="stat-label">On Leave</span>
+                        </div>
+                    </div>
+
+                    <!-- Card 3: Late Arrivals -->
+                    <div class="stat-card" onclick="openStatsModal('late')" style="cursor:pointer;" title="View late arrivals">
                         <div class="stat-icon icon-late">
                             <i data-lucide="clock-alert" style="width: 20px; height: 20px;"></i>
                         </div>
                         <div class="stat-info">
                             <h3 class="stat-value" id="statLate">-</h3>
-                            <span class="stat-label">Late</span>
+                            <span class="stat-label">Late Arrivals</span>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon icon-absent">
-                            <i data-lucide="user-x" style="width: 20px; height: 20px;"></i>
+
+                    <!-- Card 4: Geofence Issues -->
+                    <div class="stat-card" onclick="openStatsModal('geofence')" style="cursor:pointer;" title="View geofence issues">
+                        <div class="stat-icon icon-absent" style="background: linear-gradient(135deg,#f97316 0%,#ea580c 100%);">
+                            <i data-lucide="map-pin-off" style="width: 20px; height: 20px;"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 class="stat-value" id="statAbsent">-</h3>
-                            <span class="stat-label">Absent</span>
+                            <h3 class="stat-value" id="statGeofence">-</h3>
+                            <span class="stat-label">Geofence Issues</span>
                         </div>
                     </div>
+
                 </div>
 
                 <!-- Filters -->
@@ -546,6 +556,19 @@ $htmlDateValue = date('Y-m-d');
                         <input type="date" id="toDate" class="filter-input" value="<?php echo $htmlDateValue; ?>">
                     </div>
 
+                        <!-- Export Buttons -->
+                        <div class="filter-group" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; min-width: 120px;">
+                            <span class="filter-label" style="opacity:0;">Export</span>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" id="exportPdfBtn" style="background: #ef4444; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; transition: background 0.2s;">
+                                    <i data-lucide="file-text" style="width: 16px; height: 16px;"></i> PDF
+                                </button>
+                                <button type="button" id="exportExcelBtn" style="background: #22c55e; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; transition: background 0.2s;">
+                                    <i data-lucide="file-spreadsheet" style="width: 16px; height: 16px;"></i> Excel
+                                </button>
+                            </div>
+                        </div>
+
                     <div class="filter-group" style="flex: 1; min-width: 150px;">
                         <span class="filter-label">Quick Search</span>
                         <div class="search-input-wrapper">
@@ -581,6 +604,9 @@ $htmlDateValue = date('Y-m-d');
                         </tbody>
                     </table>
                 </div>
+
+                <!-- Pagination Controls -->
+                <div id="paginationContainer" style="margin-top: 0.75rem;"></div>
             </div>
             
             <!-- Dynamic Map location Modal Overlay -->
@@ -670,6 +696,7 @@ $htmlDateValue = date('Y-m-d');
             <!-- Include Action Modals architecture -->
             <?php include 'modals/view_details_modal.php'; ?>
             <?php include 'modals/edit_attendance_modal.php'; ?>
+            <?php include 'modals/stats_detail_modal.php'; ?>
             
         </main>
     </div>
@@ -679,6 +706,14 @@ $htmlDateValue = date('Y-m-d');
         window.SIDEBAR_BASE_PATH = '../../studio_users/';
     </script>
     <script src="../../studio_users/components/sidebar-loader.js"></script>
+
+    <!-- PDF export libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Excel export library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <script src="js/script.js"></script>
     <script>
         lucide.createIcons();

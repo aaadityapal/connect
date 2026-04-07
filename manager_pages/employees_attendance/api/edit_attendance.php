@@ -72,15 +72,17 @@ try {
     $punchInPhoto = null;
     if (isset($_FILES['punch_in_photo']) && $_FILES['punch_in_photo']['error'] === UPLOAD_ERR_OK) {
         $ext = strtolower(pathinfo($_FILES['punch_in_photo']['name'], PATHINFO_EXTENSION));
-        $punchInPhoto = $userId . '_' . $dateStr . '_' . time() . '.' . $ext;
-        move_uploaded_file($_FILES['punch_in_photo']['tmp_name'], $uploadDir . $punchInPhoto);
+        $filename = $userId . '_' . $dateStr . '_' . time() . '.' . $ext;
+        move_uploaded_file($_FILES['punch_in_photo']['tmp_name'], $uploadDir . $filename);
+        $punchInPhoto = 'uploads/attendance/' . $filename; // store full web-relative path
     }
 
     $punchOutPhoto = null;
     if (isset($_FILES['punch_out_photo']) && $_FILES['punch_out_photo']['error'] === UPLOAD_ERR_OK) {
         $ext = strtolower(pathinfo($_FILES['punch_out_photo']['name'], PATHINFO_EXTENSION));
-        $punchOutPhoto = $userId . '_' . $dateStr . '_' . (time() + 1) . '.' . $ext;
-        move_uploaded_file($_FILES['punch_out_photo']['tmp_name'], $uploadDir . $punchOutPhoto);
+        $filename = $userId . '_' . $dateStr . '_' . (time() + 1) . '.' . $ext;
+        move_uploaded_file($_FILES['punch_out_photo']['tmp_name'], $uploadDir . $filename);
+        $punchOutPhoto = 'uploads/attendance/' . $filename; // store full web-relative path
     }
 
     $pdo->beginTransaction();

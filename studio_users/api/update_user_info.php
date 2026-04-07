@@ -9,9 +9,29 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once '../../config/db_connect.php';
 require_once 'activity_helper.php';
+require_once '../../includes/profile_completion_helper.php';
 
 $userId = $_SESSION['user_id'];
 $data = $_POST;
+
+function sanitizeInputValue($value) {
+    if (is_array($value)) return $value;
+    return trim(strip_tags((string)$value));
+}
+
+function hasAlphaNumericContent($value): bool {
+    return (bool)preg_match('/[\p{L}\p{N}]/u', (string)$value);
+}
+
+function isValidPhoneValue($value): bool {
+    $digits = preg_replace('/\D+/', '', (string)$value);
+    $len = strlen($digits);
+    return $len >= 10 && $len <= 15;
+}
+
+function isValidPostalValue($value): bool {
+    return (bool)preg_match('/^[A-Za-z0-9\-\s]{4,10}$/', (string)$value);
+}
 
 try {
     // ── Pre-fetch: Get current values to detect changes ──
@@ -31,6 +51,8 @@ try {
     $updateParts = [];
     $params = [];
     $changesLog = [];
+    $errors = [];
+    $cleanData = [];
 
     // Helper to make field names human-readable
     function formatFieldName($f) {
@@ -51,8 +73,91 @@ try {
     }
 
     foreach ($allowedFields as $field) {
-        if (isset($data[$field])) {
-            $newVal  = $data[$field];
+        if (!isset($data[$field])) {
+            continue;
+        }
+
+        $value = sanitizeInputValue($data[$field]);
+
+        // Reject special-characters-only values for human-readable text fields
+        $textFields = [
+            'bio', 'nationality', 'languages', 'address', 'city', 'state', 'country',
+            'emergency_contact_name', 'skills', 'interests'
+        ];
+
+        if ($value !== '' && in_array($field, $textFields, true) && !hasAlphaNumericContent($value)) {
+            $errors[] = formatFieldName($field) . ' contains only special characters.';
+        }
+
+        if (($field === 'phone_number' || $field === 'phone' || $field === 'emergency_contact_phone') && $value !== '') {
+            if (!isValidPhoneValue($value)) {
+                $errors[] = formatFieldName($field) . ' must be a valid phone number.';
+            }
+        }
+
+        if ($field === 'postal_code' && $value !== '') {
+            if (!isValidPostalValue($value)) {
+                $errors[] = 'Postal Code must be 4-10 alphanumeric characters.';
+            }
+        }
+
+        if ($field === 'social_media' && $value !== '') {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                foreach ($decoded as $platform => $url) {
+                    $decoded[$platform] = sanitizeInputValue($url);
+                }
+                $value = json_encode($decoded, JSON_UNESCAPED_UNICODE);
+            } else {
+                // Keep social links optional and non-blocking.
+                $value = '';
+            }
+        }
+
+        if ($field === 'emergency_contact' && $value !== '') {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                foreach ($decoded as $idx => $contact) {
+                    if (!is_array($contact)) continue;
+                    $name = sanitizeInputValue($contact['name'] ?? '');
+                    $phone = sanitizeInputValue($contact['phone'] ?? '');
+                    $note = sanitizeInputValue($contact['note'] ?? '');
+
+                    if ($name !== '' && !hasAlphaNumericContent($name)) {
+                        $errors[] = 'Emergency Contact Name in row ' . ($idx + 1) . ' is invalid.';
+                    }
+                    if ($phone !== '' && !isValidPhoneValue($phone)) {
+                        $errors[] = 'Emergency Contact Phone in row ' . ($idx + 1) . ' is invalid.';
+                    }
+                    if ($note !== '' && !hasAlphaNumericContent($note)) {
+                        $errors[] = 'Emergency Contact Note in row ' . ($idx + 1) . ' is invalid.';
+                    }
+
+                    $decoded[$idx]['name'] = $name;
+                    $decoded[$idx]['phone'] = $phone;
+                    $decoded[$idx]['note'] = $note;
+                }
+                $value = json_encode($decoded, JSON_UNESCAPED_UNICODE);
+            } else {
+                $errors[] = 'Emergency Contacts format is invalid.';
+            }
+        }
+
+        $cleanData[$field] = $value;
+    }
+
+    if (!empty($errors)) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => $errors[0],
+            'errors' => $errors
+        ]);
+        exit();
+    }
+
+    foreach ($allowedFields as $field) {
+        if (array_key_exists($field, $cleanData)) {
+            $newVal  = $cleanData[$field];
             $oldVal  = $oldUser[$field] ?? '';
             
             // Compare values (trim both to be sure)
@@ -84,6 +189,13 @@ try {
     }
 
     if (empty($updateParts)) {
+        $currentPercent = compute_profile_completion_percent($oldUser ?: []);
+        $storedPercent = isset($oldUser['profile_completion_percent']) ? (int)$oldUser['profile_completion_percent'] : -1;
+        if ($storedPercent !== $currentPercent) {
+            $syncPctStmt = $pdo->prepare("UPDATE users SET profile_completion_percent = ? WHERE id = ?");
+            $syncPctStmt->execute([$currentPercent, $userId]);
+        }
+
         echo json_encode(['status' => 'success', 'message' => 'Profile is already up to date.']);
         exit();
     }
@@ -93,6 +205,13 @@ try {
     
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
+
+    $refreshStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+    $refreshStmt->execute([$userId]);
+    $newUser = $refreshStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    $newPercent = compute_profile_completion_percent($newUser);
+    $pctStmt = $pdo->prepare("UPDATE users SET profile_completion_percent = ? WHERE id = ?");
+    $pctStmt->execute([$newPercent, $userId]);
 
     $detailedLog = "Updated profile fields: " . implode(', ', $changesLog);
     logUserActivity($pdo, $userId, 'profile_update', 'user', $detailedLog);

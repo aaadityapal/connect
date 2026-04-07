@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once '../../config/db_connect.php';
 require_once 'activity_helper.php';
+require_once '../../includes/profile_completion_helper.php';
 
 $userId = $_SESSION['user_id'];
 
@@ -37,6 +38,13 @@ if (isset($_FILES['profile_pic'])) {
                         // Update database
                         $stmt = $pdo->prepare("UPDATE users SET profile_picture = ? WHERE id = ?");
                         $stmt->execute([$dbPath, $userId]);
+
+                        $fetchPctStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+                        $fetchPctStmt->execute([$userId]);
+                        $userRow = $fetchPctStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+                        $profilePercent = compute_profile_completion_percent($userRow);
+                        $pctStmt = $pdo->prepare("UPDATE users SET profile_completion_percent = ? WHERE id = ?");
+                        $pctStmt->execute([$profilePercent, $userId]);
 
                         logUserActivity($pdo, $userId, 'profile_pic_update', 'user', 'Updated profile picture');
 

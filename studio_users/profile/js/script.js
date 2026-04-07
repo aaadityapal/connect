@@ -248,24 +248,50 @@ async function loadUserInfo() {
             }
 
             // ── Profile Completion % ──────────────────────────────────────
+            const hasAlphaNumContent = (v) => /[A-Za-z0-9]/.test(String(v ?? ''));
+            const isValidEmailValue = (v) => {
+                const raw = String(v ?? '').trim();
+                return raw !== '' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw);
+            };
+            const isValidPhoneValue = (v) => {
+                const digits = String(v ?? '').replace(/\D/g, '');
+                return digits.length >= 10 && digits.length <= 15;
+            };
+            const isValidDateValue = (v) => {
+                const raw = String(v ?? '').trim();
+                if (!raw) return false;
+                const dt = new Date(raw);
+                return !Number.isNaN(dt.getTime());
+            };
+            const isValidUrlValue = (v) => {
+                const raw = String(v ?? '').trim();
+                if (!raw) return false;
+                try {
+                    // eslint-disable-next-line no-new
+                    new URL(raw);
+                    return true;
+                } catch {
+                    return false;
+                }
+            };
+
             const completionFields = [
-                { val: d.profile_picture, weight: 1 },
-                { val: d.username, weight: 1 },
-                { val: d.email, weight: 1 },
-                { val: d.phone_number || d.phone, weight: 1 },
-                { val: d.designation, weight: 1 },
-                { val: d.department, weight: 1 },
-                { val: d.dob, weight: 1 },
+                { val: d.profile_picture, weight: 1, meaningful: true },
+                { val: d.username, weight: 1, meaningful: true },
+                { val: d.email, weight: 1, validator: 'email' },
+                { val: d.phone_number || d.phone, weight: 1, validator: 'phone' },
+                { val: d.designation, weight: 1, meaningful: true },
+                { val: d.department, weight: 1, meaningful: true },
+                { val: d.dob, weight: 1, validator: 'date' },
                 { val: d.gender, weight: 1 },
-                { val: d.bio, weight: 1 },
-                { val: d.address, weight: 1 },
-                { val: d.nationality, weight: 1 },
+                { val: d.bio, weight: 1, meaningful: true },
+                { val: d.address, weight: 1, meaningful: true },
+                { val: d.nationality, weight: 1, meaningful: true },
                 { val: d.blood_group, weight: 1 },
                 { val: d.marital_status, weight: 1 },
-                { val: d.languages, weight: 1 },
-                { val: d.skills, weight: 1 },
-                { val: d.interests, weight: 1 },
-                { val: d.social_media, isJson: true, weight: 1 },
+                { val: d.languages, weight: 1, meaningful: true },
+                { val: d.skills, weight: 1, meaningful: true },
+                { val: d.interests, weight: 1, meaningful: true },
                 { val: d.bank_details, isJson: true, weight: 1 },
                 { val: d.education_background, isArray: true, weight: 1 },
                 { val: d.work_experiences, isArray: true, weight: 1 },
@@ -279,22 +305,62 @@ async function loadUserInfo() {
                 totalWeight += f.weight;
                 let isFilled = false;
                 if (f.isArray) {
-                    isFilled = Array.isArray(f.val) && f.val.length > 0;
+                    const arr = Array.isArray(f.val) ? f.val : [];
+                    isFilled = arr.some(item => {
+                        if (item && typeof item === 'object') {
+                            return Object.values(item).some(v => hasAlphaNumContent(v));
+                        }
+                        return hasAlphaNumContent(item);
+                    });
                 } else if (f.isJson) {
                     if (typeof f.val === 'object' && f.val !== null) {
-                        // Check if any value inside the object is set
-                        isFilled = Object.values(f.val).some(v => v && String(v).trim() !== '');
+                        isFilled = Object.values(f.val).some(v => {
+                            if (typeof v === 'string' && /linkedin|twitter|facebook|instagram|github|youtube/i.test(JSON.stringify(f.val))) {
+                                return isValidUrlValue(v);
+                            }
+                            return hasAlphaNumContent(v);
+                        });
                     } else if (typeof f.val === 'string') {
-                        isFilled = f.val.trim() !== '' && f.val !== '[]' && f.val !== '{}';
+                        const raw = f.val.trim();
+                        if (raw !== '' && raw !== '[]' && raw !== '{}') {
+                            try {
+                                const parsed = JSON.parse(raw);
+                                if (parsed && typeof parsed === 'object') {
+                                    isFilled = Object.values(parsed).some(v => {
+                                        if (typeof v === 'string' && /https?:\/\//i.test(v)) return isValidUrlValue(v);
+                                        return hasAlphaNumContent(v);
+                                    });
+                                }
+                            } catch {
+                                isFilled = hasAlphaNumContent(raw);
+                            }
+                        }
                     }
+                } else if (f.validator === 'email') {
+                    isFilled = isValidEmailValue(f.val);
+                } else if (f.validator === 'phone') {
+                    isFilled = isValidPhoneValue(f.val);
+                } else if (f.validator === 'date') {
+                    isFilled = isValidDateValue(f.val);
                 } else {
-                    isFilled = f.val && String(f.val).trim() !== '';
+                    const raw = String(f.val ?? '').trim();
+                    if (!raw) {
+                        isFilled = false;
+                    } else if (f.meaningful) {
+                        isFilled = hasAlphaNumContent(raw);
+                    } else {
+                        isFilled = true;
+                    }
                 }
 
                 if (isFilled) filledWeight += f.weight;
             });
 
-            const pct = Math.round((filledWeight / totalWeight) * 100);
+            const computedPct = Math.round((filledWeight / totalWeight) * 100);
+            const storedPct = Number(d.profile_completion_percent);
+            const pct = Number.isFinite(storedPct) && storedPct >= 0 && storedPct <= 100
+                ? Math.round(storedPct)
+                : computedPct;
 
             const badge = document.getElementById('profile-completion-badge');
             if (badge) badge.textContent = `Profile ${pct}% Complete`;
@@ -988,7 +1054,55 @@ async function saveChanges() {
         // ── Helper: get field value safely ───────────────────────────
         function getVal(id) {
             const el = document.getElementById(id);
-            return el ? el.value : '';
+            return el ? String(el.value || '').trim() : '';
+        }
+
+        function hasAlphaNum(v) {
+            return /[A-Za-z0-9]/.test(String(v || ''));
+        }
+
+        function isPhoneValid(v) {
+            const digits = String(v || '').replace(/\D/g, '');
+            return digits.length >= 10 && digits.length <= 15;
+        }
+
+        function isPostalValid(v) {
+            return /^[A-Za-z0-9\-\s]{4,10}$/.test(String(v || ''));
+        }
+
+        function failValidation(msg) {
+            if (typeof showToast === 'function') showToast(msg);
+            else alert(msg);
+            const err = new Error(msg);
+            err.isValidation = true;
+            throw err;
+        }
+
+        const textMustNotBeSpecialOnly = [
+            ['pi-bio', 'Bio'],
+            ['pi-nationality', 'Nationality'],
+            ['pi-languages', 'Languages'],
+            ['pi-address', 'Address'],
+            ['pi-city', 'City'],
+            ['pi-state', 'State'],
+            ['pi-country', 'Country']
+        ];
+
+        for (const [id, label] of textMustNotBeSpecialOnly) {
+            const val = getVal(id);
+            if (val && !hasAlphaNum(val)) {
+                failValidation(`${label} cannot contain only special characters.`);
+            }
+        }
+
+        const phoneVal = getVal('pi-phone');
+        if (phoneVal && !isPhoneValid(phoneVal)) {
+            failValidation('Please enter a valid phone number.');
+        }
+
+        const postalVal = getVal('pi-postal-code');
+        if (postalVal && !isPostalValid(postalVal)) {
+            failValidation('Please enter a valid postal code.');
         }
 
         // ── SECTION 2 & 4: Fields ────────────────────────────────────
@@ -1015,6 +1129,23 @@ async function saveChanges() {
             phone: row.querySelector('.ec-phone').value,
             note:  row.querySelector('.ec-note').value
         }));
+
+        for (let i = 0; i < contacts.length; i++) {
+            const c = contacts[i];
+            const name = String(c.name || '').trim();
+            const phone = String(c.phone || '').trim();
+            const note = String(c.note || '').trim();
+
+            if (name && !hasAlphaNum(name)) {
+                failValidation(`Emergency contact name in row ${i + 1} is invalid.`);
+            }
+            if (phone && !isPhoneValid(phone)) {
+                failValidation(`Emergency contact phone in row ${i + 1} is invalid.`);
+            }
+            if (note && !hasAlphaNum(note)) {
+                failValidation(`Emergency contact note in row ${i + 1} is invalid.`);
+            }
+        }
         formData.append('emergency_contact', JSON.stringify(contacts));
         
         // Also sync first contact to legacy fields if available
@@ -1075,7 +1206,9 @@ async function saveChanges() {
 
     } catch (err) {
         console.error("Save error:", err);
-        alert("An error occurred while saving.");
+        if (!err || !err.isValidation) {
+            alert("An error occurred while saving.");
+        }
     } finally {
         if (saveBtn) {
             saveBtn.disabled = false;
@@ -1270,11 +1403,20 @@ document.addEventListener('click', (e) => {
     const isRemoveBtn = e.target.closest('#ag-remove-preview');
     
     if (closeBtn || isOverlay) {
-        const modal = document.getElementById('ag-upload-modal') 
-                   || document.getElementById('ag-education-modal')
-                   || document.getElementById('ag-experience-modal')
-                   || document.getElementById('ag-document-modal')
-                   || document.querySelector('.ag-modal-overlay.ag-active');
+        let modal = null;
+
+        if (closeBtn) {
+            modal = closeBtn.closest('.ag-modal-overlay');
+        }
+
+        if (!modal && isOverlay) {
+            modal = e.target.closest('.ag-modal-overlay');
+        }
+
+        if (!modal) {
+            modal = document.querySelector('.ag-modal-overlay.ag-active');
+        }
+
         if (modal) {
             modal.classList.remove('ag-active');
             // Cleanup: Reset preview/forms UI when closing

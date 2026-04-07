@@ -10,11 +10,28 @@ $username  = $_SESSION['username'] ?? 'Manager';
 $user_role = $_SESSION['role'] ?? 'user';
 
 require_once '../../config/db_connect.php';
+require_once '../../includes/profile_completion_helper.php';
 
-// Fetch all employees with key profile fields for completion percentage
-$stmt = $pdo->prepare("SELECT id, username, email, role, joining_date, status, status_changed_date, profile_picture, phone, dob, gender, bio, address, city, state, country, postal_code, languages, skills, education_background, work_experiences, bank_details, documents FROM users ORDER BY username ASC");
+// Fetch all employees with fields needed for profile completion percentage sync
+$stmt = $pdo->prepare("SELECT id, username, email, role, joining_date, status, status_changed_date, profile_completion_percent, profile_picture, phone_number, phone, dob, gender, bio, address, city, state, country, postal_code, designation, department, nationality, blood_group, marital_status, languages, skills, interests, social_media, emergency_contact, education_background, work_experiences, bank_details, documents FROM users ORDER BY username ASC");
 $stmt->execute();
 $employees = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Keep stored percentage synced with profile module logic
+if (!empty($employees)) {
+    $syncPctStmt = $pdo->prepare("UPDATE users SET profile_completion_percent = :pct WHERE id = :id LIMIT 1");
+    foreach ($employees as $idx => $emp) {
+        $computed = compute_profile_completion_percent($emp);
+        $stored = isset($emp['profile_completion_percent']) ? (int)$emp['profile_completion_percent'] : -1;
+        $employees[$idx]['profile_completion_percent'] = $computed;
+        if ($stored !== $computed) {
+            $syncPctStmt->execute([
+                ':pct' => $computed,
+                ':id' => (int)$emp['id'],
+            ]);
+        }
+    }
+}
 
 $activeCount = 0;
 $inactiveCount = 0;
@@ -104,84 +121,6 @@ function profilePictureUrl($path) {
     $clean = preg_replace('/^(\.\.\/)+/', '', $clean);
     $clean = ltrim($clean, '/');
     return '../../' . $clean;
-}
-
-function isFilledValue($value, $isJson = false, $isArray = false) {
-    if ($value === null) return false;
-
-    if ($isArray || $isJson) {
-        if (is_array($value)) {
-            return count($value) > 0;
-        }
-
-        $raw = trim((string)$value);
-        if ($raw === '' || strtolower($raw) === 'null' || $raw === '[]' || $raw === '{}') {
-            return false;
-        }
-
-        $decoded = json_decode($raw, true);
-        if (json_last_error() === JSON_ERROR_NONE) {
-            if ($isArray) {
-                return is_array($decoded) && count($decoded) > 0;
-            }
-
-            if (is_array($decoded)) {
-                foreach ($decoded as $v) {
-                    if (is_array($v)) {
-                        foreach ($v as $nested) {
-                            if (trim((string)$nested) !== '') return true;
-                        }
-                    } else if (trim((string)$v) !== '') {
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    return trim((string)$value) !== '';
-}
-
-function calculateProfileCompletion(array $emp) {
-    $fields = [
-        ['key' => 'profile_picture', 'weight' => 1],
-        ['key' => 'username', 'weight' => 1],
-        ['key' => 'email', 'weight' => 1],
-        ['key' => 'phone', 'weight' => 1],
-        ['key' => 'joining_date', 'weight' => 1],
-        ['key' => 'dob', 'weight' => 1],
-        ['key' => 'gender', 'weight' => 1],
-        ['key' => 'bio', 'weight' => 1],
-        ['key' => 'address', 'weight' => 1],
-        ['key' => 'city', 'weight' => 1],
-        ['key' => 'state', 'weight' => 1],
-        ['key' => 'country', 'weight' => 1],
-        ['key' => 'postal_code', 'weight' => 1],
-        ['key' => 'languages', 'weight' => 1],
-        ['key' => 'skills', 'weight' => 1],
-        ['key' => 'education_background', 'weight' => 1, 'isArray' => true],
-        ['key' => 'work_experiences', 'weight' => 1, 'isArray' => true],
-        ['key' => 'bank_details', 'weight' => 1, 'isJson' => true],
-        ['key' => 'documents', 'weight' => 1, 'isArray' => true],
-    ];
-
-    $total = 0;
-    $filled = 0;
-
-    foreach ($fields as $f) {
-        $weight = $f['weight'] ?? 1;
-        $total += $weight;
-        $value = $emp[$f['key']] ?? null;
-        if (isFilledValue($value, !empty($f['isJson']), !empty($f['isArray']))) {
-            $filled += $weight;
-        }
-    }
-
-    if ($total === 0) return 0;
-    return (int)round(($filled / $total) * 100);
 }
 
 function formatLastActiveAt($status, $statusChangedDate) {
@@ -336,7 +275,7 @@ function formatLastActiveAt($status, $statusChangedDate) {
                             $isActive = strtolower(trim($employee['status'])) === 'active';
                             $avatarInitial = strtoupper(substr($employee['username'], 0, 1));
                             $profilePicUrl = profilePictureUrl($employee['profile_picture'] ?? '');
-                            $profileCompletion = calculateProfileCompletion($employee);
+                            $profileCompletion = isset($employee['profile_completion_percent']) ? (int)$employee['profile_completion_percent'] : 0;
                         ?>
                             <div class="employee-card <?php echo $isActive ? 'status-active' : 'status-inactive'; ?>"
                                    data-employee-id="<?php echo (int)$employee['id']; ?>"

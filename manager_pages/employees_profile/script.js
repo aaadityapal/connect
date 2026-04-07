@@ -301,31 +301,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function calculateProfileCompletionPercent(employee = {}) {
+        const stored = Number(employee?.profile_completion_percent);
+        if (Number.isFinite(stored) && stored >= 0 && stored <= 100) {
+            return Math.round(stored);
+        }
+
         const fields = [
             { key: 'profile_picture' },
             { key: 'username' },
             { key: 'email' },
-            { key: 'phone' },
-            { key: 'joining_date' },
+            { key: 'phone_number_fallback_phone' },
+            { key: 'designation' },
+            { key: 'department' },
             { key: 'dob' },
             { key: 'gender' },
             { key: 'bio' },
             { key: 'address' },
-            { key: 'city' },
-            { key: 'state' },
-            { key: 'country' },
-            { key: 'postal_code' },
+            { key: 'nationality' },
+            { key: 'blood_group' },
+            { key: 'marital_status' },
             { key: 'languages' },
             { key: 'skills' },
+            { key: 'interests' },
+            { key: 'social_media', isJson: true },
+            { key: 'bank_details', isJson: true },
             { key: 'education_background', isArray: true },
             { key: 'work_experiences', isArray: true },
-            { key: 'bank_details', isJson: true },
-            { key: 'documents', isArray: true }
+            { key: 'emergency_contact', isJson: true }
         ];
 
         const total = fields.length;
         const filled = fields.reduce((sum, f) => {
-            const value = employee[f.key];
+            const value = (f.key === 'phone_number_fallback_phone')
+                ? (employee.phone_number || employee.phone)
+                : employee[f.key];
             return sum + (isFilledForCompletion(value, { isJson: !!f.isJson, isArray: !!f.isArray }) ? 1 : 0);
         }, 0);
 
@@ -642,7 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function openEditProfileModal(employeeId, employee) {
-        const infoFields = ['username', 'email', 'phone', 'gender', 'dob', 'address', 'city', 'state', 'country', 'postal_code', 'bio', 'languages'];
+        const infoFields = ['username', 'email', 'phone', 'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact', 'gender', 'dob', 'address', 'city', 'state', 'country', 'postal_code', 'bio', 'languages'];
         const workFields = ['role', 'reporting_manager', 'designation', 'status', 'joining_date', 'skills'];
         const bank = normalizeBankEditData(employee || {});
         const educationRows = normalizeEducationList(employee || {});
@@ -1006,6 +1015,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (/(username|name)/.test(normalized)) return 'user';
         if (/(email)/.test(normalized)) return 'mail';
         if (/(phone|mobile)/.test(normalized)) return 'phone';
+        if (/(emergency|contact)/.test(normalized)) return 'phone-call';
         if (/(gender)/.test(normalized)) return 'users';
         if (/(dob|birth|date)/.test(normalized)) return 'calendar';
         if (/(address|city|state|country|zip|pincode|postal)/.test(normalized)) return 'map-pin';
@@ -1024,6 +1034,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const normalized = normalizeKey(title);
         if (normalized.includes('primary')) return 'user-circle';
         if (normalized.includes('personal')) return 'id-card';
+        if (normalized.includes('emergency')) return 'phone-call';
         if (normalized.includes('location')) return 'map-pinned';
         if (normalized.includes('employment')) return 'briefcase-business';
         if (normalized.includes('education')) return 'graduation-cap';
@@ -1045,11 +1056,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Force requested fields into Information tab
-        if (['id', 'employeeid', 'uniqueid', 'bio', 'languages', 'bloodgroup', 'role'].includes(normalized)) {
+        if (['id', 'employeeid', 'uniqueid', 'bio', 'languages', 'bloodgroup', 'role', 'emergencycontact', 'emergencycontactname', 'emergencycontactphone'].includes(normalized)) {
             return 'info';
         }
 
-        if (/(username|name|email|phone|mobile|gender|dob|birth|address|city|state|country|pincode|zip)/.test(key)) {
+        if (/(username|name|email|phone|mobile|gender|dob|birth|address|city|state|country|pincode|zip|emergency|contact)/.test(key)) {
             return 'info';
         }
 
@@ -1106,6 +1117,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     title: 'Personal Details',
                     keys: ['bio', 'languages', 'blood_group', 'phone', 'mobile', 'gender', 'dob', 'birth_date']
+                },
+                {
+                    title: 'Emergency Contacts',
+                    keys: ['emergency_contact_name', 'emergency_contact_phone', 'emergency_phone', 'emergency_mobile', 'emergency_contact', 'emergency_relation', 'emergency_relationship']
                 },
                 {
                     title: 'Location',

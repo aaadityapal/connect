@@ -8,6 +8,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once '../../config/db_connect.php';
+require_once '../../includes/profile_completion_helper.php';
 
 $userId = $_SESSION['user_id'];
 
@@ -30,12 +31,23 @@ try {
         notification_preferences,
         profile_picture,
         documents,
+        profile_completion_percent,
         status, last_login, created_at
         FROM users WHERE id = ?");
     $stmt->execute([$userId]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user) {
+        $computedPercent = compute_profile_completion_percent($user);
+        $storedPercent = isset($user['profile_completion_percent']) ? (int)$user['profile_completion_percent'] : -1;
+
+        if ($storedPercent !== $computedPercent) {
+            $syncStmt = $pdo->prepare("UPDATE users SET profile_completion_percent = ? WHERE id = ?");
+            $syncStmt->execute([$computedPercent, $userId]);
+        }
+
+        $user['profile_completion_percent'] = $computedPercent;
+
         // Parse JSON fields safely
         $jsonFields = ['social_media', 'education_background', 'work_experiences', 'bank_details', 'notification_preferences', 'documents'];
         foreach ($jsonFields as $field) {

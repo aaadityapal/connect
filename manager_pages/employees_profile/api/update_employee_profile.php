@@ -70,10 +70,22 @@ $params[':id'] = $employeeId;
 
 try {
     require_once '../../../config/db_connect.php';
+    require_once '../../../includes/profile_completion_helper.php';
 
     $sql = "UPDATE users SET " . implode(', ', $updates) . " WHERE id = :id LIMIT 1";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
+
+    $fetchStmt = $pdo->prepare("SELECT * FROM users WHERE id = :id LIMIT 1");
+    $fetchStmt->execute([':id' => $employeeId]);
+    $userRow = $fetchStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    $completionPercent = compute_profile_completion_percent($userRow);
+
+    $pctStmt = $pdo->prepare("UPDATE users SET profile_completion_percent = :pct WHERE id = :id LIMIT 1");
+    $pctStmt->execute([
+        ':pct' => $completionPercent,
+        ':id' => $employeeId,
+    ]);
 
     echo json_encode([
         'success' => true,

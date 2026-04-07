@@ -7,6 +7,7 @@
 session_start();
 require_once '../../config/db_connect.php';
 require_once __DIR__ . '/activity_helper.php';
+require_once '../../includes/profile_completion_helper.php';
 header('Content-Type: application/json');
 
 date_default_timezone_set('Asia/Kolkata');
@@ -207,6 +208,143 @@ try {
             $taskId,
             $metadata
         );
+    }
+
+    // ── Smart Automation: Chain profile reminders until 90% completion ─────────
+    $isProfileReminderTask = (
+        strtolower(trim((string)($row['project_name'] ?? ''))) === strtolower('ArchitectsHive Back Office')
+        && strtolower(trim((string)($row['task_description'] ?? ''))) === strtolower('Complete your profile as soon as possible')
+    );
+
+    if ($isProfileReminderTask) {
+        // Target assignee: this reminder task is expected to be single-user; fallback to first assignee.
+        $targetUserId = 0;
+        if (!empty($assigneeIds)) {
+            $targetUserId = (int)$assigneeIds[0];
+        }
+
+        if ($targetUserId > 0) {
+            $uStmt = $pdo->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
+            $uStmt->execute([$targetUserId]);
+            $targetUser = $uStmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($targetUser) {
+                $computedPct = compute_profile_completion_percent($targetUser);
+                $storedPct = isset($targetUser['profile_completion_percent']) ? (int)$targetUser['profile_completion_percent'] : -1;
+                if ($storedPct !== $computedPct) {
+                    $syncStmt = $pdo->prepare("UPDATE users SET profile_completion_percent = ? WHERE id = ?");
+                    $syncStmt->execute([$computedPct, $targetUserId]);
+                }
+
+                // If below 90, schedule next-day reminder due by 06:00 PM.
+                if ($computedPct < 90) {
+                    $nextDueDate = date('Y-m-d', strtotime('+1 day'));
+                    $dueTime = '18:00:00';
+                    $projectName = 'ArchitectsHive Back Office';
+                    $taskDescription = 'Complete your profile as soon as possible';
+                    $assignedToStr = (string)$targetUserId;
+                    $assignedName = trim((string)($targetUser['username'] ?? ('User ' . $targetUserId)));
+
+                    // Smart guard 1: if any active/open reminder already exists (including extended), do not create another.
+                    $openCheck = $pdo->prepare("SELECT id FROM studio_assigned_tasks
+                        WHERE deleted_at IS NULL
+                          AND project_name = :project_name
+                          AND task_description = :task_description
+                          AND (
+                            assigned_to = :assigned_to_exact
+                            OR FIND_IN_SET(:assigned_to_csv, REPLACE(IFNULL(assigned_to, ''), ' ', '')) > 0
+                          )
+                          AND status IN ('Pending','In Progress')
+                        ORDER BY id DESC
+                        LIMIT 1");
+                    $openCheck->execute([
+                        ':project_name' => $projectName,
+                        ':task_description' => $taskDescription,
+                        ':assigned_to_exact' => $assignedToStr,
+                        ':assigned_to_csv' => $assignedToStr,
+                    ]);
+                    $openExisting = $openCheck->fetch(PDO::FETCH_ASSOC);
+
+                    if (!$openExisting) {
+                        // Smart guard 2: avoid duplicate insertion for the same next-day due slot.
+                        $dupCheck = $pdo->prepare("SELECT id FROM studio_assigned_tasks
+                            WHERE deleted_at IS NULL
+                              AND project_name = :project_name
+                              AND task_description = :task_description
+                              AND due_date = :due_date
+                              AND due_time = :due_time
+                              AND (
+                                assigned_to = :assigned_to_exact
+                                OR FIND_IN_SET(:assigned_to_csv, REPLACE(IFNULL(assigned_to, ''), ' ', '')) > 0
+                              )
+                            ORDER BY id DESC
+                            LIMIT 1");
+                        $dupCheck->execute([
+                            ':project_name' => $projectName,
+                            ':task_description' => $taskDescription,
+                            ':due_date' => $nextDueDate,
+                            ':due_time' => $dueTime,
+                            ':assigned_to_exact' => $assignedToStr,
+                            ':assigned_to_csv' => $assignedToStr,
+                        ]);
+                        $duplicate = $dupCheck->fetch(PDO::FETCH_ASSOC);
+
+                        if (!$duplicate) {
+                            $ins = $pdo->prepare("INSERT INTO studio_assigned_tasks
+                                (project_id, project_name, stage_id, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, is_recurring, status, created_by, created_at)
+                                VALUES
+                                (NULL, :project_name, NULL, NULL, :task_description, 'Medium', :assigned_to, :assigned_names, :due_date, :due_time, 0, 'Pending', :created_by, NOW())");
+
+                            $ins->execute([
+                                ':project_name' => $projectName,
+                                ':task_description' => $taskDescription,
+                                ':assigned_to' => $assignedToStr,
+                                ':assigned_names' => $assignedName,
+                                ':due_date' => $nextDueDate,
+                                ':due_time' => $dueTime,
+                                ':created_by' => $userId,
+                            ]);
+
+                            $newTaskId = (int)$pdo->lastInsertId();
+                            $autoMeta = [
+                                'automation' => 'profile_reminder_chain',
+                                'trigger' => 'task_completion_approved',
+                                'trigger_task_id' => $taskId,
+                                'new_task_id' => $newTaskId,
+                                'employee_id' => $targetUserId,
+                                'employee_name' => $assignedName,
+                                'profile_completion_percent' => $computedPct,
+                                'required_percent' => 90,
+                                'due_date' => $nextDueDate,
+                                'due_time' => $dueTime,
+                            ];
+
+                            logUserActivity(
+                                $pdo,
+                                $userId,
+                                'profile_reminder_auto_created',
+                                'task',
+                                "Auto-created next profile reminder for {$assignedName} (completion: {$computedPct}%).",
+                                $newTaskId,
+                                $autoMeta
+                            );
+
+                            if ($targetUserId !== $userId) {
+                                logUserActivity(
+                                    $pdo,
+                                    $targetUserId,
+                                    'profile_reminder_received',
+                                    'task',
+                                    'A new profile completion reminder has been assigned automatically.',
+                                    $newTaskId,
+                                    $autoMeta
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     echo json_encode(['success' => true]);

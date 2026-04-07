@@ -9,6 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once '../../config/db_connect.php';
 require_once 'activity_helper.php';
+require_once '../../includes/profile_completion_helper.php';
 
 $userId = $_SESSION['user_id'];
 $data = json_decode(file_get_contents('php://input'), true);
@@ -62,6 +63,13 @@ try {
     // Update DB
     $updateStmt = $pdo->prepare("UPDATE users SET documents = ? WHERE id = ?");
     $updateStmt->execute([json_encode($newDocs), $userId]);
+
+    $fetchPctStmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+    $fetchPctStmt->execute([$userId]);
+    $userRow = $fetchPctStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    $profilePercent = compute_profile_completion_percent($userRow);
+    $pctStmt = $pdo->prepare("UPDATE users SET profile_completion_percent = ? WHERE id = ?");
+    $pctStmt->execute([$profilePercent, $userId]);
 
     logUserActivity($pdo, $userId, 'document_delete', 'user', "Deleted document: " . $deletedDocName);
 

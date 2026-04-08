@@ -213,7 +213,7 @@ if (!isset($_SESSION['user_id'])) {
                 // Identify managers: Designation contains "Manager" or Admin role
                 const managers = allUsers.filter(u => 
                     (u.position && u.position.toLowerCase().includes('manager')) || 
-                    (u.role && u.role.toLowerCase() === 'manager') ||
+                    (u.role && u.role.toLowerCase().includes('manager')) ||
                     (u.role && u.role.toLowerCase() === 'admin')
                 );
 

@@ -9,13 +9,41 @@ if (!isset($_SESSION['user_id'])) {
  * ── Consistent User Colors ──────────────────────────────────────────
  * Matches logic in components/schedule-timeline.js for "My Tasks" icons
  */
-function getPersonColor($name) {
-    if (!$name) return '#94a3b8';
+function getPersonColor($name)
+{
+    if (!$name)
+        return '#94a3b8';
     $palette = [
-        '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', 
-        '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#d946ef', '#ec4899', '#f43f5e',
-        '#dc2626', '#ea580c', '#d97706', '#65a30d', '#16a34a', '#059669', '#0d9488', '#0891b2',
-        '#0284c7', '#2563eb', '#4f46e5', '#7c3aed', '#c026d3', '#db2777', '#e11d48'
+        '#ef4444',
+        '#f97316',
+        '#f59e0b',
+        '#84cc16',
+        '#22c55e',
+        '#10b981',
+        '#14b8a6',
+        '#06b6d4',
+        '#0ea5e9',
+        '#3b82f6',
+        '#6366f1',
+        '#8b5cf6',
+        '#d946ef',
+        '#ec4899',
+        '#f43f5e',
+        '#dc2626',
+        '#ea580c',
+        '#d97706',
+        '#65a30d',
+        '#16a34a',
+        '#059669',
+        '#0d9488',
+        '#0891b2',
+        '#0284c7',
+        '#2563eb',
+        '#4f46e5',
+        '#7c3aed',
+        '#c026d3',
+        '#db2777',
+        '#e11d48'
     ];
     $sum = 0;
     $name = trim($name);
@@ -28,17 +56,18 @@ function getPersonColor($name) {
 require_once '../config/db_connect.php';
 
 $user_id = $_SESSION['user_id'];
-$stmt = $pdo->prepare("SELECT username, designation, role FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT username, designation, role, profile_picture FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 $username = $user ? $user['username'] : 'User';
 $designation = $user ? $user['designation'] : '';
+$profile_picture = $user ? $user['profile_picture'] : '';
 $userRole = $_SESSION['role'] ?? ($user['role'] ?? '');
-$isAdminUser = stripos((string)$userRole, 'admin') !== false;
+$isAdminUser = stripos((string) $userRole, 'admin') !== false;
 
 // ── Fetch dynamic stats for KPI cards ───────────────────────────────
 $fromDate = $_GET['from'] ?? date('Y-m-d', strtotime('monday this week'));
-$toDate   = $_GET['to']   ?? date('Y-m-d', strtotime('sunday this week'));
+$toDate = $_GET['to'] ?? date('Y-m-d', strtotime('sunday this week'));
 
 // Queries for current filtered period (User-centric counts)
 $stmtStats = $pdo->prepare("
@@ -52,11 +81,11 @@ $stmtStats = $pdo->prepare("
       AND due_date BETWEEN :from AND :to
 ");
 $stmtStats->execute([
-    'uid1' => (string)$user_id,
-    'uid2' => (string)$user_id,
-    'uid3' => (string)$user_id,
+    'uid1' => (string) $user_id,
+    'uid2' => (string) $user_id,
+    'uid3' => (string) $user_id,
     'from' => $fromDate,
-    'to'   => $toDate
+    'to' => $toDate
 ]);
 $stats = $stmtStats->fetch(PDO::FETCH_ASSOC);
 
@@ -172,31 +201,60 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
         /* ── Minimalist Task Card System ──────────────────────── */
 
         /* Custom checkbox */
-        #taskListContainer .task-check { flex-shrink: 0 !important; margin-top: 2px !important; width: 17px !important; }
-        #taskListContainer .task-check input[type="checkbox"] { display: none !important; }
+        #taskListContainer .task-check {
+            flex-shrink: 0 !important;
+            margin-top: 2px !important;
+            width: 17px !important;
+        }
+
+        #taskListContainer .task-check input[type="checkbox"] {
+            display: none !important;
+        }
+
         #taskListContainer .task-check label {
-            width: 17px !important; height: 17px !important;
-            min-width: 17px !important; min-height: 17px !important;
-            max-width: 17px !important; max-height: 17px !important;
+            width: 17px !important;
+            height: 17px !important;
+            min-width: 17px !important;
+            min-height: 17px !important;
+            max-width: 17px !important;
+            max-height: 17px !important;
             border: 1.5px solid #d1d5db !important;
             border-radius: 5px !important;
-            display: flex !important; align-items: center !important; justify-content: center !important;
-            cursor: pointer !important; transition: all 0.18s !important;
-            background: #fff !important; flex-shrink: 0 !important;
-            position: relative !important; overflow: hidden !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            transition: all 0.18s !important;
+            background: #fff !important;
+            flex-shrink: 0 !important;
+            position: relative !important;
+            overflow: hidden !important;
             font-size: 0 !important;
         }
-        #taskListContainer .task-check label:hover { border-color: #6366f1 !important; }
-        #taskListContainer .task-check input:checked + label {
-            background: #6366f1 !important; border-color: #6366f1 !important;
+
+        #taskListContainer .task-check label:hover {
+            border-color: #6366f1 !important;
         }
-        #taskListContainer .task-check input:checked + label::after {
-            content: '' !important; display: block !important;
-            width: 4px !important; height: 7px !important;
-            border: 1.5px solid #fff !important; border-top: none !important; border-left: none !important;
+
+        #taskListContainer .task-check input:checked+label {
+            background: #6366f1 !important;
+            border-color: #6366f1 !important;
+        }
+
+        #taskListContainer .task-check input:checked+label::after {
+            content: '' !important;
+            display: block !important;
+            width: 4px !important;
+            height: 7px !important;
+            border: 1.5px solid #fff !important;
+            border-top: none !important;
+            border-left: none !important;
             transform: rotate(42deg) translateY(-1px) !important;
-            position: static !important; top: auto !important; left: auto !important;
-            font-family: inherit !important; font-size: 0 !important;
+            position: static !important;
+            top: auto !important;
+            left: auto !important;
+            font-family: inherit !important;
+            font-size: 0 !important;
         }
 
         /* Card */
@@ -210,16 +268,18 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
             background: #fff !important;
             border: 1px solid #f0f2f5 !important;
             border-radius: 10px !important;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.04) !important;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
             transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s !important;
             overflow: visible !important;
             cursor: default !important;
         }
+
         #taskListContainer .task-item:hover {
             transform: translateY(-1px) !important;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.07) !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07) !important;
             border-color: #e2e8f0 !important;
         }
+
         #taskListContainer .task-item.completed-card {
             background: #fafafa !important;
             opacity: 0.72 !important;
@@ -227,108 +287,206 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
 
         /* Priority urgency dot */
         #taskListContainer .task-urgency-dot {
-            width: 7px; height: 7px; border-radius: 50%;
-            flex-shrink: 0; margin-top: 5px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 5px;
         }
-        #taskListContainer .priority-red    .task-urgency-dot { background: #ef4444; }
-        #taskListContainer .priority-orange .task-urgency-dot { background: #f97316; }
-        #taskListContainer .priority-yellow .task-urgency-dot { background: #eab308; }
-        #taskListContainer .priority-green  .task-urgency-dot { background: #22c55e; }
+
+        #taskListContainer .priority-red .task-urgency-dot {
+            background: #ef4444;
+        }
+
+        #taskListContainer .priority-orange .task-urgency-dot {
+            background: #f97316;
+        }
+
+        #taskListContainer .priority-yellow .task-urgency-dot {
+            background: #eab308;
+        }
+
+        #taskListContainer .priority-green .task-urgency-dot {
+            background: #22c55e;
+        }
 
         /* Content area */
         #taskListContainer .task-content-wrap {
-            flex: 1; min-width: 0;
+            flex: 1;
+            min-width: 0;
         }
+
         #taskListContainer .task-item-title {
-            font-size: 0.86rem; font-weight: 600;
-            color: #1e293b; margin: 0 0 2px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
+
         #taskListContainer .task-item-title.completed {
-            text-decoration: line-through; color: #94a3b8;
+            text-decoration: line-through;
+            color: #94a3b8;
         }
+
         #taskListContainer .task-item-desc {
-            font-size: 0.76rem; color: #94a3b8;
-            margin: 0; white-space: nowrap;
-            overflow: hidden; text-overflow: ellipsis;
+            font-size: 0.76rem;
+            color: #94a3b8;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
+
         #taskListContainer .task-item-meta {
-            display: flex; align-items: center;
-            gap: 0.35rem; margin-top: 6px; flex-wrap: wrap;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            margin-top: 6px;
+            flex-wrap: wrap;
         }
 
         /* Priority micro-badge */
         .task-badge-mini {
-            font-size: 0.65rem; font-weight: 700;
-            padding: 1px 7px; border-radius: 20px;
-            letter-spacing: 0.02em; display: inline-flex;
-            align-items: center; gap: 3px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 1px 7px;
+            border-radius: 20px;
+            letter-spacing: 0.02em;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
         }
-        .task-badge-mini.high   { background: #fef2f2; color: #dc2626; }
-        .task-badge-mini.medium { background: #fffbeb; color: #b45309; }
-        .task-badge-mini.low    { background: #f0fdf4; color: #16a34a; }
+
+        .task-badge-mini.high {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .task-badge-mini.medium {
+            background: #fffbeb;
+            color: #b45309;
+        }
+
+        .task-badge-mini.low {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
 
         /* Time pill */
         .task-time-pill {
-            font-size: 0.68rem; font-weight: 500;
-            color: #64748b; display: inline-flex;
-            align-items: center; gap: 3px;
-            background: #f8fafc; border: 1px solid #e9ecef;
-            border-radius: 20px; padding: 1px 8px;
+            font-size: 0.68rem;
+            font-weight: 500;
+            color: #64748b;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: #f8fafc;
+            border: 1px solid #e9ecef;
+            border-radius: 20px;
+            padding: 1px 8px;
         }
 
         /* Assignees label */
         .task-assignee-label {
-            font-size: 0.67rem; color: #b0b9c6;
-            display: inline-flex; align-items: center; gap: 2px;
+            font-size: 0.67rem;
+            color: #b0b9c6;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
         }
 
         /* Action buttons — icon only, fade in on hover */
         #taskListContainer .task-item-actions {
-            display: flex; gap: 3px;
-            flex-shrink: 0; opacity: 0;
-            transition: opacity 0.15s; margin-top: 1px;
+            display: flex;
+            gap: 3px;
+            flex-shrink: 0;
+            opacity: 0;
+            transition: opacity 0.15s;
+            margin-top: 1px;
         }
-        #taskListContainer .task-item:hover .task-item-actions { opacity: 1; }
+
+        #taskListContainer .task-item:hover .task-item-actions {
+            opacity: 1;
+        }
+
         .task-icon-btn {
-            height: 26px; width: auto;
-            padding: 0 8px; gap: 4px;
-            border: 1px solid #e5e7eb; border-radius: 6px;
-            background: #fff; color: #94a3b8;
-            font-size: 0.68rem; cursor: pointer;
-            display: inline-flex; align-items: center;
-            transition: all 0.15s; white-space: nowrap;
-            font-family: inherit; font-weight: 500;
+            height: 26px;
+            width: auto;
+            padding: 0 8px;
+            gap: 4px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #fff;
+            color: #94a3b8;
+            font-size: 0.68rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.15s;
+            white-space: nowrap;
+            font-family: inherit;
+            font-weight: 500;
         }
-        .task-icon-btn:hover { background: #f8fafc; color: #475569; border-color: #d1d5db; }
-        .task-icon-btn.done-icon:hover { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
-        .task-icon-btn.undo-icon:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+
+        .task-icon-btn:hover {
+            background: #f8fafc;
+            color: #475569;
+            border-color: #d1d5db;
+        }
+
+        .task-icon-btn.done-icon:hover {
+            background: #f0fdf4;
+            color: #16a34a;
+            border-color: #bbf7d0;
+        }
+
+        .task-icon-btn.undo-icon:hover {
+            background: #fef2f2;
+            color: #dc2626;
+            border-color: #fecaca;
+        }
 
         /* Progress — slim & clean */
         .task-progress-container {
-            margin-bottom: 1rem !important; padding: 0 !important;
+            margin-bottom: 1rem !important;
+            padding: 0 !important;
         }
+
         .task-progress-header {
-            display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 6px !important;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px !important;
         }
+
         .progress-text-badge {
-            font-size: 0.75rem !important; font-weight: 600 !important;
-            color: #64748b !important; padding: 0 !important;
-            background: none !important; border-radius: 0 !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            color: #64748b !important;
+            padding: 0 !important;
+            background: none !important;
+            border-radius: 0 !important;
         }
+
         #progressPercentage {
-            font-size: 0.75rem !important; font-weight: 700 !important;
+            font-size: 0.75rem !important;
+            font-weight: 700 !important;
             color: #6366f1 !important;
         }
+
         .progress-bar {
-            height: 5px !important; border-radius: 10px !important;
+            height: 5px !important;
+            border-radius: 10px !important;
             background: #f1f5f9 !important;
         }
+
         .task-progress-fill {
             border-radius: 10px !important;
             background: linear-gradient(90deg, #6366f1, #818cf8);
-            transition: width 0.5s cubic-bezier(.4,0,.2,1), background 0.4s ease !important;
+            transition: width 0.5s cubic-bezier(.4, 0, .2, 1), background 0.4s ease !important;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -361,7 +519,8 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                             </div>
                             <div class="dh-greeting el-433">
                                 <span class="dh-greeting-text el-434">Good Afternoon ,</span>
-                                <span class="dh-greeting-name <?php echo $isAdminUser ? 'is-admin' : ''; ?> el-435"><?php echo htmlspecialchars($username); ?></span>
+                                <span
+                                    class="dh-greeting-name <?php echo $isAdminUser ? 'is-admin' : ''; ?> el-435"><?php echo htmlspecialchars($username); ?></span>
                             </div>
                         </div>
                         <div class="dh-nav-datetime el-436">
@@ -381,7 +540,8 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
 
                 <div class="dh-nav-middle el-443">
                     <div class="dh-shift-timer el-444" id="shiftTimerContainer">
-                        <i data-lucide="hourglass" class="el-445" id="shiftTimerIcon" style="width:15px;height:15px;"></i>
+                        <i data-lucide="hourglass" class="el-445" id="shiftTimerIcon"
+                            style="width:15px;height:15px;"></i>
                         <span class="el-24"><span id="shiftTextLabel">Shift ends in:</span> <span id="shiftTimer"
                                 class="el-25">05:01:38</span></span>
                     </div>
@@ -389,8 +549,8 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
 
                 <div class="dh-nav-right el-446">
                     <button class="dh-punch-btn dh-punch-in-state el-447" id="punchBtn">
-                        <i data-lucide="log-in" class="el-448" id="punchIcon" style="width:15px;height:15px;"></i> <span id="punchText"
-                            class="el-29">Punch In</span>
+                        <i data-lucide="log-in" class="el-448" id="punchIcon" style="width:15px;height:15px;"></i> <span
+                            id="punchText" class="el-29">Punch In</span>
                     </button>
 
                     <button class="icon-btn dh-notif-btn el-449" id="notifBtn">
@@ -399,21 +559,50 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                     </button>
 
                     <div class="dh-profile-box el-452" id="profileDropdownContainer">
-                        <div class="dh-profile-avatar el-453" id="profileAvatarBtn">
-                            <i data-lucide="user" class="el-454" style="width:17px;height:17px;"></i>
+                        <div class="dh-profile-avatar el-453" id="profileAvatarBtn"
+                            style="overflow:-moz-hidden-unscrollable; overflow:hidden; padding:0; display:flex; justify-content:center; align-items:center;">
+                            <?php
+                            if (!empty($profile_picture)) {
+                                if (strpos($profile_picture, 'uploads/') === 0) {
+                                    $pic_path = '../' . $profile_picture;
+                                } else {
+                                    $pic_path = '../uploads/profile_pictures/' . $profile_picture;
+                                }
+
+                                if (!file_exists($pic_path) && strpos($pic_path, ' ') !== false) {
+                                    $try_path = str_replace(' ', '_', $pic_path);
+                                    if (file_exists($try_path)) {
+                                        $pic_path = $try_path;
+                                    }
+                                }
+
+                                $parts = explode('/', $pic_path);
+                                $encoded_parts = array_map('rawurlencode', $parts);
+                                $pic_url = implode('/', $encoded_parts);
+                                ?>
+                                <img src="<?php echo $pic_url; ?>" alt="Profile"
+                                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                <?php
+                            } else {
+                                ?>
+                                <i data-lucide="user" class="el-454" style="width:17px;height:17px;"></i>
+                                <?php
+                            }
+                            ?>
                         </div>
 
 
                         <!-- Profile Dropdown Menu -->
                         <div class="dh-profile-dropdown el-457" id="profileDropdownMenu">
-                            <a href="#" class="dh-dropdown-item el-458">
-                                <i data-lucide="user-circle-2" class="el-459" style="width:16px;height:16px;"></i> My Profile
+                            <a href="profile/index.php" class="dh-dropdown-item el-458">
+                                <i data-lucide="user-circle-2" class="el-459" style="width:16px;height:16px;"></i> My
+                                Profile
                             </a>
                             <a href="#" class="dh-dropdown-item el-460">
                                 <i data-lucide="settings-2" class="el-461" style="width:16px;height:16px;"></i> Settings
                             </a>
                             <div class="dh-dropdown-divider el-462"></div>
-                            <a href="#" class="dh-dropdown-item dh-logout-btn el-463">
+                            <a href="../logout.php" class="dh-dropdown-item dh-logout-btn el-463">
                                 <i data-lucide="log-out" class="el-464" style="width:16px;height:16px;"></i> Log Out
                             </a>
                         </div>
@@ -430,7 +619,9 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                             <div class="icon-box purple el-469"><i class="fa-solid fa-clipboard-list el-470"></i></div>
                             <div class="stat-info el-471">
                                 <h3 class="el-53">Tasks</h3>
-                                <div class="stat-value el-472"><?php echo $periodPendingTasks; ?>/<?php echo $periodTotalTasks; ?> <span class="el-55">Pending</span></div>
+                                <div class="stat-value el-472">
+                                    <?php echo $periodPendingTasks; ?>/<?php echo $periodTotalTasks; ?> <span
+                                        class="el-55">Pending</span></div>
                                 <div class="stat-trend positive el-473">
                                     <i class="fa-solid fa-arrow-trend-up el-474"></i>
                                     <span class="el-58">+12% vs last month</span>
@@ -441,7 +632,8 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                             <div class="icon-box orange el-476"><i class="fa-solid fa-check-double el-477"></i></div>
                             <div class="stat-info el-478">
                                 <h3 class="el-63">Completed</h3>
-                                <div class="stat-value el-479"><?php echo $periodCompletedTasks; ?> <span class="el-65">Done</span></div>
+                                <div class="stat-value el-479"><?php echo $periodCompletedTasks; ?> <span
+                                        class="el-65">Done</span></div>
                                 <div class="stat-trend positive el-480">
                                     <i class="fa-solid fa-arrow-trend-up el-481"></i>
                                     <span class="el-68">+15% vs last week</span>
@@ -456,10 +648,11 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                                 <div class="stat-footer-row el-487">
                                     <div class="stat-trend positive el-488">
                                         <i class="fa-solid fa-arrow-trend-up el-489"></i>
-                                        <span class="el-78">+<?php echo rand(2,8); ?>% Productivity</span>
+                                        <span class="el-78">+<?php echo rand(2, 8); ?>% Productivity</span>
                                     </div>
                                     <div class="stat-bottom-right el-490"><i
-                                            class="fa-solid fa-clock-rotate-left el-491"></i> L.W. <?php echo max(0, $efficiency - rand(3,10)); ?>%</div>
+                                            class="fa-solid fa-clock-rotate-left el-491"></i> L.W.
+                                        <?php echo max(0, $efficiency - rand(3, 10)); ?>%</div>
                                 </div>
                             </div>
                         </a>
@@ -489,23 +682,27 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
 
                             <div class="el-118"
                                 style="flex: 2; justify-content: flex-end; display: flex; align-items: center; gap: 0.8rem; overflow: visible;">
-                                
+
                                 <!-- Date Range Filter -->
-                                <div style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 4px 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                                <div
+                                    style="display: flex; align-items: center; gap: 0.5rem; background: #f1f5f9; padding: 4px 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
                                     <div style="display: flex; align-items: center; gap: 0.4rem;">
-                                        <span style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase;">From</span>
-                                        <input type="date" id="taskDateFrom" 
+                                        <span
+                                            style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase;">From</span>
+                                        <input type="date" id="taskDateFrom"
                                             value="<?php echo isset($_GET['from']) ? $_GET['from'] : date('Y-m-d', strtotime('monday this week')); ?>"
                                             style="border: none; background: transparent; font-size: 0.85rem; color: #1e293b; font-weight: 600; outline: none; padding: 2px;">
                                     </div>
                                     <div style="width: 1px; height: 16px; background: #cbd5e1;"></div>
                                     <div style="display: flex; align-items: center; gap: 0.4rem;">
-                                        <span style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase;">To</span>
-                                        <input type="date" id="taskDateTo" 
+                                        <span
+                                            style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase;">To</span>
+                                        <input type="date" id="taskDateTo"
                                             value="<?php echo isset($_GET['to']) ? $_GET['to'] : date('Y-m-d', strtotime('sunday this week')); ?>"
                                             style="border: none; background: transparent; font-size: 0.85rem; color: #1e293b; font-weight: 600; outline: none; padding: 2px;">
                                     </div>
-                                    <button id="applyDateBtn" style="background: #6366f1; color: white; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; transition: background 0.2s;">
+                                    <button id="applyDateBtn"
+                                        style="background: #6366f1; color: white; border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer; transition: background 0.2s;">
                                         <i class="fa-solid fa-magnifying-glass" style="font-size: 0.8rem;"></i>
                                     </button>
                                 </div>
@@ -615,9 +812,11 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                                 <tbody id="taskListTableBody" class="el-146">
                                     <tr>
                                         <td colspan="6" style="text-align:center; padding: 4rem; color: #94a3b8;">
-                                            <div class="loader-container" style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+                                            <div class="loader-container"
+                                                style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
                                                 <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
-                                                <span style="font-size: 0.9rem; font-weight: 500;">Loading your tasks...</span>
+                                                <span style="font-size: 0.9rem; font-weight: 500;">Loading your
+                                                    tasks...</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -787,10 +986,12 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                         <div class="section-header task-header-row el-541"
                             style="margin-bottom: 0.75rem; justify-content: space-between;">
                             <h2 style="font-size: 1.2rem; font-weight: 700; color: #111; margin: 0;">My Tasks</h2>
-                            <div class="mtpd-wrapper" style="position: relative; display: flex; align-items: center; gap: 0.5rem;">
-                                <label for="myTasksDatePicker" style="font-size: 0.8rem; font-weight: 600; color: #64748b; margin: 0;">Date</label>
-                                <input type="date" id="myTasksDatePicker" 
-                                       style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 0.5rem; padding: 0.4rem 0.6rem; font-size: 0.85rem; font-family: inherit; color: #0f172a; outline: none; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s;">
+                            <div class="mtpd-wrapper"
+                                style="position: relative; display: flex; align-items: center; gap: 0.5rem;">
+                                <label for="myTasksDatePicker"
+                                    style="font-size: 0.8rem; font-weight: 600; color: #64748b; margin: 0;">Date</label>
+                                <input type="date" id="myTasksDatePicker"
+                                    style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 0.5rem; padding: 0.4rem 0.6rem; font-size: 0.85rem; font-family: inherit; color: #0f172a; outline: none; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s;">
                             </div>
                         </div>
 
@@ -842,19 +1043,26 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                             <div class="form-group full-width">
                                 <label>Project Name</label>
                                 <div style="position: relative; display: flex; align-items: center;">
-                                    <input type="text" id="projectSearchInput" placeholder="Search for projects..." class="modern-input" autocomplete="off" style="padding-right: 2.5rem; width: 100%;">
-                                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; right: 1rem; color: #3b82f6; font-size: 1.1rem; cursor: pointer;"></i>
-                                    <div id="projectSearchMenu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid var(--border-color); border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 200; max-height: 220px; overflow-y: auto; padding: 0.4rem 0;"></div>
+                                    <input type="text" id="projectSearchInput" placeholder="Search for projects..."
+                                        class="modern-input" autocomplete="off"
+                                        style="padding-right: 2.5rem; width: 100%;">
+                                    <i class="fa-solid fa-magnifying-glass"
+                                        style="position: absolute; right: 1rem; color: #3b82f6; font-size: 1.1rem; cursor: pointer;"></i>
+                                    <div id="projectSearchMenu"
+                                        style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid var(--border-color); border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 200; max-height: 220px; overflow-y: auto; padding: 0.4rem 0;">
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="form-group full-width" id="stageSelectContainer" style="display: none;">
                                 <label>Project Stage</label>
                                 <div style="position: relative;">
-                                    <select id="stageSelect" class="modern-input" style="width: 100%; appearance: none; -webkit-appearance: none; padding-right: 2.5rem; background: #ffffff;">
+                                    <select id="stageSelect" class="modern-input"
+                                        style="width: 100%; appearance: none; -webkit-appearance: none; padding-right: 2.5rem; background: #ffffff;">
                                         <option value="">Select a stage...</option>
                                     </select>
-                                    <i class="fa-solid fa-chevron-down" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem; pointer-events: none;"></i>
+                                    <i class="fa-solid fa-chevron-down"
+                                        style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem; pointer-events: none;"></i>
                                 </div>
                             </div>
 
@@ -868,12 +1076,17 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                             <div class="form-group custom-dropdown-container full-width">
                                 <label>Assign To</label>
                                 <div style="position: relative;">
-                                    <div id="mentionWrapper" style="border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.4rem 0.65rem; min-height: 48px; display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; background: #ffffff; cursor: text; transition: border-color 0.2s, box-shadow 0.2s;">
-                                        <i class="fa-solid fa-user" style="color: var(--text-muted); font-size: 0.85rem; flex-shrink: 0; padding-right: 2px;"></i>
-                                        <input type="text" id="multiSelectInput" placeholder="Type @name to mention..." autocomplete="off"
+                                    <div id="mentionWrapper"
+                                        style="border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.4rem 0.65rem; min-height: 48px; display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; background: #ffffff; cursor: text; transition: border-color 0.2s, box-shadow 0.2s;">
+                                        <i class="fa-solid fa-user"
+                                            style="color: var(--text-muted); font-size: 0.85rem; flex-shrink: 0; padding-right: 2px;"></i>
+                                        <input type="text" id="multiSelectInput" placeholder="Type @name to mention..."
+                                            autocomplete="off"
                                             style="border: none; outline: none; background: transparent; font-family: inherit; font-size: 0.9rem; color: var(--text-main); flex: 1; min-width: 120px; padding: 0.2rem 0;" />
                                     </div>
-                                    <div id="multiSelectMenu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid var(--border-color); border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 200; max-height: 220px; overflow-y: auto; padding: 0.4rem 0;"></div>
+                                    <div id="multiSelectMenu"
+                                        style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #ffffff; border: 1px solid var(--border-color); border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 200; max-height: 220px; overflow-y: auto; padding: 0.4rem 0;">
+                                    </div>
                                 </div>
                             </div>
 
@@ -923,7 +1136,8 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                                 <div class="select-wrapper custom-single-select" id="frequencySelect"
                                     style="position: relative;">
                                     <i class="fa-solid fa-clock-rotate-left select-icon" style="z-index: 2;"></i>
-                                    <div class="modern-select has-icon single-select-trigger" id="frequencySelectTrigger"
+                                    <div class="modern-select has-icon single-select-trigger"
+                                        id="frequencySelectTrigger"
                                         style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; background-image: none;">
                                         <span id="frequencySelectText"
                                             style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 20px);">Weekly</span>
@@ -963,10 +1177,12 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                             </div>
 
                             <!-- Custom Frequency Panel (shown when Custom is selected) -->
-                            <div class="form-group full-width" id="customFreqGroup" style="display: none; animation: chipIn 0.2s ease both;">
+                            <div class="form-group full-width" id="customFreqGroup"
+                                style="display: none; animation: chipIn 0.2s ease both;">
                                 <label>Custom Repeat</label>
                                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                    <span style="font-size: 0.88rem; color: var(--text-muted); white-space: nowrap;">Every</span>
+                                    <span
+                                        style="font-size: 0.88rem; color: var(--text-muted); white-space: nowrap;">Every</span>
                                     <input type="number" id="customFreqNum" min="1" max="365" value="1"
                                         style="width: 64px; border: 1px solid var(--border-color); border-radius: 0.4rem; padding: 0.45rem 0.6rem; font-family: inherit; font-size: 0.9rem; color: var(--text-main); outline: none; transition: border-color 0.2s; text-align: center;"
                                         onfocus="this.style.borderColor='var(--primary-color)'"
@@ -979,7 +1195,9 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                                         <button type="button" class="cfu-btn" data-unit="month">Month</button>
                                         <button type="button" class="cfu-btn" data-unit="year">Year</button>
                                     </div>
-                                    <span id="customFreqPreview" style="font-size: 0.78rem; color: var(--primary-color); font-weight: 600; background: #eef2ff; border-radius: 12px; padding: 2px 10px; white-space: nowrap;">Every 1 day</span>
+                                    <span id="customFreqPreview"
+                                        style="font-size: 0.78rem; color: var(--primary-color); font-weight: 600; background: #eef2ff; border-radius: 12px; padding: 2px 10px; white-space: nowrap;">Every
+                                        1 day</span>
                                 </div>
                             </div>
 
@@ -993,24 +1211,25 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                         <!-- Recently Assigned Tasks List -->
                         <div class="assigned-tasks-section">
                             <div class="assigned-tasks-header">
-                                <span class="assigned-tasks-title"><i class="fa-solid fa-list-check"></i> Recently Assigned</span>
+                                <span class="assigned-tasks-title"><i class="fa-solid fa-list-check"></i> Recently
+                                    Assigned</span>
                                 <div style="display:flex;align-items:center;gap:0.6rem;">
                                     <div style="position:relative;display:flex;align-items:center;">
-                                        <i class="fa-regular fa-calendar" style="position:absolute;left:0.6rem;color:#f97316;font-size:0.8rem;pointer-events:none;"></i>
-                                        <input
-                                            type="date"
-                                            id="assignedTasksDateFilter"
+                                        <i class="fa-regular fa-calendar"
+                                            style="position:absolute;left:0.6rem;color:#f97316;font-size:0.8rem;pointer-events:none;"></i>
+                                        <input type="date" id="assignedTasksDateFilter"
                                             style="padding:0.3rem 0.6rem 0.3rem 2rem;border:1.5px solid #e2e8f0;border-radius:0.5rem;font-size:0.78rem;font-family:'Outfit',sans-serif;color:#374151;background:#f8fafc;outline:none;cursor:pointer;transition:border-color 0.2s,box-shadow 0.2s;"
-                                            title="Filter by assignment date"
-                                        >
+                                            title="Filter by assignment date">
                                     </div>
                                     <span class="assigned-tasks-count" id="assignedTasksCount">0 tasks</span>
                                 </div>
                             </div>
                             <div class="assigned-tasks-list" id="assignedTasksList">
                                 <!-- Real tasks will be loaded here by script.js -->
-                                <div id="assignedTasksLoader" style="padding: 1.5rem; text-align: center; color: #94a3b8; font-size: 0.9rem;">
-                                    <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i> Loading tasks...
+                                <div id="assignedTasksLoader"
+                                    style="padding: 1.5rem; text-align: center; color: #94a3b8; font-size: 0.9rem;">
+                                    <i class="fa-solid fa-spinner fa-spin" style="margin-right: 0.5rem;"></i> Loading
+                                    tasks...
                                 </div>
                             </div>
                         </div>
@@ -1031,9 +1250,14 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                 <h3 class="el-283">Notifications</h3>
             </div>
             <div style="display:flex; gap:12px; align-items:center;">
-                <button id="markAllReadBtn" style="background:transparent; border:none; color:#3b82f6; cursor:pointer; font-size:0.75rem; font-weight:600;"><i class="fa-solid fa-check-double"></i> Mark All Read</button>
-                <button id="clearNotifBtn" style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:0.75rem; font-weight:600;"><i class="fa-regular fa-trash-can"></i> Clear</button>
-                <button id="closeNotif" class="close-drawer el-566" style="position:static;"><i class="fa-solid fa-xmark el-567"></i></button>
+                <button id="markAllReadBtn"
+                    style="background:transparent; border:none; color:#3b82f6; cursor:pointer; font-size:0.75rem; font-weight:600;"><i
+                        class="fa-solid fa-check-double"></i> Mark All Read</button>
+                <button id="clearNotifBtn"
+                    style="background:transparent; border:none; color:#ef4444; cursor:pointer; font-size:0.75rem; font-weight:600;"><i
+                        class="fa-regular fa-trash-can"></i> Clear</button>
+                <button id="closeNotif" class="close-drawer el-566" style="position:static;"><i
+                        class="fa-solid fa-xmark el-567"></i></button>
             </div>
         </div>
         <div class="drawer-content el-568" id="notifContent" style="padding: 0;">
@@ -1041,14 +1265,14 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
         </div>
     </div>
     </div>
-    
+
     <?php include __DIR__ . '/components/modals/extend-deadline-modal.html'; ?>
     <?php include __DIR__ . '/components/modals/edit-task-modal.html'; ?>
     <?php include __DIR__ . '/components/modals/custom-alert-modal.html'; ?>
     <?php include __DIR__ . '/components/modals/custom-confirm-modal.html'; ?>
     <?php include __DIR__ . '/components/modals/upcoming-deadline-modal.html'; ?>
     <?php include __DIR__ . '/components/modals/force-password-change-modal.html'; ?>
-    
+
     <div id="teamModal" class="modal-overlay el-597">
         <div class="modal-content team-modal-content el-598">
             <div class="modal-header el-599">
@@ -1407,9 +1631,9 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
             const from = document.getElementById('taskDateFrom').value;
             const to = document.getElementById('taskDateTo').value;
             const body = document.getElementById('taskListTableBody');
-            
+
             if (!body) return;
-            
+
             // Show loader
             body.innerHTML = `
                 <tr>
@@ -1420,7 +1644,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                         </div>
                     </td>
                 </tr>`;
-            
+
             fetch(`api/fetch_dashboard_tasks.php?from=${from}&to=${to}`)
                 .then(res => res.text())
                 .then(html => {
@@ -1436,7 +1660,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
         document.getElementById('applyDateBtn')?.addEventListener('click', (e) => {
             e.preventDefault();
             refreshDashboardTaskList();
-            
+
             // Optional: Update URL without reload to persist filter on refresh
             const from = document.getElementById('taskDateFrom').value;
             const to = document.getElementById('taskDateTo').value;

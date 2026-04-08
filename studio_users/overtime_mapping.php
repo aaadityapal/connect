@@ -212,7 +212,7 @@ if (!isset($_SESSION['user_id'])) {
                 
                 const managers = allUsers.filter(u => 
                     (u.position && u.position.toLowerCase().includes('manager')) || 
-                    (u.role && u.role.toLowerCase() === 'manager') ||
+                    (u.role && u.role.toLowerCase().includes('manager')) ||
                     (u.role && u.role.toLowerCase() === 'admin')
                 );
 

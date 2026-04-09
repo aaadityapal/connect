@@ -74,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             shift_start, 
             shift_end, 
             weekly_off,
+            joining_date,
             must_change_password
         ) VALUES (
             :username,
@@ -85,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             :shift_start,
             :shift_end,
             :weekly_off,
+            CURDATE(),
             1
         )" : "INSERT INTO users (
             username,
@@ -95,6 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             role,
             shift_start,
             shift_end,
+            joining_date,
             weekly_off
         ) VALUES (
             :username,
@@ -105,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             :role,
             :shift_start,
             :shift_end,
+            CURDATE(),
             :weekly_off
         )";
 
@@ -132,6 +136,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $new_id = $pdo->lastInsertId();
         $verify = $pdo->query("SELECT shift_start, shift_end, weekly_off FROM users WHERE id = $new_id")->fetch();
         error_log("Verified Data: " . print_r($verify, true));
+
+        // ─── Auto-Allot Official Leave Bank ──────────────────────────────────
+        try {
+            $year = date('Y');
+            $ltStmt = $pdo->query("SELECT id, max_days FROM leave_types WHERE status = 'active'");
+            $bankStmt = $pdo->prepare("INSERT INTO leave_bank (user_id, leave_type_id, total_balance, remaining_balance, year) VALUES (?, ?, ?, ?, ?)");
+            foreach ($ltStmt->fetchAll(PDO::FETCH_ASSOC) as $lt) {
+                $max = (float)$lt['max_days'];
+                $bankStmt->execute([$new_id, $lt['id'], $max, $max, $year]);
+            }
+        } catch (Exception $e) { }
+        // ─────────────────────────────────────────────────────────────────────
 
         $_SESSION['success_message'] = "User added successfully!";
         header('Location: hr_dashboard.php');

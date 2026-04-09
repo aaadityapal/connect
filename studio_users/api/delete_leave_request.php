@@ -100,6 +100,24 @@ try {
         $logStmt->execute([$user_id, $leave_id, $logDesc, json_encode(['refunded' => $refundAmount, 'original_request' => $leave])]);
     } catch (Exception $e) { }
 
+    // ─── Auto-Scrap Conneqts Bot Tasks ─────
+    try {
+        $datesArr = array_map(function($r) { return $r['start_date']; }, $allRows);
+        sort($datesArr);
+        $firstDate = $datesArr[0];
+        $lastDate = $datesArr[count($datesArr) - 1];
+        $range = ($firstDate === $lastDate) ? $firstDate : "$firstDate to $lastDate";
+        
+        $empStmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+        $empStmt->execute([$user_id]);
+        $employeeName = $empStmt->fetchColumn() ?: 'Employee';
+
+        $taskDescPrefix = "Please verify the {$ltName} request from {$employeeName} for {$range}.";
+
+        $stmtDelTask = $pdo->prepare("DELETE FROM studio_assigned_tasks WHERE project_name = 'ArchitectsHive Back Office' AND created_by = ? AND task_description LIKE ?");
+        $stmtDelTask->execute([$user_id, "%$taskDescPrefix%"]);
+    } catch (Exception $e) { }
+
     $pdo->commit();
     echo json_encode(['success' => true, 'message' => 'Request deleted and balance restored!']);
 

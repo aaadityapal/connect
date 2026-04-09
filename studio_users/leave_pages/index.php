@@ -131,12 +131,12 @@ if (!isset($_SESSION['user_id'])) {
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon blue">📁</div>
+                        <div class="stat-icon blue">💊</div>
                         <div class="stat-body">
-                            <div class="stat-label">Other Leaves</div>
-                            <div class="stat-value" id="stat-other">--</div>
-                            <div class="stat-sub">days total</div>
-                            <span class="stat-tag blue">Multiple types</span>
+                            <div class="stat-label">Sick Leaves</div>
+                            <div class="stat-value" id="stat-sick">--</div>
+                            <div class="stat-sub">strictly for wellness</div>
+                            <span class="stat-tag blue">Accrues 0.5/month</span>
                         </div>
                     </div>
                 </div>
@@ -349,37 +349,44 @@ if (!isset($_SESSION['user_id'])) {
                                 </div>
                             </div>
 
-                            <ul class="balance-list">
-                                <li>
-                                    <div class="bl-info"><span class="bl-icon green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg></span><span class="bl-name">Casual Leave</span></div>
-                                    <div class="bl-val">12 days <span class="mini">0/2 used this month</span></div>
-                                </li>
-                                <li>
-                                    <div class="bl-info"><span class="bl-icon orange"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg></span><span class="bl-name">Compensation </span></div>
-                                    <div class="bl-val">0 days</div>
-                                </li>
-                        
-                                <li>
-                                    <div class="bl-info"><span class="bl-icon blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></span><span class="bl-name">Maternity</span></div>
-                                    <div class="bl-val">60 days</div>
-                                </li>
-                                <li>
-                                    <div class="bl-info"><span class="bl-icon blue"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span><span class="bl-name">Paternity</span></div>
-                                    <div class="bl-val">7 days</div>
-                                </li>
-                                <li>
-                                    <div class="bl-info"><span class="bl-icon orange"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="2" x2="14" y2="2"></line><line x1="12" y1="14" x2="15" y2="11"></line><circle cx="12" cy="14" r="8"></circle></svg></span><span class="bl-name">Short Leave</span></div>
-                                    <div class="bl-val">
-                                        2   
-                                        <div class="mini-prog"><div class="mini-prog-fill" style="width:25%"></div></div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="bl-info"><span class="bl-icon amber"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg></span><span class="bl-name">Sick</span></div>
-                                    <div class="bl-val">6 days</div>
-                                </li>
-                                
+                            <ul class="balance-list" id="balance-list-js">
+                                <!-- Leave types will be rendered here by JS -->
                             </ul>
+                            <script>
+                            // Dynamically render leave types from backend response
+                            document.addEventListener('DOMContentLoaded', function() {
+                                window.updateLeaveBank = async function() {
+                                    const monthDropdown = document.getElementById('bank-month-dropdown');
+                                    const yearDropdown = document.getElementById('bank-year-dropdown');
+                                    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+                                    const month = monthDropdown ? monthDropdown.querySelector('.selected-value').textContent.trim() : months[new Date().getMonth()];
+                                    const year = yearDropdown ? yearDropdown.querySelector('.selected-value').textContent.trim() : new Date().getFullYear();
+                                    const monthIdx = months.indexOf(month);
+                                    try {
+                                        const resp = await fetch(`../api/get_leave_balances.php?year=${year}&month=${monthIdx}`);
+                                        const res = await resp.json();
+                                        if (res.success) {
+                                            const balances = res.data;
+                                            const ul = document.getElementById('balance-list-js');
+                                            ul.innerHTML = '';
+                                            balances.forEach(b => {
+                                                let icon = '';
+                                                let color = '';
+                                                if (b.leave_type.toLowerCase().includes('casual')) { icon = '🌴'; color = 'green'; }
+                                                else if (b.leave_type.toLowerCase().includes('compensation')) { icon = '⚖️'; color = 'purple'; }
+                                                else if (b.leave_type.toLowerCase().includes('short')) { icon = '⏱️'; color = 'orange'; }
+                                                else if (b.leave_type.toLowerCase().includes('sick')) { icon = '💊'; color = 'amber'; }
+                                                else if (b.leave_type.toLowerCase().includes('maternity')) { icon = '👶'; color = 'blue'; }
+                                                else if (b.leave_type.toLowerCase().includes('paternity')) { icon = '🧑‍🍼'; color = 'blue'; }
+                                                else { icon = '📁'; color = 'blue'; }
+                                                ul.innerHTML += `<li><div class=\"bl-info\"><span class=\"bl-icon ${color}\">${icon}</span><span class=\"bl-name\">${b.leave_type}</span></div><div class=\"bl-val\">${b.is_locked ? `<span style='color:#d32f2f; background:#fef2f2; padding:3px 8px; border-radius:12px; font-size:0.75rem; border:1px solid #fecaca; font-weight:500;'>${b.lockMessage}</span>` : `${Number(b.remaining_balance)} days`}</div></li>`;
+                                            });
+                                        }
+                                    } catch (e) { console.error('Balance fetch error:', e); }
+                                };
+                                window.updateLeaveBank();
+                            });
+                            </script>
 
                             <div class="balance-note">
                                 Balances include approved &amp; pending requests. Rejected leaves don't reduce balance.

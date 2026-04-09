@@ -1,0 +1,2 @@
+# Execute Midnight Auditor daily at 11:59 PM IST (which equates precisely to 18:29 UTC)
+29 18 * * * /usr/bin/php /Applications/XAMPP/xamppfiles/htdocs/connect/studio_users/api/cron_leave_bot.php

@@ -18,14 +18,23 @@ try {
     $assigned = $stmt->fetch();
     $assignedManagerId = $assigned ? $assigned['manager_id'] : null;
 
-    // 2. Get all potential approvers (Managers and Admins)
-    $query = "SELECT id, username as name, position FROM users 
-              WHERE (position LIKE '%Manager%' OR role = 'admin' OR role = 'manager')
-              AND status = 'Active' 
-              AND deleted_at IS NULL
-              ORDER BY username ASC";
-    
-    $stmt = $pdo->query($query);
+    // 2. Get potential approvers (Senior Managers + the user's specific assigned manager)
+    if ($assignedManagerId) {
+        $query = "SELECT id, username as name, role FROM users 
+                  WHERE (role LIKE 'Senior Manager%' OR id = ?)
+                  AND status = 'Active' 
+                  AND deleted_at IS NULL
+                  ORDER BY username ASC";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute([$assignedManagerId]);
+    } else {
+        $query = "SELECT id, username as name, role FROM users 
+                  WHERE role LIKE 'Senior Manager%'
+                  AND status = 'Active' 
+                  AND deleted_at IS NULL
+                  ORDER BY username ASC";
+        $stmt = $pdo->query($query);
+    }
     $approvers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode([

@@ -68,11 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Insert new user
         if ($hasMustChange) {
-            $stmt = $pdo->prepare("INSERT INTO users (unique_id, username, email, password, role, reporting_manager, must_change_password)
-                                  VALUES (?, ?, ?, ?, ?, ?, 1)");
+            $stmt = $pdo->prepare("INSERT INTO users (unique_id, username, email, password, role, reporting_manager, joining_date, must_change_password)
+                                  VALUES (?, ?, ?, ?, ?, ?, CURDATE(), 1)");
         } else {
-            $stmt = $pdo->prepare("INSERT INTO users (unique_id, username, email, password, role, reporting_manager)
-                                  VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("INSERT INTO users (unique_id, username, email, password, role, reporting_manager, joining_date)
+                                  VALUES (?, ?, ?, ?, ?, ?, CURDATE())");
         }
         
         $stmt->execute([
@@ -83,6 +83,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $role,
             $reporting_manager
         ]);
+        
+        $new_id = $pdo->lastInsertId();
+
+        // ─── Auto-Allot Official Leave Bank ──────────────────────────────────
+        try {
+            $year = date('Y');
+            $ltStmt = $pdo->query("SELECT id, max_days FROM leave_types WHERE status = 'active'");
+            $bankStmt = $pdo->prepare("INSERT INTO leave_bank (user_id, leave_type_id, total_balance, remaining_balance, year) VALUES (?, ?, ?, ?, ?)");
+            foreach ($ltStmt->fetchAll(PDO::FETCH_ASSOC) as $lt) {
+                $max = (float)$lt['max_days'];
+                $bankStmt->execute([$new_id, $lt['id'], $max, $max, $year]);
+            }
+        } catch (Exception $e) { }
+        // ─────────────────────────────────────────────────────────────────────
 
         $_SESSION['success'] = "Registration successful! Your ID is: " . $unique_id;
         header('Location: login.php');

@@ -39,22 +39,40 @@ try {
     $userRow = $uStmt->fetch(PDO::FETCH_ASSOC);
     
     $isEligibleForParental = false;
+    $isEligibleForCasual = false;
     if ($userRow && !empty($userRow['joining_date'])) {
         $joinDate = new DateTime($userRow['joining_date']);
+        
         $oneYearLater = clone $joinDate;
         $oneYearLater->modify('+365 days');
         if (new DateTime() >= $oneYearLater) {
             $isEligibleForParental = true;
         }
+
+        $probationEnd = clone $joinDate;
+        $probationEnd->modify('+90 days');
+        if (new DateTime() >= $probationEnd) {
+            $isEligibleForCasual = true;
+        }
     }
 
     foreach ($dates as $d) {
         $typeName = strtolower($d['type_name'] ?? '');
+        
         $isParental = strpos($typeName, 'maternity') !== false || strpos($typeName, 'paternity') !== false;
         if ($isParental && !$isEligibleForParental) {
             echo json_encode([
                 'success' => false, 
                 'message' => 'You must complete 365 days from your joining date to apply for Maternity or Paternity leave.'
+            ]);
+            exit();
+        }
+
+        $isCasual = strpos($typeName, 'casual') !== false;
+        if ($isCasual && !$isEligibleForCasual) {
+            echo json_encode([
+                'success' => false, 
+                'message' => 'You cannot use Casual Leaves during your 90-day probation period. They will safely accrue in your bank until your probation ends.'
             ]);
             exit();
         }
@@ -208,17 +226,94 @@ try {
         // ID 13 is Unpaid Leave. We bypass balance checks for it.
         if ($tid == 13) continue;
 
-        $stmt = $pdo->prepare("SELECT remaining_balance, lt.name 
+        $stmt = $pdo->prepare("SELECT remaining_balance, total_balance, lt.name 
                                FROM leave_bank lb 
                                JOIN leave_types lt ON lb.leave_type_id = lt.id 
                                WHERE lb.user_id = ? AND lb.leave_type_id = ? AND lb.year = ? FOR UPDATE");
         $stmt->execute([$userId, $tid, $currentYear]);
         $bank = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$bank || $bank['remaining_balance'] < $count) {
+        $name = $bank['name'] ?? 'Unknown Leave Type';
+        $avail = $bank['remaining_balance'] ?? 0;
+        $nameLower = strtolower($name);
+
+        // --- DYNAMIC RECALCULATIONS FOR ACCURATE VALIDATION ---
+        
+        // 1. Compensate Leave Dynamic Re-math
+        if (strpos($nameLower, 'compensation') !== false || strpos($nameLower, 'comp off') !== false || strpos($nameLower, 'compensate') !== false) {
+            $earnedTotal = floatval($bank['total_balance']);
+            
+            $shiftStmt = $pdo->prepare("SELECT weekly_offs FROM user_shifts WHERE user_id = ? AND (effective_to IS NULL OR effective_to >= CURDATE()) ORDER BY effective_from DESC LIMIT 1");
+            $shiftStmt->execute([$userId]);
+            $shiftRow = $shiftStmt->fetch(PDO::FETCH_ASSOC);
+            $weeklyOffsStr = $shiftRow && !empty($shiftRow['weekly_offs']) ? $shiftRow['weekly_offs'] : 'Saturday,Sunday';
+            $weeklyOffs = array_map('strtolower', array_map('trim', explode(',', $weeklyOffsStr)));
+
+            $attStmt = $pdo->prepare("SELECT date, punch_in, punch_out FROM attendance WHERE user_id = ? AND status = 'present' AND date >= '2026-04-01'");
+            $attStmt->execute([$userId]);
+            $attRecords = $attStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $earnedFromExtraWork = 0;
+            foreach ($attRecords as $att) {
+                $dayName = strtolower(date('l', strtotime($att['date'])));
+                if (in_array($dayName, $weeklyOffs) && !empty($att['punch_in']) && !empty($att['punch_out'])) {
+                    $earnedFromExtraWork += 1;
+                }
+            }
+            $earnedTotal += $earnedFromExtraWork;
+
+            $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date >= '2026-04-01'");
+            $usedStmt->execute([$userId, $tid]);
+            $used = $usedStmt->fetch(PDO::FETCH_ASSOC);
+            $usedTotal = $used && $used['used'] ? floatval($used['used']) : 0;
+
+            $avail = max(0, $earnedTotal - $usedTotal);
+        }
+        
+        // 2. Casual Leave Dynamic Re-math
+        if (strpos($nameLower, 'casual') !== false) {
+            $month = (int)date('n') - 1; 
+            $year = (int)date('Y');
+            $leaveYearStart = ($month >= 3) ? $year : $year - 1; 
+            $leaveYearApril = new DateTime("$leaveYearStart-04-01");
+
+            $uJoinStmt = $pdo->prepare("SELECT joining_date FROM users WHERE id = ?");
+            $uJoinStmt->execute([$userId]);
+            $uJoinRow = $uJoinStmt->fetch(PDO::FETCH_ASSOC);
+            
+            $accrualStartMonth = clone $leaveYearApril;
+            if ($uJoinRow && !empty($uJoinRow['joining_date'])) {
+                $joinD = new DateTime($uJoinRow['joining_date']);
+                if ($joinD > $leaveYearApril) {
+                    $accrualStartMonth = new DateTime($joinD->format('Y-m-01')); 
+                }
+            }
+
+            $selectedMonth = new DateTime("$year-" . str_pad($month+1,2,'0',STR_PAD_LEFT) . "-01");
+            $monthsSinceStart = ($selectedMonth->format('Y') - $accrualStartMonth->format('Y')) * 12 + ($selectedMonth->format('n') - $accrualStartMonth->format('n'));
+            
+            $totalAccrued = ($monthsSinceStart >= 0 && $monthsSinceStart < 12) ? ($monthsSinceStart + 1) : 0;
+            $maxPossibleMonths = 12 - (($accrualStartMonth->format('Y') - $leaveYearApril->format('Y')) * 12 + ($accrualStartMonth->format('n') - 4));
+            if ($totalAccrued > $maxPossibleMonths) $totalAccrued = $maxPossibleMonths;
+
+            $casualDateStart = $leaveYearApril->format('Y-m-d');
+            $usedStmt = $pdo->prepare("
+                SELECT SUM(duration) as used 
+                FROM leave_request 
+                WHERE user_id = ? 
+                AND leave_type = ?
+                AND status != 'rejected'
+                AND start_date >= ?
+            ");
+            $usedStmt->execute([$userId, $tid, $casualDateStart]);
+            $usedRow = $usedStmt->fetch(PDO::FETCH_ASSOC);
+            $totalUsed = $usedRow && $usedRow['used'] ? floatval($usedRow['used']) : 0;
+            
+            $avail = max(0, $totalAccrued - $totalUsed);
+        }
+
+        if (!$bank || $avail < $count) {
             $pdo->rollBack();
-            $name = $bank['name'] ?? 'Unknown Leave Type';
-            $avail = $bank['remaining_balance'] ?? 0;
             echo json_encode([
                 'success' => false, 
                 'message' => "Insufficient balance for $name. Available: $avail, Requested: $count"
@@ -226,9 +321,12 @@ try {
             exit();
         }
 
-        $updateBank = $pdo->prepare("UPDATE leave_bank SET remaining_balance = remaining_balance - ? 
-                                     WHERE user_id = ? AND leave_type_id = ? AND year = ?");
-        $updateBank->execute([$count, $userId, $tid, $currentYear]);
+        // Only explicitly decrement static leaves (like Sick Leave) because dynamic leaves compute on the fly
+        if (strpos($nameLower, 'compensation') === false && strpos($nameLower, 'comp off') === false && strpos($nameLower, 'compensate') === false && strpos($nameLower, 'casual') === false) {
+            $updateBank = $pdo->prepare("UPDATE leave_bank SET remaining_balance = remaining_balance - ? 
+                                         WHERE user_id = ? AND leave_type_id = ? AND year = ?");
+            $updateBank->execute([$count, $userId, $tid, $currentYear]);
+        }
     }
 
     // manager_approval enum is ('approved','rejected'), so we leave it NULL for pending status
@@ -310,6 +408,88 @@ try {
         $logStmt->execute([$userId, $lastInsertId, $logDesc, json_encode(['dates' => $dates, 'reason' => $reason])]);
     } catch (Throwable $e) { }
 
+    // ─── Automated "Conneqts Bot" Task Assignment ───
+    try {
+        $empStmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+        $empStmt->execute([$userId]);
+        $empRow = $empStmt->fetch(PDO::FETCH_ASSOC);
+        $employeeName = $empRow ? $empRow['username'] : 'Employee';
+
+        $assignedIds = [];
+        $assignedNames = [];
+
+        $mgrId = $approverId;
+        if ($mgrId) {
+            $mStmt = $pdo->prepare("SELECT id, username FROM users WHERE id = ?");
+            $mStmt->execute([$mgrId]);
+            if ($mRow = $mStmt->fetch(PDO::FETCH_ASSOC)) {
+                $assignedIds[] = $mRow['id'];
+                $assignedNames[] = $mRow['username'];
+            }
+        }
+
+        $hrStmt = $pdo->prepare("SELECT id, username FROM users WHERE LOWER(role) = 'hr'");
+        $hrStmt->execute();
+        $hrUsers = $hrStmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($hrUsers as $h) {
+            if (!in_array($h['id'], $assignedIds)) {
+                $assignedIds[] = $h['id'];
+                $assignedNames[] = $h['username'];
+            }
+        }
+
+        if (count($assignedIds) > 0) {
+            $assignedToCSV = implode(',', $assignedIds);
+            $assignedNamesCSV = implode(', ', $assignedNames);
+            
+            $totalDays = count($dates);
+            $firstDate = $dates[0]['date'];
+            $lastDate = $dates[$totalDays - 1]['date'];
+            $range = ($firstDate === $lastDate) ? $firstDate : "$firstDate to $lastDate";
+            $type = $dates[0]['type_name'] ?? 'Leave';
+
+            $taskDesc = "Please verify the $type request from $employeeName for $range. Total Days: $totalDays. Reason: " . substr($reason, 0, 100);
+
+            // Resolve project_id for FK constraint (production has strict FK on project_id)
+            $projStmt = $pdo->prepare("SELECT id FROM projects WHERE LOWER(title) LIKE '%architectshive back office%' LIMIT 1");
+            $projStmt->execute();
+            $projRow  = $projStmt->fetch(PDO::FETCH_ASSOC);
+            $botProjectId = $projRow ? $projRow['id'] : null;
+
+            $tStmt = $pdo->prepare("INSERT INTO studio_assigned_tasks 
+                    (project_id, project_name, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, status, created_by, created_at)
+                    VALUES 
+                    (?, 'ArchitectsHive Back Office', 'Verification', ?, 'High', ?, ?, CURDATE(), '18:00:00', 'Pending', ?, NOW())");
+            $tStmt->execute([$botProjectId, $taskDesc, $assignedToCSV, $assignedNamesCSV, $userId]);
+            $newTaskID = $pdo->lastInsertId();
+
+            $logSubStmt = $pdo->prepare("INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read) VALUES (?, 'task_assigned', 'task', ?, ?, ?, NOW(), 0)");
+            
+            $logMetadata = [
+                'task_id' => $newTaskID,
+                'assigned_by_name' => 'Conneqts Bot',
+                'project_name' => 'ArchitectsHive Back Office',
+                'assigned_to' => $assignedToCSV,
+                'assigned_names' => $assignedNamesCSV,
+                'due_date' => date('Y-m-d'),
+                'due_time' => '18:00:00'
+            ];
+
+            foreach ($assignedIds as $aUid) {
+                $logSubStmt->execute([
+                    $aUid,
+                    $newTaskID,
+                    "Conneqts Bot assigned you a Leave Verification task for $employeeName (Due Today by 06:00 PM).",
+                    json_encode($logMetadata)
+                ]);
+            }
+        }
+    } catch (Throwable $e) {
+        // Temporarily surface the error for production debugging
+        error_log('[ConneqtsBot ERROR] ' . $e->getMessage() . ' | File: ' . $e->getFile() . ' | Line: ' . $e->getLine());
+        $botError = $e->getMessage();
+    }
+
     // ─── WhatsApp Notifications ─────────────
     try {
         require_once __DIR__ . '/../../whatsapp/WhatsAppService.php';
@@ -375,8 +555,9 @@ try {
     }
 
     echo json_encode([
-        'success' => true, 
-        'message' => 'Leave application submitted successfully! Your balance has been updated.'
+        'success'   => true, 
+        'message'   => 'Leave application submitted successfully! Your balance has been updated.',
+        'bot_error' => $botError ?? null
     ]);
 
 } catch (Throwable $e) {

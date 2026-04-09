@@ -51,9 +51,19 @@ try {
         $short = 2.00;
 
         // --- 3. Sick Leave (ID 2) --- 
-        // Rule: +0.5 every month. Max 12. Caps at 12.
-        $joinedMonthsTotal = ($jDate->diff($today)->y * 12) + $jDate->diff($today)->m + 1;
-        $sick = min(12, $joinedMonthsTotal * 0.5);
+        // Rule: +0.5 every month, rolling 24-month window
+        // After 24 months: +0.5 (new) -0.5 (24 months ago expires)
+        $joiningDate = $user['joining_date'] ? new DateTime($user['joining_date']) : new DateTime('2024-01-01');
+        $monthsSinceJoining = ($joiningDate->diff($today)->y * 12) + $joiningDate->diff($today)->m + 1;
+        
+        if ($monthsSinceJoining <= 24) {
+            // First 24 months: simple accrual
+            $sick = $monthsSinceJoining * 0.5;
+        } else {
+            // After 24 months: rolling window (max 12, minus any used)
+            // Total accrued in last 24 months = 24 * 0.5 = 12
+            $sick = 12.0;
+        }
 
         // --- 4. Maternity/Paternity (IDs 5, 6) ---
         $mat = 28.00;
@@ -111,8 +121,8 @@ try {
             $insertSql = "INSERT INTO leave_bank (user_id, leave_type_id, total_balance, remaining_balance, year) 
                           VALUES (?, ?, ?, ?, ?)
                           ON DUPLICATE KEY UPDATE 
-                          total_balance = VALUES(total_balance), 
-                          remaining_balance = VALUES(remaining_balance),
+                          remaining_balance = remaining_balance + (VALUES(total_balance) - total_balance),
+                          total_balance = VALUES(total_balance),
                           year = VALUES(year)";
             $stmtInsert = $pdo->prepare($insertSql);
             // I'll assume remaining = total for this "create" step, unless user says otherwise.

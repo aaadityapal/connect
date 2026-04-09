@@ -11,9 +11,13 @@ if (!isset($_SESSION['user_id'])) {
 
 try {
     $userId = $_SESSION['user_id'];
-    $uStmt = $pdo->prepare("SELECT joining_date FROM users WHERE id = ?");
+    
+    // Fetch user's role and gender
+    $uStmt = $pdo->prepare("SELECT joining_date, role, gender FROM users WHERE id = ?");
     $uStmt->execute([$userId]);
     $userRow = $uStmt->fetch(PDO::FETCH_ASSOC);
+    $userRole = $userRow['role'] ?? '';
+    $userGender = strtolower($userRow['gender'] ?? '');
 
     $isEligibleForParental = false;
     $parentalLockMessage = '';
@@ -38,6 +42,32 @@ try {
     // Fetch only active leave types
     $stmt = $pdo->query("SELECT id, name FROM leave_types WHERE status = 'active' ORDER BY name ASC");
     $types = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Filter leave types based on user role and gender
+    $types = array_filter($types, function($t) use ($userRole, $userGender) {
+        $leaveName = strtolower($t['name']);
+        
+        // Show "Back Office" leave only to "Maid Back Office" role
+        if (strpos($leaveName, 'back office') !== false) {
+            return strtolower($userRole) === 'maid back office';
+        }
+        
+        // Show "Maternity Leave" only to female users
+        if (strpos($leaveName, 'maternity') !== false) {
+            return $userGender === 'female';
+        }
+        
+        // Show "Paternity Leave" only to male users
+        if (strpos($leaveName, 'paternity') !== false) {
+            return $userGender === 'male';
+        }
+        
+        // All other leave types are visible to everyone
+        return true;
+    });
+    
+    // Re-index array after filtering
+    $types = array_values($types);
     
     // Set properties for Parental leaves if not eligible
     $result = [];

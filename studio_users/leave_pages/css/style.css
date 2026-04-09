@@ -1170,15 +1170,22 @@ input[type="checkbox"] { width: 15px; height: 15px; border-radius: 4px; cursor: 
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.5);
     display: none;
     align-items: center;
     justify-content: center;
     z-index: 10001;
     backdrop-filter: blur(4px);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-.nlr-modal-backdrop.active { display: flex; }
+.nlr-modal-backdrop.active { 
+    display: flex;
+    pointer-events: auto;
+    opacity: 1;
+}
 
 .nlr-result-modal {
     background: #fff;
@@ -1187,10 +1194,11 @@ input[type="checkbox"] { width: 15px; height: 15px; border-radius: 4px; cursor: 
     border-radius: 20px;
     padding: 40px 32px;
     text-align: center;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    transform: scale(0.9);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    transform: scale(0.85);
     opacity: 0;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: auto;
 }
 
 .nlr-modal-backdrop.active .nlr-result-modal {
@@ -1210,24 +1218,32 @@ input[type="checkbox"] { width: 15px; height: 15px; border-radius: 4px; cursor: 
 
 .nlr-modal-icon.success { background: #e8f5e9; color: #2e7d32; }
 .nlr-modal-icon.error { background: #ffebee; color: #c62828; }
+.nlr-modal-icon.warning { background: #fef3c7; color: #d97706; }
 
 .nlr-modal-title { font-size: 1.3rem; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
 .nlr-modal-desc { font-size: 0.95rem; color: #666; line-height: 1.5; margin-bottom: 24px; }
 
 .nlr-modal-btn {
     width: 100%;
-    padding: 14px;
+    padding: 16px;
     border-radius: 12px;
     border: none;
     background: #c62828;
     color: #fff;
     font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(198, 40, 40, 0.2);
 }
 
 .nlr-modal-btn:hover {
     background: #b71c1c;
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(198, 40, 40, 0.2);
+    box-shadow: 0 8px 20px rgba(198, 40, 40, 0.3);
+}
+
+.nlr-modal-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(198, 40, 40, 0.2);
 }

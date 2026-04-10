@@ -1,6 +1,11 @@
 (function() {
     let alertedIds = JSON.parse(localStorage.getItem('alertedDeadlineTasks') || '[]');
 
+    // ── Punch-in blocking mode ────────────────────────────────────────────
+    // Set to true when the modal is triggered from a successful punch-in.
+    // In this mode the overlay is NON-dismissible and shows a banner.
+    let _punchInMode = false;
+
     document.addEventListener('DOMContentLoaded', () => {
         // Initial check after 3 seconds
         setTimeout(checkUpcomingDeadlines, 3000);
@@ -13,9 +18,49 @@
             console.log('[Upcoming Deadline] Task update event received, checking...');
             checkUpcomingDeadlines();
         });
+
+        // Close on overlay click — ONLY when NOT in punch-in blocking mode
+        const overlay = document.getElementById('upcomingDeadlineModalOverlay');
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay && !_punchInMode) {
+                    closeUpcomingModal();
+                }
+            });
+        }
     });
 
+    /**
+     * Called by script.js immediately after a successful punch-in.
+     * Shows the modal in blocking mode — user MUST resolve action tasks
+     * (mark as done or extend) before the modal dismisses.
+     */
+    function showAfterPunchIn() {
+        _punchInMode = true;
+        checkUpcomingDeadlines();
+    }
+    window.showUpcomingDeadlinesAfterPunchIn = showAfterPunchIn;
+
+    /**
+     * Checks whether the user is currently punched in by reading the punch button's
+     * CSS state — no extra global variable needed.
+     * dh-punch-out-state = user IS punched in (button now says "Punch Out")
+     */
+    function isUserPunchedIn() {
+        const btn = document.getElementById('punchBtn');
+        return btn && btn.classList.contains('dh-punch-out-state');
+    }
+
     function checkUpcomingDeadlines() {
+        // ── Gate: only show modal if the user is currently punched in ────────
+        // Exception: _punchInMode is true when triggered directly by punch-in
+        // success (the very first check), so we always allow that through.
+        if (!_punchInMode && !isUserPunchedIn()) {
+            console.log('[Upcoming Deadline] Skipped — user not punched in.');
+            closeUpcomingModal(); // close if it was open from a previous session
+            return;
+        }
+
         Promise.all([
             fetch('api/check_upcoming_deadlines.php').then(r => r.json()).catch(() => ({ success: false, tasks: [] })),
             fetch('api/check_pending_task_approvals.php').then(r => r.json()).catch(() => ({ success: false, tasks: [] }))
@@ -27,6 +72,11 @@
             if (actionTasks.length > 0 || approvalTasks.length > 0) {
                 showSplitModal(actionTasks, approvalTasks);
             } else {
+                // If no tasks remain and we were in punch-in blocking mode, release it cleanly
+                if (_punchInMode) {
+                    _punchInMode = false;
+                    console.log('[Punch-In Modal] All tasks resolved — unblocking.');
+                }
                 closeUpcomingModal();
             }
         })
@@ -97,6 +147,29 @@
             }
         }
 
+        // ── Punch-in blocker banner ───────────────────────────────────────
+        // Remove any stale banner first
+        const existingBanner = box ? box.querySelector('.udm-punchin-banner') : null;
+        if (existingBanner) existingBanner.remove();
+
+        if (_punchInMode && actionTasks.length > 0) {
+            const banner = document.createElement('div');
+            banner.className = 'udm-punchin-banner';
+            banner.innerHTML = `
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>You have <strong>${actionTasks.length} pending task${actionTasks.length > 1 ? 's' : ''}</strong> that must be resolved before your next punch-in will count. Please <strong>Mark as Done</strong> or <strong>Extend</strong> each task below.</span>
+            `;
+            // Insert banner right after the header
+            const header = box ? box.querySelector('.udm-header') : null;
+            if (header) header.insertAdjacentElement('afterend', banner);
+            else if (box) box.prepend(banner);
+        }
+
+        // Overlay click-outside: block in punch-in mode, allow otherwise
+        if (overlay) {
+            overlay.style.cursor = _punchInMode && actionTasks.length > 0 ? 'not-allowed' : 'default';
+        }
+
         // Counts + empty states
         if (actionCountEl) actionCountEl.textContent = `(${actionTasks.length})`;
         if (approvalCountEl) approvalCountEl.textContent = `(${approvalTasks.length})`;
@@ -110,29 +183,49 @@
             const mustExtendFirst = !!task.requires_extension_before_completion || Number(task.completion_reject_count || 0) >= 2;
 
             const item = document.createElement('div');
-            item.className = 'udm-task-item';
+            item.className = 'udm-task-item udm-task-item--detailed';
             item.style.borderLeft = `4px solid ${task.dotColor || '#e11d48'}`;
 
+            // Build assignees display
+            const persons = Array.isArray(task.persons) ? task.persons : (task.persons ? [task.persons] : []);
+            const assigneesHtml = persons.length > 0
+                ? persons.map(p => `<span class="udm-meta-chip"><i class="fa-solid fa-user" style="font-size:0.65rem;"></i> ${p}</span>`).join('')
+                : '<span class="udm-meta-chip">Unassigned</span>';
+
             item.innerHTML = `
-                <div class="udm-task-info">
-                    <div class="udm-task-name">${task.projectStage || task.title || 'Untitled Task'}</div>
-                    <div class="udm-task-badge" style="background:${task.bgColor || '#fff1f2'}; color:${task.dotColor || '#e11d48'};">
-                        <i class="fa-regular fa-clock" style="margin-right:4px;"></i>${task.time_remaining_label || ''}
+                <div class="udm-task-body">
+                    <div class="udm-task-top-row">
+                        <div class="udm-task-name">${task.projectStage || task.title || 'Untitled Task'}</div>
+                        <div class="udm-task-badge" style="background:${task.bgColor || '#fff1f2'}; color:${task.dotColor || '#e11d48'}; flex-shrink:0;">
+                            <i class="fa-regular fa-clock" style="margin-right:4px;"></i>${task.time_remaining_label || ''}
+                        </div>
                     </div>
+
+                    ${task.desc ? `<div class="udm-task-desc">${task.desc}</div>` : ''}
+
+                    <div class="udm-task-meta-row">
+                        <span class="udm-meta-chip udm-meta-chip--by">
+                            <i class="fa-solid fa-paper-plane" style="font-size:0.65rem;"></i> Assigned by: <strong>${task.assignedBy || 'Unknown'}</strong>
+                        </span>
+                        ${assigneesHtml}
+                        ${task.dateTo ? `<span class="udm-meta-chip"><i class="fa-regular fa-calendar" style="font-size:0.65rem;"></i> Due: ${task.dateTo}</span>` : ''}
+                    </div>
+
                     ${mustExtendFirst ? `
-                    <div class="udm-task-badge" style="margin-top:6px; background:#fff7ed; color:#9a3412; border-color:#fed7aa;">
+                    <div class="udm-task-badge" style="margin-top:8px; background:#fff7ed; color:#9a3412; border-color:#fed7aa;">
                         <i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i>
                         Mandatory: Extend deadline first (rejected ${Number(task.completion_reject_count || 0)} times)
                     </div>` : ''}
-                </div>
-                <div class="udm-task-actions">
-                    <button class="udm-action-btn udm-secondary-btn" data-action="extend">
-                        <i class="fa-solid fa-clock-rotate-left"></i> Extend
-                    </button>
-                    ${mustExtendFirst ? '' : `
-                    <button class="udm-action-btn udm-primary-btn" data-action="finish">
-                        <i class="fa-solid fa-check"></i> Mark as Done
-                    </button>`}
+
+                    <div class="udm-task-actions udm-task-actions--inline">
+                        <button class="udm-action-btn udm-secondary-btn" data-action="extend">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Extend
+                        </button>
+                        ${mustExtendFirst ? '' : `
+                        <button class="udm-action-btn udm-primary-btn" data-action="finish">
+                            <i class="fa-solid fa-check"></i> Mark as Done
+                        </button>`}
+                    </div>
                 </div>
             `;
 
@@ -158,26 +251,42 @@
         approvalContainer.innerHTML = '';
         (approvalTasks || []).forEach(task => {
             const item = document.createElement('div');
-            item.className = 'udm-task-item compact';
+            item.className = 'udm-task-item udm-task-item--detailed compact';
             item.style.borderLeft = `4px solid ${task.dotColor || '#16a34a'}`;
 
+            // Build assignees display
+            const apPersons = Array.isArray(task.persons) ? task.persons : (task.persons ? [task.persons] : []);
+            const apAssigneesHtml = apPersons.length > 0
+                ? apPersons.map(p => `<span class="udm-meta-chip"><i class="fa-solid fa-user" style="font-size:0.65rem;"></i> ${p}</span>`).join('')
+                : '<span class="udm-meta-chip">Unassigned</span>';
+
             item.innerHTML = `
-                <div class="udm-task-info">
-                    <div class="udm-task-name">${task.projectStage || task.title || 'Untitled Task'}</div>
-                    <div class="udm-task-badge" style="background:${task.bgColor || '#dcfce7'}; color:${task.dotColor || '#16a34a'};">
-                        <i class="fa-solid fa-circle-check" style="margin-right:6px;"></i>${task.time_remaining_label || 'Completed'}
+                <div class="udm-task-body">
+                    <div class="udm-task-top-row">
+                        <div class="udm-task-name">${task.projectStage || task.title || 'Untitled Task'}</div>
+                        <div class="udm-task-badge" style="background:${task.bgColor || '#dcfce7'}; color:${task.dotColor || '#16a34a'}; flex-shrink:0;">
+                            <i class="fa-solid fa-circle-check" style="margin-right:6px;"></i>${task.time_remaining_label || 'Completed'}
+                        </div>
                     </div>
-                </div>
-                <div class="udm-task-actions">
-                    <button class="udm-action-btn udm-secondary-btn" data-action="view" title="View" aria-label="View">
-                        <i class="fa-solid fa-eye"></i>
-                    </button>
-                    <button class="udm-action-btn udm-approve-btn" data-action="approve" title="Approve" aria-label="Approve">
-                        <i class="fa-solid fa-thumbs-up"></i>
-                    </button>
-                    <button class="udm-action-btn udm-reject-btn" data-action="reject" title="Reject" aria-label="Reject">
-                        <i class="fa-solid fa-ban"></i>
-                    </button>
+
+                    ${task.desc ? `<div class="udm-task-desc">${task.desc}</div>` : ''}
+
+                    <div class="udm-task-meta-row">
+                        ${apAssigneesHtml}
+                        ${task.dateTo ? `<span class="udm-meta-chip"><i class="fa-regular fa-calendar" style="font-size:0.65rem;"></i> Due: ${task.dateTo}</span>` : ''}
+                    </div>
+
+                    <div class="udm-task-actions udm-task-actions--inline">
+                        <button class="udm-action-btn udm-secondary-btn" data-action="view" title="View task details" aria-label="View">
+                            <i class="fa-solid fa-eye"></i> View
+                        </button>
+                        <button class="udm-action-btn udm-approve-btn" data-action="approve" title="Approve completion" aria-label="Approve">
+                            <i class="fa-solid fa-thumbs-up"></i> Approve
+                        </button>
+                        <button class="udm-action-btn udm-reject-btn" data-action="reject" title="Reject completion" aria-label="Reject">
+                            <i class="fa-solid fa-ban"></i> Reject
+                        </button>
+                    </div>
                 </div>
             `;
 

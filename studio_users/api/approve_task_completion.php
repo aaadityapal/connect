@@ -212,7 +212,7 @@ try {
 
     // ── Smart Automation: Chain profile reminders until 90% completion ─────────
     $isProfileReminderTask = (
-        strtolower(trim((string)($row['project_name'] ?? ''))) === strtolower('ArchitectsHive Back Office')
+        strtolower(trim((string)($row['project_name'] ?? ''))) === strtolower('ArchitectsHive Systems')
         && strtolower(trim((string)($row['task_description'] ?? ''))) === strtolower('Complete your profile as soon as possible')
     );
 
@@ -240,7 +240,7 @@ try {
                 if ($computedPct < 90) {
                     $nextDueDate = date('Y-m-d', strtotime('+1 day'));
                     $dueTime = '18:00:00';
-                    $projectName = 'ArchitectsHive Back Office';
+                    $projectName = 'ArchitectsHive Systems';
                     $taskDescription = 'Complete your profile as soon as possible';
                     $assignedToStr = (string)$targetUserId;
                     $assignedName = trim((string)($targetUser['username'] ?? ('User ' . $targetUserId)));

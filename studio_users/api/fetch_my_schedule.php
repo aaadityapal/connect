@@ -203,7 +203,7 @@ try {
             'status' => $myStatus,           // User's specific status overrides global status for modal UI
             'global_status' => $task['status'], // Just in case we need the real global
             'person' => $myAssignedName ?? (count($personsMap) > 0 ? $personsMap[0] : 'Unassigned'),
-            'assignedBy' => ($task['project_name'] === 'ArchitectsHive Back Office') ? 'Conneqts Bot' : ($task['assigned_by_name'] ?? 'System Admin'),
+            'assignedBy' => ($task['project_name'] === 'ArchitectsHive Systems') ? 'Conneqts Bot' : ($task['assigned_by_name'] ?? 'System Admin'),
             'persons' => $personsMap,
             'can_act' => true,
             'assignee_statuses' => $assigneeStatuses,

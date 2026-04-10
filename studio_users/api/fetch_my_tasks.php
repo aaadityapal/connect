@@ -218,7 +218,7 @@ try {
             'assignees'         => array_values($assignedNames),
             'can_act'           => true,
             'assignee_statuses' => $assigneeStatuses,
-            'assignedBy'        => ($task['project_name'] === 'ArchitectsHive Back Office') ? 'Conneqts Bot' : ($task['created_by_name'] ?? 'System Admin'),
+            'assignedBy'        => ($task['project_name'] === 'ArchitectsHive Systems') ? 'Conneqts Bot' : ($task['created_by_name'] ?? 'System Admin'),
             'modalDateFrom'     => $modalDateFrom,
             'modalDateTo'       => $modalDateTo,
             'dateFrom'          => $modalDateFrom,

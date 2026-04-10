@@ -317,7 +317,7 @@ try {
             'status' => $myStatus, // User specific status for modal logic
             'global_status' => $task['status'],
             'person' => count($personsMap) > 0 ? $personsMap[0] : 'Unassigned',
-            'assignedBy' => ($task['project_name'] === 'ArchitectsHive Back Office') ? 'Conneqts Bot' : ($task['assigned_by_name'] ?? 'System Admin'),
+            'assignedBy' => ($task['project_name'] === 'ArchitectsHive Systems') ? 'Conneqts Bot' : ($task['assigned_by_name'] ?? 'System Admin'),
             'persons' => $personsMap,
             'can_act' => $isViewerAssignee,
             'assignee_statuses' => $assigneeStatuses,

@@ -351,7 +351,7 @@ try {
     // - Partial completion: creator gets partial update; pending assignees get "still pending" update.
     // - Every completion (partial or full): creator also gets approval-needed update.
     $creatorId = isset($taskRow['created_by']) ? (int)$taskRow['created_by'] : 0;
-    $isBotTask = ($taskRow['project_name'] === 'ArchitectsHive Back Office');
+    $isBotTask = ($taskRow['project_name'] === 'ArchitectsHive Systems');
     
     if ($creatorId > 0 && $creatorId !== $userId && $status === 'Completed' && !$isBotTask) {
         $assignedIdsInt = array_values(array_filter(array_map('intval', $assignedToArr), fn($v) => $v > 0));

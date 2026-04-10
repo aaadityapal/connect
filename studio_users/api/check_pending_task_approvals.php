@@ -54,7 +54,7 @@ try {
           AND sat.created_by = :uid
           AND sat.status IN ('In Progress', 'Completed')
           AND IFNULL(TRIM(sat.completed_by), '') <> ''
-          AND sat.project_name != 'ArchitectsHive Back Office'
+          AND sat.project_name != 'ArchitectsHive Systems'
           AND (sat.assigned_to IS NULL OR FIND_IN_SET(:uid_not_assignee, REPLACE(sat.assigned_to, ' ', '')) = 0)
         ORDER BY sat.completed_at DESC, sat.updated_at DESC, sat.id DESC
         LIMIT 50

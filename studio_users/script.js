@@ -4223,6 +4223,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         executePunchIn();
                         closePunchIn();
                         showDailyTasksPopup();
+                        // Show pending tasks/approvals modal in blocking mode after punch-in
+                        if (typeof window.showUpcomingDeadlinesAfterPunchIn === 'function') {
+                            window.showUpcomingDeadlinesAfterPunchIn();
+                        }
                     } else {
                         // Show error inline in modal
                         clickPicBtn.disabled = false;

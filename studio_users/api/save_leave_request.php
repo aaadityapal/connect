@@ -451,7 +451,7 @@ try {
             $taskDesc = "Please verify the $type request from $employeeName for $range. Total Days: $totalDays. Reason: " . substr($reason, 0, 100);
 
             // Resolve project_id for FK constraint (production has strict FK on project_id)
-            $projStmt = $pdo->prepare("SELECT id FROM projects WHERE LOWER(title) LIKE '%architectshive back office%' LIMIT 1");
+            $projStmt = $pdo->prepare("SELECT id FROM projects WHERE LOWER(title) LIKE '%architectshive systems%' LIMIT 1");
             $projStmt->execute();
             $projRow  = $projStmt->fetch(PDO::FETCH_ASSOC);
             $botProjectId = $projRow ? $projRow['id'] : null;
@@ -459,7 +459,7 @@ try {
             $tStmt = $pdo->prepare("INSERT INTO studio_assigned_tasks 
                     (project_id, project_name, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, status, created_by, created_at)
                     VALUES 
-                    (?, 'ArchitectsHive Back Office', 'Verification', ?, 'High', ?, ?, CURDATE(), '18:00:00', 'Pending', ?, NOW())");
+                    (?, 'ArchitectsHive Systems', 'Verification', ?, 'High', ?, ?, CURDATE(), '18:00:00', 'Pending', ?, NOW())");
             $tStmt->execute([$botProjectId, $taskDesc, $assignedToCSV, $assignedNamesCSV, $userId]);
             $newTaskID = $pdo->lastInsertId();
 
@@ -468,7 +468,7 @@ try {
             $logMetadata = [
                 'task_id' => $newTaskID,
                 'assigned_by_name' => 'Conneqts Bot',
-                'project_name' => 'ArchitectsHive Back Office',
+                'project_name' => 'ArchitectsHive Systems',
                 'assigned_to' => $assignedToCSV,
                 'assigned_names' => $assignedNamesCSV,
                 'due_date' => date('Y-m-d'),

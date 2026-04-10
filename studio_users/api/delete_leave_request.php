@@ -114,7 +114,7 @@ try {
 
         $taskDescPrefix = "Please verify the {$ltName} request from {$employeeName} for {$range}.";
 
-        $stmtDelTask = $pdo->prepare("DELETE FROM studio_assigned_tasks WHERE project_name = 'ArchitectsHive Back Office' AND created_by = ? AND task_description LIKE ?");
+        $stmtDelTask = $pdo->prepare("DELETE FROM studio_assigned_tasks WHERE project_name = 'ArchitectsHive Systems' AND created_by = ? AND task_description LIKE ?");
         $stmtDelTask->execute([$user_id, "%$taskDescPrefix%"]);
     } catch (Exception $e) { }
 

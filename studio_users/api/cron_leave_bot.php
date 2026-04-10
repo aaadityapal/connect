@@ -54,14 +54,14 @@ try {
             $baseDesc = "Please verify the {$lr['leave_type']} request from {$lr['employee_name']} for {$range}.";
 
             // Prevent infinite task duplication logic: Ensure NO active or pending follow-ups currently exist for this action today
-            $checkDup = $pdo->prepare("SELECT id FROM studio_assigned_tasks WHERE project_name = 'ArchitectsHive Back Office' AND task_description LIKE ? AND `status` != 'Completed' AND `status` != 'Cancelled' LIMIT 1");
+            $checkDup = $pdo->prepare("SELECT id FROM studio_assigned_tasks WHERE project_name = 'ArchitectsHive Systems' AND task_description LIKE ? AND `status` != 'Completed' AND `status` != 'Cancelled' LIMIT 1");
             $checkDup->execute(["%(FOLLOW UP) $baseDesc%"]);
 
             if (!$checkDup->fetch()) {
                 // Execute Auto-Assignment Pipeline to spawn for the newly arrived day/morning
                 $clonedDesc = "(FOLLOW UP) " . $baseDesc . "\n[System Audit: Still pending formal action from $group]";
                 
-                $tStmt = $pdo->prepare("INSERT INTO studio_assigned_tasks (project_name, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, status, created_by, created_at) VALUES ('ArchitectsHive Back Office', 'Verification', ?, 'High', ?, ?, CURDATE(), '18:00:00', 'Pending', ?, NOW())");
+                $tStmt = $pdo->prepare("INSERT INTO studio_assigned_tasks (project_name, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, status, created_by, created_at) VALUES ('ArchitectsHive Systems', 'Verification', ?, 'High', ?, ?, CURDATE(), '18:00:00', 'Pending', ?, NOW())");
                 
                 // Set the exact applicant user as creator explicitly to obey FK constraints exactly as before
                 $tStmt->execute([$clonedDesc, $assignedToCSV, $assignedNamesCSV, $lr['user_id']]);
@@ -73,7 +73,7 @@ try {
                 $logMetadata = json_encode([
                     'task_id' => $newTaskID,
                     'assigned_by_name' => 'Conneqts Bot',
-                    'project_name' => 'ArchitectsHive Back Office',
+                    'project_name' => 'ArchitectsHive Systems',
                     'assigned_to' => $assignedToCSV,
                     'assigned_names' => $assignedNamesCSV,
                     'due_date' => date('Y-m-d'),

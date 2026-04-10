@@ -256,6 +256,29 @@ try {
                 $b['total_balance'] = $earnedTotal;
             }
         }
+
+        if (strpos($nameStr, 'short') !== false) {
+            // Logic for Short Leave (2 per month)
+            $b['total_balance'] = 2.0;
+            
+            $dateObj = new DateTime("$year-" . ($month + 1) . "-01");
+            $mStart = $dateObj->format('Y-m-01');
+            $mEnd = $dateObj->format('Y-m-t');
+
+            $uStmt = $pdo->prepare("
+                SELECT COUNT(*) as used 
+                FROM leave_request 
+                WHERE user_id = ? 
+                AND leave_type = (SELECT id FROM leave_types WHERE LOWER(name) LIKE '%short%')
+                AND status != 'rejected'
+                AND start_date BETWEEN ? AND ?
+            ");
+            $uStmt->execute([$user_id, $mStart, $mEnd]);
+            $uRow = $uStmt->fetch(PDO::FETCH_ASSOC);
+            $mUsed = $uRow && $uRow['used'] ? floatval($uRow['used']) : 0;
+
+            $b['remaining_balance'] = max(0, 2.0 - $mUsed);
+        }
     }
 
     // 2. Fetch usage for the selected month/year

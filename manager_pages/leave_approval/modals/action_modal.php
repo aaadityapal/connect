@@ -21,6 +21,36 @@
                     <span id="actionLeaveType" class="badge">Casual Leave</span>
                 </div>
 
+                <div id="quickOverviewSection" style="background: #fafafa; border: 1px dashed #e2e8f0; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; display: none;">
+                    <h4 style="margin: 0 0 0.75rem 0; font-size: 0.8rem; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em;">Quick Overview</h4>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                <label style="font-size: 0.7rem; font-weight: 700; color: #64748b; margin-bottom: 2px; display: block;">Applicant Reason:</label>
+                                <span id="actionApplicantAt" style="font-size: 0.65rem; color: #94a3b8; font-weight: 500;"></span>
+                            </div>
+                            <p id="actionApplicantReason" style="margin: 0; font-size: 0.85rem; color: #1e293b; line-height: 1.4;"></p>
+                        </div>
+                        <div id="actionManagerReasonBox" style="border-top: 1px solid #f1f5f9; padding-top: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                <label style="font-size: 0.7rem; font-weight: 700; color: #64748b; margin-bottom: 2px; display: block;">Manager Remarks:</label>
+                                <span id="actionManagerAt" style="font-size: 0.65rem; color: #94a3b8; font-weight: 500;"></span>
+                            </div>
+                            <p id="actionManagerReason" style="margin: 0; font-size: 0.85rem; color: #1e293b; line-height: 1.4; font-style: italic;"></p>
+                        </div>
+                        <div style="border-top: 1px solid #f1f5f9; padding-top: 0.5rem; display: flex; justify-content: space-between;">
+                            <div>
+                                <label style="font-size: 0.7rem; font-weight: 700; color: #64748b; margin-bottom: 2px; display: block;">Dates:</label>
+                                <span id="actionLeaveDates" style="font-size: 0.85rem; color: #1e293b; font-weight: 500;"></span>
+                            </div>
+                            <div style="text-align: right;">
+                                <label style="font-size: 0.7rem; font-weight: 700; color: #64748b; margin-bottom: 2px; display: block;">Duration:</label>
+                                <span id="actionLeaveDuration" style="font-size: 0.85rem; color: #1e293b; font-weight: 600;"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Manager Reason -->
                 <div class="form-group">
                     <label id="mgrReasonLabel" for="mgrReason">Manager's Remarks <span id="mgrReasonStatus"></span></label>

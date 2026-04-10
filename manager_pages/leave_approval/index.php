@@ -6,8 +6,21 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+$userId    = $_SESSION['user_id'];
 $username  = $_SESSION['username'] ?? 'Manager';
 $user_role = $_SESSION['role'] ?? 'user';
+
+// Permission Check: Admin or specific Manual Leave permission
+require_once '../../config/db_connect.php';
+$isManagerAdmin = (strtolower($user_role) === 'admin');
+$hasManualLeavePermission = $isManagerAdmin;
+
+if (!$hasManualLeavePermission) {
+    $pStmt = $pdo->prepare("SELECT can_add_manual_leave FROM manual_leave_permissions WHERE user_id = ?");
+    $pStmt->execute([$userId]);
+    $pRow = $pStmt->fetch(PDO::FETCH_ASSOC);
+    $hasManualLeavePermission = ($pRow && (int)$pRow['can_add_manual_leave'] === 1);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -48,9 +61,12 @@ $user_role = $_SESSION['role'] ?? 'user';
                     <input type="hidden" id="currentUserRole" value="<?php echo $user_role; ?>">
                 </div>
                 <div class="header-actions">
-                    <button class="btn-icon" title="Refresh list">
-                        <i data-lucide="refresh-cw" style="width: 18px; height: 18px;"></i>
+                    <?php if ($hasManualLeavePermission): ?>
+                    <button class="btn-primary-gradient" id="addLeaveManualBtn">
+                        <i data-lucide="plus-circle"></i>
+                        <span>Add Users Leaves Manually</span>
                     </button>
+                    <?php endif; ?>
                 </div>
             </header>
 
@@ -112,6 +128,9 @@ $user_role = $_SESSION['role'] ?? 'user';
                     </div>
 
                     <div class="filter-group select-group">
+                        <select class="filter-select" id="employeeFilter">
+                            <option value="All">All Employees</option>
+                        </select>
                         <select class="filter-select" id="statusFilter">
                             <option value="All">All Status</option>
                             <option value="Pending">Pending</option>
@@ -201,29 +220,11 @@ $user_role = $_SESSION['role'] ?? 'user';
                     </button>
                 </div>
 
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Employee</th>
-                                <th>Leave Type</th>
-                                <th>Total Balance</th>
-                                <th>Used Leaves</th>
-                                <th>Remaining Balance</th>
-                                <th>Year</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaveBankTableBody">
-                            <tr>
-                                <td colspan="6" style="padding: 2rem; text-align: center;">
-                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-                                        <div class="fa-spin" style="font-size: 1.5rem; color: var(--primary);"><i class="fa-solid fa-spinner"></i></div>
-                                        <p style="color: var(--text-muted); font-size: 0.9rem;">Loading leave bank...</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div id="leaveBankCardsGrid" class="leave-bank-grid">
+                    <div style="grid-column: 1 / -1; padding: 4rem; text-align: center;">
+                        <div class="fa-spin" style="font-size: 1.5rem; color: var(--primary);"><i class="fa-solid fa-spinner"></i></div>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 1rem;">Loading leave bank...</p>
+                    </div>
                 </div>
             </div>
 
@@ -231,8 +232,18 @@ $user_role = $_SESSION['role'] ?? 'user';
     </div>
 
     <!-- Modals -->
-    <?php require_once 'modals/details_modal.php'; ?>
-    <?php require_once 'modals/action_modal.php'; ?>
+    <?php include 'modals/details_modal.php'; ?>
+    <?php include 'modals/action_modal.php'; ?>
+    <?php include 'modals/manual_leave_modal.php'; ?>
+    <?php include 'modals/response_modal.php'; ?>
+
+    <!-- Global Loader Overlay -->
+    <div id="globalLoader" class="loader-overlay" style="display: none;">
+        <div class="loader-content">
+            <div class="spinner-modern"></div>
+            <p>Processing request...</p>
+        </div>
+    </div>
 
     <!-- Layout script for interactivity -->
     <script src="js/script.js" defer></script>

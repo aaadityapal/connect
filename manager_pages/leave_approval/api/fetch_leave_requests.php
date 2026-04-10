@@ -13,10 +13,9 @@ $manager_id = $_SESSION['user_id'];
 $user_role  = $_SESSION['role'] ?? 'user'; // Assuming 'role' is stored in session
 
 try {
-    // 1. Fetch leave requests
-    // If user is Admin, show all. If Manager, show only mapped employees
-    if ($user_role === 'admin') {
-        $query = "SELECT lr.*, lt.name as leave_type_name, u.username as employee_name, u.employee_id as emp_code, u.position as user_role,
+    // If user is Admin or HR, show all. If Manager, show only mapped employees
+    if (in_array(strtolower($user_role), ['admin', 'hr'])) {
+        $query = "SELECT lr.*, lt.name as leave_type_name, u.username as employee_name, u.employee_id as emp_code, u.role as user_role,
                          la.file_path, la.file_name, la.file_type
                   FROM leave_request lr
                   JOIN leave_types lt ON lr.leave_type = lt.id
@@ -26,7 +25,7 @@ try {
         $stmt = $pdo->prepare($query);
         $stmt->execute();
     } else {
-        $query = "SELECT lr.*, lt.name as leave_type_name, u.username as employee_name, u.employee_id as emp_code, u.position as user_role,
+        $query = "SELECT lr.*, lt.name as leave_type_name, u.username as employee_name, u.employee_id as emp_code, u.role as user_role,
                          la.file_path, la.file_name, la.file_type
                   FROM leave_request lr
                   JOIN leave_types lt ON lr.leave_type = lt.id
@@ -43,7 +42,6 @@ try {
 
     $grouped = [];
     foreach ($rows as $row) {
-        // Create a unique key for grouping multi-day requests
         $key = $row['user_id'] . '_' . $row['created_at'] . '_' . substr($row['reason'], 0, 50);
         
         if (!isset($grouped[$key])) {
@@ -54,8 +52,10 @@ try {
                 'emp_id' => $row['emp_code'] ?? ('EMP-' . $row['user_id']),
                 'type' => $row['leave_type_name'],
                 'reason' => $row['reason'],
-                'status' => $row['manager_approval'] ? ucfirst($row['manager_approval']) : 'Pending',
+                'manager_status' => $row['manager_approval'] ? ucfirst($row['manager_approval']) : 'Pending',
                 'hr_status' => ucfirst($row['status']),
+                'manager_reason' => $row['manager_action_reason'],
+                'manager_at' => $row['manager_action_at'],
                 'raw_dates' => [],
                 'days' => 0,
                 'hours' => 0,
@@ -69,7 +69,6 @@ try {
         if (!in_array($row['start_date'], $grouped[$key]['raw_dates'])) {
             $grouped[$key]['raw_dates'][] = $row['start_date'];
             
-            // Check if it's hour-based (Short Leave or Time fields present)
             $isShort = stripos($row['leave_type_name'], 'Short') !== false;
             $isHalf  = stripos($row['leave_type_name'], 'Half') !== false;
 
@@ -81,14 +80,12 @@ try {
                 $grouped[$key]['hours'] += $hours;
                 $grouped[$key]['is_hour_based'] = true;
             } elseif ($isHalf) {
-                // If duration is 0.5, show as 4 hours (assumption)
                 $grouped[$key]['hours'] += 4;
                 $grouped[$key]['is_hour_based'] = true;
             } else {
                 $grouped[$key]['days'] += (float)$row['duration'];
             }
 
-            // Determine Shift Label (First Half, Second Half, Morning, Evening)
             $shift = '';
             if ($row['day_type'] && $row['day_type'] !== 'full') {
                 $shift = ($row['day_type'] === 'first_half') ? 'First Half' : 'Second Half';
@@ -136,8 +133,11 @@ try {
             'is_hour_based' => $g['is_hour_based'],
             'shift' => $g['shift'],
             'duration_label' => ($g['is_hour_based'] ? (round($g['hours'], 1) . ' Hour(s)') : ($g['days'] . ' Day(s)')) . ($g['shift'] ? " ({$g['shift']})" : ""),
-            'manager_status' => $g['status'], // Map internal 'status' (manager_approval) to manager_status
+            'manager_status' => $g['manager_status'],
             'hr_status' => $g['hr_status'],
+            'manager_reason' => $g['manager_reason'],
+            'manager_at' => $g['manager_at'],
+            'created_at' => $g['created_at'],
             'reason' => $g['reason'],
             'attachments' => $g['attachments']
         ];
@@ -148,4 +148,3 @@ try {
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
-?>

@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id   = $_SESSION['user_id'];
-$user_role = $_SESSION['role'] ?? 'user';
+$manager_role = strtolower($_SESSION['role'] ?? 'user');
 
 // Get JSON input
 $input = json_decode(file_get_contents('php://input'), true);
@@ -28,11 +28,36 @@ $mgrReason  = $input['manager_reason'] ?? '';
 $hrReason   = $input['hr_reason'] ?? '';
 
 try {
+    // 0. Verify current status for workflow rules
+    $vStmt = $pdo->prepare("SELECT manager_approval FROM leave_request WHERE id = ?");
+    $vStmt->execute([$requestId]);
+    $currentReq = $vStmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($currentReq) {
+        $isHRAttemptingApprove = ($manager_role === 'hr' && $actionType === 'approve');
+        if ($isHRAttemptingApprove && ($currentReq['manager_approval'] !== 'approved')) {
+            echo json_encode(['success' => false, 'message' => 'Approval for the manager is pending.']);
+            exit();
+        }
+    }
+
     // 1. Determine update fields
     // If Admin, update BOTH Manager and HR fields
     // If Manager, update only Manager fields
     
-    if ($user_role === 'admin') {
+    if (in_array($manager_role, ['admin', 'hr'])) {
+        if ($actionType === 'reject') {
+            $hrFinalReason = $hrReason;
+            $mgrFinalReason = "HR rejected your leave with reason: " . $hrReason;
+            $mgrFinalStatus = 'rejected';
+            $hrFinalStatus = 'rejected';
+        } else {
+            $hrFinalReason = $hrReason;
+            $mgrFinalReason = $mgrReason;
+            $mgrFinalStatus = $status;
+            $hrFinalStatus = $status;
+        }
+
         $query = "UPDATE leave_request 
                   SET manager_approval = :mgr_status,
                       manager_action_reason = :mgr_reason,
@@ -45,29 +70,49 @@ try {
                   WHERE id = :id";
         $stmt = $pdo->prepare($query);
         $stmt->execute([
-            ':mgr_status'  => $status,
-            ':mgr_reason'  => $mgrReason,
+            ':mgr_status'  => $mgrFinalStatus,
+            ':mgr_reason'  => $mgrFinalReason,
             ':mgr_user_id' => $user_id,
-            ':hr_status'   => $status,
-            ':hr_reason'   => $hrReason,
+            ':hr_status'   => $hrFinalStatus,
+            ':hr_reason'   => $hrFinalReason,
             ':hr_user_id'  => $user_id,
             ':id'          => $requestId
         ]);
     } else {
-        // Just manager
-        $query = "UPDATE leave_request 
-                  SET manager_approval = :status,
-                      manager_action_reason = :mgr_reason,
-                      manager_action_by = :user_id,
-                      manager_action_at = NOW()
-                  WHERE id = :id";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute([
-            ':status'      => $status,
-            ':mgr_reason'  => $mgrReason,
-            ':user_id'     => $user_id,
-            ':id'          => $requestId
-        ]);
+        // Just manager - but if they REJECT, it also rejects for HR automatically
+        if ($actionType === 'reject') {
+            $query = "UPDATE leave_request 
+                      SET manager_approval = 'rejected',
+                          manager_action_reason = :mgr_reason,
+                          manager_action_by = :user_id,
+                          manager_action_at = NOW(),
+                          status = 'rejected',
+                          hr_action_reason = :hr_linked_reason,
+                          hr_action_by = :user_id,
+                          hr_action_at = NOW()
+                      WHERE id = :id";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([
+                ':mgr_reason'  => $mgrReason,
+                ':hr_linked_reason' => "Manager rejected your leave with reason: " . $mgrReason,
+                ':user_id'     => $user_id,
+                ':id'          => $requestId
+            ]);
+        } else {
+            $query = "UPDATE leave_request 
+                      SET manager_approval = :status,
+                          manager_action_reason = :mgr_reason,
+                          manager_action_by = :user_id,
+                          manager_action_at = NOW()
+                      WHERE id = :id";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([
+                ':status'      => $status,
+                ':mgr_reason'  => $mgrReason,
+                ':user_id'     => $user_id,
+                ':id'          => $requestId
+            ]);
+        }
     }
 
     if ($stmt->rowCount() > 0) {

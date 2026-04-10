@@ -359,6 +359,15 @@ function canShow($menuId, $perms) {
         </a>
         <?php endif; ?>
 
+        <?php if (canShow('manual-leave-permissions', $_permissions)): ?>
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'manual_leave_permissions.php'; return false;"
+            class="menu-item" data-page="manual-leave-permissions">
+            <i data-lucide="file-edit" class="menu-icon" style="width:17px;height:17px;"></i>
+            <span class="menu-text">Manual Leave Permission</span>
+            <div class="tooltip">Manual Leave Permission</div>
+        </a>
+        <?php endif; ?>
+
         <?php if (canShow('help', $_permissions)): ?>
         <a href="help.php" class="menu-item" data-page="help">
             <i data-lucide="help-circle" class="menu-icon" style="width:17px;height:17px;"></i>

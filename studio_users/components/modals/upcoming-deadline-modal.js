@@ -19,13 +19,16 @@
             checkUpcomingDeadlines();
         });
 
-        // Close on overlay click — ONLY when NOT in punch-in blocking mode
+        // ── Overlay click is intentionally BLOCKED ────────────────────────
+        // The modal is NON-dismissible by design. It ONLY closes automatically
+        // after checkUpcomingDeadlines() confirms all tasks are resolved
+        // (marked as done, extended, approved, or rejected).
+        // Prevent any accidental close via outside click.
         const overlay = document.getElementById('upcomingDeadlineModalOverlay');
         if (overlay) {
             overlay.addEventListener('click', (e) => {
-                if (e.target === overlay && !_punchInMode) {
-                    closeUpcomingModal();
-                }
+                e.stopPropagation();
+                // Do nothing — modal cannot be dismissed by clicking outside.
             });
         }
     });

@@ -60,6 +60,7 @@ $menu_items = [
         'settings' => ['label' => 'Settings', 'icon' => 'settings-2'],
         'project-permissions' => ['label' => 'Project Permission', 'icon' => 'shield-check'],
         'attendance-action-permissions' => ['label' => 'Attendance Action Permission', 'icon' => 'user-check'],
+        'manual-leave-permissions' => ['label' => 'Manual Leave Permission', 'icon' => 'file-edit'],
         'help' => ['label' => 'Help & Support', 'icon' => 'help-circle'],
         'logout' => ['label' => 'Logout', 'icon' => 'power']
     ]

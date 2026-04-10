@@ -457,9 +457,9 @@ try {
             $botProjectId = $projRow ? $projRow['id'] : null;
 
             $tStmt = $pdo->prepare("INSERT INTO studio_assigned_tasks 
-                    (project_id, project_name, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, status, created_by, created_at)
+                    (project_id, project_name, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, status, created_by, is_system_task, created_at)
                     VALUES 
-                    (?, 'ArchitectsHive Systems', 'Verification', ?, 'High', ?, ?, CURDATE(), '18:00:00', 'Pending', ?, NOW())");
+                    (?, 'ArchitectsHive Systems', 'Verification', ?, 'High', ?, ?, CURDATE(), '18:00:00', 'Pending', ?, 1, NOW())");
             $tStmt->execute([$botProjectId, $taskDesc, $assignedToCSV, $assignedNamesCSV, $userId]);
             $newTaskID = $pdo->lastInsertId();
 

@@ -41,6 +41,7 @@ try {
               WHERE sat.deleted_at IS NULL
                 AND DATE(sat.created_at) = :date
                 AND sat.created_by = :user_id
+                AND sat.is_system_task = 0
               ORDER BY sat.created_at DESC";
 
     $stmt = $pdo->prepare($query);

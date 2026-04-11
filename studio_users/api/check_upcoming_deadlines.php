@@ -59,11 +59,26 @@ try {
         $dueTimestamp = strtotime($task['due_date'] . ' ' . $task['due_time']);
         $diffSeconds = $dueTimestamp - $now;
 
-        // Condition: 
-        // 1. Due in the future within 2 minutes (0 to 120s)
-        // 2. OR Due in the past (Overdue)
-        $isUpcoming = ($diffSeconds >= 0 && $diffSeconds <= 120);
-        $isOverdue  = ($diffSeconds < 0);
+        // ── Filtering Logic ──
+        $filter = $_GET['filter'] ?? null;
+        
+        if ($filter === 'eightpm') {
+            // Check if due date is today AND due time is 8 PM (20:00:00)
+            $isToday = (date('Y-m-d', $dueTimestamp) === date('Y-m-d', $now));
+            $isEightPM = (date('H:i', $dueTimestamp) === '20:00');
+            
+            if (!$isToday || !$isEightPM) continue;
+            
+            // If it's 8 PM today, it blocks punch-out
+            $isUpcoming = true;
+            $isOverdue = false;
+        } else {
+            // Original polling logic: 
+            // 1. Due in the future within 2 minutes (0 to 120s)
+            // 2. OR Due in the past (Overdue)
+            $isUpcoming = ($diffSeconds >= 0 && $diffSeconds <= 120);
+            $isOverdue  = ($diffSeconds < 0);
+        }
 
         if ($isUpcoming || $isOverdue) {
             $rejectCount = (int)($task['completion_reject_count'] ?? 0);

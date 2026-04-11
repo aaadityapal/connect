@@ -74,7 +74,7 @@ try {
                 // Execute Auto-Assignment Pipeline to spawn for the newly arrived day/morning
                 $clonedDesc = "(FOLLOW UP) " . $baseDesc . "\n[System Audit: Still pending formal action from $group]";
                 
-                $tStmt = $pdo->prepare("INSERT INTO studio_assigned_tasks (project_name, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, status, created_by, is_system_task, created_at) VALUES ('ArchitectsHive Systems', 'Verification', ?, 'High', ?, ?, CURDATE(), '18:00:00', 'Pending', ?, 1, NOW())");
+                $tStmt = $pdo->prepare("INSERT INTO studio_assigned_tasks (project_name, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, status, created_by, is_system_task, created_at) VALUES ('ArchitectsHive Systems', 'Verification', ?, 'High', ?, ?, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '18:00:00', 'Pending', ?, 1, NOW())");
                 
                 // Set the exact applicant user as creator explicitly to obey FK constraints exactly as before
                 $tStmt->execute([$clonedDesc, $assignedToCSV, $assignedNamesCSV, $lr['user_id']]);
@@ -89,7 +89,7 @@ try {
                     'project_name' => 'ArchitectsHive Systems',
                     'assigned_to' => $assignedToCSV,
                     'assigned_names' => $assignedNamesCSV,
-                    'due_date' => date('Y-m-d'),
+                    'due_date' => date('Y-m-d', strtotime('+1 day')),
                     'due_time' => '18:00:00'
                 ]);
 

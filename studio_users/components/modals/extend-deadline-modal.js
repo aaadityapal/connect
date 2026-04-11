@@ -172,7 +172,30 @@
             return;
         }
 
-        // Hard Limit Check: Cannot exceed this week's Sunday 8 PM
+        // ── Hard Limit 1: Cannot exceed 8:00 PM on the same day ──────────────
+        const dailyLimit = new Date(date);
+        dailyLimit.setHours(20, 0, 0, 0); // 8:00 PM of the chosen day
+        if (date > dailyLimit) {
+            // Auto-clamp to 8:00 PM and warn the user
+            date = dailyLimit;
+            // Sync inputs to reflect the clamped value
+            if (timeInput) timeInput.value = '20:00';
+            if (dateInput) {
+                const y  = date.getFullYear();
+                const mo = String(date.getMonth() + 1).padStart(2, '0');
+                const d  = String(date.getDate()).padStart(2, '0');
+                dateInput.value = `${y}-${mo}-${d}`;
+            }
+            // Warn the user that the time was auto-adjusted
+            const msg = "Deadline auto-adjusted to 08:00 PM — tasks cannot be extended past 8 PM.";
+            if (window.showCustomAlert) {
+                window.showCustomAlert(msg, "Auto-Adjusted to 08:00 PM", "info");
+            } else {
+                alert(msg);
+            }
+        }
+
+        // ── Hard Limit 2: Cannot exceed this week's Sunday 8 PM ──────────────
         const dayIdx      = new Date().getDay();
         const daysToSun   = (7 - dayIdx) % 7;
         const sundayLimit = new Date();
@@ -182,16 +205,14 @@
         if (date > sundayLimit) {
             const msg = "Task extensions are limited to Sunday 8:00 PM of the current week.";
             if (window.showCustomAlert) {
-                window.showCustomAlert(msg, "Policy Limit", "info");
+                window.showCustomAlert(msg, "Weekly Policy Limit", "info");
             } else {
                 alert(msg);
             }
-            
-            // Hide preview and disable apply button
             previewRow.style.display = 'none';
             applyBtn.disabled = true;
             _newDeadline = null;
-            return; // Terminate early so we don't enable the button
+            return;
         }
 
         _newDeadline = date;
@@ -213,9 +234,11 @@
             dateInput.value = '';
             timeInput.value = '';
 
-            const hours     = parseInt(btn.getAttribute('data-hours'), 10);
-            const base      = getBaseDeadline();
-            const newDate   = new Date(base.getTime() + hours * 3600 * 1000);
+            const hours   = parseInt(btn.getAttribute('data-hours'), 10);
+            // Always extend from the CURRENT time, not the old task deadline.
+            // e.g. if now is 5:43 PM and user picks +3h → 8:43 PM (will fail daily limit).
+            const base    = new Date();
+            const newDate = new Date(base.getTime() + hours * 3600 * 1000);
             showPreview(newDate);
         });
     });

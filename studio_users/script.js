@@ -2663,64 +2663,74 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     return; // Stop here, do not toggle state
                 }
-                const punchOutModal = document.getElementById('punchOutModal');
-                if (punchOutModal) {
-                    punchOutModal.classList.add('visible');
-                    punchOutModal.classList.add('open');
+                const startPunchOutSequence = () => {
+                    const punchOutModal = document.getElementById('punchOutModal');
+                    if (punchOutModal) {
+                        punchOutModal.classList.add('visible');
+                        punchOutModal.classList.add('open');
 
-                    const statusText = document.getElementById('punchOutStatus');
-                    const video = document.getElementById('cameraPreviewOut');
-                    const canvas = document.getElementById('cameraCanvasOut');
-                    const grantBtn = document.getElementById('grantAccessBtnOut');
-                    const switchCameraBtnOut = document.getElementById('switchCameraBtnOut');
-                    const capturePicBtnOut = document.getElementById('capturePicBtnOut');
-                    const retakeWrapperOut = document.getElementById('retakeWrapperOut');
-                    const submitBtn = document.getElementById('submitPunchOutBtn');
-                    const summaryTA = document.getElementById('punchOutSummary');
+                        const statusText = document.getElementById('punchOutStatus');
+                        const video = document.getElementById('cameraPreviewOut');
+                        const canvas = document.getElementById('cameraCanvasOut');
+                        const grantBtn = document.getElementById('grantAccessBtnOut');
+                        const switchCameraBtnOut = document.getElementById('switchCameraBtnOut');
+                        const capturePicBtnOut = document.getElementById('capturePicBtnOut');
+                        const retakeWrapperOut = document.getElementById('retakeWrapperOut');
+                        const submitBtn = document.getElementById('submitPunchOutBtn');
+                        const summaryTA = document.getElementById('punchOutSummary');
 
-                    if (statusText) statusText.style.display = 'none';
-                    if (video) {
-                        video.style.display = 'none';
-                        if (video.srcObject) {
-                            video.srcObject.getTracks().forEach(track => track.stop());
-                            video.srcObject = null;
+                        if (statusText) statusText.style.display = 'none';
+                        if (video) {
+                            video.style.display = 'none';
+                            if (video.srcObject) {
+                                video.srcObject.getTracks().forEach(track => track.stop());
+                                video.srcObject = null;
+                            }
                         }
-                    }
-                    if (canvas) canvas.style.display = 'none';
-                    if (retakeWrapperOut) retakeWrapperOut.style.display = 'none';
-                    if (capturePicBtnOut) capturePicBtnOut.style.display = 'none';
-                    if (switchCameraBtnOut) switchCameraBtnOut.style.display = 'flex';
-                    if (grantBtn) grantBtn.textContent = 'Grant Camera & Location Access';
+                        if (canvas) canvas.style.display = 'none';
+                        if (retakeWrapperOut) retakeWrapperOut.style.display = 'none';
+                        if (capturePicBtnOut) capturePicBtnOut.style.display = 'none';
+                        if (switchCameraBtnOut) switchCameraBtnOut.style.display = 'flex';
+                        if (grantBtn) grantBtn.textContent = 'Grant Camera & Location Access';
 
-                    if (submitBtn) {
-                        submitBtn.style.display = 'none';
-                        submitBtn.disabled = true;
-                    }
-                    const sendOvertimeBtn = document.getElementById('sendOvertimeBtn');
-                    if (sendOvertimeBtn) {
-                        sendOvertimeBtn.style.display = 'none';
-                    }
+                        if (submitBtn) {
+                            submitBtn.style.display = 'none';
+                            submitBtn.disabled = true;
+                        }
+                        const sendOvertimeBtn = document.getElementById('sendOvertimeBtn');
+                        if (sendOvertimeBtn) {
+                            sendOvertimeBtn.style.display = 'none';
+                        }
 
-                    if (summaryTA) {
-                        summaryTA.value = '';
-                        const wc = document.getElementById('wordCount');
-                        if (wc) wc.textContent = '0';
-                    }
+                        if (summaryTA) {
+                            summaryTA.value = '';
+                            const wc = document.getElementById('wordCount');
+                            if (wc) wc.textContent = '0';
+                        }
 
-                    // Generate smart work-report suggestions from completed tasks
-                    generateWorkReportSuggestions();
+                        // Generate smart work-report suggestions from completed tasks
+                        generateWorkReportSuggestions();
 
-                    if (localStorage.getItem('punchInAccessGranted') === 'true') {
-                        if (grantBtn) grantBtn.style.display = 'none';
-                        requestPunchOutAccess();
+                        if (localStorage.getItem('punchInAccessGranted') === 'true') {
+                            if (grantBtn) grantBtn.style.display = 'none';
+                            requestPunchOutAccess();
+                        } else {
+                            if (grantBtn) {
+                                grantBtn.style.display = 'flex';
+                                grantBtn.textContent = 'Grant Camera & Location Access';
+                            }
+                        }
                     } else {
-                        if (grantBtn) {
-                            grantBtn.style.display = 'flex';
-                            grantBtn.textContent = 'Grant Camera & Location Access';
-                        }
+                        executePunchOut();
                     }
+                };
+
+                // ── Task Deadline Check ──
+                // If the user has any tasks extended to 8:00 PM today, block punch-out.
+                if (typeof window.showUpcomingDeadlinesBeforePunchOut === 'function') {
+                    window.showUpcomingDeadlinesBeforePunchOut(startPunchOutSequence);
                 } else {
-                    executePunchOut();
+                    startPunchOutSequence();
                 }
             } else {
                 // User is trying to punch in, open modal to ask for camera and location

@@ -6,6 +6,12 @@
     // In this mode the overlay is NON-dismissible and shows a banner.
     let _punchInMode = false;
 
+    // ── Punch-out blocking mode ───────────────────────────────────────────
+    // Set to true when the modal is triggered before a punch-out attempt.
+    // All tasks extended to today's 8 PM must be resolved.
+    let _punchOutMode = false;
+    let _punchOutCallback = null;
+
     document.addEventListener('DOMContentLoaded', () => {
         // Initial check after 3 seconds
         setTimeout(checkUpcomingDeadlines, 3000);
@@ -45,6 +51,22 @@
     window.showUpcomingDeadlinesAfterPunchIn = showAfterPunchIn;
 
     /**
+     * Called by script.js when user clicks Punch Out.
+     * Shows the modal in blocking mode — user MUST mark tasks as done
+     * or extend them before the punch-out modal is allowed to open.
+     * @param {Function} onClearedCallback  - fired automatically once all tasks are resolved.
+     */
+    function showBeforePunchOut(onClearedCallback) {
+        _punchOutMode    = true;
+        _punchOutCallback = typeof onClearedCallback === 'function' ? onClearedCallback : null;
+        checkUpcomingDeadlines();
+    }
+    window.showUpcomingDeadlinesBeforePunchOut = showBeforePunchOut;
+
+    /** Returns true while punch-out blocking is active (used by script.js guard). */
+    window.isPunchOutModeActive = function() { return _punchOutMode; };
+
+    /**
      * Checks whether the user is currently punched in by reading the punch button's
      * CSS state — no extra global variable needed.
      * dh-punch-out-state = user IS punched in (button now says "Punch Out")
@@ -55,31 +77,49 @@
     }
 
     function checkUpcomingDeadlines() {
-        // ── Gate: only show modal if the user is currently punched in ────────
-        // Exception: _punchInMode is true when triggered directly by punch-in
-        // success (the very first check), so we always allow that through.
-        if (!_punchInMode && !isUserPunchedIn()) {
+        // ── Gate: only show modal if the user is currently punched in ──────────
+        // Exception: _punchInMode or _punchOutMode bypass this gate.
+        if (!_punchInMode && !_punchOutMode && !isUserPunchedIn()) {
             console.log('[Upcoming Deadline] Skipped — user not punched in.');
             closeUpcomingModal(); // close if it was open from a previous session
             return;
         }
 
+        // In punch-out mode, we use a filter to check specifically for 8-PM tasks.
+        const endpoint = _punchOutMode 
+            ? 'api/check_upcoming_deadlines.php?filter=eightpm' 
+            : 'api/check_upcoming_deadlines.php';
+
         Promise.all([
-            fetch('api/check_upcoming_deadlines.php').then(r => r.json()).catch(() => ({ success: false, tasks: [] })),
+            fetch(endpoint).then(r => r.json()).catch(() => ({ success: false, tasks: [] })),
             fetch('api/check_pending_task_approvals.php').then(r => r.json()).catch(() => ({ success: false, tasks: [] }))
         ])
         .then(([actionRes, approvalRes]) => {
             const actionTasks = (actionRes && actionRes.success && Array.isArray(actionRes.tasks)) ? actionRes.tasks : [];
-            const approvalTasks = (approvalRes && approvalRes.success && Array.isArray(approvalRes.tasks)) ? approvalRes.tasks : [];
+            // In punch-out mode, ignore approval tasks—only blocking items matter.
+            const approvalTasks = _punchOutMode ? [] : ((approvalRes && approvalRes.success && Array.isArray(approvalRes.tasks)) ? approvalRes.tasks : []);
 
             if (actionTasks.length > 0 || approvalTasks.length > 0) {
                 showSplitModal(actionTasks, approvalTasks);
             } else {
-                // If no tasks remain and we were in punch-in blocking mode, release it cleanly
+                // If in punch-in mode, release.
                 if (_punchInMode) {
                     _punchInMode = false;
                     console.log('[Punch-In Modal] All tasks resolved — unblocking.');
                 }
+                
+                // If in punch-out mode, release and fire original punch-out sequence.
+                if (_punchOutMode) {
+                    _punchOutMode = false;
+                    console.log('[Punch-Out Modal] All 8 PM tasks resolved — unblocking punch-out.');
+                    closeUpcomingModal();
+                    if (typeof _punchOutCallback === 'function') {
+                        _punchOutCallback();
+                        _punchOutCallback = null;
+                    }
+                    return;
+                }
+                
                 closeUpcomingModal();
             }
         })
@@ -155,22 +195,36 @@
         const existingBanner = box ? box.querySelector('.udm-punchin-banner') : null;
         if (existingBanner) existingBanner.remove();
 
-        if (_punchInMode && actionTasks.length > 0) {
-            const banner = document.createElement('div');
-            banner.className = 'udm-punchin-banner';
-            banner.innerHTML = `
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <span>You have <strong>${actionTasks.length} pending task${actionTasks.length > 1 ? 's' : ''}</strong> that must be resolved before your next punch-in will count. Please <strong>Mark as Done</strong> or <strong>Extend</strong> each task below.</span>
-            `;
-            // Insert banner right after the header
-            const header = box ? box.querySelector('.udm-header') : null;
-            if (header) header.insertAdjacentElement('afterend', banner);
-            else if (box) box.prepend(banner);
+        if (actionTasks.length > 0) {
+            if (_punchInMode) {
+                const banner = document.createElement('div');
+                banner.className = 'udm-punchin-banner';
+                banner.innerHTML = `
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>You have <strong>${actionTasks.length} pending task${actionTasks.length > 1 ? 's' : ''}</strong> that must be resolved before your next punch-in will count. Please <strong>Mark as Done</strong> or <strong>Extend</strong> each task below.</span>
+                `;
+                const header = box ? box.querySelector('.udm-header') : null;
+                if (header) header.insertAdjacentElement('afterend', banner);
+                else if (box) box.prepend(banner);
+            } else if (_punchOutMode) {
+                const banner = document.createElement('div');
+                banner.className = 'udm-punchin-banner udm-punchout-banner';
+                banner.style.background = '#fff7ed';
+                banner.style.borderColor = '#fed7aa';
+                banner.style.color = '#9a3412';
+                banner.innerHTML = `
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Please take action on tasks extended to 8:00 PM today before punching out. Mark them as <strong>Done</strong> or <strong>Extend to Tomorrow</strong>.</span>
+                `;
+                const header = box ? box.querySelector('.udm-header') : null;
+                if (header) header.insertAdjacentElement('afterend', banner);
+                else if (box) box.prepend(banner);
+            }
         }
 
-        // Overlay click-outside: block in punch-in mode, allow otherwise
+        // Overlay click-outside: block in punch-in or punch-out mode
         if (overlay) {
-            overlay.style.cursor = _punchInMode && actionTasks.length > 0 ? 'not-allowed' : 'default';
+            overlay.style.cursor = (_punchInMode || _punchOutMode) && actionTasks.length > 0 ? 'not-allowed' : 'default';
         }
 
         // Counts + empty states

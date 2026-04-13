@@ -4639,10 +4639,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const otProceedBtn = document.getElementById('otProceedBtn');
         if (otProceedBtn) {
-            otProceedBtn.addEventListener('click', () => {
+            otProceedBtn.addEventListener('click', async () => {
                 document.getElementById('otPromptSection').style.display = 'none';
                 document.getElementById('otReportSection').style.display = 'block';
                 document.getElementById('otFooterSubmit').style.display = 'flex';
+
+                // ── Load managers into dropdown ──────────────────────────────
+                const otMgrSelect  = document.getElementById('otManagerSelect');
+                const otMgrLoading = document.getElementById('otManagerLoading');
+                if (otMgrSelect && otMgrSelect.options.length <= 1) { // Only fetch if not already populated
+                    try {
+                        if (otMgrLoading) otMgrLoading.style.display = 'block';
+                        const res  = await fetch('overtime_page/api_overtime.php');
+                        const data = await res.json();
+                        if (data.managers && Array.isArray(data.managers)) {
+                            otMgrSelect.innerHTML = '<option value="">Select Manager</option>';
+                            data.managers.forEach(mgr => {
+                                const opt = document.createElement('option');
+                                opt.value = mgr.id;
+                                opt.textContent = mgr.name;
+                                // Pre-select the mapped manager if available
+                                if (data.assigned_manager_id && parseInt(mgr.id) === parseInt(data.assigned_manager_id)) {
+                                    opt.selected = true;
+                                }
+                                otMgrSelect.appendChild(opt);
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Failed to load managers for OT modal:', e);
+                    } finally {
+                        if (otMgrLoading) otMgrLoading.style.display = 'none';
+                    }
+                }
             });
         }
 
@@ -4667,12 +4695,13 @@ document.addEventListener("DOMContentLoaded", () => {
             otSubmit.addEventListener('click', () => {
                 const otModal = document.getElementById('overtimePromptModal');
                 if (otModal) otModal.classList.remove('visible', 'open');
-                processPunchOutSubmission(otTA.value.trim());
+                const otMgrId = document.getElementById('otManagerSelect')?.value || '';
+                processPunchOutSubmission(otTA.value.trim(), otMgrId);
             });
         }
 
         // Extracted Submission API fetch
-        async function processPunchOutSubmission(overtimeReasonText = null) {
+        async function processPunchOutSubmission(overtimeReasonText = null, otManagerId = null) {
             const statusText = document.getElementById('punchOutStatus');
             if (submitPunchOutBtn) submitPunchOutBtn.disabled = true;
 
@@ -4709,7 +4738,7 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             if (outOfGeofenceReasonOut) payload.out_of_geofence_reason = outOfGeofenceReasonOut;
-            if (overtimeReasonText) payload.overtime_report = overtimeReasonText; // New payload field for future use
+            if (overtimeReasonText) payload.overtime_report = overtimeReasonText;
 
             try {
                 const res = await fetch('../punch.php', {
@@ -4728,6 +4757,29 @@ document.addEventListener("DOMContentLoaded", () => {
                         statusText.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#22c55e;"></i>
                         <span>${data.message}</span>`;
                     }
+
+                    // ── Submit OT to api_submit_overtime.php if user filled OT report ──
+                    if (overtimeReasonText && data.attendance_id && otManagerId) {
+                        try {
+                            const otPayload = new FormData();
+                            otPayload.append('attendance_id', data.attendance_id);
+                            otPayload.append('manager_id',    otManagerId);
+                            otPayload.append('report',        overtimeReasonText);
+                            const otRes  = await fetch('overtime_page/api_submit_overtime.php', {
+                                method: 'POST',
+                                body: otPayload
+                            });
+                            const otData = await otRes.json();
+                            if (otData.status === 'success') {
+                                console.log('[OT Bot] Overtime submitted successfully via punch-out.');
+                            } else {
+                                console.warn('[OT Bot] OT submit returned:', otData.message || otData);
+                            }
+                        } catch (otErr) {
+                            console.error('[OT Bot] Failed to submit overtime after punch-out:', otErr);
+                        }
+                    }
+
                     setTimeout(() => {
                         executePunchOut();
                         const punchOutModal = document.getElementById('punchOutModal');

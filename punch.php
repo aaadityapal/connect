@@ -925,15 +925,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
 
                 echo json_encode([
-                    'success' => true,
-                    'message' => $message,
-                    'punch_time' => $current_time,
-                    'working_hours' => $time_message,
-                    'has_overtime' => $time_details['has_overtime'],
-                    'work_report' => $work_report,
-                    'location_changed' => $location_changed,
+                    'success'           => true,
+                    'message'           => $message,
+                    'punch_time'        => $current_time,
+                    'working_hours'     => $time_message,
+                    'has_overtime'      => $time_details['has_overtime'],
+                    'work_report'       => $work_report,
+                    'location_changed'  => $location_changed,
                     'location_distance' => $distance_km,
-                    'location_message' => $location_message
+                    'location_message'  => $location_message,
+                    'attendance_id'     => (int)$attendance['id']  // ← needed for OT submission
                 ]);
             } catch (Exception $e) {
                 error_log("Punch Out Error: " . $e->getMessage());

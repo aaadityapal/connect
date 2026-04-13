@@ -1,0 +1,99 @@
+<!-- components/filters/filters.html -->
+<div class="filters-card-wrapper">
+    
+    <div class="filters-card-header">
+        <i class="ph ph-funnel"></i>
+        <span>Filter Overtime Records</span>
+    </div>
+
+    <div class="filters-grid-row">
+        
+        <!-- USER -->
+        <div class="filter-input-group">
+            <label><i class="ph ph-user"></i> USER</label>
+            <div class="custom-dropdown" id="dd-user" data-target="filter-user">
+                <button class="dd-trigger" type="button">
+                    <span class="dd-selected">All Users</span>
+                    <i class="ph ph-caret-down dd-caret"></i>
+                </button>
+                <div class="dd-menu">
+                    <div class="dd-option selected" data-value="all">All Users</div>
+                    <div class="dd-option" data-value="aditya">Aditya Kumar Pal</div>
+                    <div class="dd-option" data-value="john">John Doe</div>
+                    <div class="dd-option" data-value="jane">Jane Smith</div>
+                </div>
+                <input type="hidden" id="filter-user" value="all">
+            </div>
+        </div>
+
+        <!-- STATUS -->
+        <div class="filter-input-group">
+            <label><i class="ph ph-sliders-horizontal"></i> STATUS</label>
+            <div class="custom-dropdown" id="dd-status" data-target="filter-status">
+                <button class="dd-trigger" type="button">
+                    <span class="dd-selected">All Statuses</span>
+                    <i class="ph ph-caret-down dd-caret"></i>
+                </button>
+                <div class="dd-menu">
+                    <div class="dd-option selected" data-value="all">All Statuses</div>
+                    <div class="dd-option" data-value="pending">Pending</div>
+                    <div class="dd-option" data-value="submitted">Submitted</div>
+                    <div class="dd-option" data-value="approved">Approved</div>
+                    <div class="dd-option" data-value="rejected">Rejected</div>
+                    <div class="dd-option" data-value="expired">Expired</div>
+                </div>
+                <input type="hidden" id="filter-status" value="all">
+            </div>
+        </div>
+
+        <!-- MONTH -->
+        <div class="filter-input-group">
+            <label><i class="ph ph-calendar-blank"></i> MONTH</label>
+            <div class="custom-dropdown" id="dd-month" data-target="filter-month">
+                <button class="dd-trigger" type="button">
+                    <span class="dd-selected">Select Month</span>
+                    <i class="ph ph-caret-down dd-caret"></i>
+                </button>
+                <div class="dd-menu">
+                    <div class="dd-option" data-value="all">All Months</div>
+                    <div class="dd-option" data-value="01">January</div>
+                    <div class="dd-option" data-value="02">February</div>
+                    <div class="dd-option" data-value="03">March</div>
+                    <div class="dd-option" data-value="04">April</div>
+                    <div class="dd-option" data-value="05">May</div>
+                    <div class="dd-option" data-value="06">June</div>
+                    <div class="dd-option" data-value="07">July</div>
+                    <div class="dd-option" data-value="08">August</div>
+                    <div class="dd-option" data-value="09">September</div>
+                    <div class="dd-option" data-value="10">October</div>
+                    <div class="dd-option" data-value="11">November</div>
+                    <div class="dd-option" data-value="12">December</div>
+                </div>
+                <input type="hidden" id="filter-month" value="">
+            </div>
+        </div>
+
+        <!-- YEAR -->
+        <div class="filter-input-group">
+            <label><i class="ph ph-calendar-blank"></i> YEAR</label>
+            <div class="custom-dropdown" id="dd-year" data-target="filter-year">
+                <button class="dd-trigger" type="button">
+                    <span class="dd-selected">Select Year</span>
+                    <i class="ph ph-caret-down dd-caret"></i>
+                </button>
+                <div class="dd-menu">
+                    <div class="dd-option" data-value="2026">2026</div>
+                    <div class="dd-option" data-value="2025">2025</div>
+                    <div class="dd-option" data-value="2024">2024</div>
+                    <div class="dd-option" data-value="2023">2023</div>
+                </div>
+                <input type="hidden" id="filter-year" value="">
+            </div>
+        </div>
+
+        <button class="btn-apply-filters" id="apply-filters-btn">
+            <i class="ph ph-check"></i> Apply Filters
+        </button>
+
+    </div>
+</div>

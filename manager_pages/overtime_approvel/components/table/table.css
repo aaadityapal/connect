@@ -1,0 +1,262 @@
+/* =====================================================
+   TABLE — Professional Data Grid
+   ===================================================== */
+
+.table-card-wrapper {
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: fadeUp 0.5s 0.35s cubic-bezier(0.4,0,0.2,1) both;
+}
+
+/* ── Card Header ── */
+.table-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: #fafbfc;
+}
+
+.table-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.table-title i {
+    color: var(--brand);
+    font-size: 1.15rem;
+}
+
+.table-title h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+/* ── Studio/Site Toggle ── */
+.table-toggle-switch {
+    display: flex;
+    background: #f1f5f9;
+    border-radius: var(--radius-sm);
+    padding: 0.2rem;
+    gap: 0.2rem;
+    border: 1px solid var(--border);
+}
+
+.toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 0.38rem 0.95rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 0.3rem;
+    transition: var(--transition);
+    font-family: var(--font);
+}
+
+.toggle-btn:hover { color: var(--text-primary); background: rgba(0,0,0,0.04); }
+
+.toggle-btn.active {
+    background: var(--brand);
+    color: white;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.30);
+}
+
+/* ── Table Container ── */
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+.table-container::-webkit-scrollbar { height: 5px; }
+.table-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+/* ── Table ── */
+.data-table {
+    width: 100%;
+    min-width: 1200px;
+    border-collapse: collapse;
+}
+
+/* TH */
+.data-table thead tr {
+    border-bottom: 2px solid var(--border);
+}
+
+.data-table th {
+    background: #f8fafc;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 0.95rem 1.25rem;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.data-table th i {
+    font-size: 0.88rem;
+    margin-right: 0.3rem;
+    vertical-align: text-bottom;
+}
+
+.data-table th.highlight-col {
+    background: #fdf2f8;
+    color: #9d174d;
+}
+
+/* TD */
+.data-table td {
+    padding: 0.95rem 1.25rem;
+    color: var(--text-secondary);
+    font-size: 0.84rem;
+    font-weight: 500;
+    border-bottom: 1px solid #f1f5f9;
+    white-space: nowrap;
+    transition: background 0.15s;
+}
+
+.data-table tbody tr {
+    animation: fadeIn 0.4s ease both;
+    transition: background 0.18s;
+}
+
+.data-table tbody tr:hover td {
+    background: #f8fafc;
+}
+
+.data-table tbody tr:last-child td { border-bottom: none; }
+
+/* ── Employee Cell ── */
+.employee-name {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.employee-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+    color: #4f46e5;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+/* ── Highlighted submitted OT column ── */
+.highlighted-cell {
+    background: #fdf2f8 !important;
+    color: #9d174d;
+    font-weight: 800;
+}
+
+/* ── Truncated text ── */
+.truncate-cell {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.data-table th:last-child,
+.data-table td:last-child {
+    min-width: 140px;  /* Always enough room for 4 action buttons */
+    text-align: right;
+}
+
+/* ── Action Buttons ── */
+.ot-action-icons {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+}
+
+.ot-action-btn {
+    width: 28px; height: 28px;
+    border-radius: var(--radius-xs);
+    border: 1px solid transparent;
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.ot-action-btn.approve { color: #10b981; }
+.ot-action-btn.approve:hover { background: #d1fae5; border-color: #a7f3d0; }
+
+.ot-action-btn.reject { color: #ef4444; }
+.ot-action-btn.reject:hover { background: #fee2e2; border-color: #fca5a5; }
+
+.ot-action-btn.edit { color: var(--brand); }
+.ot-action-btn.edit:hover { background: #ede9fe; border-color: #c4b5fd; }
+
+.ot-action-btn.view { color: var(--text-secondary); }
+.ot-action-btn.view:hover { background: #f1f5f9; color: var(--text-primary); }
+
+/* ── Empty State ── */
+.empty-state {
+    padding: 6rem 2rem;
+    text-align: center;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-state i {
+    font-size: 4.5rem;
+    color: #e2e8f0;
+    display: block;
+    margin-bottom: 1.5rem;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+}
+
+.empty-state h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 400px;
+    margin: 0 auto 0.75rem;
+}
+
+.empty-state span {
+    font-size: 0.85rem;
+    background: #f1f5f9;
+    padding: 0.4rem 1rem;
+    border-radius: 99px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.empty-state.hidden { display: none; }

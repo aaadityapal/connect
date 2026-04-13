@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/config/db_connect.php';
 
-$userId = 33;
+$userId = 3;
 $newPassword = 'Qwer@1234';
 $hash = password_hash($newPassword, PASSWORD_BCRYPT);
 

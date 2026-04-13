@@ -1,0 +1,41 @@
+<!-- components/table/table.html -->
+<div class="table-card-wrapper mt-4">
+    
+    <div class="table-card-header">
+        <div class="table-title">
+            <i class="ph ph-clock-counter-clockwise"></i>
+            <h2>Recent Employee Activity</h2>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th><i class="ph ph-user"></i> EMPLOYEE</th>
+                    <th><i class="ph ph-calendar-blank"></i> DATE</th>
+                    <th><i class="ph ph-clock"></i> END TIME</th>
+                    <th><i class="ph ph-sign-out"></i> PUNCH OUT</th>
+                    <th><i class="ph ph-user-plus"></i> OT HOURS</th>
+                    <th class="highlight-col"><i class="ph-bold ph-pencil-simple"></i> SUBMITTED OT</th>
+                    <th><i class="ph ph-file-text"></i> WORK REPORT</th>
+                    <th><i class="ph ph-file-text"></i> OVERTIME REPORT</th>
+                    <th><i class="ph ph-sliders-horizontal"></i> STATUS</th>
+                    <th><i class="ph ph-gear"></i> ACTION</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Dynamically populated rows -->
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state hidden" id="empty-state">
+            <div class="empty-icon"><i class="ph ph-mask-sad"></i></div>
+            <h3>No Overtime Records</h3>
+            <p>There is no overtime present for the selected period.</p>
+            <span>Try choosing a different user or status filter</span>
+        </div>
+    </div>
+
+</div>

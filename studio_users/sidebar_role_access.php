@@ -54,13 +54,15 @@ $menu_items = [
         'password-reset-mng' => ['label' => 'Password Reset', 'icon' => 'key-round'],
         'employee-work-report' => ['label' => 'Employee Work Report', 'icon' => 'file-text'],
         'employees-profile' => ['label' => 'Employees Profile', 'icon' => 'users'],
-        'employees-attendance' => ['label' => 'Employees Attendance', 'icon' => 'user-check']
+        'employees-attendance' => ['label' => 'Employees Attendance', 'icon' => 'user-check'],
+        'overtime-approval-mng' => ['label' => 'Overtime Approval', 'icon' => 'clock-8']
     ],
     'System' => [
         'settings' => ['label' => 'Settings', 'icon' => 'settings-2'],
         'project-permissions' => ['label' => 'Project Permission', 'icon' => 'shield-check'],
         'attendance-action-permissions' => ['label' => 'Attendance Action Permission', 'icon' => 'user-check'],
         'manual-leave-permissions' => ['label' => 'Manual Leave Permission', 'icon' => 'file-edit'],
+        'unsubmitted-ot-permissions' => ['label' => 'Unsubmitted OT Permission', 'icon' => 'shield-alert'],
         'help' => ['label' => 'Help & Support', 'icon' => 'help-circle'],
         'logout' => ['label' => 'Logout', 'icon' => 'power']
     ]

@@ -1,0 +1,140 @@
+/* =====================================================
+   GLOBAL.CSS — Professional Enterprise Design System
+   Dark-accent · Indigo Tone · Premium Animations
+   ===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ── Design Tokens ── */
+:root {
+    --bg-page:       #f1f5f9;
+    --bg-card:       #ffffff;
+    --bg-card-hover: #fafbfc;
+
+    --text-primary:   #0f172a;
+    --text-secondary: #475569;
+    --text-muted:     #94a3b8;
+
+    --brand:          #6366f1;
+    --brand-dark:     #4f46e5;
+    --brand-light:    rgba(99,102,241,0.12);
+
+    --green:  #10b981;  --green-light:  rgba(16,185,129,0.12);
+    --red:    #ef4444;  --red-light:    rgba(239,68,68,0.12);
+    --cyan:   #0ea5e9;  --cyan-light:   rgba(14,165,233,0.12);
+    --orange: #f97316;  --orange-light: rgba(249,115,22,0.12);
+    --pink:   #ec4899;  --pink-light:   rgba(236,72,153,0.12);
+
+    --border:  #e2e8f0;
+    --divider: rgba(226,232,240,0.7);
+
+    --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md:   0 4px 16px rgba(0,0,0,0.06), 0 2px 6px rgba(0,0,0,0.04);
+    --shadow-lg:   0 12px 40px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06);
+    --shadow-card: 0 2px 8px rgba(99,102,241,0.06), 0 1px 3px rgba(0,0,0,0.05);
+
+    --radius-xs: 6px;
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+
+    --font: 'Inter', system-ui, sans-serif;
+    --transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Reset ── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size: 13px; scroll-behavior: smooth; }
+
+body {
+    font-family: var(--font);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Root container ── */
+#app-root {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.dashboard-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 1.25rem 1.75rem 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+}
+
+/* ════════════════════════
+   GLOBAL ANIMATION KEYFRAMES
+   ════════════════════════ */
+@keyframes fadeUp {
+    from { opacity:0; transform: translateY(18px); }
+    to   { opacity:1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity:0; }
+    to   { opacity:1; }
+}
+@keyframes slideRight {
+    from { opacity:0; transform: translateX(-18px); }
+    to   { opacity:1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+    from { opacity:0; transform: scale(0.93); }
+    to   { opacity:1; transform: scale(1); }
+}
+@keyframes shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position: 600px 0;  }
+}
+@keyframes pulseRing {
+    0%   { transform:scale(0.9); opacity:0.7; }
+    50%  { transform:scale(1.1); opacity:1;   }
+    100% { transform:scale(0.9); opacity:0.7; }
+}
+@keyframes rainbowScroll {
+    0%   { background-position:0% 50%;   }
+    50%  { background-position:100% 50%; }
+    100% { background-position:0% 50%;   }
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes countUp {
+    from { opacity:0; transform:translateY(8px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+@keyframes modalIn {
+    from { opacity:0; transform:translateY(24px) scale(0.96); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes backdropIn {
+    from { opacity:0; }
+    to   { opacity:1; }
+}
+
+/* ════════════════════════
+   GLOBAL UTILITY
+   ════════════════════════ */
+.ot-badge {
+    display:inline-flex; align-items:center; gap:0.3rem;
+    padding:0.28rem 0.7rem; border-radius:99px;
+    font-size:0.72rem; font-weight:700; letter-spacing:0.02em;
+    white-space:nowrap;
+}
+.ot-badge-approved { background:#d1fae5; color:#065f46; }
+.ot-badge-pending  { background:#fef3c7; color:#92400e; }
+.ot-badge-rejected { background:#fee2e2; color:#991b1b; }
+.ot-badge-submitted{ background:#dbeafe; color:#1e40af; }
+.ot-badge-expired  { background:#f3f4f6; color:#6b7280; border:1px solid #d1d5db; }
+
+.text-muted   { color: var(--text-muted); }
+.text-brand   { color: var(--brand); }
+.fw-700       { font-weight:700; }

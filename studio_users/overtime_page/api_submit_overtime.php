@@ -193,6 +193,82 @@ try {
             error_log("Failed to insert activity log: " . $logE->getMessage());
         }
 
+        // ─── Conneqts Bot: Create Task for Manager ───────────────────────────
+        try {
+            // Fetch employee name
+            $empStmt = $pdo->prepare("SELECT username FROM users WHERE id = ?");
+            $empStmt->execute([$user_id]);
+            $empRow   = $empStmt->fetch(PDO::FETCH_ASSOC);
+            $empName  = $empRow ? $empRow['username'] : 'Employee';
+
+            // Fetch the assigned manager from overtime_approval_mapping
+            $mgrStmt = $pdo->prepare("SELECT u.id, u.username FROM overtime_approval_mapping oam JOIN users u ON oam.manager_id = u.id WHERE oam.employee_id = ? LIMIT 1");
+            $mgrStmt->execute([$user_id]);
+            $mgrRow = $mgrStmt->fetch(PDO::FETCH_ASSOC);
+
+            // Fallback: use the manager_id from the form if mapping not found
+            if (!$mgrRow && $manager_id) {
+                $fbStmt = $pdo->prepare("SELECT id, username FROM users WHERE id = ?");
+                $fbStmt->execute([$manager_id]);
+                $mgrRow = $fbStmt->fetch(PDO::FETCH_ASSOC);
+            }
+
+            if ($mgrRow) {
+                $assignedToCSV    = (string)$mgrRow['id'];
+                $assignedNamesCSV = $mgrRow['username'];
+
+                $attendanceDate   = $record['date'];
+                $otFormatted      = number_format($calculatedOt, 1);
+                $reportPreview    = substr($report, 0, 100) . (strlen($report) > 100 ? '...' : '');
+
+                $taskDesc = "Review and approve the overtime submission from $empName for $attendanceDate. "
+                          . "Calculated OT: {$otFormatted}h. Report: \"$reportPreview\"";
+
+                // Resolve project_id for ArchitectsHive Systems (FK constraint)
+                $projStmt = $pdo->prepare("SELECT id FROM projects WHERE LOWER(title) LIKE '%architectshive systems%' LIMIT 1");
+                $projStmt->execute();
+                $projRow      = $projStmt->fetch(PDO::FETCH_ASSOC);
+                $botProjectId = $projRow ? $projRow['id'] : null;
+
+                $tStmt = $pdo->prepare("
+                    INSERT INTO studio_assigned_tasks
+                        (project_id, project_name, stage_number, task_description, priority,
+                         assigned_to, assigned_names, due_date, due_time, status, created_by, is_system_task, created_at)
+                    VALUES
+                        (?, 'ArchitectsHive Systems', 'Verification', ?, 'High',
+                         ?, ?, CURDATE(), '17:45:00', 'Pending', ?, 1, NOW())
+                ");
+                $tStmt->execute([$botProjectId, $taskDesc, $assignedToCSV, $assignedNamesCSV, $user_id]);
+                $newTaskId = $pdo->lastInsertId();
+
+                // Activity log for the manager
+                $logMetadata = json_encode([
+                    'task_id'          => $newTaskId,
+                    'assigned_by_name' => 'Conneqts Bot',
+                    'project_name'     => 'ArchitectsHive Systems',
+                    'assigned_to'      => $assignedToCSV,
+                    'assigned_names'   => $assignedNamesCSV,
+                    'due_date'         => date('Y-m-d'),
+                    'due_time'         => '17:45:00'
+                ]);
+
+                $logBotStmt = $pdo->prepare("
+                    INSERT INTO global_activity_logs
+                        (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read)
+                    VALUES (?, 'task_assigned', 'task', ?, ?, ?, NOW(), 0)
+                ");
+                $logBotStmt->execute([
+                    $mgrRow['id'],
+                    $newTaskId,
+                    "Conneqts Bot assigned you an Overtime Verification task for $empName ($attendanceDate, {$otFormatted}h) — Due Today by 05:45 PM.",
+                    $logMetadata
+                ]);
+            }
+        } catch (Throwable $eBotOt) {
+            error_log('[ConneqtsBot OT ERROR] ' . $eBotOt->getMessage() . ' | File: ' . $eBotOt->getFile() . ' | Line: ' . $eBotOt->getLine());
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         $pdo->commit();
         echo json_encode(['status' => 'success', 'message' => 'Report submitted successfully.']);
     } else {

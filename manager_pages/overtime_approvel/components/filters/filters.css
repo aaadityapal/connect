@@ -1,0 +1,233 @@
+/* =====================================================
+   FILTERS — Professional with Animated Custom Dropdowns
+   ===================================================== */
+.filters-card-wrapper {
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.75rem;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    animation: fadeUp 0.5s 0.07s cubic-bezier(0.4,0,0.2,1) both;
+    /* CRITICAL: must NOT clip dropdown */
+    overflow: visible;
+    position: relative;
+    z-index: 10;          /* sit above the metric cards below */
+}
+
+.filters-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.filters-card-header i {
+    color: var(--brand);
+    font-size: 1.1rem;
+}
+
+.filters-grid-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr auto;
+    gap: 1rem;
+    align-items: flex-end;
+    /* CRITICAL: allow dropdown to overflow below this row */
+    overflow: visible;
+    position: relative;
+}
+
+/* ── Filter group ── */
+.filter-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.38rem;
+}
+
+.filter-input-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+
+.filter-input-group label i {
+    font-size: 0.85rem;
+    color: var(--brand);
+}
+
+/* ══════════════════════════════════════
+   CUSTOM ANIMATED DROPDOWN
+   ══════════════════════════════════════ */
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+    user-select: none;
+}
+
+/* Trigger button */
+.dd-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.65rem 0.9rem;
+    background: #f8fafc;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.dd-trigger:hover {
+    border-color: #c7d2fe;
+    background: #f5f3ff;
+}
+
+.custom-dropdown.is-open .dd-trigger {
+    border-color: var(--brand);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    border-bottom-color: transparent;
+}
+
+.dd-selected {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Animated caret */
+.dd-caret {
+    font-size: 0.85rem;
+    color: var(--brand);
+    flex-shrink: 0;
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+.custom-dropdown.is-open .dd-caret {
+    transform: rotate(180deg);
+}
+
+/* Dropdown menu panel */
+.dd-menu {
+    position: absolute;
+    top: calc(100% - 2px);   /* Overlap the bottom border of trigger */
+    left: 0; right: 0;
+    background: #ffffff;
+    border: 1.5px solid var(--brand);
+    border-top: none;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.14), 0 4px 16px rgba(99,102,241,0.10);
+    z-index: 9000;           /* Must be above ALL page sections */
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        max-height 0.30s cubic-bezier(0.4,0,0.2,1),
+        opacity    0.22s ease;
+}
+
+.custom-dropdown.is-open .dd-menu {
+    max-height: 260px;
+    opacity: 1;
+    pointer-events: all;
+    overflow-y: auto;
+}
+
+/* Scrollbar inside menu */
+.dd-menu::-webkit-scrollbar { width: 4px; }
+.dd-menu::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 99px; }
+
+/* Individual option */
+.dd-option {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.865rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dd-option:hover {
+    background: #f5f3ff;
+    color: var(--brand);
+}
+
+.dd-option.selected {
+    background: var(--brand-light);
+    color: var(--brand);
+    font-weight: 700;
+}
+
+.dd-option.selected::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--brand);
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+/* ── Apply Button ── */
+.btn-apply-filters {
+    background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.675rem 1.4rem;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(99,102,241,0.28);
+    white-space: nowrap;
+    height: 40px;
+    font-family: var(--font);
+}
+
+.btn-apply-filters:hover {
+    background: linear-gradient(135deg, var(--brand-dark), #3730a3);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99,102,241,0.38);
+}
+
+.btn-apply-filters:active { transform: translateY(0); }
+.btn-apply-filters i { font-size: 1rem; }
+
+@media (max-width: 900px) {
+    .filters-grid-row {
+        grid-template-columns: 1fr 1fr;
+    }
+    .btn-apply-filters {
+        grid-column: span 2;
+        justify-content: center;
+    }
+}
+@media (max-width: 560px) {
+    .filters-grid-row { grid-template-columns: 1fr; }
+    .btn-apply-filters { grid-column: span 1; }
+}

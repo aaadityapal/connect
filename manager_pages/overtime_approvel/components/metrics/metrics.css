@@ -1,0 +1,199 @@
+/* =====================================================
+   METRICS — Professional KPI Cards
+   ===================================================== */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.75rem;
+    overflow: visible;
+    position: relative;
+}
+
+/* ── Base Card ── */
+.metric-card {
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    padding: 1rem 0.9rem 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--card-accent, #cbd5e1);
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+    transition: transform 0.24s cubic-bezier(0.4,0,0.2,1),
+                box-shadow 0.24s cubic-bezier(0.4,0,0.2,1);
+
+    /* Staggered entry - set per card */
+    animation: fadeUp 0.5s var(--card-delay, 0s) cubic-bezier(0.4,0,0.2,1) both;
+}
+
+.metric-card:nth-child(1) { --card-delay: 0.08s; }
+.metric-card:nth-child(2) { --card-delay: 0.14s; }
+.metric-card:nth-child(3) { --card-delay: 0.20s; }
+.metric-card:nth-child(4) { --card-delay: 0.26s; }
+.metric-card:nth-child(5) { --card-delay: 0.32s; }
+.metric-card:nth-child(6) { --card-delay: 0.38s; }
+
+/* Background tint wash */
+.metric-card::before {
+    content: '';
+    position: absolute;
+    bottom: -30px; right: -30px;
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: var(--card-tint, rgba(203,213,225,0.12));
+    pointer-events: none;
+    transition: transform 0.35s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.metric-card:hover::before {
+    transform: scale(1.3);
+}
+
+/* ── Per-card accent colors ── */
+.mc-indigo {
+    --card-accent: #6366f1;
+    --card-tint:   rgba(99,102,241,0.06);
+    --mc-val:      #4f46e5;
+    --mc-icon-bg:  rgba(99,102,241,0.10);
+    --mc-icon:     #6366f1;
+    --mc-pill-bg:  rgba(99,102,241,0.10);
+    --mc-pill:     #4f46e5;
+}
+.mc-cyan {
+    --card-accent: #0ea5e9;
+    --card-tint:   rgba(14,165,233,0.06);
+    --mc-val:      #0284c7;
+    --mc-icon-bg:  rgba(14,165,233,0.10);
+    --mc-icon:     #0ea5e9;
+    --mc-pill-bg:  rgba(14,165,233,0.10);
+    --mc-pill:     #0284c7;
+}
+.mc-pink {
+    --card-accent: #ec4899;
+    --card-tint:   rgba(236,72,153,0.06);
+    --mc-val:      #db2777;
+    --mc-icon-bg:  rgba(236,72,153,0.10);
+    --mc-icon:     #ec4899;
+    --mc-pill-bg:  rgba(236,72,153,0.10);
+    --mc-pill:     #db2777;
+}
+.mc-green {
+    --card-accent: #10b981;
+    --card-tint:   rgba(16,185,129,0.06);
+    --mc-val:      #059669;
+    --mc-icon-bg:  rgba(16,185,129,0.10);
+    --mc-icon:     #10b981;
+    --mc-pill-bg:  rgba(16,185,129,0.10);
+    --mc-pill:     #059669;
+}
+.mc-orange {
+    --card-accent: #f97316;
+    --card-tint:   rgba(249,115,22,0.06);
+    --mc-val:      #ea580c;
+    --mc-icon-bg:  rgba(249,115,22,0.10);
+    --mc-icon:     #f97316;
+    --mc-pill-bg:  rgba(249,115,22,0.10);
+    --mc-pill:     #ea580c;
+}
+
+.mc-amber {
+    --card-accent: #f59e0b;
+    --card-tint:   rgba(245,158,11,0.06);
+    --mc-val:      #d97706;
+    --mc-icon-bg:  rgba(245,158,11,0.10);
+    --mc-icon:     #f59e0b;
+    --mc-pill-bg:  rgba(245,158,11,0.10);
+    --mc-pill:     #d97706;
+}
+
+/* ── Top row ── */
+.metric-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.metric-icon-badge {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    background: var(--mc-icon-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    color: var(--mc-icon);
+    transition: transform 0.2s ease;
+}
+
+.metric-card:hover .metric-icon-badge {
+    transform: scale(1.1) rotate(-5deg);
+}
+
+.metric-trend {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.22rem 0.65rem;
+    border-radius: 99px;
+    background: var(--mc-pill-bg);
+    color: var(--mc-pill);
+    letter-spacing: 0.03em;
+}
+
+/* ── Value ── */
+.metric-value {
+    font-size: 2.1rem;
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    color: var(--mc-val);
+    animation: countUp 0.5s ease both;
+}
+
+.metric-value small {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: normal;
+    color: var(--text-muted);
+    vertical-align: baseline;
+    margin-left: 2px;
+    line-height: 1;
+}
+
+/* ── Footer ── */
+.metric-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--divider);
+}
+
+.metric-title {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.metric-subtitle {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+@media (max-width: 900px) {
+    .metrics-grid { grid-template-columns: repeat(2,1fr); }
+}
+@media (max-width: 480px) {
+    .metrics-grid { grid-template-columns: 1fr; }
+}

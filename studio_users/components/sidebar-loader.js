@@ -57,6 +57,7 @@
         if (path.includes('/manager_pages/password_reset/')) return 'password-reset-mng';
         if (path.includes('/manager_pages/employees_profile/')) return 'employees-profile';
         if (path.includes('/manager_pages/employees_attendance/')) return 'employees-attendance';
+        if (path.includes('/manager_pages/overtime_approvel/')) return 'overtime-approval-mng';
         if (path.includes('/manager_pages/projects/')) return 'projects';
         if (path.includes('/projects'))           return 'projects';
         if (path.includes('/site-updates'))       return 'site-updates';

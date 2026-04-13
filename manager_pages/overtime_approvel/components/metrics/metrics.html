@@ -1,0 +1,94 @@
+<!-- components/metrics/metrics.html -->
+<section class="metrics-grid">
+
+    <!-- Card 1: Purple -->
+    <div class="metric-card mc-indigo">
+        <div class="metric-top">
+            <div class="metric-icon-badge">
+                <i class="ph ph-paper-plane-tilt"></i>
+            </div>
+            <span class="metric-trend">📬 Sent</span>
+        </div>
+        <div id="metric-submitted" class="metric-value">0</div>
+        <div class="metric-footer">
+            <span class="metric-title">Submitted Requests</span>
+            <p class="metric-subtitle"><i class="ph ph-clock"></i> from employees</p>
+        </div>
+    </div>
+
+    <!-- Card 2: Amber/Yellow -->
+    <div class="metric-card mc-amber">
+        <div class="metric-top">
+            <div class="metric-icon-badge">
+                <i class="ph ph-hourglass-high"></i>
+            </div>
+            <span class="metric-trend">⏳ Wait</span>
+        </div>
+        <div id="metric-pending" class="metric-value">0</div>
+        <div class="metric-footer">
+            <span class="metric-title">Pending Un-submitted</span>
+            <p class="metric-subtitle"><i class="ph ph-info"></i> auto-calculated</p>
+        </div>
+    </div>
+
+    <!-- Card 2: Cyan / Blue -->
+    <div class="metric-card mc-cyan">
+        <div class="metric-top">
+            <div class="metric-icon-badge">
+                <i class="ph ph-check-circle"></i>
+            </div>
+            <span class="metric-trend">✓ Done</span>
+        </div>
+        <div id="metric-hours" class="metric-value">0<small>h</small></div>
+        <div class="metric-footer">
+            <span class="metric-title">Approved Hours</span>
+            <p class="metric-subtitle"><i class="ph ph-info"></i> for selected period</p>
+        </div>
+    </div>
+
+    <!-- Card 3: Pink / Orange -->
+    <div class="metric-card mc-pink">
+        <div class="metric-top">
+            <div class="metric-icon-badge">
+                <i class="ph ph-x-circle"></i>
+            </div>
+            <span class="metric-trend">✕ Denied</span>
+        </div>
+        <div id="metric-rejected" class="metric-value">0</div>
+        <div class="metric-footer">
+            <span class="metric-title">Rejected Requests</span>
+            <p class="metric-subtitle"><i class="ph ph-info"></i> for selected period</p>
+        </div>
+    </div>
+
+    <!-- Card 4: Green / Cyan -->
+    <div class="metric-card mc-green">
+        <div class="metric-top">
+            <div class="metric-icon-badge">
+                <i class="ph ph-check-square-offset"></i>
+            </div>
+            <span class="metric-trend">✓ Total</span>
+        </div>
+        <div id="metric-approved" class="metric-value">0</div>
+        <div class="metric-footer">
+            <span class="metric-title">Accepted Requests</span>
+            <p class="metric-subtitle"><i class="ph ph-info"></i> total approved</p>
+        </div>
+    </div>
+
+    <!-- Card 5: Orange / Yellow -->
+    <div class="metric-card mc-orange">
+        <div class="metric-top">
+            <div class="metric-icon-badge">
+                <i class="ph ph-warning-circle"></i>
+            </div>
+            <span class="metric-trend">⚠ Stale</span>
+        </div>
+        <div id="metric-expired" class="metric-value">0</div>
+        <div class="metric-footer">
+            <span class="metric-title">Expired Requests</span>
+            <p class="metric-subtitle"><i class="ph ph-clock-counter-clockwise"></i> pending 15+ days</p>
+        </div>
+    </div>
+
+</section>

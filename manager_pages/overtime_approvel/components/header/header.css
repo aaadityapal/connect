@@ -1,0 +1,96 @@
+/* =====================================================
+   HEADER — Premium Professional
+   ===================================================== */
+.dashboard-header-card {
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    padding: 0.9rem 1.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.5s cubic-bezier(0.4,0,0.2,1) both;
+}
+
+/* Premium royal red top border */
+.dashboard-header-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ef4444, #b91c1c); /* Royal red gradient */
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+/* Subtle right-side glow */
+.dashboard-header-card::after {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.header-content-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    position: relative; z-index: 1;
+}
+
+.header-logo-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.15rem;
+    box-shadow: 0 4px 12px rgba(239,68,68,0.30);
+    flex-shrink: 0;
+}
+
+.header-title {
+    font-size: 1.28rem;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.03em;
+    margin: 0;
+}
+.header-title span { color: #ef4444; }
+
+.header-content-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    position: relative; z-index: 1;
+}
+
+.live-tracking-pill {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    color: #065f46;
+    font-size: 0.73rem;
+    font-weight: 700;
+    padding: 0.28rem 0.8rem;
+    border-radius: 99px;
+    display: flex; align-items: center; gap: 0.4rem;
+    border: 1px solid #6ee7b7;
+}
+
+.live-tracking-pill .dot {
+    width: 6px; height: 6px;
+    background: #10b981;
+    border-radius: 50%;
+    animation: pulseRing 2s ease-in-out infinite;
+}
+
+.header-date {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}

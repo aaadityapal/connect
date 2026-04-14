@@ -1,0 +1,10 @@
+[2026-04-13 16:36:34] [user_id=21] --- Submission received: 1 expense(s) ---
+[2026-04-13 16:36:34] [user_id=21] Employee: Aditya Kumar Pal
+[2026-04-13 16:36:34] [user_id=21] Mapping — manager_id=33, hr_id=2, sr_manager_id=11
+[2026-04-13 16:36:34] [user_id=21] Approvers: Gunjan Anand Sehgal, Bhuvnesh Sharma (IDs: 2,33)
+[2026-04-13 16:36:34] [user_id=21] Cumulative today: 4 entries, Rs.453.50
+[2026-04-13 16:36:34] [user_id=21] Next window: due_date=2026-04-13, due_time=18:00:00
+[2026-04-13 16:36:34] [user_id=21] UPDATED: Task ID 221 — now 4 entries, Rs.453.50
+[2026-04-13 16:36:34] [user_id=21] Activity log updated for approver user_id=2 — Rs.453.50
+[2026-04-13 16:36:34] [user_id=21] Activity log updated for approver user_id=33 — Rs.453.50
+[2026-04-13 16:36:34] [user_id=21] --- Done ---

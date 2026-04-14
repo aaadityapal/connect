@@ -806,16 +806,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // --- BLIND VERIFICATION RESTORATION ---
         // A user only 'unlocks' the details for THEMSELVES after THEY enter the distance.
+        // ⚠️ Senior Manager (L3) is EXEMPT — L1 and L2 have already cross-verified distance.
         let isVerified = false;
-        if (item.acting_level === 'Manager (L1)') {
+        if (item.acting_level === 'Senior Manager (L3)') {
+            // L3 skips distance check — L1 + L2 already verified independently
+            isVerified = true;
+        } else if (item.acting_level === 'Manager (L1)') {
             isVerified = (item.confirmed_distance !== null && item.confirmed_distance !== "");
         } else if (item.acting_level === 'HR (L2)') {
             isVerified = (item.hr_confirmed_distance !== null && item.hr_confirmed_distance !== "");
-        } else if (item.acting_level === 'Senior Manager (L3)') {
-            isVerified = (item.senior_confirmed_distance !== null && item.senior_confirmed_distance !== "");
         } else {
-            // Admin see details if it was their turn to act 
-            isVerified = true; 
+            // Admin: always unlocked
+            isVerified = true;
         }
 
         if (isVerified) {

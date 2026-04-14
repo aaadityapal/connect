@@ -326,70 +326,104 @@ if (!isset($_SESSION['user_id'])) {
                 return;
             }
 
+            const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+            const dayShort = { Monday:'Mon', Tuesday:'Tue', Wednesday:'Wed', Thursday:'Thu', Friday:'Fri', Saturday:'Sat', Sunday:'Sun' };
+
             container.innerHTML = approvers.map(a => {
-                const days = a.active_days ? a.active_days.split(',') : ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-                const st = a.start_time ? a.start_time.substring(0,5) : '09:00';
-                const et = a.end_time ? a.end_time.substring(0,5) : '18:00';
-                
-                const isChecked = (day) => days.includes(day) ? 'checked' : '';
+                const sched = a.day_schedule || {};
+
+                const dayRows = days.map(day => {
+                    const d = sched[day] || { is_active: (day === 'Saturday' || day === 'Sunday') ? 0 : 1, start_time: '09:00', end_time: '18:00' };
+                    return `
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 8px 10px; font-size:13px; font-weight:600; color:#475569; width:90px;">${dayShort[day]}</td>
+                        <td style="padding: 8px 10px; text-align:center;">
+                            <label class="switch" style="margin:0;">
+                                <input type="checkbox" class="day-active" data-day="${day}" ${d.is_active ? 'checked' : ''}
+                                    onchange="toggleDayRow(this, '${a.id}', '${day}')">
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+                        <td style="padding: 8px 10px;">
+                            <input type="time" class="time-input day-start" data-day="${day}"
+                                id="start-${a.id}-${day}" value="${d.start_time}"
+                                ${d.is_active ? '' : 'disabled'}
+                                style="width:100%; padding:6px 8px; border-radius:6px; border:1px solid #e2e8f0; font-size:13px; font-weight:600; color:#1e293b; ${d.is_active ? '' : 'opacity:0.4;'}">
+                        </td>
+                        <td style="padding: 8px 10px;">
+                            <input type="time" class="time-input day-end" data-day="${day}"
+                                id="end-${a.id}-${day}" value="${d.end_time}"
+                                ${d.is_active ? '' : 'disabled'}
+                                style="width:100%; padding:6px 8px; border-radius:6px; border:1px solid #e2e8f0; font-size:13px; font-weight:600; color:#1e293b; ${d.is_active ? '' : 'opacity:0.4;'}">
+                        </td>
+                    </tr>`;
+                }).join('');
 
                 return `
-                <div class="mapping-card" style="display: flex; flex-direction: column; gap: 16px;">
-                    <div style="display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;">
-                        <div class="role-icon" style="background:#eff6ff; color:#2563eb; width: 44px; height: 44px; font-size: 16px;"><i class="fa-solid fa-user-tie"></i></div>
+                <div class="mapping-card" style="display:flex; flex-direction:column; gap:14px;">
+                    <div style="display:flex; align-items:center; gap:12px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
+                        <div class="role-icon" style="background:#eff6ff; color:#2563eb; width:44px; height:44px; font-size:16px;"><i class="fa-solid fa-user-tie"></i></div>
                         <div>
-                            <div style="font-weight: 700; color: #1e293b; font-size: 15px;">${a.username} <span style="font-size:12px; color:#64748b; font-weight: 500;">(${a.employee_id})</span></div>
-                            <div class="role-badge" style="background:#f1f5f9; color:#475569; margin-top: 4px; display: inline-block;">${a.role}</div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <label style="font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px; display: block; text-transform: uppercase;">Active Days</label>
-                        <div style="display: flex; flex-wrap: wrap; gap: 6px;" class="days-group-${a.id}">
-                            <label class="day-chip"><input type="checkbox" value="Monday" ${isChecked('Monday')}><span>Mon</span></label>
-                            <label class="day-chip"><input type="checkbox" value="Tuesday" ${isChecked('Tuesday')}><span>Tue</span></label>
-                            <label class="day-chip"><input type="checkbox" value="Wednesday" ${isChecked('Wednesday')}><span>Wed</span></label>
-                            <label class="day-chip"><input type="checkbox" value="Thursday" ${isChecked('Thursday')}><span>Thu</span></label>
-                            <label class="day-chip"><input type="checkbox" value="Friday" ${isChecked('Friday')}><span>Fri</span></label>
-                            <label class="day-chip"><input type="checkbox" value="Saturday" ${isChecked('Saturday')}><span>Sat</span></label>
-                            <label class="day-chip"><input type="checkbox" value="Sunday" ${isChecked('Sunday')}><span>Sun</span></label>
+                            <div style="font-weight:700; color:#1e293b; font-size:15px;">${a.username} <span style="font-size:12px; color:#64748b; font-weight:500;">(${a.employee_id})</span></div>
+                            <div class="role-badge" style="background:#f1f5f9; color:#475569; margin-top:4px; display:inline-block;">${a.role}</div>
                         </div>
                     </div>
 
-                    <div style="display: flex; gap: 12px;">
-                        <div style="flex: 1;">
-                            <label style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px; display: block;">START TIME</label>
-                            <input type="time" class="time-input" id="start-time-${a.id}" value="${st}" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; font-weight: 600; color: #1e293b;">
-                        </div>
-                        <div style="flex: 1;">
-                            <label style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px; display: block;">END TIME</label>
-                            <input type="time" class="time-input" id="end-time-${a.id}" value="${et}" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #e2e8f0; font-weight: 600; color: #1e293b;">
-                        </div>
-                    </div>
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:#f8fafc;">
+                                <th style="padding:8px 10px; text-align:left; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Day</th>
+                                <th style="padding:8px 10px; text-align:center; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Active</th>
+                                <th style="padding:8px 10px; text-align:left; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">Start</th>
+                                <th style="padding:8px 10px; text-align:left; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase;">End</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sched-body-${a.id}">${dayRows}</tbody>
+                    </table>
 
-                    <button onclick="updateApproverSchedule(${a.id})" style="margin-top: auto; background: #f8fafc; color: #2563eb; border: 1px solid #cbd5e1; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#2563eb'; this.style.color='#fff';" onmouseout="this.style.background='#f8fafc'; this.style.color='#2563eb';">
-                        <i class="fa-solid fa-floppy-disk" style="margin-right: 6px;"></i> Save Schedule
+                    <button onclick="updateApproverSchedule(${a.id})"
+                        style="background:#f8fafc; color:#2563eb; border:1px solid #cbd5e1; padding:10px; border-radius:8px; font-weight:600; cursor:pointer; transition:all 0.2s;"
+                        onmouseover="this.style.background='#2563eb'; this.style.color='#fff';"
+                        onmouseout="this.style.background='#f8fafc'; this.style.color='#2563eb';">
+                        <i class="fa-solid fa-floppy-disk" style="margin-right:6px;"></i>Save Schedule
                     </button>
-                </div>
-            `;
+                </div>`;
             }).join('');
         }
 
+        function toggleDayRow(checkbox, approverId, day) {
+            const active = checkbox.checked;
+            const startEl = document.getElementById(`start-${approverId}-${day}`);
+            const endEl   = document.getElementById(`end-${approverId}-${day}`);
+            if (startEl) { startEl.disabled = !active; startEl.style.opacity = active ? '1' : '0.4'; }
+            if (endEl)   { endEl.disabled   = !active; endEl.style.opacity   = active ? '1' : '0.4'; }
+        }
+
         async function updateApproverSchedule(userId) {
-            const daysGroup = document.querySelector(`.days-group-${userId}`);
-            const days = Array.from(daysGroup.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value).join(',');
-            const start = document.getElementById(`start-time-${userId}`).value;
-            const end = document.getElementById(`end-time-${userId}`).value;
+            const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+            const schedule = {};
+
+            days.forEach(day => {
+                const activeEl = document.querySelector(`#sched-body-${userId} .day-active[data-day="${day}"]`);
+                const startEl  = document.getElementById(`start-${userId}-${day}`);
+                const endEl    = document.getElementById(`end-${userId}-${day}`);
+                if (!activeEl) return;
+                schedule[day] = {
+                    is_active:  activeEl.checked ? 1 : 0,
+                    start_time: startEl ? startEl.value : '09:00',
+                    end_time:   endEl   ? endEl.value   : '18:00'
+                };
+            });
 
             try {
                 const response = await fetch('../api/update_approver_schedule.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ approver_id: userId, active_days: days, start_time: start, end_time: end })
+                    body: JSON.stringify({ approver_id: userId, schedule })
                 });
                 const data = await response.json();
                 if (data.success) {
-                    alert('Schedule updated seamlessly!');
+                    alert('Schedule saved successfully!');
                 } else {
                     alert('Error: ' + data.message);
                 }

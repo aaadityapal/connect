@@ -1,12 +1,3 @@
--- 
--- Table structure for table `ot_unsubmitted_action_perms`
--- 
--- This table stores granular permissions for managers to action overtime:
--- 1. can_action_unsubmitted: Approve/Reject even if the employee hasn't submitted a report.
--- 2. can_action_expired: Approve/Reject overtime older than 15 days.
--- 3. can_action_completed: Modify or Re-action already approved/rejected overtime.
---
-
 CREATE TABLE IF NOT EXISTS `ot_unsubmitted_action_perms` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,

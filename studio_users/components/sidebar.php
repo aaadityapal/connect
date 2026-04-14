@@ -387,6 +387,25 @@ function canShow($menuId, $perms) {
         </a>
         <?php endif; ?>
 
+        <?php if (canShow('travel-meter-permissions', $_permissions)): ?>
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'travel_meter_perms.php'; return false;"
+            class="menu-item" data-page="travel-meter-permissions">
+            <i data-lucide="camera" class="menu-icon" style="width:17px;height:17px;"></i>
+            <span class="menu-text">Travel Meter Permission</span>
+            <div class="tooltip">Travel Meter Permission</div>
+        </a>
+        <?php endif; ?>
+
+        <?php if (canShow('travel-meter-mode-permissions', $_permissions)): ?>
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'travel_meter_mode_perms.php'; return false;"
+            class="menu-item" data-page="travel-meter-mode-permissions">
+            <i data-lucide="gauge" class="menu-icon" style="width:17px;height:17px;"></i>
+            <span class="menu-text">Meter Mode Permission</span>
+            <div class="tooltip">Meter Mode Permission</div>
+        </a>
+        <?php endif; ?>
+
+
         <?php if (canShow('help', $_permissions)): ?>
         <a href="help.php" class="menu-item" data-page="help">
             <i data-lucide="help-circle" class="menu-icon" style="width:17px;height:17px;"></i>

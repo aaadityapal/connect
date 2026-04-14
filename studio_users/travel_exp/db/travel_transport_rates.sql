@@ -15,13 +15,14 @@ CREATE TABLE IF NOT EXISTS `travel_transport_rates` (
 -- ==========================================
 
 INSERT IGNORE INTO `travel_transport_rates` (`transport_mode`, `rate_per_km`) VALUES 
-('Car', 10.00), 
-('Bike', 5.00), 
-('Cab', 0.00), 
-('Cab Bike', 0.00),
-('Metro', 0.00), 
-('E-Rickshaw', 0.00), 
-('Bus', 0.00), 
-('Train', 0.00), 
-('Flight', 0.00), 
-('Other', 0.00);
+('Auto', 0.00),
+('Bike', 5.00),
+('Bike Taxi', 0.00),
+('Bus', 0.00),
+('Cab', 0.00),
+('Car', 10.00),
+('E-Rickshaw', 0.00),
+('Flight', 0.00),
+('Metro', 0.00),
+('Other', 0.00),
+('Train', 0.00);

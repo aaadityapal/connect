@@ -30,10 +30,6 @@ try {
      * 2. If Admin: Show ALL pending travel expenses.
      * 3. If Manager/HR/SrMgr: Show expenses waiting specifically for them.
      */
-    $sched_stmt = $pdo->prepare("SELECT active_days, start_time, end_time FROM travel_approver_schedules WHERE user_id = ?");
-    $sched_stmt->execute([$current_user_id]);
-    $sched = $sched_stmt->fetch(PDO::FETCH_ASSOC);
-
     $is_window_open = false;
     $window_message = "Approval window not configured.";
 
@@ -41,24 +37,37 @@ try {
         $is_window_open = true;
         $window_message = "Admin override.";
     } else {
-        $active_days = $sched ? explode(',', $sched['active_days']) : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-        $start_time = $sched ? $sched['start_time'] : '09:00:00';
-        $end_time = $sched ? $sched['end_time'] : '18:00:00';
-        
-        // Ensure accurate Indian Standard Time evaluation
         date_default_timezone_set('Asia/Kolkata');
-        $current_day = date('l');
+        $current_day  = date('l');    // e.g. "Monday"
         $current_time = date('H:i:s');
-        
-        if (in_array($current_day, $active_days)) {
-            if ($current_time >= $start_time && $current_time <= $end_time) {
-                $is_window_open = true;
-                $window_message = "Window open.";
-            } else {
-                $window_message = "Approvals allowed " . date('h:i A', strtotime($start_time)) . " to " . date('h:i A', strtotime($end_time)) . ".";
-            }
+
+        // Fetch this approver's schedule for today from per-day table
+        $sched_stmt = $pdo->prepare("
+            SELECT is_active, start_time, end_time
+            FROM travel_approver_day_schedules
+            WHERE approver_id = ? AND day_name = ?
+        ");
+        $sched_stmt->execute([$current_user_id, $current_day]);
+        $sched = $sched_stmt->fetch(PDO::FETCH_ASSOC);
+
+        // Fallback defaults if no row exists
+        if (!$sched) {
+            $is_active  = in_array($current_day, ['Saturday','Sunday']) ? 0 : 1;
+            $start_time = '09:00:00';
+            $end_time   = '18:00:00';
         } else {
-            $window_message = "Approvals are not allowed on $current_day.";
+            $is_active  = (int)$sched['is_active'];
+            $start_time = $sched['start_time'];
+            $end_time   = $sched['end_time'];
+        }
+
+        if (!$is_active) {
+            $window_message = "Approvals are not allowed on {$current_day}.";
+        } elseif ($current_time >= $start_time && $current_time <= $end_time) {
+            $is_window_open = true;
+            $window_message = "Window open.";
+        } else {
+            $window_message = "Approvals on {$current_day} allowed " . date('h:i A', strtotime($start_time)) . " – " . date('h:i A', strtotime($end_time)) . ".";
         }
     }
     
@@ -84,6 +93,7 @@ try {
         LEFT JOIN travel_expense_attachments tea ON te.id = tea.expense_id
         LEFT JOIN travel_role_config trc ON u.role = trc.role_name
         LEFT JOIN travel_meter_mode_config tmmc ON te.user_id = tmmc.user_id
+                                               AND tmmc.mode = te.mode_of_transport
         LEFT JOIN attendance att ON te.user_id = att.user_id AND te.travel_date = att.date
         WHERE 
             -- Admin sees everything

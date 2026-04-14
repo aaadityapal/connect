@@ -58,13 +58,15 @@ $menu_items = [
         'overtime-approval-mng' => ['label' => 'Overtime Approval', 'icon' => 'clock-8']
     ],
     'System' => [
-        'settings' => ['label' => 'Settings', 'icon' => 'settings-2'],
-        'project-permissions' => ['label' => 'Project Permission', 'icon' => 'shield-check'],
-        'attendance-action-permissions' => ['label' => 'Attendance Action Permission', 'icon' => 'user-check'],
-        'manual-leave-permissions' => ['label' => 'Manual Leave Permission', 'icon' => 'file-edit'],
-        'unsubmitted-ot-permissions' => ['label' => 'Unsubmitted OT Permission', 'icon' => 'shield-alert'],
-        'help' => ['label' => 'Help & Support', 'icon' => 'help-circle'],
-        'logout' => ['label' => 'Logout', 'icon' => 'power']
+        'settings'                      => ['label' => 'Settings',                      'icon' => 'settings-2'],
+        'project-permissions'           => ['label' => 'Project Permission',             'icon' => 'shield-check'],
+        'attendance-action-permissions' => ['label' => 'Attendance Action Permission',   'icon' => 'user-check'],
+        'manual-leave-permissions'      => ['label' => 'Manual Leave Permission',        'icon' => 'file-edit'],
+        'unsubmitted-ot-permissions'    => ['label' => 'Unsubmitted OT Permission',      'icon' => 'shield-alert'],
+        'travel-meter-permissions'      => ['label' => 'Travel Meter Permission',        'icon' => 'camera'],
+        'travel-meter-mode-permissions'  => ['label' => 'Meter Mode Permission',          'icon' => 'gauge'],
+        'help'                          => ['label' => 'Help & Support',                 'icon' => 'help-circle'],
+        'logout'                        => ['label' => 'Logout',                         'icon' => 'power']
     ]
 ];
 ?>

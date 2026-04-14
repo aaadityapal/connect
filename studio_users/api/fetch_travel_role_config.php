@@ -10,31 +10,32 @@ if (!isset($_SESSION['user_id'])) {
 require_once '../../config/db_connect.php';
 
 try {
-    // Fetch all role configs
-    $stmt = $pdo->query("SELECT * FROM travel_role_config ORDER BY role_name ASC");
+    $user_id = $_SESSION['user_id'];
+
+    // 1. Fetch all role configs (for settings page usage)
+    $stmt    = $pdo->query("SELECT * FROM travel_role_config ORDER BY role_name ASC");
     $configs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Get current user's role requirement
-    $user_id = $_SESSION['user_id'];
+    // 2. Get current user's role
     $uStmt = $pdo->prepare("SELECT role FROM users WHERE id = ?");
     $uStmt->execute([$user_id]);
     $userRole = $uStmt->fetchColumn();
 
-    $rStmt = $pdo->prepare("SELECT require_meters FROM travel_role_config WHERE role_name = ?");
-    $rStmt->execute([$userRole]);
-    $requireMeters = $rStmt->fetchColumn();
-
-    $mStmt = $pdo->prepare("SELECT meter_mode FROM travel_meter_mode_config WHERE user_id = ?");
+    // 3. [NEW] Fetch per-mode meter photo permissions for this user
+    //    from the new travel_meter_photo_perms table.
+    //    Returns an array of mode names that require meter photos, e.g. ['Bike', 'Car']
+    $mStmt = $pdo->prepare("SELECT mode FROM travel_meter_photo_perms WHERE user_id = ?");
     $mStmt->execute([$user_id]);
-    $meterMode = $mStmt->fetchColumn();
-    if ($meterMode === false) $meterMode = 0; // Default to Attendance (0)
+    $meterModes = $mStmt->fetchAll(PDO::FETCH_COLUMN);
 
     echo json_encode([
-        'success' => true,
-        'configs' => $configs,
-        'user_requirement' => $requireMeters == 1,
-        'meter_mode' => (int)$meterMode,
-        'user_role' => $userRole
+        'success'          => true,
+        'configs'          => $configs,
+        'user_role'        => $userRole,
+        'meter_modes'      => $meterModes,           // NEW: array of modes requiring meter photos
+        // Legacy fields kept for backward compatibility with other code
+        'user_requirement' => count($meterModes) > 0,
+        'meter_mode'       => count($meterModes) > 0 ? 1 : 0,
     ]);
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);

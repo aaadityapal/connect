@@ -45,18 +45,18 @@
 <div class="modal-overlay" id="add-expense-modal">
     <div class="modal-box add-expense-box">
 
-        <!-- Premium Gradient Header (like image 2 style) -->
+        <!-- Minimalist Header -->
         <div class="add-modal-header">
             <div class="add-modal-header-inner">
                 <div class="add-modal-icon-wrap">
-                    <i class="fa-solid fa-plane-departure"></i>
+                    <i class="fa-solid fa-receipt"></i>
                 </div>
                 <div>
-                    <h2>Add Travel Expense</h2>
+                    <h2>New Travel Expense</h2>
                     <p>Fill in the trip details to submit your claim</p>
                 </div>
             </div>
-            <button class="add-modal-close" id="add-modal-close">
+            <button class="add-modal-close" id="add-modal-close" title="Close">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
@@ -72,28 +72,32 @@
                 <!-- Row 1: Date & Purpose -->
                 <div class="add-form-row">
                     <div class="add-form-field">
-                        <label>Date <span class="req">*</span></label>
-                        <input type="date" class="add-input e-date">
+                        <label><i class="fa-regular fa-calendar" style="margin-right:5px; color:#b0bcc8;"></i>Date <span class="req">*</span></label>
+                        <div class="input-icon-wrap">
+                            <input type="date" class="add-input e-date">
+                        </div>
                     </div>
                     <div class="add-form-field" style="grid-column: 1 / -1;">
-                        <label>Purpose <span class="req">*</span></label>
-                        <textarea class="add-input e-purpose add-textarea" placeholder="Detailed reason for travel..."></textarea>
+                        <label><i class="fa-regular fa-pen-to-square" style="margin-right:5px; color:#b0bcc8;"></i>Purpose <span class="req">*</span></label>
+                        <textarea class="add-input e-purpose add-textarea" placeholder="Reason for travel..."></textarea>
                     </div>
                 </div>
 
                 <!-- Row 2: From & To -->
                 <div class="add-form-row">
                     <div class="add-form-field">
-                        <label>From <span class="req">*</span></label>
-                        <div class="field-wrap">
-                            <input type="text" class="add-input e-from" placeholder="Departure location" autocomplete="off">
+                        <label><i class="fa-solid fa-location-dot" style="margin-right:5px; color:#b0bcc8;"></i>From <span class="req">*</span></label>
+                        <div class="field-wrap input-icon-wrap">
+                            <i class="fa-regular fa-circle-dot field-icon"></i>
+                            <input type="text" class="add-input e-from has-icon" placeholder="Departure location" autocomplete="off">
                             <div class="address-suggestions" style="display:none;"></div>
                         </div>
                     </div>
                     <div class="add-form-field">
-                        <label>To <span class="req">*</span></label>
-                        <div class="field-wrap">
-                            <input type="text" class="add-input e-to" placeholder="Destination" autocomplete="off">
+                        <label><i class="fa-solid fa-location-crosshairs" style="margin-right:5px; color:#b0bcc8;"></i>To <span class="req">*</span></label>
+                        <div class="field-wrap input-icon-wrap">
+                            <i class="fa-solid fa-location-pin field-icon"></i>
+                            <input type="text" class="add-input e-to has-icon" placeholder="Destination" autocomplete="off">
                             <div class="address-suggestions" style="display:none;"></div>
                         </div>
                     </div>
@@ -102,61 +106,69 @@
                 <!-- Row 3: Mode, Distance, Amount -->
                 <div class="add-form-row add-form-row-3">
                     <div class="add-form-field">
-                        <label>Mode of Transport <span class="req">*</span></label>
+                        <label><i class="fa-solid fa-car-side" style="margin-right:5px; color:#b0bcc8;"></i>Mode <span class="req">*</span></label>
                         <div class="custom-select e-mode-wrap" tabindex="0">
-                            <div class="select-trigger add-input" style="justify-content: space-between; display: flex;">
-                                <span class="select-value" style="color:#94a3b8;">Select mode</span>
-                                <i class="fa-solid fa-chevron-down" style="color:#cbd5e1;font-size:11px;"></i>
+                            <div class="select-trigger add-input" style="justify-content: space-between; display: flex; align-items: center;">
+                                <span class="select-value" style="color:#b0bcc8;">Select mode</span>
+                                <i class="fa-solid fa-chevron-down" style="color:#cbd5e1;font-size:10px;"></i>
                             </div>
                             <div class="select-dropdown" style="z-index: 100;">
-                                <div class="select-item active" data-value="">Select mode</div>
-                                <div class="select-item" data-value="Car">Car</div>
-                                <div class="select-item" data-value="Cab">Cab</div>
-                                <div class="select-item" data-value="Cab Bike">Cab Bike</div>
-                                <div class="select-item" data-value="Metro">Metro</div>
-                                <div class="select-item" data-value="E-Rickshaw">E-Rickshaw</div>
-                                <div class="select-item" data-value="Bus">Bus</div>
-                                <div class="select-item" data-value="Train">Train</div>
-                                <div class="select-item" data-value="Flight">Flight</div>
-                                <div class="select-item" data-value="Bike">Bike</div>
-                                <div class="select-item" data-value="Other">Other</div>
+                                <div class="select-item active" data-value="">— Select —</div>
+                                <div class="select-item" data-value="Auto"><i class="fa-solid fa-car-side" style="width:16px;"></i> Auto</div>
+                                <div class="select-item" data-value="Bike"><i class="fa-solid fa-bicycle" style="width:16px;"></i> Bike</div>
+                                <div class="select-item" data-value="Bike Taxi"><i class="fa-solid fa-motorcycle" style="width:16px;"></i> Bike Taxi</div>
+                                <div class="select-item" data-value="Bus"><i class="fa-solid fa-bus" style="width:16px;"></i> Bus</div>
+                                <div class="select-item" data-value="Cab"><i class="fa-solid fa-taxi" style="width:16px;"></i> Cab</div>
+                                <div class="select-item" data-value="Car"><i class="fa-solid fa-car" style="width:16px;"></i> Car</div>
+                                <div class="select-item" data-value="E-Rickshaw"><i class="fa-solid fa-bolt" style="width:16px;"></i> E-Rickshaw</div>
+                                <div class="select-item" data-value="Flight"><i class="fa-solid fa-plane" style="width:16px;"></i> Flight</div>
+                                <div class="select-item" data-value="Metro"><i class="fa-solid fa-train-subway" style="width:16px;"></i> Metro</div>
+                                <div class="select-item" data-value="Other"><i class="fa-solid fa-ellipsis" style="width:16px;"></i> Other</div>
+                                <div class="select-item" data-value="Train"><i class="fa-solid fa-train" style="width:16px;"></i> Train</div>
                             </div>
                             <input type="hidden" class="e-mode" value="">
                         </div>
                     </div>
                     <div class="add-form-field">
-                        <label>Distance (km) <span class="req">*</span></label>
-                        <input type="number" class="add-input e-distance" placeholder="Distance in km" min="0">
+                        <label><i class="fa-solid fa-route" style="margin-right:5px; color:#b0bcc8;"></i>Distance <span class="req">*</span></label>
+                        <div class="input-icon-wrap">
+                            <i class="field-icon fa-solid fa-ruler-horizontal"></i>
+                            <input type="number" class="add-input e-distance has-icon" placeholder="km" min="0">
+                            <span class="input-suffix">km</span>
+                        </div>
                     </div>
                     <div class="add-form-field">
-                        <label>Amount (₹) <span class="req">*</span></label>
-                        <input type="number" class="add-input e-amount" placeholder="0.00" min="0" step="0.01">
+                        <label><i class="fa-solid fa-indian-rupee-sign" style="margin-right:5px; color:#b0bcc8;"></i>Amount <span class="req">*</span></label>
+                        <div class="input-icon-wrap">
+                            <i class="field-icon fa-solid fa-indian-rupee-sign"></i>
+                            <input type="number" class="add-input e-amount has-icon" placeholder="0.00" min="0" step="0.01">
+                        </div>
                     </div>
                 </div>
 
                 <!-- Row 4: Photos -->
                 <div class="add-photo-row">
                     <div class="add-photo-field meter-photo-field">
-                        <label>Meter Start Photo <span class="req">*</span></label>
+                        <label><i class="fa-solid fa-gauge-high" style="margin-right:5px; color:#b0bcc8;"></i>Meter Start <span class="req">*</span></label>
                         <label class="file-drop-zone e-meter-start-lbl">
-                            <i class="fa-solid fa-camera"></i>
-                            <span class="e-meter-start-name">Choose file…</span>
+                            <i class="fa-regular fa-image"></i>
+                            <span class="e-meter-start-name">Tap to upload start photo</span>
                             <input type="file" class="e-meter-start-input" accept="image/*" style="display:none;">
                         </label>
                     </div>
                     <div class="add-photo-field meter-photo-field">
-                        <label>Meter End Photo <span class="req">*</span></label>
+                        <label><i class="fa-solid fa-gauge" style="margin-right:5px; color:#b0bcc8;"></i>Meter End <span class="req">*</span></label>
                         <label class="file-drop-zone e-meter-end-lbl">
-                            <i class="fa-solid fa-camera"></i>
-                            <span class="e-meter-end-name">Choose file…</span>
+                            <i class="fa-regular fa-image"></i>
+                            <span class="e-meter-end-name">Tap to upload end photo</span>
                             <input type="file" class="e-meter-end-input" accept="image/*" style="display:none;">
                         </label>
                     </div>
                     <div class="add-photo-field bill-photo-field" style="display:none; grid-column: 1 / -1;">
-                        <label>Bill/Ticket Photo <span class="req">*</span></label>
+                        <label><i class="fa-solid fa-file-invoice" style="margin-right:5px; color:#b0bcc8;"></i>Bill / Ticket <span class="req">*</span></label>
                         <label class="file-drop-zone e-bill-lbl">
-                            <i class="fa-solid fa-file-invoice"></i>
-                            <span class="e-bill-name">Choose file…</span>
+                            <i class="fa-regular fa-file-lines"></i>
+                            <span class="e-bill-name">Tap to upload bill or ticket</span>
                             <input type="file" class="e-bill-input" accept="image/*,.pdf" style="display:none;">
                         </label>
                     </div>
@@ -164,8 +176,8 @@
 
                 <!-- Row 5: Notes -->
                 <div class="add-form-field" style="margin-top:4px;">
-                    <label>Notes</label>
-                    <textarea class="add-input add-textarea e-notes" placeholder="Additional details (optional)"></textarea>
+                    <label><i class="fa-regular fa-note-sticky" style="margin-right:5px; color:#b0bcc8;"></i>Notes <span style="color:#b0bcc8; font-weight:400;">(optional)</span></label>
+                    <textarea class="add-input add-textarea e-notes" placeholder="Any additional details..."></textarea>
                 </div>
             </div>
             <!-- Hidden map for Leaflet calculations -->
@@ -174,29 +186,29 @@
         </div>
 
         <!-- Expense Summary Table -->
-        <div class="modal-summary-section" id="modal-summary-section" style="display:none; padding: 20px 30px; background: #f8fafc; border-top: 1px dashed #cbd5e1;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <h5 style="font-size: 13px; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <i class="fa-solid fa-list-check" style="margin-right:6px;"></i>Entries Summary
+        <div class="modal-summary-section" id="modal-summary-section" style="display:none; padding: 14px 28px; background: #fff; border-top: 1px solid #f1f5f9;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h5 style="font-size: 10.5px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;">
+                    Entries Summary
                 </h5>
             </div>
-            <div style="max-height: 150px; overflow-y: auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <div style="max-height: 130px; overflow-y: auto; border: 1px solid #f1f5f9; border-radius: 8px; background: #fafafa;">
                 <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
                     <thead>
-                        <tr style="background: #f1f5f9; color: #475569; position: sticky; top: 0;">
-                            <th style="padding: 10px; text-align: left;">#</th>
-                            <th style="padding: 10px; text-align: left;">Purpose</th>
-                            <th style="padding: 10px; text-align: left;">Mode</th>
-                            <th style="padding: 10px; text-align: right;">Amount</th>
+                        <tr style="background: #f8fafc; color: #94a3b8; position: sticky; top: 0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em;">
+                            <th style="padding: 8px 12px; text-align: left; font-weight: 600;">#</th>
+                            <th style="padding: 8px 12px; text-align: left; font-weight: 600;">Purpose</th>
+                            <th style="padding: 8px 12px; text-align: left; font-weight: 600;">Mode</th>
+                            <th style="padding: 8px 12px; text-align: right; font-weight: 600;">Amount</th>
                         </tr>
                     </thead>
                     <tbody id="modal-summary-tbody">
                         <!-- Filled via JS -->
                     </tbody>
                     <tfoot>
-                        <tr style="border-top: 2px solid #e2e8f0; font-weight: 800;">
-                            <td colspan="3" style="padding: 12px 10px; text-align: right;">Total Estimated:</td>
-                            <td id="modal-summary-total" style="padding: 12px 10px; text-align: right; color: var(--clr-blue); font-size: 14px;">₹ 0.00</td>
+                        <tr style="border-top: 1px solid #f1f5f9; font-weight: 700;">
+                            <td colspan="3" style="padding: 10px 12px; text-align: right; font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em;">Total</td>
+                            <td id="modal-summary-total" style="padding: 10px 12px; text-align: right; color: #0f172a; font-size: 13px; font-weight: 700;">₹ 0.00</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -206,14 +218,14 @@
         <!-- Footer -->
         <div class="add-modal-footer">
             <button class="btn btn-ghost" id="add-modal-close-btn">
-                <i class="fa-solid fa-xmark"></i> Close
+                Cancel
             </button>
             <div style="display:flex;gap:10px;">
                 <button class="btn btn-orange" id="btn-add-to-list">
-                    <i class="fa-solid fa-plus"></i> Add Expense
+                    <i class="fa-solid fa-plus"></i> Add Another
                 </button>
                 <button class="btn btn-green" id="btn-save-all-expenses">
-                    <i class="fa-solid fa-floppy-disk"></i> Save All Expenses
+                    <i class="fa-solid fa-floppy-disk"></i> Save Expenses
                 </button>
             </div>
         </div>

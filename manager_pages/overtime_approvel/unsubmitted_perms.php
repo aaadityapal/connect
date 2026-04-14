@@ -59,20 +59,28 @@ if (!$canAccess) {
         .card-body { padding: 1.3rem; }
         .toolbar { margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem; background: #f1f5f9; padding: 0.75rem 1rem; border-radius: 12px; }
         .search { width: 100%; max-width: 460px; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0.62rem 0.8rem; outline: none; font-family: inherit; font-size: 0.92rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1rem; padding-bottom: 1rem; }
-        .card { border: 1px solid #e5eaf1; border-radius: 14px; padding: 0.9rem; background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 0.9rem; }
-        .meta { min-width: 0; }
-        .name { margin: 0; font-size: 0.95rem; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sub { margin: 0.2rem 0 0; font-size: 0.8rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pill { display: inline-flex; align-items: center; gap: 0.3rem; background: #eef2ff; color: #4f46e5; border: 1px solid #dde3ff; border-radius: 999px; padding: 0.12rem 0.45rem; margin-top: 0.35rem; font-size: 0.74rem; font-weight: 600; }
-        .right { display: flex; flex-direction: column; gap: 0.45rem; align-items: flex-end; flex-shrink: 0; }
-        .switch-row { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.76rem; color: #475569; font-weight: 600; }
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1rem; padding-bottom: 1rem; }
+        /* User card */
+        .card { border: 1px solid #e5eaf1; border-radius: 14px; background: #fff; overflow: hidden; }
+        .card-user-header { display: flex; align-items: center; gap: 0.75rem; padding: 0.9rem 1.1rem; }
+        .avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#818cf8); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.95rem; flex-shrink: 0; }
+        .name { margin: 0; font-size: 0.92rem; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sub { margin: 0.15rem 0 0; font-size: 0.78rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pill { display: inline-flex; align-items: center; gap: 0.25rem; background: #eef2ff; color: #4f46e5; border: 1px solid #dde3ff; border-radius: 999px; padding: 0.1rem 0.4rem; margin-top: 0.25rem; font-size: 0.72rem; font-weight: 600; }
+        /* Permission rows */
+        .perm-rows { border-top: 1px solid #f1f5f9; }
+        .perm-row { display: flex; align-items: center; justify-content: space-between; padding: 0.65rem 1.1rem; }
+        .perm-row + .perm-row { border-top: 1px solid #f8fafc; }
+        .perm-label { font-size: 0.84rem; color: #475569; font-weight: 500; }
+        /* Toggle switch */
+        .switch { position: relative; display: inline-block; width: 42px; height: 23px; flex-shrink: 0; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #cbd5e1; transition: .25s; border-radius: 23px; }
+        .slider:before { position: absolute; content: ""; height: 17px; width: 17px; left: 3px; bottom: 3px; background-color: white; transition: .25s; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
         input:checked + .slider { background-color: #6366f1; }
-        input:checked + .slider:before { transform: translateX(20px); }
+        input:checked + .slider:before { transform: translateX(19px); }
+        /* Misc */
+        .meta { min-width: 0; flex: 1; }
         .save-wrap { display: flex; justify-content: flex-end; background: #fff; padding: 1rem 0 0.4rem; border-top: 1px solid #f0f2f5; margin-top: 0.5rem; }
         .save-btn { background: #6366f1; color: #fff; border: none; padding: 0.8rem 2rem; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(99,102,241,0.2); display: flex; align-items: center; gap: 0.5rem; }
         .save-btn:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; }
@@ -161,37 +169,39 @@ document.addEventListener('DOMContentLoaded', function() {
         container.innerHTML = filteredUsers.map(u => {
             const uid = Number(u.id) || 0;
             const st = state[uid] || { can_action_unsubmitted: 0, can_action_expired: 0, can_action_completed: 0 };
+            const initials = (u.username || 'U').trim().split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
             return `
-                <div class="card" style="height: auto; flex-direction: column; align-items: stretch; gap: 1rem; padding: 1.2rem;">
-                    <div class="meta" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                        <div>
+                <div class="card">
+                    <div class="card-user-header">
+                        <div class="avatar">${escapeHtml(initials)}</div>
+                        <div class="meta">
                             <p class="name">${escapeHtml(u.username || ('User ' + uid))}</p>
                             <p class="sub">${escapeHtml(u.email || '-')}</p>
-                            <span class="pill"><i data-lucide="badge-check" style="width:12px;height:12px;"></i>${escapeHtml(u.role || 'N/A')}</span>
+                            <span class="pill"><i data-lucide="badge-check" style="width:11px;height:11px;"></i>${escapeHtml(u.role || 'N/A')}</span>
                         </div>
                     </div>
-                    <div class="right" style="flex-direction: row; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-top: 1px solid #f1f5f9; padding-top: 1rem; align-items: center; width: 100%;">
-                        <label class="switch-row" style="flex: 1; min-width: 140px; white-space: nowrap;">
-                            <span>Bypass Submit</span>
-                            <span class="switch" style="transform: scale(0.9);">
+                    <div class="perm-rows">
+                        <div class="perm-row">
+                            <span class="perm-label">Bypass Submit</span>
+                            <label class="switch">
                                 <input type="checkbox" class="perm" data-user-id="${uid}" data-key="can_action_unsubmitted" ${Number(st.can_action_unsubmitted)===1?'checked':''}>
                                 <span class="slider"></span>
-                            </span>
-                        </label>
-                        <label class="switch-row" style="flex: 1; min-width: 140px; white-space: nowrap;">
-                            <span>Bypass Expiry</span>
-                            <span class="switch" style="transform: scale(0.9);">
+                            </label>
+                        </div>
+                        <div class="perm-row">
+                            <span class="perm-label">Bypass Expiry</span>
+                            <label class="switch">
                                 <input type="checkbox" class="perm" data-user-id="${uid}" data-key="can_action_expired" ${Number(st.can_action_expired)===1?'checked':''}>
                                 <span class="slider"></span>
-                            </span>
-                        </label>
-                        <label class="switch-row" style="flex: 1; min-width: 140px; white-space: nowrap;">
-                            <span>Modify Completed</span>
-                            <span class="switch" style="transform: scale(0.9);">
+                            </label>
+                        </div>
+                        <div class="perm-row">
+                            <span class="perm-label">Modify Completed</span>
+                            <label class="switch">
                                 <input type="checkbox" class="perm" data-user-id="${uid}" data-key="can_action_completed" ${Number(st.can_action_completed)===1?'checked':''}>
                                 <span class="slider"></span>
-                            </span>
-                        </label>
+                            </label>
+                        </div>
                     </div>
                 </div>`;
         }).join('');

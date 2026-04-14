@@ -20,6 +20,12 @@ document.addEventListener("DOMContentLoaded", () => {
         loadSection("table-container",   "sections/table.html"),
         loadSection("modals-container",  "sections/modals.html")
     ]).then(() => {
+        // Immediately update badge text to current month/year
+        const badgeText = document.getElementById("badge-text");
+        if (badgeText) badgeText.textContent = `Showing ${pickerMonth} ${pickerYear}`;
+        const yearLabel = document.getElementById("picker-year-label");
+        if (yearLabel) yearLabel.textContent = pickerYear;
+
         initializeInteractions();
         initMonthPicker();
         initModals();
@@ -29,12 +35,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function fetchExpenses() {
     try {
-        // 1. Fetch role config
+        // 1. Fetch role config — now returns meter_modes from travel_meter_photo_perms
         const roleResp = await fetch('../api/fetch_travel_role_config.php');
         const roleData = await roleResp.json();
         if (roleData.success) {
-            userRequiresMeters = roleData.user_requirement;
-            userMeterMode = roleData.meter_mode;
+            // NEW: array of transport modes that require meter photos for this user
+            userMeterModes = Array.isArray(roleData.meter_modes) ? roleData.meter_modes : [];
         }
 
         // 2. Fetch transport rates
@@ -109,16 +115,21 @@ function showStatusAlert(msg, title = "Attention") {
 // Leaflet & Role specific
 let routingControl = null;
 let leafletMap = null;
-let userRequiresMeters = false; 
-let userMeterMode = 0; // 0 = Attendance, 1 = Manual
+// NEW: Array of transport modes that require meter photos for this user
+// e.g. ['Bike', 'Car'] — sourced from travel_meter_photo_perms table
+let userMeterModes = [];
 let transportRates = {}; // { 'Car': 10, 'Bike': 5, ... }
+
+// Modes that NEVER require any photo upload (neither meter nor bill)
+const PHOTO_EXEMPT_MODES = ['E-Rickshaw', 'Metro'];
 
 /* ═══════════════════════════════════════════════
    MONTH PICKER (Header badge)
 ═══════════════════════════════════════════════ */
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-let pickerYear  = 2026;
-let pickerMonth = "March"; // default
+const _now = new Date();
+let pickerYear  = _now.getFullYear();
+let pickerMonth = MONTHS[_now.getMonth()]; // default to current month
 
 function initMonthPicker() {
     const badge = document.getElementById("month-badge");
@@ -151,7 +162,7 @@ function buildPickerUI() {
 
     yearLabel.textContent = pickerYear;
     grid.innerHTML = MONTHS.map(m => `
-        <button class="month-item ${m === pickerMonth && pickerYear === 2026 ? 'active' : ''}" data-month="${m}">
+        <button class="month-item ${m === pickerMonth && pickerYear === _now.getFullYear() ? 'active' : ''}" data-month="${m}">
             ${m.slice(0, 3)}
         </button>
     `).join("");
@@ -495,24 +506,21 @@ function initModals() {
         formsContainer.addEventListener("change", e => {
             if (e.target.classList.contains("e-mode")) {
                 const form = e.target.closest(".expense-entry-form");
-                // Master Toggle: If user role requires meters, show them. Otherwise, show Bills.
-                const isMeterMode = userRequiresMeters;
                 const mode = e.target.value;
-                const isVehicle = ['Bike', 'Car', 'E-Rickshaw'].includes(mode);
-                // If INDIVIDUAL mode is Manual (1), show meters. OR if Role requires it AND mode is not explicitly Attendance.
-                const showMeters = isVehicle && (userMeterMode === 1 || (userRequiresMeters && userMeterMode !== 0));
+
+                // Exempt modes (E-Rickshaw, Metro) — show bill zone but mark as optional
+                const isExempt   = PHOTO_EXEMPT_MODES.includes(mode);
+                // Meter-required modes — from permission table
+                const showMeters = !isExempt && userMeterModes.includes(mode);
+                // Bill zone: visible for all non-meter modes (exempt ones too — optional)
+                const showBill   = !showMeters;
 
                 form.querySelectorAll(".meter-photo-field").forEach(el => el.style.display = showMeters ? "flex" : "none");
-                form.querySelectorAll(".bill-photo-field").forEach(el => el.style.display = (isVehicle && (userMeterMode === 1 || userRequiresMeters)) ? "none" : "flex");
+                form.querySelectorAll(".bill-photo-field").forEach(el  => el.style.display = showBill  ? "flex" : "none");
 
-                // Asterisk logic: vehicle modes are optional ONLY for bill-based users. 
-                // All other combinations require a photo.
-                let showAsterisk = true;
-                if (!userRequiresMeters && isVehicle) {
-                    showAsterisk = false; 
-                }
-                form.querySelectorAll(".add-photo-field label .req").forEach(req => {
-                    req.style.display = showAsterisk ? "inline" : "none";
+                // Asterisk: hide for exempt modes (optional upload), show for all others
+                form.querySelectorAll(".bill-photo-field label .req, .meter-photo-field label .req").forEach(req => {
+                    req.style.display = isExempt ? "none" : "inline";
                 });
 
                 // Update amount based on new mode rate
@@ -888,7 +896,7 @@ function openEditModal(id, isResubmit = false) {
                                 <i class="fa-solid fa-chevron-down" style="color:#94a3b8;font-size:11px;"></i>
                             </div>
                             <div class="select-dropdown" style="z-index: 100;">
-                                ${['Bike', 'Car', 'E-Rickshaw', 'Cab', 'Cab Bike', 'Metro', 'Bus', 'Train', 'Flight', 'Other'].map(m => `
+                                ${['Auto', 'Bike', 'Bike Taxi', 'Bus', 'Cab', 'Car', 'E-Rickshaw', 'Flight', 'Metro', 'Other', 'Train'].map(m => `
                                     <div class="select-item ${item.mode === m ? 'active' : ''}" data-value="${m}">${m}</div>
                                 `).join('')}
                             </div>
@@ -1031,6 +1039,7 @@ function openEditModal(id, isResubmit = false) {
     }
     
     initAddressAutocomplete(document.getElementById("edit-modal-dynamic-content"));
+    updateAmountBasedOnDistance(document.getElementById("edit-modal-dynamic-content")); // ADDED: initialize lock for correct mode on opening
 
     openModal("edit-modal");
 }
@@ -1204,10 +1213,9 @@ function openAddExpenseModal() {
         firstForm.querySelectorAll(".e-meter-start-name, .e-meter-end-name, .e-bill-name").forEach(el => el.textContent = "Choose file…");
         firstForm.querySelectorAll(".file-drop-zone").forEach(el => el.classList.remove("has-file"));
         
-        // Default visibility based on role
-        const isMeterInitial = userRequiresMeters; 
-        firstForm.querySelectorAll(".meter-photo-field").forEach(el => el.style.display = isMeterInitial ? "flex" : "none");
-        firstForm.querySelectorAll(".bill-photo-field").forEach(el => el.style.display = isMeterInitial ? "none" : "flex");
+        // Default visibility: hide both photo sections until user picks a mode
+        firstForm.querySelectorAll(".meter-photo-field").forEach(el => el.style.display = "none");
+        firstForm.querySelectorAll(".bill-photo-field").forEach(el => el.style.display = "none");
         
         // Ensure no remove button on first form
         const rm = firstForm.querySelector(".remove-expense-btn");
@@ -1358,9 +1366,14 @@ function createNewExpenseForm(sourceForm, forReturnTrip = false) {
         });
     }
 
-    // Ensure correct field visibility based on role
-    newForm.querySelectorAll(".meter-photo-field").forEach(el => el.style.display = userRequiresMeters ? "flex" : "none");
-    newForm.querySelectorAll(".bill-photo-field").forEach(el => el.style.display = userRequiresMeters ? "none" : "flex");
+    // Ensure correct field visibility based on the cloned form's selected mode
+    const clonedMode = newForm.querySelector(".e-mode")?.value || "";
+    const clonedNeedsMeters = userMeterModes.includes(clonedMode);
+    newForm.querySelectorAll(".meter-photo-field").forEach(el => el.style.display = clonedNeedsMeters ? "flex" : "none");
+    newForm.querySelectorAll(".bill-photo-field").forEach(el => el.style.display = (!clonedNeedsMeters && clonedMode) ? "flex" : "none");
+
+    // Initialize the locked/unlocked state of the amount field matching this cloned form
+    updateAmountBasedOnDistance(newForm);
 
     // Add remove button if it doesn't exist (since it's not the 1st one)
     let header = newForm.querySelector(".expense-entry-header");
@@ -1425,25 +1438,24 @@ function validateForm(form) {
         }
     }
 
-    // File validation logic
+    // File validation logic — sourced from travel_meter_photo_perms table
     const mode = form.querySelector(".e-mode")?.value;
-    const isVehicleMode = ['Bike', 'Car', 'E-Rickshaw'].includes(mode);
 
-    if (userRequiresMeters) {
-        // For meter-based roles, vehicle modes MUST provide start/end photos.
-        if (isVehicleMode) {
+    // E-Rickshaw & Metro are fully exempt — no photo required at all
+    if (!PHOTO_EXEMPT_MODES.includes(mode)) {
+        const modeRequiresMeters = userMeterModes.includes(mode);
+
+        if (modeRequiresMeters) {
+            // This mode requires meter start + end photos for this user
             const start = form.querySelector(".e-meter-start-input");
-            const end = form.querySelector(".e-meter-end-input");
+            const end   = form.querySelector(".e-meter-end-input");
             if (!start?.files.length || !end?.files.length) {
                 valid = false;
                 if (!start?.files.length) markFileError(form.querySelector(".meter-photo-field:first-child .file-drop-zone"));
-                if (!end?.files.length) markFileError(form.querySelector(".meter-photo-field:last-child .file-drop-zone"));
+                if (!end?.files.length)   markFileError(form.querySelector(".meter-photo-field:last-child .file-drop-zone"));
             }
-        }
-    } else {
-        // For bill-based roles, vehicle modes are optional (own vehicle), 
-        // but others (Cab, Metro, etc.) require a bill/ticket photo.
-        if (!isVehicleMode) {
+        } else {
+            // Mode does NOT require meters — require a bill/ticket photo instead
             const bill = form.querySelector(".e-bill-input");
             if (!bill?.files.length) {
                 valid = false;
@@ -1451,6 +1463,7 @@ function validateForm(form) {
             }
         }
     }
+    // else: exempt mode (E-Rickshaw / Metro) — skip all photo validation
 
     return valid;
 }
@@ -1645,10 +1658,28 @@ function updateAmountBasedOnDistance(form) {
     const mode = modeEl.value;
     const distance = parseFloat(distEl.value) || 0;
     
-    if (transportRates[mode] && transportRates[mode] > 0 && distance > 0) {
-        amtEl.value = (transportRates[mode] * distance).toFixed(2);
-        updateModalSummary();
+    // Check if this mode has a fixed rate from the database
+    const hasFixedRate = transportRates[mode] && transportRates[mode] > 0;
+
+    if (hasFixedRate) {
+        // Mode has fixed rate: calculation is automatic, field is locked
+        if (distance > 0) {
+            amtEl.value = (transportRates[mode] * distance).toFixed(2);
+        }
+        amtEl.readOnly = true;
+        // Optionally style it to look disabled yet readable
+        amtEl.style.backgroundColor = "#f8fafc";
+        amtEl.style.cursor = "not-allowed";
+        amtEl.style.opacity = "0.8";
+    } else {
+        // Custom amount mode: open for typing
+        amtEl.readOnly = false;
+        amtEl.style.backgroundColor = "";
+        amtEl.style.cursor = "text";
+        amtEl.style.opacity = "1";
     }
+    
+    updateModalSummary();
 }
 
 function updateModalSummary() {

@@ -31,7 +31,7 @@
 
 ### IST Schedule:
 - **06:30 PM** - First summary (Both teams)
-- **09:00 PM** - Final summary (Both teams)
+- **10:00 PM** - Final summary (Both teams)
 
 ### UTC Cron Jobs (for production):
 
@@ -39,8 +39,8 @@
 # 06:30 PM IST = 01:00 PM UTC
 0 13 * * * /usr/bin/php /path/to/whatsapp/cron_punchout_summary.php both >> /path/to/whatsapp/cron.log 2>&1
 
-# 09:00 PM IST = 03:30 PM UTC
-30 15 * * * /usr/bin/php /path/to/whatsapp/cron_punchout_summary.php both >> /path/to/whatsapp/cron.log 2>&1
+# 10:00 PM IST = 04:30 PM UTC
+30 16 * * * /usr/bin/php /path/to/whatsapp/cron_punchout_summary.php both >> /path/to/whatsapp/cron.log 2>&1
 ```
 
 ---
@@ -67,8 +67,8 @@ Copy and paste this into your production server's crontab:
 # 06:30 PM IST - First summary with PDF
 0 13 * * * /usr/bin/php /home/username/public_html/whatsapp/cron_punchout_summary.php both >> /home/username/public_html/whatsapp/cron.log 2>&1
 
-# 09:00 PM IST - Final summary with PDF
-30 15 * * * /usr/bin/php /home/username/public_html/whatsapp/cron_punchout_summary.php both >> /home/username/public_html/whatsapp/cron.log 2>&1
+# 10:00 PM IST - Final summary with PDF
+30 16 * * * /usr/bin/php /home/username/public_html/whatsapp/cron_punchout_summary.php both >> /home/username/public_html/whatsapp/cron.log 2>&1
 ```
 
 ---
@@ -124,7 +124,7 @@ tail -f /path/to/whatsapp/whatsapp.log
 | Punch-In #2 | 09:30 AM | 04:00 AM | `0 4 * * *` | Both |
 | Punch-In #3 | 12:00 PM | 06:30 AM | `30 6 * * *` | Both |
 | Punch-Out #1 | 06:30 PM | 01:00 PM | `0 13 * * *` | Both |
-| Punch-Out #2 | 09:00 PM | 03:30 PM | `30 15 * * *` | Both |
+| Punch-Out #2 | 10:00 PM | 04:30 PM | `30 16 * * *` | Both |
 
 ---
 

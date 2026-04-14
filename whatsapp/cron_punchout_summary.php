@@ -5,13 +5,13 @@
  * This script sends admin notifications for punch-outs at specific times:
  * 
  * Punch-Out Summary:
- * - 09:00 PM (Daily summary with PDF - Both teams)
+ * - 10:00 PM (Daily summary with PDF - Both teams)
  * 
  * Setup cron job (IST):
- * 0 21 * * * /usr/bin/php /path/to/cron_punchout_summary.php both
+ * 0 22 * * * /usr/bin/php /path/to/cron_punchout_summary.php both
  * 
  * Production (UTC - subtract 5:30 from IST):
- * 30 15 * * * /usr/bin/php /path/to/cron_punchout_summary.php both
+ * 30 16 * * * /usr/bin/php /path/to/cron_punchout_summary.php both
  */
 
 require_once __DIR__ . '/../config.php';

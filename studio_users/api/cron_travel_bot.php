@@ -40,6 +40,7 @@ try {
         JOIN users u ON u.id = te.user_id
         LEFT JOIN travel_expense_mapping tem ON tem.employee_id = te.user_id
         WHERE te.status = 'pending'
+          AND te.travel_date >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)
     ");
     $pendingExpenses = $pendingStmt->fetchAll(PDO::FETCH_ASSOC);
 

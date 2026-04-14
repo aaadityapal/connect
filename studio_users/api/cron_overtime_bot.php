@@ -46,6 +46,8 @@ try {
         LEFT JOIN users mgr ON mgr.id = oam.manager_id
         WHERE oreq.status NOT IN ('approved', 'rejected', 'paid')
           AND oreq.status IN ('submitted', 'pending')
+          AND CAST(oreq.overtime_hours AS DECIMAL(10,2)) >= 1.5
+          AND oreq.date >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)
     ");
     $stmt->execute();
     $pendingOvertimes = $stmt->fetchAll(PDO::FETCH_ASSOC);

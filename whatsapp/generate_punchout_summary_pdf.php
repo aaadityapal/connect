@@ -42,132 +42,119 @@ function generatePunchOutSummaryPDF($punchOutData, $date, $teamType)
         // Add page
         $pdf->AddPage();
 
-        // ===== HEADER SECTION =====
+        // ===== MINIMALIST HEADER SECTION =====
         // Company Name
-        $pdf->SetFont('helvetica', 'B', 18);
-        $pdf->SetTextColor(41, 128, 185); // Professional blue
-        $pdf->Cell(0, 10, 'ArchitectsHive', 0, 1, 'C');
+        $pdf->SetFont('helvetica', 'B', 20);
+        $pdf->SetTextColor(79, 70, 229); // Vibrant Indigo
+        $pdf->Cell(0, 8, 'ArchitectsHive', 0, 1, 'L');
 
-        $pdf->SetFont('helvetica', '', 9);
-        $pdf->SetTextColor(100, 100, 100);
-        $pdf->Cell(0, 5, 'Attendance & Work Report System', 0, 1, 'C');
+        $pdf->SetFont('helvetica', 'I', 9);
+        $pdf->SetTextColor(107, 114, 128); // Soft Gray
+        $pdf->Cell(0, 5, 'Team Attendance & Activity Report', 0, 1, 'L');
 
-        // Divider line
-        $pdf->SetDrawColor(41, 128, 185);
+        // Clean subtle divider
+        $pdf->Ln(2);
+        $pdf->SetDrawColor(224, 231, 255); // Super light indigo border
         $pdf->SetLineWidth(0.5);
-        $pdf->Line(15, $pdf->GetY() + 2, 195, $pdf->GetY() + 2);
-        $pdf->Ln(5);
+        $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
+        $pdf->Ln(8);
 
         // ===== TITLE SECTION =====
-        $pdf->SetFont('helvetica', 'B', 16);
-        $pdf->SetTextColor(0, 0, 0);
-        $pdf->Cell(0, 8, "Daily Punch-Out Summary", 0, 1, 'C');
+        $pdf->SetFont('helvetica', 'B', 24);
+        $pdf->SetTextColor(17, 24, 39); // Very dark slate
+        $pdf->Cell(0, 10, "Daily Punch-Out Summary", 0, 1, 'L');
 
         $pdf->SetFont('helvetica', 'B', 12);
-        $pdf->SetTextColor(52, 73, 94);
-        $pdf->Cell(0, 6, "$teamType Team", 0, 1, 'C');
+        $pdf->SetTextColor(236, 72, 153); // Vibrant Pink accent for team name
+        $pdf->Cell(0, 6, strtoupper($teamType) . " TEAM", 0, 1, 'L');
 
         $pdf->SetFont('helvetica', '', 10);
-        $pdf->SetTextColor(100, 100, 100);
-        $pdf->Cell(0, 5, $dateFormatted, 0, 1, 'C');
-        $pdf->Cell(0, 5, "Generated at: $currentTime", 0, 1, 'C');
-        $pdf->Ln(8);
+        $pdf->SetTextColor(107, 114, 128);
+        $pdf->Cell(0, 6, $dateFormatted . "  •  Generated at " . $currentTime, 0, 1, 'L');
+        $pdf->Ln(6);
 
         // ===== SUMMARY BOX =====
         $totalEmployees = count($punchOutData);
 
-        $pdf->SetFillColor(236, 240, 241);
-        $pdf->SetDrawColor(189, 195, 199);
-        $pdf->SetLineWidth(0.3);
+        // A beautiful soft indigo card
+        $pdf->SetFillColor(238, 242, 255); // Indigo 50
+        $pdf->SetDrawColor(238, 242, 255); // No visible outer border
+        $pdf->SetLineWidth(0.1);
 
-        $pdf->SetFont('helvetica', 'B', 10);
-        $pdf->SetTextColor(52, 73, 94);
-        $pdf->Cell(90, 8, 'Total Employees Punched Out:', 1, 0, 'L', 1);
-        $pdf->SetFont('helvetica', '', 10);
-        $pdf->Cell(90, 8, $totalEmployees, 1, 1, 'C', 1);
-        $pdf->Ln(5);
+        $pdf->SetFont('helvetica', 'B', 11);
+        $pdf->SetTextColor(67, 56, 202); // Deep Indigo
+        // Render a pill-like card
+        $pdf->Cell(0, 14, "   Total Employees Punched Out: " . $totalEmployees, 1, 1, 'L', 1);
+        $pdf->Ln(8);
 
         // ===== TABLE HEADER =====
         $pdf->SetFont('helvetica', 'B', 10);
-        $pdf->SetFillColor(52, 73, 94); // Dark blue-gray
+        $pdf->SetFillColor(79, 70, 229); // Vibrant Indigo header
         $pdf->SetTextColor(255, 255, 255); // White text
-        $pdf->SetDrawColor(52, 73, 94);
-        $pdf->SetLineWidth(0.3);
+        $pdf->SetDrawColor(99, 102, 241); // Slightly lighter indigo border to blend beautifully
+        $pdf->SetLineWidth(0.2);
 
-        // Column widths: S.No (15), Name (50), Time (30), Work Report (85)
-        $w = [15, 50, 30, 85];
-        $headers = ['S.No', 'Employee Name', 'Punch-Out Time', 'Work Report'];
+        // Sleeker column widths
+        $w = [12, 48, 30, 90]; 
+        $headers = ['#', 'Employee Name', 'Punch-Out', 'Work Report'];
 
         for ($i = 0; $i < count($headers); $i++) {
-            $pdf->Cell($w[$i], 8, $headers[$i], 1, 0, 'C', 1);
+            $pdf->Cell($w[$i], 9, $headers[$i], 1, 0, 'C', 1);
         }
         $pdf->Ln();
 
         // ===== TABLE ROWS =====
         $pdf->SetFont('helvetica', '', 9);
-        $pdf->SetTextColor(0, 0, 0);
+        $pdf->SetTextColor(55, 65, 81); // Slate gray for optimal reading
 
         if (empty($punchOutData)) {
-            // No punch-outs - show message
             $pdf->SetFont('helvetica', 'I', 10);
-            $pdf->SetTextColor(100, 100, 100);
-            $pdf->Cell(0, 20, 'No punch-outs recorded for this team today.', 0, 1, 'C');
+            $pdf->SetTextColor(156, 163, 175);
+            $pdf->Cell(0, 20, 'No punch-outs recorded for this team today. Go grab a coffee! ☕', 0, 1, 'C');
         } else {
-            // Show punch-out data
             $rowNum = 1;
             foreach ($punchOutData as $record) {
-                // Alternate row colors for better readability
+                // Soft pastel row alternation
                 if ($rowNum % 2 == 0) {
-                    $pdf->SetFillColor(249, 249, 249); // Light gray
+                    $pdf->SetFillColor(249, 250, 251); // Gray 50
                 } else {
-                    $pdf->SetFillColor(255, 255, 255); // White
+                    $pdf->SetFillColor(255, 255, 255); // Clean White
                 }
 
-                $pdf->SetDrawColor(189, 195, 199); // Light border
+                $pdf->SetDrawColor(229, 231, 235); // Very soft gray borders
 
-                // Format punch-out time
                 $punchOutTime = date('h:i A', strtotime($record['punch_out']));
 
-                // Clean and prepare work report
                 $workReport = $record['work_report'] ?? 'No report submitted';
                 $workReport = trim($workReport);
                 if (empty($workReport)) {
                     $workReport = 'No report submitted';
                 }
 
-                // Calculate row height based on work report content
                 $nb = $pdf->getNumLines($workReport, $w[3]);
-                $h = max(8, 6 * $nb); // Minimum 8mm height
+                $h = max(10, 6 * $nb); // Added slightly more padding to rows (min 10mm)
 
-                // Check for page break
+                // Page break logic with reprinted clean header
                 if ($pdf->GetY() + $h > $pdf->GetPageHeight() - 20) {
                     $pdf->AddPage();
 
-                    // Reprint header on new page
                     $pdf->SetFont('helvetica', 'B', 10);
-                    $pdf->SetFillColor(52, 73, 94);
+                    $pdf->SetFillColor(79, 70, 229);
                     $pdf->SetTextColor(255, 255, 255);
-                    $pdf->SetDrawColor(52, 73, 94);
+                    $pdf->SetDrawColor(99, 102, 241);
 
                     for ($i = 0; $i < count($headers); $i++) {
-                        $pdf->Cell($w[$i], 8, $headers[$i], 1, 0, 'C', 1);
+                        $pdf->Cell($w[$i], 9, $headers[$i], 1, 0, 'C', 1);
                     }
                     $pdf->Ln();
 
                     $pdf->SetFont('helvetica', '', 9);
-                    $pdf->SetTextColor(0, 0, 0);
+                    $pdf->SetTextColor(55, 65, 81);
                 }
 
-                // Store current position
-                $startX = $pdf->GetX();
-                $startY = $pdf->GetY();
-
-                // Draw cells with same height
                 $pdf->Cell($w[0], $h, $rowNum, 1, 0, 'C', 1);
-                $pdf->Cell($w[1], $h, $record['username'], 1, 0, 'L', 1);
+                $pdf->Cell($w[1], $h, '  ' . $record['username'], 1, 0, 'L', 1);
                 $pdf->Cell($w[2], $h, $punchOutTime, 1, 0, 'C', 1);
-
-                // MultiCell for work report (allows text wrapping)
                 $pdf->MultiCell($w[3], $h, $workReport, 1, 'L', 1, 1, null, null, true, 0, false, true, $h, 'M');
 
                 $rowNum++;
@@ -175,16 +162,20 @@ function generatePunchOutSummaryPDF($punchOutData, $date, $teamType)
         }
 
         // ===== FOOTER SECTION =====
-        $pdf->Ln(10);
-        $pdf->SetFont('helvetica', 'I', 8);
-        $pdf->SetTextColor(150, 150, 150);
-        $pdf->Cell(0, 5, 'This is an automated report generated by Conneqts.io', 0, 1, 'C');
-        $pdf->Cell(0, 5, '© ' . date('Y') . ' Conneqts.io. All rights reserved.', 0, 1, 'C');
+        $pdf->Ln(12);
+        
+        // Separator above footer
+        $pdf->SetDrawColor(243, 244, 246);
+        $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());
+        $pdf->Ln(4);
 
-        // Developer credit
         $pdf->SetFont('helvetica', '', 8);
-        $pdf->SetTextColor(200, 100, 100);
-        $pdf->Cell(0, 5, 'Made With Love By Aditya', 0, 1, 'C');
+        $pdf->SetTextColor(156, 163, 175); // Slate 400
+        $pdf->Cell(0, 4, 'Automated report generated by Conneqts.io © ' . date('Y') . '. All rights reserved.', 0, 1, 'C');
+
+        $pdf->SetFont('helvetica', 'I', 8);
+        $pdf->SetTextColor(244, 114, 182); // Sweet pink for signature
+        $pdf->Cell(0, 4, 'Made With Love By Aditya 💖', 0, 1, 'C');
 
         // ===== SAVE FILE =====
         $uploadDir = __DIR__ . '/../uploads/punchout_summaries';

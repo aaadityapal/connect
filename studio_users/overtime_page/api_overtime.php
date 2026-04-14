@@ -87,9 +87,10 @@ try {
                 $isExpired = false;
                 $rawStatus = isset($row['raw_status']) ? trim(strtolower($row['raw_status'])) : 'pending';
                 
-                // If it's more than 15 days old and not strictly finalized (approved/rejected)
+                // If it's more than 15 days old, it should ONLY expire if the user hasn't submitted their report yet.
+                // If it is 'submitted', 'approved', or 'rejected', it should not automatically expire.
                 if ((int)$row['db_expired'] === 1) {
-                    if ($rawStatus !== 'approved' && $rawStatus !== 'rejected') {
+                    if ($rawStatus === 'pending' || $rawStatus === '') {
                         $isExpired = true;
                     }
                 }

@@ -112,9 +112,9 @@ try {
             $status = ucfirst($row['attendance_status']);
         }
 
-        // Expiration Rule: If > 15 days old and not Approved/Rejected/Paid, it's Expired
-        $terminalStates = ['approved', 'rejected', 'paid'];
-        if ($daysDiff > 15 && !in_array(strtolower($status), $terminalStates)) {
+        // Expiration Rule: If > 15 days old and not yet submitted by the user, it is Expired
+        // If it is 'submitted', it is safely waiting in the manager's queue and should not expire.
+        if ($daysDiff > 15 && strtolower($status) === 'pending') {
             $status = 'Expired';
         }
 

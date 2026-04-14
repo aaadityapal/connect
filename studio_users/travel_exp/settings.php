@@ -93,10 +93,7 @@ if (!isset($_SESSION['user_id'])) {
 
             <div class="settings-card">
                 <div class="tabs-header">
-                    <button class="tab-btn active" data-tab="roles">
-                        <i class="fa-solid fa-users-gear" style="margin-right:8px;"></i>Role Requirements (For Approval Modal)
-                    </button>
-                    <button class="tab-btn" data-tab="rates">
+                    <button class="tab-btn active" data-tab="rates">
                         <i class="fa-solid fa-gas-pump" style="margin-right:8px;"></i>Per KM Rates
                     </button>
                     <button class="tab-btn" data-tab="auth">
@@ -105,23 +102,10 @@ if (!isset($_SESSION['user_id'])) {
                     <button class="tab-btn" data-tab="approval">
                         <i class="fa-solid fa-calendar-check" style="margin-right:8px;"></i>Approval Window
                     </button>
-                    <button class="tab-btn" data-tab="meters">
-                        <i class="fa-solid fa-gauge" style="margin-right:8px;"></i>Individual Meter Mode (For Travel Expenses Modal)
-                    </button>
                 </div>
                 
-                <!-- Tab 1: Roles -->
-                <div id="roles" class="tab-content active">
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:12px; margin-bottom:15px;">
-                        <h3 style="font-size: 14px; color: #475569;">Enable roles that MUST upload Meter Start/End photos</h3>
-                    </div>
-                    <div class="role-list" id="role-list-container">
-                        <p style="text-align:center; color:#94a3b8; padding: 20px;">Loading roles...</p>
-                    </div>
-                </div>
-
                 <!-- Tab 2: Rates -->
-                <div id="rates" class="tab-content">
+                <div id="rates" class="tab-content active">
                     <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:12px; margin-bottom:15px;">
                         <h3 style="font-size: 14px; color: #475569;">Set per-kilometer reimbursement rates for each mode</h3>
                     </div>
@@ -153,26 +137,16 @@ if (!isset($_SESSION['user_id'])) {
                     </div>
                 </div>
 
-                <!-- Tab 5: User Meter mode -->
-                <div id="meters" class="tab-content">
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:12px; margin-bottom:15px;">
-                        <h3 style="font-size: 14px; color: #475569;">Decide if user photos should be pulled from Attendance Punch OR required manually</h3>
-                    </div>
-                    <div class="role-list" id="meters-list-container">
-                        <p style="text-align:center; color:#94a3b8; padding: 20px;">Loading configuration...</p>
-                    </div>
-                </div>
+
             </div>
         </main>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            fetchRoles();
             fetchRates();
             fetchAuths();
             fetchMapping();
-            fetchUserMeters();
             initTabs();
         });
 
@@ -188,45 +162,7 @@ if (!isset($_SESSION['user_id'])) {
             });
         }
 
-        async function fetchRoles() {
-            try {
-                const response = await fetch('../api/fetch_travel_role_config.php');
-                const data = await response.json();
-                if (data.success) renderRoles(data.configs);
-            } catch (e) { console.error(e); }
-        }
 
-        function renderRoles(configs) {
-            const container = document.getElementById('role-list-container');
-            container.innerHTML = configs.map(role => `
-                <div class="role-item">
-                    <div class="role-info">
-                        <div class="role-icon"><i class="fa-solid fa-user-tag"></i></div>
-                        <div>
-                            <div class="role-name">${role.role_name}</div>
-                            <div class="role-badge">Requires Photos: ${role.require_meters == 1 ? 'YES' : 'NO'}</div>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="switch">
-                            <input type="checkbox" ${role.require_meters == 1 ? 'checked' : ''} onchange="updateRole('${role.role_name}', this.checked)">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function updateRole(roleName, checked) {
-            try {
-                await fetch('../api/update_travel_role_config.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ role_name: roleName, require_meters: checked ? 1 : 0 })
-                });
-                fetchRoles();
-            } catch (e) { console.error(e); }
-        }
 
         // --- Per KM Rates Logic ---
         async function fetchRates() {
@@ -285,7 +221,7 @@ if (!isset($_SESSION['user_id'])) {
                     <div class="role-info">
                         <div class="role-icon" style="background:var(--clr-blue); color:#fff; border:none;"><i class="fa-solid fa-user-lock"></i></div>
                         <div>
-                            <div class="role-name">${user.username} <span style="font-size:0.75rem; color:#94a3b8; margin-left:4px;">(${user.employee_id})</span></div>
+                            <div class="role-name">${user.username} <span style="font-size:0.75rem; color:#94a3b8; margin-left:4px;">(${user.unique_id || user.employee_id})</span></div>
                             <div class="role-badge" style="background:#f1f5f9; color:#475569;">Role: ${user.role}</div>
                         </div>
                     </div>
@@ -364,7 +300,7 @@ if (!isset($_SESSION['user_id'])) {
                     <div style="display:flex; align-items:center; gap:12px; padding-bottom:12px; border-bottom:1px solid #f1f5f9;">
                         <div class="role-icon" style="background:#eff6ff; color:#2563eb; width:44px; height:44px; font-size:16px;"><i class="fa-solid fa-user-tie"></i></div>
                         <div>
-                            <div style="font-weight:700; color:#1e293b; font-size:15px;">${a.username} <span style="font-size:12px; color:#64748b; font-weight:500;">(${a.employee_id})</span></div>
+                            <div style="font-weight:700; color:#1e293b; font-size:15px;">${a.username} <span style="font-size:12px; color:#64748b; font-weight:500;">(${a.unique_id || a.employee_id})</span></div>
                             <div class="role-badge" style="background:#f1f5f9; color:#475569; margin-top:4px; display:inline-block;">${a.role}</div>
                         </div>
                     </div>
@@ -430,49 +366,7 @@ if (!isset($_SESSION['user_id'])) {
             } catch (e) { console.error(e); }
         }
 
-        // --- Individual Meter Mode Logic ---
-        async function fetchUserMeters() {
-            try {
-                const response = await fetch('../api/fetch_user_meters_config.php');
-                const data = await response.json();
-                if (data.success) renderUserMeters(data.users);
-            } catch (e) { console.error(e); }
-        }
 
-        function renderUserMeters(users) {
-            const container = document.getElementById('meters-list-container');
-            container.innerHTML = users.map(user => `
-                <div class="role-item">
-                    <div class="role-info">
-                        <div class="role-icon" style="background:#fef9c3; color:#a16207; border:none;"><i class="fa-solid fa-gauge-high"></i></div>
-                        <div>
-                            <div class="role-name">${user.username} <span style="font-size:0.75rem; color:#94a3b8; margin-left:4px;">(${user.employee_id})</span></div>
-                            <div class="role-badge" style="background:${user.meter_mode == 1 ? '#dcfce7' : '#f1f5f9'}; color:${user.meter_mode == 1 ? '#16a34a' : '#475569'};">
-                                Mode: ${user.meter_mode == 1 ? 'Manual Meter Upload' : 'Attendance Punch based'}
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase;">Manual Upload</span>
-                        <label class="switch">
-                            <input type="checkbox" ${user.meter_mode == 1 ? 'checked' : ''} onchange="updateUserMeter(${user.id}, this.checked)">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function updateUserMeter(userId, checked) {
-            try {
-                await fetch('../api/update_user_meters_config.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, meter_mode: checked ? 1 : 0 })
-                });
-                fetchUserMeters();
-            } catch (e) { console.error(e); }
-        }
     </script>
 </body>
 </html>

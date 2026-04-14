@@ -612,7 +612,7 @@ export function openConfirmModal(type, row, onConfirm, onEdit) {
     // Map wiring
     document.getElementById('view-map-link')?.addEventListener('click', () => {
         if (row.punchOutLat && row.punchOutLng) {
-            openMapModal(row.punchOutLat, row.punchOutLng, row.punchOutAddress);
+            window.openMapModal(row.punchOutLat, row.punchOutLng, row.punchOutAddress);
         } else {
             alert('Coordinates not available for this session.');
         }
@@ -635,7 +635,7 @@ export function openConfirmModal(type, row, onConfirm, onEdit) {
 /**
  * Opens a small, elegant map modal with an embedded Google Maps view.
  */
-function openMapModal(lat, lng, address) {
+window.openMapModal = function (lat, lng, address) {
     const mapUrl = `https://www.google.com/maps?q=${lat},${lng}&hl=en&z=15&output=embed`;
     
     const mapModalHtml = `

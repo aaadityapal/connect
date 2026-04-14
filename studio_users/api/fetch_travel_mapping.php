@@ -18,7 +18,7 @@ $days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
 try {
     // 1. Fetch all unique approvers from the mapping table
     $query = "
-        SELECT DISTINCT u.id, u.username, u.employee_id, u.role
+        SELECT DISTINCT u.id, u.username, u.employee_id, u.unique_id, u.role
         FROM users u
         WHERE u.id IN (
             SELECT manager_id        FROM travel_expense_mapping WHERE manager_id IS NOT NULL

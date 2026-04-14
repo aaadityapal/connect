@@ -512,8 +512,9 @@ function initModals() {
                 const isExempt   = PHOTO_EXEMPT_MODES.includes(mode);
                 // Meter-required modes — from permission table
                 const showMeters = !isExempt && userMeterModes.includes(mode);
-                // Bill zone: visible for all non-meter modes (exempt ones too — optional)
-                const showBill   = !showMeters;
+                // Bill zone: visible for non-meter modes, except for Bike/Car which never have bills
+                const isPersonalVehicle = ['Bike', 'Car'].includes(mode);
+                const showBill   = !showMeters && !isPersonalVehicle;
 
                 form.querySelectorAll(".meter-photo-field").forEach(el => el.style.display = showMeters ? "flex" : "none");
                 form.querySelectorAll(".bill-photo-field").forEach(el  => el.style.display = showBill  ? "flex" : "none");
@@ -1369,8 +1370,9 @@ function createNewExpenseForm(sourceForm, forReturnTrip = false) {
     // Ensure correct field visibility based on the cloned form's selected mode
     const clonedMode = newForm.querySelector(".e-mode")?.value || "";
     const clonedNeedsMeters = userMeterModes.includes(clonedMode);
+    const isPersonalVehicle = ['Bike', 'Car'].includes(clonedMode);
     newForm.querySelectorAll(".meter-photo-field").forEach(el => el.style.display = clonedNeedsMeters ? "flex" : "none");
-    newForm.querySelectorAll(".bill-photo-field").forEach(el => el.style.display = (!clonedNeedsMeters && clonedMode) ? "flex" : "none");
+    newForm.querySelectorAll(".bill-photo-field").forEach(el => el.style.display = (!clonedNeedsMeters && clonedMode && !isPersonalVehicle) ? "flex" : "none");
 
     // Initialize the locked/unlocked state of the amount field matching this cloned form
     updateAmountBasedOnDistance(newForm);
@@ -1444,6 +1446,7 @@ function validateForm(form) {
     // E-Rickshaw & Metro are fully exempt — no photo required at all
     if (!PHOTO_EXEMPT_MODES.includes(mode)) {
         const modeRequiresMeters = userMeterModes.includes(mode);
+        const isPersonalVehicle = ['Bike', 'Car'].includes(mode);
 
         if (modeRequiresMeters) {
             // This mode requires meter start + end photos for this user
@@ -1454,8 +1457,8 @@ function validateForm(form) {
                 if (!start?.files.length) markFileError(form.querySelector(".meter-photo-field:first-child .file-drop-zone"));
                 if (!end?.files.length)   markFileError(form.querySelector(".meter-photo-field:last-child .file-drop-zone"));
             }
-        } else {
-            // Mode does NOT require meters — require a bill/ticket photo instead
+        } else if (!isPersonalVehicle) {
+            // Mode does NOT require meters and is NOT Bike/Car — require a bill/ticket photo instead
             const bill = form.querySelector(".e-bill-input");
             if (!bill?.files.length) {
                 valid = false;

@@ -103,18 +103,24 @@ try {
 
     $formattedData = array_map(function ($row) {
         $daysDiff = (time() - strtotime($row['date'])) / 86400; // 86400 seconds in a day
+        $attendanceStatus = strtolower(trim((string)($row['attendance_status'] ?? '')));
+        $isSubmitted = !empty($row['submittedAt']);
         
         // Resolve status
         $status = 'Pending';
         if (!empty($row['oreq_status'])) {
             $status = ucfirst($row['oreq_status']);
-        } else if (!empty($row['attendance_status'])) {
-            $status = ucfirst($row['attendance_status']);
+        } else if ($isSubmitted) {
+            // Mark as submitted only when the employee actually submitted
+            $status = 'Submitted';
+        } else if (in_array($attendanceStatus, ['approved', 'rejected', 'paid'], true)) {
+            // Keep terminal attendance states visible for older records without overtime_requests rows
+            $status = ucfirst($attendanceStatus);
         }
 
-        // Expiration Rule: If > 15 days old and not yet submitted by the user, it is Expired
-        // If it is 'submitted', it is safely waiting in the manager's queue and should not expire.
-        if ($daysDiff > 15 && strtolower($status) === 'pending') {
+        // Expiration Rule: If > 15 days old and not yet submitted by the user, it is Expired.
+        // Submitted requests stay actionable (approve/reject) and must not expire.
+        if ($daysDiff > 15 && strtolower($status) === 'pending' && !$isSubmitted) {
             $status = 'Expired';
         }
 
@@ -157,6 +163,7 @@ try {
             'managerComment' => $row['managerComment'] ?: '',
             'attendance_id' => $row['attendance_id'],
             'request_id' => $row['request_id'],
+            'isSubmitted' => $isSubmitted,
             'punchOutAddress' => $row['punch_out_address'] ?: '—',
             'punchOutLat' => $row['punch_out_latitude'],
             'punchOutLng' => $row['punch_out_longitude']

@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
         background: '#fff', border: '1px solid #e5e7eb',
         borderRadius: '8px', boxShadow: '0 8px 32px rgba(0,0,0,0.16)',
         padding: '5px', minWidth: '170px', maxHeight: '240px',
-        overflowY: 'auto', display: 'none', scrollbarWidth: 'thin',
+        overflowY: 'auto', scrollbarWidth: 'thin',
     });
     document.body.appendChild(floatingMenu);
 

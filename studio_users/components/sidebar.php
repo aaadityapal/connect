@@ -350,6 +350,14 @@ function canShow($menuId, $perms) {
         </a>
         <?php endif; ?>
 
+        <?php if (canShow('geofence-approval-mapping', $_permissions)): ?>
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'geofence_approval_mapping.php'; return false;" class="menu-item" data-page="geofence-approval-mapping">
+            <i data-lucide="map-pinned" class="menu-icon" style="width:17px;height:17px;"></i>
+            <span class="menu-text">Geofence Approval Mapping</span>
+            <div class="tooltip">Geofence Approval Mapping</div>
+        </a>
+        <?php endif; ?>
+
         <?php if ($_isAdmin): ?>
         <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'sidebar_role_access.php'; return false;"
             class="menu-item" data-page="sidebar-role-access">

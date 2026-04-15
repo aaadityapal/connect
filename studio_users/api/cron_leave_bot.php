@@ -20,7 +20,7 @@ logger("Cron Job Started.");
 
 try {
     // 1. Sweep the database for any Leave Applications still stuck functionally 'pending'
-    $stmt = $pdo->prepare("SELECT lr.id, lr.user_id, lr.leave_type, lr.start_date, lr.end_date, lr.reason, lr.manager_action_by, lr.hr_action_by, lr.manager_approval, lr.hr_approval, u.username as employee_name, lt.name as leave_type_name FROM leave_request lr JOIN users u ON lr.user_id = u.id LEFT JOIN leave_types lt ON lr.leave_type = lt.id WHERE lr.status = 'pending' AND lr.start_date >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)");
+    $stmt = $pdo->prepare("SELECT lr.id, lr.user_id, lr.leave_type, lr.start_date, lr.end_date, lr.reason, lr.manager_action_by, lr.hr_action_by, lr.manager_approval, lr.hr_approval, u.username as employee_name, lt.name as leave_type_name FROM leave_request lr JOIN users u ON lr.user_id = u.id LEFT JOIN leave_types lt ON lr.leave_type = lt.id WHERE lr.status = 'pending' AND u.status = 'Active' AND lr.start_date >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)");
     $stmt->execute();
     $pendingLeaves = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

@@ -318,7 +318,7 @@ if (!isset($_SESSION['user_id'])) {
                                             <span class="selected-value">March</span>
                                             <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                         </button>
-                                        <div class="dropdown-menu">
+                                        <div class="dropdown-menu" style="display: none;">
                                         <div class="dropdown-item" data-value="January">January</div>
                                         <div class="dropdown-item" data-value="February">February</div>
                                         <div class="dropdown-item active" data-value="March">March</div>
@@ -339,7 +339,7 @@ if (!isset($_SESSION['user_id'])) {
                                             <span class="selected-value">2026</span>
                                             <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                         </button>
-                                        <div class="dropdown-menu">
+                                        <div class="dropdown-menu" style="display: none;">
                                             <div class="dropdown-item" data-value="2024">2024</div>
                                             <div class="dropdown-item" data-value="2025">2025</div>
                                             <div class="dropdown-item active" data-value="2026">2026</div>
@@ -463,7 +463,7 @@ if (!isset($_SESSION['user_id'])) {
                                     <span class="selected-value">March</span>
                                     <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                 </button>
-                                <div class="dropdown-menu">
+                                <div class="dropdown-menu" style="display: none;">
                                     <div class="dropdown-item" data-value="January">January</div>
                                     <div class="dropdown-item" data-value="February">February</div>
                                     <div class="dropdown-item active" data-value="March">March</div>
@@ -483,7 +483,7 @@ if (!isset($_SESSION['user_id'])) {
                                     <span class="selected-value">2026</span>
                                     <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                                 </button>
-                                <div class="dropdown-menu">
+                                <div class="dropdown-menu" style="display: none;">
                                     <div class="dropdown-item" data-value="2024">2024</div>
                                     <div class="dropdown-item" data-value="2025">2025</div>
                                     <div class="dropdown-item active" data-value="2026">2026</div>

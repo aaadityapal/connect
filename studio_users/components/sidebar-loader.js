@@ -66,6 +66,7 @@
         if (path.includes('/analytics'))          return 'analytics';
         if (path.includes('/travel_exp/settings')) return 'travel-exp-settings';
         if (path.includes('/manage_geofence_locations')) return 'geofence-locations';
+        if (path.includes('/geofence_approval_mapping')) return 'geofence-approval-mapping';
         if (path.includes('/settings'))           return 'settings';
         if (path.includes('/help'))               return 'help';
 
@@ -86,6 +87,7 @@
             'analytics'       : 'analytics',
             'settings'        : 'settings',
             'manage_geofence_locations': 'geofence-locations',
+            'geofence_approval_mapping': 'geofence-approval-mapping',
             'help'            : 'help',
             'hierarchy'       : 'hierarchy',
             'manager_mapping' : 'manager-mapping',

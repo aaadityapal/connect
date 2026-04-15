@@ -44,10 +44,16 @@ try {
         -- Fetch the manager from overtime_approval_mapping (authoritative source)
         LEFT JOIN overtime_approval_mapping oam ON oam.employee_id = oreq.user_id
         LEFT JOIN users mgr ON mgr.id = oam.manager_id
-        WHERE oreq.status NOT IN ('approved', 'rejected', 'paid')
-          AND oreq.status IN ('submitted', 'pending')
+        WHERE
+          -- Rule: Process requests that have been formally submitted by the employee
+          (oreq.status = 'submitted'
+            -- OR process recent pending (unsubmitted) requests, but ignore old ones
+            OR (oreq.status = 'pending' AND oreq.date >= DATE_SUB(CURDATE(), INTERVAL 15 DAY))
+          )
+          AND oreq.status NOT IN ('approved', 'rejected', 'paid')
+          AND u.status = 'Active' -- Bug fix: Only process for active users
           AND CAST(oreq.overtime_hours AS DECIMAL(10,2)) >= 1.5
-          AND oreq.date >= DATE_SUB(CURDATE(), INTERVAL 60 DAY)
+          AND oreq.date >= DATE_SUB(CURDATE(), INTERVAL 60 DAY) -- Keep a general 60-day window for submitted requests
     ");
     $stmt->execute();
     $pendingOvertimes = $stmt->fetchAll(PDO::FETCH_ASSOC);

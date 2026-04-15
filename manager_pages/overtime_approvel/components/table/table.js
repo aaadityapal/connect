@@ -127,7 +127,7 @@ export function renderTableData() {
         const badgeClass = `ot-badge ot-badge-${row.status.toLowerCase()}`;
 
         // Permission-based action logic
-        const isSubmitted = row.request_id !== null && row.request_id !== '';
+        const isSubmitted = Boolean(row.isSubmitted);
         const status = row.status.toLowerCase();
         const isTerminal = ['approved', 'rejected', 'paid'].includes(status);
         
@@ -137,8 +137,8 @@ export function renderTableData() {
         } else if (status === 'expired') {
             canAction = window.HAS_EXPIRED_PERM;
         } else {
-            // Pending cases
-            canAction = isSubmitted || window.HAS_UNSUBMITTED_PERM;
+            // Submitted is always actionable; true pending needs unsubmitted permission
+            canAction = isSubmitted ? true : window.HAS_UNSUBMITTED_PERM;
         }
 
         tr.innerHTML = `

@@ -79,11 +79,12 @@ try {
     }
 
     // Check if the record already exists in overtime_requests
-    $stmt_check = $pdo->prepare("SELECT id, status, date FROM overtime_requests WHERE attendance_id = :aid");
+    $stmt_check = $pdo->prepare("SELECT id, status, date, submitted_at FROM overtime_requests WHERE attendance_id = :aid");
     $stmt_check->execute([':aid' => $data['attendance_id']]);
     $oreq = $stmt_check->fetch(PDO::FETCH_ASSOC);
     $oreq_id = $oreq['id'] ?? null;
     $oreq_status = $oreq['status'] ?? null;
+    $oreq_submitted_at = $oreq['submitted_at'] ?? null;
 
     // Fetch attendance data for fallback status/date
     $stmt_att = $pdo->prepare("SELECT date, overtime_status FROM attendance WHERE id = ?");
@@ -98,7 +99,8 @@ try {
 
     // Calculate Expiry
     $daysDiff = (time() - strtotime($effectiveDate)) / 86400;
-    $isExpStatus = ($daysDiff > 15 && !in_array($currentEffectiveStatus, ['approved', 'rejected', 'paid']));
+    $isSubmitted = !empty($oreq_submitted_at);
+    $isExpStatus = ($daysDiff > 15 && !$isSubmitted && !in_array($currentEffectiveStatus, ['approved', 'rejected', 'paid']));
 
     // 2. MODIFICATION CHECK (If it's already Approved/Rejected/Paid)
     $terminalStates = ['approved', 'rejected', 'paid'];
@@ -109,8 +111,8 @@ try {
     }
 
     // 3. UN-SUBMITTED / EXPIRED CHECK
-    // A record is "Actioned" if it has an oreq entry OR if the attendance table already has a terminal status
-    $isActioned = ($oreq_id !== null || $isTerminal);
+    // A record is "Actioned" if it was submitted by employee or already terminal
+    $isActioned = ($isSubmitted || $isTerminal);
 
     if ($isExpStatus) {
         if (!$canExp) {

@@ -26,6 +26,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const yearLabel = document.getElementById("picker-year-label");
         if (yearLabel) yearLabel.textContent = pickerYear;
 
+        // Set default filter dates
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth() + 1;
+        const day = today.getDate();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        const dateToInput = document.getElementById("filter-date-to");
+        const dateFromInput = document.getElementById("filter-date-from");
+
+        if (dateToInput) {
+            dateToInput.value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
+        if (dateFromInput) {
+            const fromYear = firstDayOfMonth.getFullYear();
+            const fromMonth = firstDayOfMonth.getMonth() + 1;
+            dateFromInput.value = `${fromYear}-${String(fromMonth).padStart(2, '0')}-01`;
+        }
+
         initializeInteractions();
         initMonthPicker();
         initModals();

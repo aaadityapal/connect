@@ -232,6 +232,240 @@ function getUserShiftDetails($conn, $user_id)
     ];
 }
 
+function ensureGeofenceApprovalMappingTable($conn)
+{
+    $sql = "CREATE TABLE IF NOT EXISTS geofence_approval_mapping (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        manager_id INT NOT NULL,
+        employee_id INT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_geofence_manager_employee (manager_id, employee_id),
+        KEY idx_geofence_manager (manager_id),
+        KEY idx_geofence_employee (employee_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+    return $conn->query($sql);
+}
+
+function createGeofenceOutsideApprovalTask(
+    $conn,
+    $user_id,
+    $attendance_id,
+    $action_type,
+    $geofence_id,
+    $within_geofence,
+    $distance_from_geofence,
+    $outside_reason,
+    $address,
+    $event_date,
+    $event_time
+) {
+    if ((int)$geofence_id <= 0 || (int)$within_geofence === 1) {
+        return false;
+    }
+
+    if (!ensureGeofenceApprovalMappingTable($conn)) {
+        error_log('[Conneqts Bot][Geofence] Could not ensure mapping table: ' . $conn->error);
+        return false;
+    }
+
+    $managerRows = [];
+
+    // 1) Try dedicated geofence approval mapping first.
+    $mgrStmt = $conn->prepare("SELECT DISTINCT u.id, u.username
+        FROM geofence_approval_mapping gam
+        INNER JOIN users u ON u.id = gam.manager_id
+        WHERE gam.employee_id = ?");
+    if ($mgrStmt) {
+        $mgrStmt->bind_param('i', $user_id);
+        $mgrStmt->execute();
+        $mgrResult = $mgrStmt->get_result();
+        while ($row = $mgrResult->fetch_assoc()) {
+            $managerRows[] = $row;
+        }
+        $mgrStmt->close();
+    }
+
+    // 2) Fallback to leave_approval_mapping if dedicated mapping is empty.
+    if (count($managerRows) === 0) {
+        $fallbackStmt = $conn->prepare("SELECT DISTINCT u.id, u.username
+            FROM leave_approval_mapping lam
+            INNER JOIN users u ON u.id = lam.manager_id
+            WHERE lam.employee_id = ?");
+        if ($fallbackStmt) {
+            $fallbackStmt->bind_param('i', $user_id);
+            $fallbackStmt->execute();
+            $fallbackResult = $fallbackStmt->get_result();
+            while ($row = $fallbackResult->fetch_assoc()) {
+                $managerRows[] = $row;
+            }
+            $fallbackStmt->close();
+        }
+    }
+
+    if (count($managerRows) === 0) {
+        error_log('[Conneqts Bot][Geofence] No mapped manager found for employee_id=' . $user_id);
+        return false;
+    }
+
+    $employeeName = 'Employee';
+    $empStmt = $conn->prepare('SELECT username FROM users WHERE id = ? LIMIT 1');
+    if ($empStmt) {
+        $empStmt->bind_param('i', $user_id);
+        $empStmt->execute();
+        $empRes = $empStmt->get_result();
+        if ($empRow = $empRes->fetch_assoc()) {
+            $employeeName = $empRow['username'] ?: $employeeName;
+        }
+        $empStmt->close();
+    }
+
+    $zoneName = 'Unknown Zone';
+    $zoneStmt = $conn->prepare('SELECT name FROM geofence_locations WHERE id = ? LIMIT 1');
+    if ($zoneStmt) {
+        $zoneStmt->bind_param('i', $geofence_id);
+        $zoneStmt->execute();
+        $zoneRes = $zoneStmt->get_result();
+        if ($zoneRow = $zoneRes->fetch_assoc()) {
+            $zoneName = $zoneRow['name'] ?: $zoneName;
+        }
+        $zoneStmt->close();
+    }
+
+    $projectId = null;
+    $projectStmt = $conn->prepare("SELECT id FROM projects WHERE LOWER(title) LIKE '%architectshive systems%' LIMIT 1");
+    if ($projectStmt) {
+        $projectStmt->execute();
+        $projectRes = $projectStmt->get_result();
+        if ($projectRow = $projectRes->fetch_assoc()) {
+            $projectId = (int)$projectRow['id'];
+        }
+        $projectStmt->close();
+    }
+
+    $assignedIds = [];
+    $assignedNames = [];
+    foreach ($managerRows as $m) {
+        $mid = (int)($m['id'] ?? 0);
+        if ($mid <= 0) {
+            continue;
+        }
+        if (!in_array($mid, $assignedIds, true)) {
+            $assignedIds[] = $mid;
+            $assignedNames[] = $m['username'] ?? ('Manager #' . $mid);
+        }
+    }
+
+    if (count($assignedIds) === 0) {
+        return false;
+    }
+
+    $assignedToCSV = implode(',', $assignedIds);
+    $assignedNamesCSV = implode(', ', $assignedNames);
+
+    if ($action_type === 'punch_in') {
+        $dueDate = $event_date;
+        $dueTime = '10:00:00';
+    } else {
+        $dueDate = date('Y-m-d', strtotime($event_date . ' +1 day'));
+        $dueTime = '14:00:00';
+    }
+
+    $distanceText = ($distance_from_geofence !== null)
+        ? ((float)$distance_from_geofence >= 1000
+            ? number_format(((float)$distance_from_geofence / 1000), 2) . ' km'
+            : round((float)$distance_from_geofence) . ' m')
+        : 'N/A';
+
+    $humanAction = ($action_type === 'punch_out') ? 'Punch Out' : 'Punch In';
+    $marker = '[GF_APPROVAL:' . (int)$attendance_id . ':' . $action_type . ']';
+
+    $taskDesc = "Geofence outside-radius approval needed for $employeeName. "
+        . "Event: $humanAction on $event_date at $event_time. "
+        . "Zone: $zoneName. Distance: $distanceText. "
+        . (!empty($outside_reason) ? "Reason: $outside_reason. " : '')
+        . (!empty($address) ? "Address: $address. " : '')
+        . $marker;
+
+    // Prevent duplicate task creation for same attendance action marker.
+    $dupStmt = $conn->prepare("SELECT id FROM studio_assigned_tasks
+        WHERE project_name = 'ArchitectsHive Systems'
+          AND created_by = ?
+          AND task_description LIKE ?
+        LIMIT 1");
+    if ($dupStmt) {
+        $likeMarker = '%' . $marker . '%';
+        $dupStmt->bind_param('is', $user_id, $likeMarker);
+        $dupStmt->execute();
+        $dupRes = $dupStmt->get_result();
+        if ($dupRes && $dupRes->num_rows > 0) {
+            $dupStmt->close();
+            return false;
+        }
+        $dupStmt->close();
+    }
+
+    $taskStmt = $conn->prepare("INSERT INTO studio_assigned_tasks
+        (project_id, project_name, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, status, created_by, is_system_task, created_at)
+        VALUES (?, 'ArchitectsHive Systems', 'Geofence Approval', ?, 'High', ?, ?, ?, ?, 'Pending', ?, 1, NOW())");
+
+    if (!$taskStmt) {
+        error_log('[Conneqts Bot][Geofence] Task prepare failed: ' . $conn->error);
+        return false;
+    }
+
+    $taskStmt->bind_param(
+        'isssssi',
+        $projectId,
+        $taskDesc,
+        $assignedToCSV,
+        $assignedNamesCSV,
+        $dueDate,
+        $dueTime,
+        $user_id
+    );
+
+    if (!$taskStmt->execute()) {
+        error_log('[Conneqts Bot][Geofence] Task insert failed: ' . $taskStmt->error);
+        $taskStmt->close();
+        return false;
+    }
+
+    $newTaskID = (int)$taskStmt->insert_id;
+    $taskStmt->close();
+
+    // Notify each assigned manager in global activity feed.
+    $logStmt = $conn->prepare("INSERT INTO global_activity_logs
+        (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read)
+        VALUES (?, 'task_assigned', 'task', ?, ?, ?, NOW(), 0)");
+
+    if ($logStmt) {
+        $logMeta = json_encode([
+            'task_id' => $newTaskID,
+            'assigned_by_name' => 'Conneqts Bot',
+            'project_name' => 'ArchitectsHive Systems',
+            'assigned_to' => $assignedToCSV,
+            'assigned_names' => $assignedNamesCSV,
+            'due_date' => $dueDate,
+            'due_time' => $dueTime,
+            'attendance_id' => (int)$attendance_id,
+            'geofence_id' => (int)$geofence_id,
+            'action_type' => $action_type
+        ]);
+
+        foreach ($assignedIds as $assigneeId) {
+            $msg = "Conneqts Bot assigned you a Geofence Approval task for $employeeName ($humanAction outside radius). Review by "
+                . date('d M Y', strtotime($dueDate)) . " at " . date('h:i A', strtotime($dueTime)) . ".";
+            $logStmt->bind_param('iiss', $assigneeId, $newTaskID, $msg, $logMeta);
+            $logStmt->execute();
+        }
+        $logStmt->close();
+    }
+
+    return true;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'check_status') {
     $user_id = $_SESSION['user_id'];
     $current_date = date('Y-m-d');
@@ -504,6 +738,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $log_stmt = $conn->prepare("INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata) VALUES (?, 'punch_in', 'attendance', ?, ?, ?)");
                     $log_stmt->bind_param("iiss", $user_id, $attendance_id, $log_desc, $log_meta);
                     $log_stmt->execute();
+
+                    // Conneqts Bot: create manager task for outside-geofence punch-in.
+                    createGeofenceOutsideApprovalTask(
+                        $conn,
+                        $user_id,
+                        $attendance_id,
+                        'punch_in',
+                        $geofence_id,
+                        $within_geofence,
+                        $distance_from_geofence,
+                        $punch_in_outside_reason,
+                        $address,
+                        $current_date,
+                        $current_time
+                    );
                 } catch(Exception $logError) {
                     error_log("Activity log error (Punch In): " . $logError->getMessage());
                 }
@@ -845,6 +1094,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $log_stmt = $conn->prepare("INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata) VALUES (?, 'punch_out', 'attendance', ?, ?, ?)");
                     $log_stmt->bind_param("iiss", $user_id, $attendance_id, $log_desc, $log_meta);
                     $log_stmt->execute();
+
+                    // Conneqts Bot: create manager task for outside-geofence punch-out.
+                    createGeofenceOutsideApprovalTask(
+                        $conn,
+                        $user_id,
+                        (int)$attendance_id,
+                        'punch_out',
+                        $geofence_id_out,
+                        $within_geofence_out,
+                        $distance_from_geofence_out,
+                        $punch_out_outside_reason,
+                        $punch_out_address,
+                        $current_date,
+                        $current_time
+                    );
                 } catch(Exception $logError) {
                     error_log("Activity log error (Punch Out): " . $logError->getMessage());
                 }

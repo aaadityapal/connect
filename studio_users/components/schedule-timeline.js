@@ -402,6 +402,153 @@
     }
 
     // ─────────────────────────────────────────────────────────
+    //  HOUR VIEW
+    // ─────────────────────────────────────────────────────────
+    const HOUR_START  = 0;
+    const HOUR_END    = 24;
+    const HOUR_COL_W  = 300;
+    const HOUR_HDR_H  = 44;
+    const HOUR_ROW_H  = 52;
+    
+    function buildHourView(cfg) {
+        const { headersEl, gridEl, eventsEl, indicatorEl, events,
+                scrollWrapper, legendTarget, baseDate, isMySchedule } = cfg;
+        if (!headersEl || !eventsEl) return;
+
+        const TOTAL_HOURS = HOUR_END - HOUR_START;
+        const TOTAL_W     = TOTAL_HOURS * HOUR_COL_W;
+        
+        let rowEnds = [];
+        let calculatedEvents = (events || []).slice().map(ev => {
+            const startMin = toMin(ev.time);
+            const dur = ev.duration || 60;
+            return { raw: ev, start: startMin, end: startMin + dur };
+        });
+        
+        calculatedEvents.sort((a,b) => a.start - b.start);
+        
+        calculatedEvents.forEach(ev => {
+            let r = 0;
+            while(rowEnds[r] !== undefined && rowEnds[r] > ev.start) {
+                r++;
+            }
+            rowEnds[r] = ev.end;
+            ev.assignedRow = r;
+        });
+
+        const HOUR_ROWS = Math.max(5, rowEnds.length);
+        const EVENTS_H    = HOUR_ROW_H * HOUR_ROWS;
+        const TOTAL_H     = HOUR_HDR_H + EVENTS_H;
+        const startMin    = HOUR_START * 60;
+        const totalMin    = TOTAL_HOURS * 60;
+        
+        const now         = new Date();
+        const nowMin      = now.getHours() * 60 + now.getMinutes();
+        
+        const isTodayBase = baseDate.getFullYear() === now.getFullYear() && 
+                            baseDate.getMonth() === now.getMonth() && 
+                            baseDate.getDate() === now.getDate();
+        
+        const nowPct      = isTodayBase ? ((nowMin - startMin) / totalMin) * 100 : -1;
+
+        const container = headersEl.parentElement;
+        if (container) Object.assign(container.style, {
+            height: TOTAL_H + 'px', position: 'relative',
+            minWidth: TOTAL_W + 'px', background: '#ffffff',
+        });
+
+        headersEl.innerHTML = '';
+        Object.assign(headersEl.style, {
+            position: 'absolute', top: '0', left: '0',
+            width: TOTAL_W + 'px', height: HOUR_HDR_H + 'px',
+            background: '#ffffff', borderBottom: '1px solid #e9ecef', zIndex: '10',
+        });
+        for (let h = HOUR_START; h <= HOUR_END; h++) {
+            const isCurrentHr = isTodayBase && (h === now.getHours());
+            const lbl = document.createElement('span');
+            lbl.textContent = fmtHourLabel(h);
+            Object.assign(lbl.style, {
+                position: 'absolute', left: ((h - HOUR_START) * HOUR_COL_W) + 'px',
+                top: '50%', transform: 'translate(-50%,-50%)',
+                fontSize: '0.72rem', fontWeight: isCurrentHr ? '700' : '500',
+                color: isCurrentHr ? '#ef4444' : '#94a3b8',
+                whiteSpace: 'nowrap', fontFamily: "'Outfit','Inter',sans-serif",
+            });
+            headersEl.appendChild(lbl);
+        }
+
+        if (gridEl) {
+            gridEl.innerHTML = '';
+            Object.assign(gridEl.style, {
+                position: 'absolute', top: HOUR_HDR_H + 'px', left: '0',
+                width: TOTAL_W + 'px', height: EVENTS_H + 'px',
+                zIndex: '1', pointerEvents: 'none',
+            });
+            for (let r = 0; r < HOUR_ROWS; r++) {
+                const band = document.createElement('div');
+                Object.assign(band.style, {
+                    position: 'absolute', top: (r * HOUR_ROW_H) + 'px',
+                    left: '0', right: '0', height: HOUR_ROW_H + 'px',
+                    background: '#ffffff', borderBottom: '1px solid #f1f5f9',
+                });
+                gridEl.appendChild(band);
+            }
+            for (let h = HOUR_START; h <= HOUR_END; h++) {
+                const line = document.createElement('div');
+                Object.assign(line.style, {
+                    position: 'absolute', left: ((h - HOUR_START) * HOUR_COL_W) + 'px',
+                    top: '0', bottom: '0', width: '1px', background: '#e9ecef',
+                });
+                gridEl.appendChild(line);
+            }
+        }
+
+        eventsEl.innerHTML = '';
+        Object.assign(eventsEl.style, {
+            position: 'absolute', top: HOUR_HDR_H + 'px', left: '0',
+            width: TOTAL_W + 'px', height: EVENTS_H + 'px', zIndex: '3',
+        });
+
+        let idx = 0;
+        calculatedEvents.forEach(item => {
+            const ev = item.raw;
+            const evMin = item.start;
+            const dur = ev.duration || 60;
+            if (evMin + dur < startMin || evMin > startMin + totalMin) return;
+
+            const clampedStart = Math.max(evMin, startMin);
+            const leftPx = ((clampedStart - startMin) / totalMin) * TOTAL_W;
+            const topPx  = item.assignedRow * HOUR_ROW_H + 6;
+            const dotColor = getColorForPerson(ev.person);
+
+            const startDateStr = baseDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const dateFrom = ev.modalDateFrom || `${startDateStr} - ${fmtMinLabel(evMin)}`;
+            const dateTo   = ev.modalDateTo || `${startDateStr} - ${fmtMinLabel(evMin + dur)}`;
+
+            const pill = makePill({
+                leftPx, topPx, height: HOUR_ROW_H - 14,
+                label: fmtMinLabel(evMin), title: ev.title,
+                dotColor, delay: (idx * 50) + 'ms', person: ev.person, persons: ev.persons,
+                dateFrom, dateTo, assignedBy: ev.assignedBy || 'System Admin', rawEvent: ev,
+                hideAssignedTo: isMySchedule
+            });
+            const widthPx = Math.max((dur / totalMin) * TOTAL_W - 8, 80);
+            pill.style.width = widthPx + 'px';
+            eventsEl.appendChild(pill);
+            idx++;
+        });
+
+        _drawIndicator(indicatorEl, nowPct, TOTAL_H, HOUR_HDR_H);
+        _drawLegend(legendTarget, events, isMySchedule);
+        _wireDragScroll(scrollWrapper);
+        if (isTodayBase) {
+            _autoCentre(scrollWrapper, nowPct, TOTAL_W);
+        } else {
+            if (scrollWrapper) scrollWrapper.scrollLeft = 0;
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────
     //  DAY VIEW
     // ─────────────────────────────────────────────────────────
     const DAY_START  = 0;
@@ -1225,17 +1372,17 @@
     ];
 
     // ─── My Schedule zoom & nav state ─────────────────────────
-    const MY_ZOOM_LEVELS   = ['Day', 'Week', 'Month'];
-    let myZoomIndex        = 0;
+    const MY_ZOOM_LEVELS   = ['Hour', 'Day', 'Week', 'Month'];
+    let myZoomIndex        = 1;
     let myBaseDate         = new Date();
 
     // ─── Team Schedule zoom & nav state ───────────────────────
-    const TEAM_ZOOM_LEVELS = ['Day', 'Week', 'Month'];
-    let teamZoomIndex      = 0;
+    const TEAM_ZOOM_LEVELS = ['Hour', 'Day', 'Week', 'Month'];
+    let teamZoomIndex      = 1;
     let teamBaseDate       = new Date();
 
     function formatPeriodLabel(zoom, d) {
-        if (zoom === 'day') {
+        if (zoom === 'hour' || zoom === 'day') {
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         } else if (zoom === 'week') {
             const mon = new Date(d);
@@ -1286,7 +1433,15 @@
         const date = myBaseDate.getDate();
 
         let filtered = [];
-        if (zoom === 'day') {
+        if (zoom === 'hour') {
+            filtered = evts.filter(e => {
+                if (!e.due_date) return false;
+                const d = new Date(e.due_date);
+                return d.getFullYear() === year && d.getMonth() === month && d.getDate() === date;
+            });
+            buildHourView({ ...ids, events: filtered, legendTarget: null });
+        } 
+        else if (zoom === 'day') {
             filtered = evts.filter(e => {
                 if (!e.due_date) return false;
                 const d = new Date(e.due_date);
@@ -1359,7 +1514,15 @@
         const date = teamBaseDate.getDate();
 
         let filtered = [];
-        if (zoom === 'day') {
+        if (zoom === 'hour') {
+            filtered = evts.filter(e => {
+                if (!e.due_date) return false;
+                const d = new Date(e.due_date);
+                return d.getFullYear() === year && d.getMonth() === month && d.getDate() === date;
+            });
+            buildHourView({ ...ids, events: filtered, legendTarget: ids.legendTarget });
+        } 
+        else if (zoom === 'day') {
             filtered = evts.filter(e => {
                 if (!e.due_date) return false;
                 const d = new Date(e.due_date);

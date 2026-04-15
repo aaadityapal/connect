@@ -552,6 +552,12 @@
                     return;
                 }
                 
+                const originalHTML = newMarkDoneBtn.innerHTML;
+                newMarkDoneBtn.disabled = true;
+                newMarkDoneBtn.style.opacity = '0.7';
+                newMarkDoneBtn.style.cursor = 'wait';
+                newMarkDoneBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+                
                 const newStatus = isCompleted ? 'Pending' : 'Completed';
                 
                 if (!isCompleted) {
@@ -594,6 +600,10 @@
                             newMarkDoneBtn.style.borderColor = '';
                         }
                         
+                        newMarkDoneBtn.disabled = false;
+                        newMarkDoneBtn.style.opacity = '1';
+                        newMarkDoneBtn.style.cursor = 'pointer';
+                        
                         // Close modal after a delay and refresh tasks if on tasks page
                         setTimeout(() => {
                             const overlay = document.getElementById('taskModalOverlay');
@@ -620,10 +630,20 @@
                             }
                         }, 500);
                     } else {
+                        newMarkDoneBtn.innerHTML = originalHTML;
+                        newMarkDoneBtn.disabled = false;
+                        newMarkDoneBtn.style.opacity = '1';
+                        newMarkDoneBtn.style.cursor = 'pointer';
                         alert('Error updating task: ' + (data.error || 'Unknown error'));
                     }
                 })
-                .catch(err => console.warn('[TaskModal] Status update failed:', err));
+                .catch(err => {
+                    newMarkDoneBtn.innerHTML = originalHTML;
+                    newMarkDoneBtn.disabled = false;
+                    newMarkDoneBtn.style.opacity = '1';
+                    newMarkDoneBtn.style.cursor = 'pointer';
+                    console.warn('[TaskModal] Status update failed:', err);
+                });
             });
             }
         }

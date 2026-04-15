@@ -342,6 +342,14 @@ function canShow($menuId, $perms) {
         </a>
         <?php endif; ?>
 
+        <?php if (canShow('geofence-locations', $_permissions)): ?>
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'manage_geofence_locations.php'; return false;" class="menu-item" data-page="geofence-locations">
+            <i data-lucide="map-pin" class="menu-icon" style="width:17px;height:17px;"></i>
+            <span class="menu-text">Geofence Settings</span>
+            <div class="tooltip">Geofence Settings</div>
+        </a>
+        <?php endif; ?>
+
         <?php if ($_isAdmin): ?>
         <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'sidebar_role_access.php'; return false;"
             class="menu-item" data-page="sidebar-role-access">

@@ -1,0 +1,107 @@
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- HR Corner Viewer Modal                                     -->
+<!-- File: components/modals/hr-corner-modal.html               -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div id="hrCornerViewerModal" class="hrcm-overlay" role="dialog" aria-modal="true" aria-labelledby="hrcm-title">
+
+    <!-- Backdrop -->
+    <div class="hrcm-backdrop" id="hrcmBackdrop"></div>
+
+    <!-- Panel -->
+    <div class="hrcm-panel">
+
+        <!-- Header -->
+        <div class="hrcm-header">
+            <div class="hrcm-header-left">
+                <div class="hrcm-header-icon">
+                    <i class="fa-solid fa-user-tie"></i>
+                </div>
+                <div>
+                    <h2 class="hrcm-title" id="hrcm-title">HR Corner</h2>
+                    <p class="hrcm-subtitle">Policies &amp; Notices from HR</p>
+                </div>
+            </div>
+            <button class="hrcm-close-btn" id="hrcmCloseBtn" aria-label="Close HR Corner">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Tab Bar -->
+        <div class="hrcm-tabs">
+            <button class="hrcm-tab hrcm-tab-active" data-tab="policies" id="hrcmTabPolicies">
+                <i class="fa-solid fa-file-shield"></i>
+                <span>Policies</span>
+                <span class="hrcm-tab-count" id="hrcmPolicyCount">0</span>
+            </button>
+            <button class="hrcm-tab" data-tab="notices" id="hrcmTabNotices">
+                <i class="fa-solid fa-bullhorn"></i>
+                <span>Notices</span>
+                <span class="hrcm-tab-count" id="hrcmNoticeCount">0</span>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="hrcm-body" id="hrcmBody">
+
+            <!-- Policies Tab -->
+            <div class="hrcm-tab-pane hrcm-tab-pane-active" id="hrcmPoliciesPane">
+                <div class="hrcm-list" id="hrcmPoliciesList">
+                    <!-- Populated by JS -->
+                    <div class="hrcm-loading">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <span>Loading policies…</span>
+                    </div>
+                </div>
+                <!-- Detail panel (right side on desktop) -->
+                <div class="hrcm-detail" id="hrcmPolicyDetail">
+                    <div class="hrcm-detail-empty" id="hrcmPolicyDetailEmpty">
+                        <i class="fa-regular fa-file-lines"></i>
+                        <p>Select a policy to read the full details</p>
+                    </div>
+                    <div class="hrcm-detail-content" id="hrcmPolicyDetailContent" style="display:none;">
+                        <div class="hrcm-detail-header">
+                            <span class="hrcm-detail-badge" id="hrcmPolicyBadge">Policy</span>
+                            <span class="hrcm-detail-version" id="hrcmPolicyVersion"></span>
+                        </div>
+                        <h3 class="hrcm-detail-title" id="hrcmPolicyTitle"></h3>
+                        <div class="hrcm-detail-meta" id="hrcmPolicyMeta"></div>
+                        <div class="hrcm-detail-body" id="hrcmPolicyBody"></div>
+                        <div class="hrcm-detail-footer" id="hrcmPolicyFooter"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notices Tab -->
+            <div class="hrcm-tab-pane" id="hrcmNoticesPane">
+                <div class="hrcm-list" id="hrcmNoticesList">
+                    <div class="hrcm-loading">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <span>Loading notices…</span>
+                    </div>
+                </div>
+                <div class="hrcm-detail" id="hrcmNoticeDetail">
+                    <div class="hrcm-detail-empty" id="hrcmNoticeDetailEmpty">
+                        <i class="fa-regular fa-bell"></i>
+                        <p>Select a notice to read the full details</p>
+                    </div>
+                    <div class="hrcm-detail-content" id="hrcmNoticeDetailContent" style="display:none;">
+                        <div class="hrcm-detail-header">
+                            <span class="hrcm-detail-badge hrcm-badge-notice" id="hrcmNoticeBadge">Notice</span>
+                            <span class="hrcm-detail-version" id="hrcmNoticeVersion"></span>
+                        </div>
+                        <h3 class="hrcm-detail-title" id="hrcmNoticeTitle"></h3>
+                        <div class="hrcm-detail-meta" id="hrcmNoticeMeta"></div>
+                        <div class="hrcm-detail-body" id="hrcmNoticeBody"></div>
+                        <div class="hrcm-detail-footer" id="hrcmNoticeFooter"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- /hrcm-body -->
+
+    </div>
+    <!-- /hrcm-panel -->
+
+</div>
+<!-- /hrCornerViewerModal -->

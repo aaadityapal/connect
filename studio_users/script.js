@@ -2064,11 +2064,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
                     }
 
-                    // Add to rotation
-                    let noticeText = `📢 Notice: ${n.title}`;
-                    if (n.attachment) {
-                        noticeText += ` <span class="pdf-badge" onclick="window.open('${n.attachment}', '_blank'); event.stopPropagation();" style="cursor:pointer; background:#ef4444; color:#fff; padding:1px 6px; border-radius:4px; font-size:0.7rem; font-weight:700; display:inline-flex; align-items:center; gap:3px;"><i class="fa-solid fa-file-pdf"></i> PDF</span>`;
-                    }
+                    // Add to rotation — attachment accessible via HR Corner modal
+                    const noticeText = `📢 Notice: ${n.title}`;
                     dynamicHRItems.push(noticeText);
                 });
 
@@ -2099,15 +2096,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // click handler for the entire HR Card
+    // ── HR Card click → always open the HR Corner Viewer Modal ──────────
+    // Bug fix: previously this only opened the Compliance Hub when there
+    // was a pending policy and did nothing otherwise.
     if (hrCard) {
-        hrCard.addEventListener('click', () => {
-            const pendingPolicy = mandatoryPolicies.find(p => !p.accepted);
-            if (pendingPolicy) {
-                const idx = mandatoryPolicies.indexOf(pendingPolicy);
-                if (typeof loadPolicy === 'function') loadPolicy(idx);
-                const pModal = document.getElementById('policyModal');
-                if (pModal) { pModal.classList.add('visible'); pModal.classList.add('open'); }
+        hrCard.addEventListener('click', (e) => {
+            e.preventDefault(); // stop href="#" scroll-to-top
+            if (window.HRCornerModal) {
+                window.HRCornerModal.open();
             }
         });
         hrCard.style.cursor = 'pointer';

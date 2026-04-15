@@ -38,17 +38,20 @@
                 >
             </div>
 
-            <!-- Detailed Description -->
+            <!-- Detailed Description (Quill Rich Text Editor) -->
             <div class="hr-field-group" id="hrFieldLongDesc">
-                <label for="hrInputLongDesc" class="hr-field-label">
+                <label class="hr-field-label">
                     <i class="fa-solid fa-file-lines hr-field-label-icon"></i>
                     Detailed Description
                 </label>
+                <div class="hr-quill-wrapper" id="hrPolicyQuillWrapper">
+                    <div id="hrPolicyQuillEditor"></div>
+                </div>
+                <!-- Hidden textarea syncs Quill HTML for form validation & submission -->
                 <textarea
                     id="hrInputLongDesc"
-                    class="hr-field-textarea"
-                    rows="9"
-                    placeholder="Enter the full described form of the policy here..."
+                    name="longDesc"
+                    style="display:none;"
                     required
                 ></textarea>
             </div>

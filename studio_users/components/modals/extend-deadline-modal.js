@@ -278,6 +278,12 @@
     applyBtn.addEventListener('click', () => {
         if (!_newDeadline || !_task) return;
 
+        const originalBtnHTML = applyBtn.innerHTML;
+        applyBtn.disabled = true;
+        applyBtn.style.opacity = '0.7';
+        applyBtn.style.cursor = 'wait';
+        applyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
         // Update task object in-memory
         _task.deadline = _newDeadline.toISOString();
         _task.due_date = _newDeadline.toISOString().slice(0, 10);
@@ -308,18 +314,24 @@
                 console.warn('[ExtendModal] DB update failed:', data.error);
             }
         })
-        .catch(err => console.warn('[ExtendModal] Network error:', err));
+        .catch(err => console.warn('[ExtendModal] Network error:', err))
+        .finally(() => {
+            applyBtn.disabled = false;
+            applyBtn.style.opacity = '';
+            applyBtn.style.cursor = '';
+            applyBtn.innerHTML = originalBtnHTML;
+            
+            // Fire caller callback if provided
+            if (typeof _onApply === 'function') _onApply(_newDeadline, _task, _period);
 
-        // Fire caller callback if provided
-        if (typeof _onApply === 'function') _onApply(_newDeadline, _task, _period);
+            // Play sound
+            try {
+                const extendAudio = new Audio('tones/tesk_extended.wav');
+                extendAudio.play();
+            } catch(e) { console.warn('Could not play audio', e); }
 
-        // Play sound
-        try {
-            const extendAudio = new Audio('tones/tesk_extended.wav');
-            extendAudio.play();
-        } catch(e) { console.warn('Could not play audio', e); }
-
-        closeExtendDeadlineModal();
+            closeExtendDeadlineModal();
+        });
     });
 
     // ── Close triggers ────────────────────────────────────────────────────────────

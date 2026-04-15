@@ -28,6 +28,10 @@ if (!isset($_SESSION['user_id'])) {
     <link rel="stylesheet" href="css/toast.css">
     <link rel="stylesheet" href="css/mobile.css">
 
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
     <!-- Sidebar Configuration -->
     <script>
         // Tell sidebar-loader.js where to find components/ relative to this file

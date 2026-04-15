@@ -250,3 +250,16 @@
     cursor: not-allowed;
     transform: none;
 }
+
+/* ── Quill Rich Text Editor (Notice) ─────────────────────── */
+/* .hr-quill-wrapper base styles live in form.css and are shared. */
+/* Only notice-specific overrides below if needed. */
+
+/* Ensure notice Quill editor has same look */
+#hrNoticeQuillWrapper.hr-quill-wrapper .ql-container.ql-snow {
+    min-height: 200px;
+}
+
+#hrNoticeQuillWrapper.hr-quill-wrapper .ql-editor {
+    min-height: 200px;
+}

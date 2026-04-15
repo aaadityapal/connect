@@ -1,19 +1,44 @@
 <section class="hr-custom-section" id="hrCustomSection">
-    <div class="hr-custom-card" id="manageListView">
-        <div class="hr-custom-card-header">
-            <h2 class="hr-custom-card-title">Manage Old Policies</h2>
-            <p class="hr-custom-card-subtitle">Review, edit, and update previously published company policies.</p>
-        </div>
 
-        <!-- Render list of policies here -->
-        <div class="hr-policy-list" id="hrPolicyList">
-            <div class="hr-policy-list-loader">
-                <i class="fa-solid fa-circle-notch fa-spin"></i> Loading policies...
+    <!-- ══════════ LIST VIEW ══════════ -->
+    <div id="manageListView">
+
+        <!-- POLICIES -->
+        <div class="hr-custom-card" style="margin-bottom: 1.5rem;">
+            <div class="hr-custom-card-header">
+                <h2 class="hr-custom-card-title">
+                    <i class="fa-solid fa-file-shield" style="color:#4f46e5; margin-right:0.5rem;"></i>
+                    Policies
+                </h2>
+                <p class="hr-custom-card-subtitle">Review, edit and delete published company policies.</p>
+            </div>
+            <div class="hr-policy-list" id="hrPolicyList">
+                <div class="hr-policy-list-loader">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading policies...
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Edit Policy View (Hidden by default) -->
+        <!-- NOTICES -->
+        <div class="hr-custom-card">
+            <div class="hr-custom-card-header">
+                <h2 class="hr-custom-card-title">
+                    <i class="fa-solid fa-bullhorn" style="color:#0891b2; margin-right:0.5rem;"></i>
+                    Notices
+                </h2>
+                <p class="hr-custom-card-subtitle">Review, edit and delete broadcast notices.</p>
+            </div>
+            <div class="hr-policy-list" id="hrNoticeList">
+                <div class="hr-policy-list-loader">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Loading notices...
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <!-- /manageListView -->
+
+    <!-- ══════════ EDIT POLICY VIEW ══════════ -->
     <div class="hr-custom-card" id="manageEditView" style="display: none;">
         <div class="hr-custom-card-header" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
@@ -27,7 +52,7 @@
 
         <form class="hr-custom-form" id="hrEditPolicyForm">
             <input type="hidden" id="editPolicyId">
-            
+
             <div class="hr-custom-field-group">
                 <label for="editPolicyHeading" class="hr-custom-field-label">
                     <i class="fa-solid fa-heading hr-custom-field-icon"></i> Main Heading
@@ -43,13 +68,16 @@
             </div>
 
             <div class="hr-custom-field-group">
-                <label for="editPolicyLongDesc" class="hr-custom-field-label">
+                <label class="hr-custom-field-label">
                     <i class="fa-solid fa-file-lines hr-custom-field-icon"></i> Detailed Description
                 </label>
-                <textarea id="editPolicyLongDesc" class="hr-custom-field-textarea" rows="7" required></textarea>
+                <div class="hr-quill-wrapper" id="editPolicyQuillWrapper">
+                    <div id="editPolicyQuillEditor"></div>
+                </div>
+                <!-- Hidden textarea syncs Quill HTML -->
+                <textarea id="editPolicyLongDesc" name="longDesc" style="display:none;" required></textarea>
             </div>
 
-            <!-- Custom Actions to Match Premium Form styles -->
             <div class="hr-custom-actions">
                 <button type="submit" class="hr-custom-btn-publish" id="hrBtnSaveChanges">
                     <i class="fa-solid fa-floppy-disk"></i> Save Changes
@@ -57,4 +85,61 @@
             </div>
         </form>
     </div>
+
+    <!-- ══════════ EDIT NOTICE VIEW ══════════ -->
+    <div class="hr-custom-card" id="manageEditNoticeView" style="display: none;">
+        <div class="hr-custom-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 class="hr-custom-card-title">Edit Notice</h2>
+                <p class="hr-custom-card-subtitle">Update the details of the selected notice.</p>
+            </div>
+            <button type="button" class="hr-btn-back" id="btnBackToListFromNotice">
+                <i class="fa-solid fa-xmark"></i> Close
+            </button>
+        </div>
+
+        <form class="hr-custom-form" id="hrEditNoticeForm">
+            <input type="hidden" id="editNoticeId">
+
+            <div class="hr-custom-field-group">
+                <label for="editNoticeTitle" class="hr-custom-field-label">
+                    <i class="fa-solid fa-bullhorn hr-custom-field-icon"></i> Notice Title
+                </label>
+                <input type="text" id="editNoticeTitle" class="hr-custom-field-input" required>
+            </div>
+
+            <div class="hr-custom-field-group">
+                <label for="editNoticeShortDesc" class="hr-custom-field-label">
+                    <i class="fa-solid fa-align-left hr-custom-field-icon"></i> Short Description
+                </label>
+                <input type="text" id="editNoticeShortDesc" class="hr-custom-field-input">
+            </div>
+
+            <div class="hr-custom-field-group">
+                <label class="hr-custom-field-label">
+                    <i class="fa-solid fa-file-lines hr-custom-field-icon"></i> Detailed Content
+                </label>
+                <div class="hr-quill-wrapper" id="editNoticeQuillWrapper">
+                    <div id="editNoticeQuillEditor"></div>
+                </div>
+                <!-- Hidden textarea syncs Quill HTML -->
+                <textarea id="editNoticeLongDesc" name="longDesc" style="display:none;" required></textarea>
+            </div>
+
+            <!-- Read-only attachment info -->
+            <div class="hr-custom-field-group" id="noticeAttachmentRow" style="display:none;">
+                <label class="hr-custom-field-label">
+                    <i class="fa-solid fa-paperclip hr-custom-field-icon"></i> Current Attachment
+                </label>
+                <p id="noticeAttachmentInfo" style="font-size:0.83rem; color:#57534e; margin:0; padding: 0.5rem 0;"></p>
+            </div>
+
+            <div class="hr-custom-actions">
+                <button type="submit" class="hr-custom-btn-publish" id="hrBtnSaveNoticeChanges">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
 </section>

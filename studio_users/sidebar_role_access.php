@@ -59,6 +59,7 @@ $menu_items = [
     ],
     'System' => [
         'settings'                      => ['label' => 'Settings',                      'icon' => 'settings-2'],
+        'geofence-locations'            => ['label' => 'Geofence Settings',             'icon' => 'map-pin'],
         'project-permissions'           => ['label' => 'Project Permission',             'icon' => 'shield-check'],
         'attendance-action-permissions' => ['label' => 'Attendance Action Permission',   'icon' => 'user-check'],
         'manual-leave-permissions'      => ['label' => 'Manual Leave Permission',        'icon' => 'file-edit'],

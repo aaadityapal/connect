@@ -65,6 +65,7 @@
         if (path.includes('/my-tasks'))           return 'my-tasks';
         if (path.includes('/analytics'))          return 'analytics';
         if (path.includes('/travel_exp/settings')) return 'travel-exp-settings';
+        if (path.includes('/manage_geofence_locations')) return 'geofence-locations';
         if (path.includes('/settings'))           return 'settings';
         if (path.includes('/help'))               return 'help';
 
@@ -84,6 +85,7 @@
             'my-tasks'        : 'my-tasks',
             'analytics'       : 'analytics',
             'settings'        : 'settings',
+            'manage_geofence_locations': 'geofence-locations',
             'help'            : 'help',
             'hierarchy'       : 'hierarchy',
             'manager_mapping' : 'manager-mapping',

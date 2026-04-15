@@ -1,5 +1,5 @@
 /* ============================================
-   notice.js — Notice Section Logic
+   notice.js — Notice Section Logic (with Quill editor)
    ============================================ */
 
 (function () {
@@ -12,6 +12,33 @@
     const uploadIcon = document.getElementById('hrNoticeUploadIconMain');
 
     if (!form) return;
+
+    // ── Init Quill ───────────────────────────────
+    const quill = new Quill('#hrNoticeQuillEditor', {
+        theme: 'snow',
+        placeholder: 'Enter the full detailed description of the notice here...',
+        modules: {
+            toolbar: [
+                [{ header: [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ color: [] }, { background: [] }],
+                [{ list: 'ordered' }, { list: 'bullet' }],
+                [{ indent: '-1' }, { indent: '+1' }],
+                ['blockquote', 'code-block'],
+                ['link'],
+                ['clean']
+            ]
+        }
+    });
+
+    const hiddenTextarea = document.getElementById('hrNoticeLongDesc');
+
+    // Sync Quill → hidden textarea on every change
+    quill.on('text-change', () => {
+        hiddenTextarea.value = quill.root.innerHTML === '<p><br></p>'
+            ? ''
+            : quill.root.innerHTML;
+    });
 
     // ── File Upload Handling ────────────────────
 
@@ -76,8 +103,14 @@
 
         const title     = document.getElementById('hrNoticeTitle').value.trim();
         const shortDesc = document.getElementById('hrNoticeShortDesc').value.trim();
-        const longDesc  = document.getElementById('hrNoticeLongDesc').value.trim();
+        const longDesc  = hiddenTextarea.value.trim();
         const file      = fileInput ? fileInput.files[0] : null;
+
+        if (!longDesc) {
+            if (window.showToast) window.showToast('Detailed Description cannot be empty.', 'error');
+            quill.focus();
+            return;
+        }
 
         const originalHTML = btnPublish.innerHTML;
         btnPublish.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
@@ -104,6 +137,8 @@
             if (!data.success) throw new Error(data.message);
 
             if (window.showToast) window.showToast('Notice sent successfully!');
+            quill.setText('');
+            hiddenTextarea.value = '';
 
         } catch (err) {
             console.error('[notice.js] Send error:', err);
@@ -119,6 +154,8 @@
         if (confirm('Clear the form? Unsaved content will be lost.')) {
             form.reset();
             resetUploadZone();
+            quill.setText('');
+            hiddenTextarea.value = '';
         }
     });
 

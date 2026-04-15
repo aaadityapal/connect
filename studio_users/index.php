@@ -113,6 +113,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <link rel="icon" href="data:image/x-icon;base64,">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="components/modals/hr-corner-modal.css">
     <link rel="stylesheet" href="components/modals/edit-task-modal.css">
     <link rel="stylesheet" href="components/modals/extend-deadline-modal.css">
     <link rel="stylesheet" href="components/modals/custom-alert-modal.css">
@@ -967,11 +968,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                                 <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-main);">HR
                                     Corner</h3>
                             </div>
-                            <button id="openPolicyBtn" class="icon-btn el-537" title="HR Policies"
-                                style="position: relative;">
-                                <i class="fa-solid fa-file-contract el-538"></i>
-                                <span class="badge el-539" id="policyBadge">!</span>
-                            </button>
+
                         </div>
                         <div class="hr-policy-container el-533">
                             <div id="hrPolicyText" class="hr-policy-text el-534">HR Updates Loading...</div>
@@ -1243,6 +1240,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     </div>
     <?php include 'components/modals/task-assigned-alert.html'; ?>
     <?php include 'components/modals/recurrence-expiry-modal.html'; ?>
+    <?php include __DIR__ . '/components/modals/hr-corner-modal.html'; ?>
     <div id="drawerOverlay" class="drawer-overlay el-563"></div>
     <div id="notifDrawer" class="notification-drawer el-564">
         <div class="drawer-header el-565" style="display:flex; justify-content:space-between; align-items:center;">
@@ -1623,6 +1621,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <script src="components/modals/task-assigned-alert.js"></script>
     <script src="components/modals/recurrence-expiry-modal.js"></script>
     <script src="components/modals/force-password-change-modal.js"></script>
+    <script src="components/modals/hr-corner-modal.js"></script>
     <script>
         /**
          * Dynamic Task List Loader (Performance Optimization)

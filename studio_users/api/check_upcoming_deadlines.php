@@ -53,9 +53,64 @@ try {
     $expandEnd   = date('Y-m-d H:i:s', $now + 120); // Now + 2 mins
     $tasks = expandRecurringTasks($rawTasks, $expandStart, $expandEnd);
 
+    // Build a stable user-id -> username map for assignee rendering.
+    $allAssignedIds = [];
+    foreach ($tasks as $t) {
+        $ids = array_filter(array_map('trim', explode(',', $t['assigned_to'] ?? '')));
+        foreach ($ids as $aid) {
+            if (is_numeric($aid)) $allAssignedIds[] = (int)$aid;
+        }
+    }
+    $allAssignedIds = array_values(array_unique($allAssignedIds));
+
+    $userNameById = [];
+    if (!empty($allAssignedIds)) {
+        $uph = implode(',', array_fill(0, count($allAssignedIds), '?'));
+        $ust = $pdo->prepare("SELECT id, username FROM users WHERE id IN ($uph)");
+        $ust->execute($allAssignedIds);
+        foreach ($ust->fetchAll(PDO::FETCH_ASSOC) as $ur) {
+            $userNameById[(int)$ur['id']] = (string)$ur['username'];
+        }
+    }
+
+    // Fetch user-specific extended deadlines so overdue/upcoming checks use
+    // the assignee's own extended due date/time for shared tasks.
+    $taskIds = [];
+    foreach ($tasks as $t) {
+        if (isset($t['id']) && is_numeric($t['id'])) {
+            $taskIds[] = (int)$t['id'];
+        }
+    }
+    $taskIds = array_values(array_unique($taskIds));
+
+    $userMetaByTask = [];
+    if (!empty($taskIds)) {
+        $tph = implode(',', array_fill(0, count($taskIds), '?'));
+        $msql = "SELECT task_id, meta_key, meta_value FROM studio_task_user_meta WHERE user_id = ? AND task_id IN ($tph)";
+        $mparams = array_merge([$userId], $taskIds);
+        $mstmt = $pdo->prepare($msql);
+        $mstmt->execute($mparams);
+        foreach ($mstmt->fetchAll(PDO::FETCH_ASSOC) as $meta) {
+            $userMetaByTask[(int)$meta['task_id']][$meta['meta_key']] = $meta['meta_value'];
+        }
+    }
+
     $upcoming = [];
 
     foreach ($tasks as $task) {
+        // Respect per-user extension for shared tasks.
+        if (isset($userMetaByTask[(int)$task['id']]['extended_due_date'])) {
+            $extendedMeta = json_decode($userMetaByTask[(int)$task['id']]['extended_due_date'], true);
+            if (is_array($extendedMeta)) {
+                if (!empty($extendedMeta['date'])) {
+                    $task['due_date'] = $extendedMeta['date'];
+                }
+                if (!empty($extendedMeta['time'])) {
+                    $task['due_time'] = $extendedMeta['time'];
+                }
+            }
+        }
+
         $dueTimestamp = strtotime($task['due_date'] . ' ' . $task['due_time']);
         $diffSeconds = $dueTimestamp - $now;
 
@@ -122,9 +177,12 @@ try {
             }
 
             // ── Format object for TaskModal/ExtendModal ──
-            $persons = array_filter(array_map('trim', explode(',', $task['assigned_names'] ?? '')));
-            $personsMap = array_values($persons);
             $assignedIds = array_filter(array_map('trim', explode(',', $task['assigned_to'] ?? '')));
+            $personsMap = [];
+            foreach ($assignedIds as $aid) {
+                $aidInt = (int)$aid;
+                $personsMap[] = $userNameById[$aidInt] ?? ("User $aidInt");
+            }
             $completedIds = array_filter(array_map('trim', explode(',', $task['completed_by'] ?? '')));
             
             $history = isset($task['extension_history']) ? json_decode($task['extension_history'], true) : [];
@@ -133,8 +191,8 @@ try {
             $assigneeStatuses = [];
             $myAssignedName = null;
             for ($i = 0; $i < count($assignedIds); $i++) {
-                $cId = $assignedIds[$i];
-                $cName = $personsMap[$i] ?? "User $cId";
+                $cId = (int)$assignedIds[$i];
+                $cName = $userNameById[$cId] ?? ($personsMap[$i] ?? "User $cId");
                 if ($cId == $userId) $myAssignedName = $cName;
 
                 $userExtCount = 0;
@@ -142,8 +200,9 @@ try {
                     if (isset($h['user_id']) && $h['user_id'] == $cId) $userExtCount++;
                 }
                 $assigneeStatuses[] = [
+                    'user_id' => (int)$cId,
                     'name' => $cName,
-                    'status' => in_array($cId, $completedIds) ? 'Completed' : 'Pending',
+                    'status' => in_array((string)$cId, array_map('strval', $completedIds), true) ? 'Completed' : 'Pending',
                     'extended' => $userExtCount > 0,
                     'extension_count' => $userExtCount
                 ];
@@ -188,6 +247,8 @@ try {
                 'person'               => $myAssignedName ?? (count($personsMap) > 0 ? $personsMap[0] : 'Unassigned'),
                 'assignedBy'           => $task['assigned_by_name'] ?? 'System Admin',
                 'persons'              => $personsMap,
+                'assignee_user_ids'    => array_values(array_map('intval', $assignedIds)),
+                'can_act'              => true,
                 'assignee_statuses'    => $assigneeStatuses,
                 'modalDateFrom'        => $created,
                 'modalDateTo'          => $due,

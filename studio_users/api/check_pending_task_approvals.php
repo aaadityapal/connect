@@ -42,7 +42,7 @@ try {
         // 1) Get tasks created by me (assigned to others) where at least one assignee
         //    has completed. We include approval timestamp so we can re-trigger approvals
         //    whenever a new assignee completes after a previous approval.
-    $stmt = $pdo->prepare("
+        $stmt = $pdo->prepare("
         SELECT 
             sat.*,
                         u.username as creator_name,
@@ -52,7 +52,7 @@ try {
         LEFT JOIN studio_task_completion_approvals a ON a.task_id = sat.id
         WHERE sat.deleted_at IS NULL
           AND sat.created_by = :uid
-          AND sat.status IN ('In Progress', 'Completed')
+                    AND (sat.status IS NULL OR sat.status NOT IN ('Cancelled', 'Incomplete'))
           AND IFNULL(TRIM(sat.completed_by), '') <> ''
           AND sat.project_name != 'ArchitectsHive Systems'
           AND (sat.assigned_to IS NULL OR FIND_IN_SET(:uid_not_assignee, REPLACE(sat.assigned_to, ' ', '')) = 0)

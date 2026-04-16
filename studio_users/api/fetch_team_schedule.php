@@ -128,6 +128,27 @@ try {
     $expandEnd   = date('Y-m-d', strtotime('+120 days'));
     $tasks = expandRecurringTasks($rawTasks, $expandStart, $expandEnd);
 
+    // Build a reliable user-id -> username map once so assignee rows
+    // never depend on the fragile assigned_names ordering.
+    $allAssignedIds = [];
+    foreach ($tasks as $t) {
+        $ids = array_filter(array_map('trim', explode(',', $t['assigned_to'] ?? '')));
+        foreach ($ids as $aid) {
+            if (is_numeric($aid)) $allAssignedIds[] = (int)$aid;
+        }
+    }
+    $allAssignedIds = array_values(array_unique($allAssignedIds));
+
+    $userNameById = [];
+    if (!empty($allAssignedIds)) {
+        $uph = implode(',', array_fill(0, count($allAssignedIds), '?'));
+        $ust = $pdo->prepare("SELECT id, username FROM users WHERE id IN ($uph)");
+        $ust->execute($allAssignedIds);
+        foreach ($ust->fetchAll(PDO::FETCH_ASSOC) as $ur) {
+            $userNameById[(int)$ur['id']] = (string)$ur['username'];
+        }
+    }
+
     $taskIds = [];
     foreach ($tasks as $t) {
         if (isset($t['id']) && is_numeric($t['id'])) {
@@ -164,8 +185,12 @@ try {
         if (!$hasOverlap) continue; // Skip if no one in the task belongs to this target tree
         // ─────────────────────────────────────────────────────────────
 
-        $persons = array_filter(array_map('trim', explode(',', $task['assigned_names'] ?? '')));
-        $personsMap = array_values($persons);
+        $assignedIds = array_filter(array_map('trim', explode(',', $task['assigned_to'] ?? '')));
+        $personsMap = [];
+        foreach ($assignedIds as $aid) {
+            $aidInt = (int)$aid;
+            $personsMap[] = $userNameById[$aidInt] ?? ("User $aidInt");
+        }
         
         // Simple mapping:
         // dayIndex = 0-6 (0=Mon, 6=Sun) based on due_date
@@ -180,7 +205,6 @@ try {
             $dateNum = (int)date('j', $time);
         }
         
-        $assignedIds = array_filter(array_map('trim', explode(',', $task['assigned_to'] ?? '')));
         $completedIds = array_filter(array_map('trim', explode(',', $task['completed_by'] ?? '')));
         $extendedIds = array_filter(array_map('trim', explode(',', $task['extended_by'] ?? '')));
         
@@ -191,8 +215,8 @@ try {
 
         $assigneeStatuses = [];
         for ($i = 0; $i < count($assignedIds); $i++) {
-            $cId = $assignedIds[$i];
-            $cName = $personsMap[$i] ?? "User $cId";
+            $cId = (int)$assignedIds[$i];
+            $cName = $userNameById[$cId] ?? ($personsMap[$i] ?? "User $cId");
 
             // Count extensions for this user
             $userExtCount = 0;
@@ -203,8 +227,9 @@ try {
             }
 
             $assigneeStatuses[] = [
+                'user_id' => $cId,
                 'name' => $cName,
-                'status' => in_array($cId, $completedIds) ? 'Completed' : 'Pending',
+                'status' => in_array((string)$cId, array_map('strval', $completedIds), true) ? 'Completed' : 'Pending',
                 'extended' => $userExtCount > 0,
                 'extension_count' => $userExtCount
             ];

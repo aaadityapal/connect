@@ -52,6 +52,27 @@ try {
     $expandEnd   = date('Y-m-d', strtotime('+120 days'));
     $tasks = expandRecurringTasks($rawTasks, $expandStart, $expandEnd);
 
+    // Build a stable user-id -> username map for assignees.
+    // This avoids wrong badge/name pairing when assigned_names order drifts.
+    $allAssignedIds = [];
+    foreach ($tasks as $t) {
+        $ids = array_filter(array_map('trim', explode(',', $t['assigned_to'] ?? '')));
+        foreach ($ids as $aid) {
+            if (is_numeric($aid)) $allAssignedIds[] = (int)$aid;
+        }
+    }
+    $allAssignedIds = array_values(array_unique($allAssignedIds));
+
+    $userNameById = [];
+    if (!empty($allAssignedIds)) {
+        $uph = implode(',', array_fill(0, count($allAssignedIds), '?'));
+        $ust = $pdo->prepare("SELECT id, username FROM users WHERE id IN ($uph)");
+        $ust->execute($allAssignedIds);
+        foreach ($ust->fetchAll(PDO::FETCH_ASSOC) as $ur) {
+            $userNameById[(int)$ur['id']] = (string)$ur['username'];
+        }
+    }
+
     $taskIds = [];
     foreach ($tasks as $t) {
         if (isset($t['id']) && is_numeric($t['id'])) {
@@ -59,6 +80,19 @@ try {
         }
     }
     $taskIds = array_values(array_unique($taskIds));
+
+    // Fetch user-specific extended due dates
+    $userMetaByTask = [];
+    if (!empty($taskIds)) {
+        $ph = implode(',', array_fill(0, count($taskIds), '?'));
+        $sql = "SELECT task_id, meta_key, meta_value FROM studio_task_user_meta WHERE user_id = ? AND task_id IN ($ph)";
+        $params = array_merge([$userId], $taskIds);
+        $metaStmt = $pdo->prepare($sql);
+        $metaStmt->execute($params);
+        foreach ($metaStmt->fetchAll(PDO::FETCH_ASSOC) as $meta) {
+            $userMetaByTask[(int)$meta['task_id']][$meta['meta_key']] = $meta['meta_value'];
+        }
+    }
 
     $myProgressByTask = [];
     if (!empty($taskIds)) {
@@ -74,8 +108,23 @@ try {
 
     $formatted = [];
     foreach ($tasks as $task) {
-        $persons = array_filter(array_map('trim', explode(',', $task['assigned_names'] ?? '')));
-        $personsMap = array_values($persons);
+        // Check for user-specific extended due date
+        if (isset($userMetaByTask[$task['id']]['extended_due_date'])) {
+            $extendedMeta = json_decode($userMetaByTask[$task['id']]['extended_due_date'], true);
+            if (!empty($extendedMeta['date'])) {
+                $task['due_date'] = $extendedMeta['date'];
+            }
+            if (!empty($extendedMeta['time'])) {
+                $task['due_time'] = $extendedMeta['time'];
+            }
+        }
+
+        $assignedIds = array_filter(array_map('trim', explode(',', $task['assigned_to'] ?? '')));
+        $personsMap = [];
+        foreach ($assignedIds as $aid) {
+            $aidInt = (int)$aid;
+            $personsMap[] = $userNameById[$aidInt] ?? ("User $aidInt");
+        }
         
         // Simple mapping:
         // dayIndex = 0-6 (0=Mon, 6=Sun) based on due_date
@@ -90,7 +139,6 @@ try {
             $dateNum = (int)date('j', $time);
         }
         
-        $assignedIds = array_filter(array_map('trim', explode(',', $task['assigned_to'] ?? '')));
         $completedIds = array_filter(array_map('trim', explode(',', $task['completed_by'] ?? '')));
         $extendedIds = array_filter(array_map('trim', explode(',', $task['extended_by'] ?? '')));
         
@@ -102,8 +150,8 @@ try {
         $assigneeStatuses = [];
         $myAssignedName = null;
         for ($i = 0; $i < count($assignedIds); $i++) {
-            $cId = $assignedIds[$i];
-            $cName = $personsMap[$i] ?? "User $cId";
+            $cId = (int)$assignedIds[$i];
+            $cName = $userNameById[$cId] ?? ($personsMap[$i] ?? "User $cId");
             if ($cId == $userId) {
                 $myAssignedName = $cName;
             }
@@ -117,8 +165,9 @@ try {
             }
 
             $assigneeStatuses[] = [
+                'user_id' => $cId,
                 'name' => $cName,
-                'status' => in_array($cId, $completedIds) ? 'Completed' : 'Pending',
+                'status' => in_array((string)$cId, array_map('strval', $completedIds), true) ? 'Completed' : 'Pending',
                 'extended' => $userExtCount > 0,
                 'extension_count' => $userExtCount
             ];

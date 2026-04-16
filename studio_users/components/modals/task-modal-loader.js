@@ -314,16 +314,32 @@
         }
 
         // Permission gate: only assigned users can perform task actions.
-        // Prefer backend-provided flag; fallback to username match when needed.
+        // Prefer backend-provided flag; fallback to user-id/name checks when needed.
+        const loggedUserId = Number(window.loggedUserId || window.SESSION_USER_ID || 0);
+        const loggedUserNameNorm = String(window.loggedUserName || '').trim().toLowerCase();
+
+        function parseCanAct(v) {
+            if (typeof v === 'boolean') return v;
+            if (typeof v === 'number') return v === 1;
+            if (typeof v === 'string') {
+                const t = v.trim().toLowerCase();
+                return t === '1' || t === 'true' || t === 'yes';
+            }
+            return null;
+        }
+
         let canActOnTask = false;
-        if (typeof taskData.can_act === 'boolean') {
-            canActOnTask = taskData.can_act;
-        } else if (Array.isArray(taskData.assignee_statuses) && window.loggedUserName) {
-            const me = String(window.loggedUserName).trim().toLowerCase();
-            canActOnTask = taskData.assignee_statuses.some(a => String(a.name || '').trim().toLowerCase() === me);
-        } else if (Array.isArray(taskData.assignees) && window.loggedUserName) {
-            const me = String(window.loggedUserName).trim().toLowerCase();
-            canActOnTask = taskData.assignees.some(n => String(n || '').trim().toLowerCase() === me);
+        const parsedCanAct = parseCanAct(taskData.can_act);
+        if (parsedCanAct !== null) {
+            canActOnTask = parsedCanAct;
+        } else if (loggedUserId > 0 && Array.isArray(taskData.assignee_user_ids)) {
+            canActOnTask = taskData.assignee_user_ids.map(v => Number(v)).includes(loggedUserId);
+        } else if (loggedUserId > 0 && Array.isArray(taskData.assignee_statuses)) {
+            canActOnTask = taskData.assignee_statuses.some(a => Number(a.user_id || 0) === loggedUserId);
+        } else if (Array.isArray(taskData.assignee_statuses) && loggedUserNameNorm) {
+            canActOnTask = taskData.assignee_statuses.some(a => String(a.name || '').trim().toLowerCase() === loggedUserNameNorm);
+        } else if (Array.isArray(taskData.assignees) && loggedUserNameNorm) {
+            canActOnTask = taskData.assignees.some(n => String(n || '').trim().toLowerCase() === loggedUserNameNorm);
         }
 
         const readOnlyHint = document.getElementById('taskModalReadOnlyHint');
@@ -659,12 +675,16 @@
             let isUserDone = (taskData.status === 'Completed');
             
             // If there's a list of assignee statuses, check the logged-in user specifically
-            if (taskData.assignee_statuses && window.loggedUserName) {
-                const myEntry = taskData.assignee_statuses.find(a => a.name === window.loggedUserName);
+            if (Array.isArray(taskData.assignee_statuses)) {
+                const myEntry = taskData.assignee_statuses.find(a => {
+                    if (loggedUserId > 0 && Number(a.user_id || 0) === loggedUserId) return true;
+                    if (!loggedUserNameNorm) return false;
+                    return String(a.name || '').trim().toLowerCase() === loggedUserNameNorm;
+                });
                 if (myEntry && myEntry.status === 'Completed') {
                     isUserDone = true;
                 }
-            } else if (taskData.person === window.loggedUserName && taskData.status === 'Completed') {
+            } else if (String(taskData.person || '').trim().toLowerCase() === loggedUserNameNorm && taskData.status === 'Completed') {
                 isUserDone = true;
             }
 

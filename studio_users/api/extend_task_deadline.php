@@ -51,7 +51,8 @@ try {
          SELECT sat.id, sat.created_by, sat.due_date, sat.due_time, sat.extended_by,
                sat.extension_count, sat.extension_history,
              sat.completion_reject_count,
-               u.username as my_username
+               u.username as my_username,
+               sat.assigned_to
         FROM studio_assigned_tasks sat
         LEFT JOIN users u ON u.id = :userId
         WHERE sat.id = :id
@@ -65,6 +66,31 @@ try {
         echo json_encode(['success' => false, 'error' => 'Task not found or access denied']);
         exit();
     }
+
+    $assignedToIds = array_filter(array_map('intval', explode(',', $task['assigned_to'])));
+    $isSharedTask = count($assignedToIds) > 1;
+
+    // If it's a shared task, store the extended due date in the meta table
+    if ($isSharedTask) {
+        $metaKey = 'extended_due_date';
+        $metaValue = json_encode(['date' => $dueDate, 'time' => $dueTime]);
+
+        $metaStmt = $pdo->prepare("
+            INSERT INTO studio_task_user_meta (task_id, user_id, meta_key, meta_value)
+            VALUES (:task_id, :user_id, :meta_key, :meta_value)
+            ON DUPLICATE KEY UPDATE meta_value = VALUES(meta_value)
+        ");
+        $metaStmt->execute([
+            'task_id' => $taskId,
+            'user_id' => $userId,
+            'meta_key' => $metaKey,
+            'meta_value' => $metaValue
+        ]);
+
+        // We still need to update the history on the main task for tracking
+        // but we won't change the main due_date
+    }
+
 
     $extendedByArr = array_filter(array_map('trim', explode(',', $task['extended_by'] ?? '')));
     if (!in_array($userId, $extendedByArr)) {
@@ -100,29 +126,49 @@ try {
     $historyJson  = json_encode($historyArr, JSON_UNESCAPED_UNICODE);
     // ─────────────────────────────────────────────────────────────────────
 
-    // Update — also persist the full extension_history JSON
-    $stmt = $pdo->prepare("
-        UPDATE studio_assigned_tasks
-        SET previous_due_date  = due_date,
-            previous_due_time  = due_time,
-            due_date           = :dueDate,
-            due_time           = :dueTime,
-            extension_count    = extension_count + 1,
-            extended_by        = :extendedBy,
-            extension_history  = :extensionHistory,
-            completion_reject_count = 0,
-            updated_at         = NOW(),
-            updated_by         = :userId
-        WHERE id = :id
-    ");
-    $stmt->execute([
-        ':dueDate'          => $dueDate  ?: null,
-        ':dueTime'          => $dueTime  ?: null,
-        ':extendedBy'       => $extendedByStr,
-        ':extensionHistory' => $historyJson,
-        ':userId'           => $userId,
-        ':id'               => $taskId
-    ]);
+    // If it's a shared task, we only update the history and other metadata,
+    // but we do NOT change the main due date.
+    if ($isSharedTask) {
+        $stmt = $pdo->prepare("
+            UPDATE studio_assigned_tasks
+            SET extension_count    = extension_count + 1,
+                extended_by        = :extendedBy,
+                extension_history  = :extensionHistory,
+                updated_at         = NOW(),
+                updated_by         = :userId
+            WHERE id = :id
+        ");
+        $stmt->execute([
+            ':extendedBy'       => $extendedByStr,
+            ':extensionHistory' => $historyJson,
+            ':userId'           => $userId,
+            ':id'               => $taskId
+        ]);
+    } else {
+        // For non-shared tasks, update the main due date as before
+        $stmt = $pdo->prepare("
+            UPDATE studio_assigned_tasks
+            SET previous_due_date  = due_date,
+                previous_due_time  = due_time,
+                due_date           = :dueDate,
+                due_time           = :dueTime,
+                extension_count    = extension_count + 1,
+                extended_by        = :extendedBy,
+                extension_history  = :extensionHistory,
+                completion_reject_count = 0,
+                updated_at         = NOW(),
+                updated_by         = :userId
+            WHERE id = :id
+        ");
+        $stmt->execute([
+            ':dueDate'          => $dueDate  ?: null,
+            ':dueTime'          => $dueTime  ?: null,
+            ':extendedBy'       => $extendedByStr,
+            ':extensionHistory' => $historyJson,
+            ':userId'           => $userId,
+            ':id'               => $taskId
+        ]);
+    }
 
     // Log to global_activity_logs
     // ($userName, $newExtNumber, $daysAdded already computed above)

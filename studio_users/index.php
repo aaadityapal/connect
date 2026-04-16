@@ -102,6 +102,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
 ?>
 <script>
     window.loggedUserName = <?php echo json_encode($username); ?>;
+    window.loggedUserId = <?php echo json_encode((int)$user_id); ?>;
 </script>
 <!DOCTYPE html>
 <html lang="en">
@@ -1607,6 +1608,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
     <script>
         window.loggedUserName = <?php echo json_encode($username); ?>;
         window.loggedUserDesignation = <?php echo json_encode($designation); ?>;
+        window.loggedUserId = <?php echo json_encode((int)$user_id); ?>;
     </script>
     <script src="header.js"></script>
     <script src="components/schedule-loader.js"></script>

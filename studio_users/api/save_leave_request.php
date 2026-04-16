@@ -428,16 +428,6 @@ try {
             }
         }
 
-        $hrStmt = $pdo->prepare("SELECT id, username FROM users WHERE LOWER(role) = 'hr'");
-        $hrStmt->execute();
-        $hrUsers = $hrStmt->fetchAll(PDO::FETCH_ASSOC);
-        foreach ($hrUsers as $h) {
-            if (!in_array($h['id'], $assignedIds)) {
-                $assignedIds[] = $h['id'];
-                $assignedNames[] = $h['username'];
-            }
-        }
-
         if (count($assignedIds) > 0) {
             $assignedToCSV = implode(',', $assignedIds);
             $assignedNamesCSV = implode(', ', $assignedNames);
@@ -448,7 +438,7 @@ try {
             $range = ($firstDate === $lastDate) ? $firstDate : "$firstDate to $lastDate";
             $type = $dates[0]['type_name'] ?? 'Leave';
 
-            $taskDesc = "Please verify the $type request from $employeeName for $range. Total Days: $totalDays. Reason: " . substr($reason, 0, 100);
+            $taskDesc = "Manager review required: verify the $type request from $employeeName for $range. Total Days: $totalDays. Reason: " . substr($reason, 0, 100);
 
             // Resolve project_id for FK constraint (production has strict FK on project_id)
             $projStmt = $pdo->prepare("SELECT id FROM projects WHERE LOWER(title) LIKE '%architectshive systems%' LIMIT 1");
@@ -479,7 +469,7 @@ try {
                 $logSubStmt->execute([
                     $aUid,
                     $newTaskID,
-                    "Conneqts Bot assigned you a Leave Verification task for $employeeName (Due Today by 06:00 PM).",
+                    "Conneqts Bot assigned you a Manager Leave Verification task for $employeeName (Due Today by 06:00 PM).",
                     json_encode($logMetadata)
                 ]);
             }

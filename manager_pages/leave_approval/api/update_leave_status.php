@@ -32,6 +32,7 @@ try {
     $vStmt = $pdo->prepare("SELECT manager_approval FROM leave_request WHERE id = ?");
     $vStmt->execute([$requestId]);
     $currentReq = $vStmt->fetch(PDO::FETCH_ASSOC);
+    $wasManagerApproved = ($currentReq && strtolower((string)$currentReq['manager_approval']) === 'approved');
 
     if ($currentReq) {
         $isHRAttemptingApprove = ($manager_role === 'hr' && $actionType === 'approve');
@@ -84,18 +85,19 @@ try {
             $query = "UPDATE leave_request 
                       SET manager_approval = 'rejected',
                           manager_action_reason = :mgr_reason,
-                          manager_action_by = :user_id,
+                          manager_action_by = :mgr_user_id,
                           manager_action_at = NOW(),
                           status = 'rejected',
                           hr_action_reason = :hr_linked_reason,
-                          hr_action_by = :user_id,
+                          hr_action_by = :hr_user_id,
                           hr_action_at = NOW()
                       WHERE id = :id";
             $stmt = $pdo->prepare($query);
             $stmt->execute([
                 ':mgr_reason'  => $mgrReason,
                 ':hr_linked_reason' => "Manager rejected your leave with reason: " . $mgrReason,
-                ':user_id'     => $user_id,
+                ':mgr_user_id' => $user_id,
+                ':hr_user_id'  => $user_id,
                 ':id'          => $requestId
             ]);
         } else {
@@ -154,6 +156,75 @@ try {
             ':id'          => $requestId,
             ':desc'        => trim($performDesc)
         ]);
+
+        // 3b. Stage-2 assignment: only after manager approves, assign verification task to HR
+        $isManagerForwardingToHR = !in_array($manager_role, ['admin', 'hr'])
+            && $actionType === 'approve'
+            && !$wasManagerApproved;
+
+        if ($isManagerForwardingToHR) {
+            $dStmt = $pdo->prepare("SELECT lr.start_date, lr.end_date, lr.reason, u.username AS employee_name, lt.name AS leave_type_name FROM leave_request lr JOIN users u ON lr.user_id = u.id JOIN leave_types lt ON lr.leave_type = lt.id WHERE lr.id = ? LIMIT 1");
+            $dStmt->execute([$requestId]);
+            $dRow = $dStmt->fetch(PDO::FETCH_ASSOC);
+
+            $employeeName = $dRow['employee_name'] ?? ('User #' . $employeeId);
+            $leaveTypeName = $dRow['leave_type_name'] ?? ('Leave #' . ($leaveData['leave_type'] ?? 'N/A'));
+            $startDate = $dRow['start_date'] ?? null;
+            $endDate = $dRow['end_date'] ?? null;
+            $range = ($startDate && $endDate)
+                ? (($startDate === $endDate) ? $startDate : ($startDate . ' to ' . $endDate))
+                : 'N/A';
+            $reasonSnippet = isset($dRow['reason']) ? substr((string)$dRow['reason'], 0, 120) : '';
+
+            $hrStmt = $pdo->prepare("SELECT id, username FROM users WHERE LOWER(role) = 'hr'");
+            $hrStmt->execute();
+            $hrUsers = $hrStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!empty($hrUsers)) {
+                $assignedIds = array_map(static fn($u) => (int)$u['id'], $hrUsers);
+                $assignedNames = array_map(static fn($u) => (string)$u['username'], $hrUsers);
+                $assignedToCSV = implode(',', $assignedIds);
+                $assignedNamesCSV = implode(', ', $assignedNames);
+
+                $taskMarker = "[LEAVE_REQ_ID:" . (int)$requestId . "]";
+                $taskDesc = "HR approval required: Manager approved {$leaveTypeName} for {$employeeName} ({$range}). Reason: {$reasonSnippet} {$taskMarker}";
+
+                $dupStmt = $pdo->prepare("SELECT id FROM studio_assigned_tasks WHERE project_name = 'ArchitectsHive Systems' AND task_description LIKE ? AND status NOT IN ('Completed', 'Cancelled') LIMIT 1");
+                $dupStmt->execute(['%' . $taskMarker . '%']);
+
+                if (!$dupStmt->fetch(PDO::FETCH_ASSOC)) {
+                    $projStmt = $pdo->prepare("SELECT id FROM projects WHERE LOWER(title) LIKE '%architectshive systems%' LIMIT 1");
+                    $projStmt->execute();
+                    $projRow = $projStmt->fetch(PDO::FETCH_ASSOC);
+                    $botProjectId = $projRow ? $projRow['id'] : null;
+
+                    $tStmt = $pdo->prepare("INSERT INTO studio_assigned_tasks (project_id, project_name, stage_number, task_description, priority, assigned_to, assigned_names, due_date, due_time, status, created_by, is_system_task, created_at) VALUES (?, 'ArchitectsHive Systems', 'Verification', ?, 'High', ?, ?, CURDATE(), '18:00:00', 'Pending', ?, 1, NOW())");
+                    $tStmt->execute([$botProjectId, $taskDesc, $assignedToCSV, $assignedNamesCSV, $user_id]);
+                    $newTaskID = $pdo->lastInsertId();
+
+                    $taskLogStmt = $pdo->prepare("INSERT INTO global_activity_logs (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read) VALUES (?, 'task_assigned', 'task', ?, ?, ?, NOW(), 0)");
+                    $meta = json_encode([
+                        'task_id' => $newTaskID,
+                        'assigned_by_name' => ($_SESSION['username'] ?? 'Manager'),
+                        'project_name' => 'ArchitectsHive Systems',
+                        'assigned_to' => $assignedToCSV,
+                        'assigned_names' => $assignedNamesCSV,
+                        'leave_request_id' => (int)$requestId,
+                        'due_date' => date('Y-m-d'),
+                        'due_time' => '18:00:00'
+                    ]);
+
+                    foreach ($assignedIds as $hrUserId) {
+                        $taskLogStmt->execute([
+                            $hrUserId,
+                            $newTaskID,
+                            "Conneqts Bot assigned it to you: Manager approved {$leaveTypeName} for {$employeeName}. Remaining approval is yours.",
+                            $meta
+                        ]);
+                    }
+                }
+            }
+        }
 
         echo json_encode(['success' => true, 'message' => 'Status updated successfully']);
 

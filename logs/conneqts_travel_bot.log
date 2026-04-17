@@ -8,3 +8,27 @@
 [2026-04-13 16:36:34] [user_id=21] Activity log updated for approver user_id=2 — Rs.453.50
 [2026-04-13 16:36:34] [user_id=21] Activity log updated for approver user_id=33 — Rs.453.50
 [2026-04-13 16:36:34] [user_id=21] --- Done ---
+[2026-04-16 12:16:11] [user_id=21] --- Submission received: 1 expense(s) ---
+[2026-04-16 12:16:11] [user_id=21] Employee: Aditya Kumar Pal
+[2026-04-16 12:16:11] [user_id=21] Mapping — manager_id=33, hr_id=2, sr_manager_id=11
+[2026-04-16 12:16:11] [user_id=21] Approvers: Gunjan Anand Sehgal, Bhuvnesh Sharma (IDs: 2,33)
+[2026-04-16 12:16:11] [user_id=21] Cumulative today: 1 entries, Rs.119.00
+[2026-04-16 12:16:11] [user_id=21] Next window: due_date=2026-04-16, due_time=18:00:00
+[2026-04-16 12:16:11] [user_id=21] CREATED: Task ID 236 — 1 entries, Rs.119.00 — due 2026-04-16 — assigned to: Gunjan Anand Sehgal, Bhuvnesh Sharma
+[2026-04-16 12:16:11] [user_id=21] Activity log written for approver user_id=2
+[2026-04-16 12:16:11] [user_id=21] Activity log written for approver user_id=33
+[2026-04-16 12:16:11] [user_id=21] --- Done ---
+[2026-04-16 12:28:43] [user_id=7] --- Submission received: 1 expense(s) ---
+[2026-04-16 12:28:43] [user_id=7] Employee: Preeti Choudhary
+[2026-04-16 12:28:43] [user_id=7] SKIPPED: No travel_expense_mapping entry for user_id=7. Task NOT created.
+[2026-04-16 12:28:43] [user_id=7] --- Done ---
+[2026-04-16 15:09:16] [user_id=7] --- Submission received: 1 expense(s) ---
+[2026-04-16 15:09:16] [user_id=7] Employee: Preeti Choudhary
+[2026-04-16 15:09:16] [user_id=7] Mapping — manager_id=33, hr_id=2, sr_manager_id=3
+[2026-04-16 15:09:16] [user_id=7] Approvers: Gunjan Anand Sehgal, Bhuvnesh Sharma (IDs: 2,33)
+[2026-04-16 15:09:16] [user_id=7] Cumulative today: 2 entries, Rs.315.00
+[2026-04-16 15:09:16] [user_id=7] Next window: due_date=2026-04-16, due_time=18:00:00
+[2026-04-16 15:09:16] [user_id=7] CREATED: Task ID 237 — 2 entries, Rs.315.00 — due 2026-04-16 — assigned to: Gunjan Anand Sehgal, Bhuvnesh Sharma
+[2026-04-16 15:09:16] [user_id=7] Activity log written for approver user_id=2
+[2026-04-16 15:09:16] [user_id=7] Activity log written for approver user_id=33
+[2026-04-16 15:09:16] [user_id=7] --- Done ---

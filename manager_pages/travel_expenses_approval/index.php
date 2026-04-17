@@ -722,6 +722,84 @@ if ($is_admin) $can_pay_auth = true;
         </div>
     </div>
 
+    <!-- Edit Expense Modal -->
+    <div id="editExpenseModal" class="modal" style="z-index: 2600;">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header">
+                <div class="modal-header-info">
+                    <h2>Edit Travel Expense</h2>
+                </div>
+                <button class="modal-close" onclick="closeActionModal('editExpenseModal')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editExpenseId">
+
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem;">
+                    <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">Purpose/Trip</label>
+                        <textarea id="editPurpose" rows="2" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 0.88rem; resize: vertical;"></textarea>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">From</label>
+                        <input type="text" id="editFrom" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 0.88rem;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">To</label>
+                        <input type="text" id="editTo" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 0.88rem;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">Transport Mode</label>
+                        <input type="text" id="editMode" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 0.88rem;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">Travel Date</label>
+                        <input type="date" id="editDate" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 0.88rem;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">Distance (KM)</label>
+                        <input type="number" id="editDistance" step="0.01" min="0" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 0.88rem;">
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">Amount (INR)</label>
+                        <input type="number" id="editAmount" step="0.01" min="0" style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; font-family: inherit; font-size: 0.88rem;">
+                        <div id="editAmountHint" style="font-size: 0.75rem; color: var(--text-muted);">For Car/Bike, amount is auto-calculated from configured per-km rate.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-minimal" onclick="closeActionModal('editExpenseModal')">Cancel</button>
+                <button class="btn-icon edit" onclick="submitExpenseEdit()"><i data-lucide="pencil"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stack Details Modal -->
+    <div id="stackModal" class="modal" style="z-index: 2550;">
+        <div class="modal-content" style="max-width: 950px;">
+            <div class="modal-header">
+                <div class="modal-header-info">
+                    <span class="modal-label" id="stackModalMeta">Travel Stack</span>
+                    <h2 id="stackModalTitle">Grouped Expenses</h2>
+                </div>
+                <button class="modal-close" onclick="closeStackModal()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="background: #f8fafc;">
+                <div id="stackModalSummary" style="margin-bottom: 1rem;"></div>
+                <div id="stackBulkApproveSection" style="margin-bottom: 1rem;"></div>
+                <div id="stackModalList" class="stack-list-grid"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-minimal" onclick="closeStackModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Interactivity Script -->
     <script src="js/script.js" defer></script>
 </body>

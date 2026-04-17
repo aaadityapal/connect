@@ -130,6 +130,9 @@ try {
         $id = $row['id'];
         
         if (!isset($expenses[$id])) {
+            $row_window_message = $window_message;
+            $can_act = false;
+
             // Determine if they are responsible for this record (even if waiting)
             $is_responsible = (
                 ($row['manager_id'] == $current_user_id && strtolower($row['manager_status']) === 'pending') ||
@@ -154,12 +157,26 @@ try {
                     $can_act = true;
                 } else {
                     $can_act = false;
-                    $window_message = "⏳ Waiting for Manager (L1) & HR (L2) to approve first.";
+
+                    $pending_roles = [];
+                    if (strtolower($row['manager_status']) !== 'approved') {
+                        $pending_roles[] = 'Manager (L1)';
+                    }
+                    if (strtolower($row['hr_status']) !== 'approved') {
+                        $pending_roles[] = 'HR (L2)';
+                    }
+
+                    if (count($pending_roles) === 1) {
+                        $row_window_message = "⏳ Waiting for {$pending_roles[0]} approval.";
+                    } else {
+                        $row_window_message = "⏳ Waiting for " . implode(' & ', $pending_roles) . " approvals.";
+                    }
                 }
             }
 
             $expenses[$id] = [
                 'id' => $row['id'],
+                'user_id' => $row['user_id'],
                 'display_id' => 'EXP-' . str_pad($row['id'], 4, '0', STR_PAD_LEFT),
                 'employee_name' => $row['employee_name'],
                 'employee_code' => $row['employee_code'],
@@ -169,6 +186,8 @@ try {
                 'to' => $row['to_location'],
                 'mode' => $row['mode_of_transport'],
                 'date' => $row['travel_date'],
+                'created_at' => $row['created_at'] ?? null,
+                'updated_at' => $row['updated_at'] ?? null,
                 'distance' => $row['distance'],
                 'amount' => $row['amount'],
                 'status' => $row['status'],
@@ -182,7 +201,10 @@ try {
                 'needs_action' => $is_responsible || $is_admin,
                 'can_act' => ($can_act && $is_window_open),
                 'is_window_open' => $is_window_open,
-                'window_message' => $window_message,
+                // Dynamic per-row lock reason:
+                // 1) Pending upstream approvals (L1/L2 for L3)
+                // 2) Otherwise approval window timing message
+                'window_message' => ($can_act ? $window_message : $row_window_message),
                 'require_meters' => (int)$row['require_meters'],
                 'meter_mode' => (int)$row['meter_mode'],
                 'punch_in_photo' => $row['punch_in_photo'],
@@ -196,6 +218,7 @@ try {
                 'max_resubmissions' => $row['max_resubmissions'] ?? 3,
                 'payment_status' => $row['payment_status'] ?? 'Pending',
                 'can_pay' => $can_pay_auth,
+                'can_edit' => ($is_admin || $row['manager_id'] == $current_user_id || $row['hr_id'] == $current_user_id || $row['senior_manager_id'] == $current_user_id),
                 'attachments' => []
             ];
 

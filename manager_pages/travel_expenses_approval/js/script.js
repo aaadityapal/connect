@@ -10,11 +10,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = {
         expenses: [],
         filteredExpenses: [],
-        currentUserRole: document.getElementById('currentUserRole')?.value || 'user'
+        renderedStacks: [],
+        currentUserRole: document.getElementById('currentUserRole')?.value || 'user',
+        stackUi: {
+            activeStackIndex: null,
+            reopenAfterDetailsClose: false
+        }
     };
 
     let currentItem = null;
     let currentActionId = null;
+    const transportRates = {};
 
     // --- Initialize Lucide Icons ---
     const initIcons = () => {
@@ -436,6 +442,174 @@ document.addEventListener('DOMContentLoaded', () => {
         employeeFilter.value = employees.includes(currentVal) ? currentVal : 'All';
     };
 
+    const groupExpensesByUserDate = (expenses) => {
+        const map = new Map();
+
+        expenses.forEach((item) => {
+            const key = `${item.employee_name}__${item.date}`;
+            if (!map.has(key)) {
+                map.set(key, {
+                    key,
+                    employee_name: item.employee_name,
+                    employee_role: item.employee_role,
+                    date: item.date,
+                    items: []
+                });
+            }
+            map.get(key).items.push(item);
+        });
+
+        const groups = Array.from(map.values()).map((group) => {
+            group.items.sort((a, b) => {
+                const aTs = parseBackendDateTime(a.created_at) || parseBackendDateTime(a.updated_at) || parseBackendDateTime(a.date) || Number(a.id);
+                const bTs = parseBackendDateTime(b.created_at) || parseBackendDateTime(b.updated_at) || parseBackendDateTime(b.date) || Number(b.id);
+                return aTs - bTs;
+            });
+            return group;
+        });
+
+        groups.sort((a, b) => {
+            const dateDiff = new Date(b.date) - new Date(a.date);
+            if (dateDiff !== 0) return dateDiff;
+            return a.employee_name.localeCompare(b.employee_name);
+        });
+
+        return groups;
+    };
+
+    const resolveStackStatus = (items, field) => {
+        const values = [...new Set(items.map((it) => String(it[field] || '').toLowerCase()))];
+        if (values.length === 1) return values[0] || 'pending';
+        return 'mixed';
+    };
+
+    const resolveStackOverallStatus = (items) => {
+        if (items.some((it) => String(it.status).toLowerCase() === 'rejected')) return 'rejected';
+        if (items.every((it) => String(it.status).toLowerCase() === 'approved')) return 'approved';
+        return 'pending';
+    };
+
+    const resolveStackPaymentStatus = (items) => {
+        const statuses = items.map((it) => String(it.payment_status || '').toLowerCase());
+        if (statuses.every((s) => s === 'paid')) return 'paid';
+        if (statuses.every((s) => s === 'pending')) return 'pending';
+        return 'mixed';
+    };
+
+    const hasDistanceVerification = (item) => {
+        if (!item) return false;
+
+        // L3 and admin are exempt from distance lock in current workflow.
+        if (item.acting_level === 'Senior Manager (L3)') return true;
+        if (item.acting_level === 'Administrator (Oversight)') return true;
+
+        const normalizeDayKey = (value) => {
+            if (!value) return '';
+            const raw = String(value).trim();
+            if (!raw) return '';
+            // Handles both YYYY-MM-DD and YYYY-MM-DD HH:mm:ss like values.
+            return raw.slice(0, 10);
+        };
+
+        // Reuse verification only for the same TRAVEL DATE for the same user.
+        // This prevents verification from leaking across different travel dates.
+        const getTravelDayKey = (row) => (
+            normalizeDayKey(row.date) ||
+            normalizeDayKey(row.travel_date) ||
+            ''
+        );
+
+        const dayKey = getTravelDayKey(item);
+        const sameDayExpenses = state.expenses.filter((exp) => {
+            const userMatchById = String(exp.user_id ?? '') === String(item.user_id ?? '');
+            const userMatchByName = String(exp.employee_name ?? '') === String(item.employee_name ?? '');
+            const sameUser = userMatchById || userMatchByName;
+            const sameDate = getTravelDayKey(exp) === dayKey;
+            return sameUser && sameDate;
+        });
+
+        // Fallback if user_id is missing for any reason.
+        const pool = sameDayExpenses.length > 0 ? sameDayExpenses : [item];
+
+        const hasValue = (v) => v !== null && v !== undefined && String(v).trim() !== '';
+
+        if (item.acting_level === 'Manager (L1)') {
+            return pool.some((exp) => hasValue(exp.confirmed_distance));
+        }
+
+        if (item.acting_level === 'HR (L2)') {
+            return pool.some((exp) => hasValue(exp.hr_confirmed_distance));
+        }
+
+        return false;
+    };
+
+    const normalizeMode = (mode) => (mode || '').toString().trim().toLowerCase();
+
+    const isRateLockedMode = (mode) => {
+        const normalized = normalizeMode(mode);
+        return normalized === 'car' || normalized === 'bike';
+    };
+
+    const loadTransportRates = async () => {
+        if (Object.keys(transportRates).length > 0) return;
+
+        try {
+            const response = await fetch('api/fetch_transport_rates.php');
+            const result = await response.json();
+            if (result.success && Array.isArray(result.rates)) {
+                result.rates.forEach((r) => {
+                    const key = normalizeMode(r.transport_mode);
+                    const rate = parseFloat(r.rate_per_km);
+                    if (key && Number.isFinite(rate)) {
+                        transportRates[key] = rate;
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Failed to load transport rates:', error);
+        }
+    };
+
+    const applyEditAmountRules = () => {
+        const modeInput = document.getElementById('editMode');
+        const distanceInput = document.getElementById('editDistance');
+        const amountInput = document.getElementById('editAmount');
+        const hintEl = document.getElementById('editAmountHint');
+
+        if (!modeInput || !distanceInput || !amountInput) return;
+
+        const mode = normalizeMode(modeInput.value);
+        const isLockedMode = isRateLockedMode(mode);
+
+        if (isLockedMode) {
+            const distance = parseFloat(distanceInput.value || '0');
+            const rate = parseFloat(transportRates[mode] ?? '0');
+            const autoAmount = Number.isFinite(distance) && Number.isFinite(rate)
+                ? Math.max(0, distance * rate)
+                : 0;
+
+            amountInput.value = autoAmount.toFixed(2);
+            amountInput.readOnly = true;
+            amountInput.style.background = '#f8fafc';
+            amountInput.style.cursor = 'not-allowed';
+
+            if (hintEl) {
+                hintEl.textContent = `Auto-calculated: ${mode.toUpperCase()} rate ${rate.toFixed(2)} per KM × distance.`;
+                hintEl.style.color = '#0f766e';
+            }
+        } else {
+            amountInput.readOnly = false;
+            amountInput.style.background = '#ffffff';
+            amountInput.style.cursor = 'text';
+
+            if (hintEl) {
+                hintEl.textContent = 'You can edit amount for this mode.';
+                hintEl.style.color = '#64748b';
+            }
+        }
+    };
+
 
     // --- Table Rendering ---
     const renderTable = (expenses) => {
@@ -447,55 +621,356 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        tableBody.innerHTML = expenses.map(item => {
-            const mStat = item.manager_status.toLowerCase();
-            const hStat = item.hr_status.toLowerCase();
-            const aStat = item.accountant_status.toLowerCase();
-            const overallStatus = item.status.toLowerCase();
+        const stacks = groupExpensesByUserDate(expenses);
+        state.renderedStacks = stacks;
+
+        tableBody.innerHTML = stacks.map((stack, idx) => {
+            const lead = stack.items[0];
+            const totalAmount = stack.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+            const managerStatus = resolveStackStatus(stack.items, 'manager_status');
+            const hrStatus = resolveStackStatus(stack.items, 'hr_status');
+            const seniorStatus = resolveStackStatus(stack.items, 'accountant_status');
+            const overallStatus = resolveStackOverallStatus(stack.items);
+            const paymentStatus = resolveStackPaymentStatus(stack.items);
+            const hasActionBlocked = stack.items.some((it) => it.needs_action && !it.can_act);
+            const blockedMessageItem = stack.items.find((it) => it.needs_action && !it.can_act);
 
             return `
-            <tr data-id="${item.id}">
+            <tr data-stack-key="${stack.key}" class="stack-row-clickable" onclick="openStackDetails(${idx})" title="Open grouped expenses">
                 <td>
-                    <div style="font-weight: 600;">${item.employee_name}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-muted);">${item.employee_role}</div>
+                    <div style="font-weight: 600;">${stack.employee_name}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">${stack.employee_role || ''}</div>
                 </td>
                 <td>
-                    <div>${item.purpose}</div>
-                    <div style="font-size: 0.7rem; color: var(--text-muted);">${item.from} → ${item.to}</div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span>${lead.purpose}</span>
+                        <span class="stack-count-badge">${stack.items.length} ${stack.items.length > 1 ? 'Entries' : 'Entry'}</span>
+                    </div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted);">${formatDate(stack.date)} • ${stack.items.map(i => i.from + ' → ' + i.to).slice(0, 2).join(' | ')}${stack.items.length > 2 ? ' ...' : ''}</div>
                 </td>
-                <td><span class="status-tag ${mStat}">${item.manager_status}</span></td>
-                <td><span class="status-tag ${hStat}">${item.hr_status}</span></td>
-                <td><span class="status-tag ${aStat}">${item.accountant_status}</span></td>
-                <td>${formatDate(item.date)}</td>
-                <td class="amount">₹ ${parseFloat(item.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
+                <td><span class="status-tag ${managerStatus}">${managerStatus}</span></td>
+                <td><span class="status-tag ${hrStatus}">${hrStatus}</span></td>
+                <td><span class="status-tag ${seniorStatus}">${seniorStatus}</span></td>
+                <td>${formatDate(stack.date)}</td>
+                <td class="amount">₹ ${totalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</td>
                 <td>
-                    <span class="status-tag ${overallStatus}">${item.status}</span>
-                    ${(!item.can_act && item.needs_action) ? `
+                    <span class="status-tag ${overallStatus}">${overallStatus}</span>
+                    ${hasActionBlocked && blockedMessageItem ? `
                         <div style="font-size: 0.65rem; color: #ea580c; font-weight: 700; margin-top: 4px; display: flex; align-items: center; gap: 3px;">
                             <i data-lucide="clock" style="width: 10px; height: 10px;"></i> 
-                            ${item.window_message.replace('Approval window ', '')}
+                            ${blockedMessageItem.window_message.replace('Approval window ', '')}
                         </div>
                     ` : ''}
                 </td>
-                <td><span class="status-tag ${item.payment_status.toLowerCase()}">${item.payment_status}</span></td>
+                <td><span class="status-tag ${paymentStatus}">${paymentStatus}</span></td>
                 <td class="actions">
                     <div class="actions-group">
-                        <button class="btn-icon view" title="View Details" onclick="openDetails(${item.id})"><i data-lucide="eye"></i></button>
-                        ${item.needs_action ? (
-                            item.can_act ? `
-                                <button class="btn-icon approve" title="Approve" onclick="updateStatus(${item.id}, 'Approved')"><i data-lucide="check"></i></button>
-                                <button class="btn-icon reject" title="Reject" onclick="updateStatus(${item.id}, 'Rejected')"><i data-lucide="x"></i></button>
-                            ` : `
-                                <button class="btn-icon locked" title="${item.window_message}" style="background: #fff7ed; color: #ea580c; border: 1px dashed #fed7aa; cursor: help;">
-                                    <i data-lucide="lock" style="width: 14px; height: 14px;"></i>
-                                </button>
-                            `
-                        ) : ''}
+                        <button class="btn-icon view" title="Open Stack" onclick="event.stopPropagation(); openStackDetails(${idx})"><i data-lucide="layers"></i></button>
                     </div>
                 </td>
             </tr>`;
         }).join('');
         initIcons();
+    };
+
+    window.openStackDetails = (stackIndex) => {
+        const stack = state.renderedStacks[stackIndex];
+        if (!stack) return;
+
+        state.stackUi.activeStackIndex = stackIndex;
+
+        const modal = document.getElementById('stackModal');
+        const title = document.getElementById('stackModalTitle');
+        const meta = document.getElementById('stackModalMeta');
+        const summary = document.getElementById('stackModalSummary');
+        const bulkSection = document.getElementById('stackBulkApproveSection');
+        const list = document.getElementById('stackModalList');
+
+        const totalAmount = stack.items.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+
+        title.textContent = `${stack.employee_name} • ${formatDate(stack.date)}`;
+        meta.textContent = `${stack.items.length} ${stack.items.length > 1 ? 'Expenses' : 'Expense'} in this stack`;
+        summary.innerHTML = `
+            <div class="stack-summary">
+                <div class="stack-summary-item">
+                    <div class="summary-label-wrap"><i data-lucide="layers" style="width:14px; height:14px;"></i><span class="label">Total Entries</span></div>
+                    <span class="value">${stack.items.length}</span>
+                </div>
+                <div class="stack-summary-item">
+                    <div class="summary-label-wrap"><i data-lucide="banknote" style="width:14px; height:14px;"></i><span class="label">Total Amount</span></div>
+                    <span class="value">₹ ${totalAmount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+                </div>
+            </div>
+        `;
+
+        const bulkEligibleItems = stack.items.filter((item) => {
+            const pendingOverall = String(item.status || '').toLowerCase() === 'pending';
+            return item.needs_action && item.can_act && pendingOverall && hasDistanceVerification(item);
+        });
+
+        if (bulkEligibleItems.length > 0) {
+            bulkSection.innerHTML = `
+                <div class="bulk-approve-panel">
+                    <div class="bulk-approve-header">
+                        <div class="bulk-approve-title" id="bulkPanelTitle"><i data-lucide="list-checks" style="width:16px; height:16px;"></i> Bulk Actions (Verified Only)</div>
+                        <div class="bulk-header-right">
+                            <span class="bulk-selected-meta" id="bulkSelectedCount">Selected ${bulkEligibleItems.length} of ${bulkEligibleItems.length}</span>
+                            <label class="bulk-select-all">
+                                <input type="checkbox" id="bulkSelectAllExpenses" checked>
+                                <span>Select all verified (${bulkEligibleItems.length})</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bulk-approve-list" id="bulkApproveList">
+                        ${bulkEligibleItems.map((item) => `
+                            <label class="bulk-expense-item">
+                                <input type="checkbox" class="bulk-expense-check" value="${item.id}" checked>
+                                <span class="id">${item.display_id || `EXP-${item.id}`}</span>
+                                <span class="text">${item.purpose}</span>
+                                <span class="amount">₹ ${parseFloat(item.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+
+                    <div class="bulk-checkpoints">
+                        <label><input type="checkbox" class="bulk-checkpoint"> I verified meter-based distance for selected entries.</label>
+                        <label><input type="checkbox" class="bulk-checkpoint"> I confirm purpose and route are valid for selected entries.</label>
+                        <label><input type="checkbox" class="bulk-checkpoint"> I reviewed selected entries and confirm policy compliance.</label>
+                    </div>
+
+                    <div class="bulk-actions-row">
+                        <textarea id="bulkApproveReason" rows="2" placeholder="Optional common note (required for reject, min 10 words)..."></textarea>
+                        <div class="bulk-action-buttons">
+                            <button class="btn-bulk-action approve" id="bulkApproveBtn" disabled onclick="submitBulkApprove('${stack.key}')"><i data-lucide="check-check"></i><span>Approve Selected</span></button>
+                            <button class="btn-bulk-action reject" id="bulkRejectBtn" disabled onclick="submitBulkReject('${stack.key}')"><i data-lucide="x-circle"></i><span>Reject Selected</span></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            bulkSection.innerHTML = `
+                <div class="bulk-approve-panel muted">
+                    <div class="bulk-approve-title"><i data-lucide="info" style="width:16px; height:16px;"></i> Bulk Approve</div>
+                    <div class="bulk-empty-text">No entries are currently eligible for bulk approve. Only distance-verified, pending, actionable entries are shown here.</div>
+                </div>
+            `;
+        }
+
+        list.innerHTML = stack.items.map((item) => {
+            const canQuickApprove = item.needs_action && item.can_act && hasDistanceVerification(item);
+            const canQuickReject = item.needs_action && item.can_act && hasDistanceVerification(item);
+            const canMarkPaid = Boolean(item.can_pay) && String(item.status || '').toLowerCase() === 'approved' && String(item.payment_status || '').toLowerCase() !== 'paid';
+
+            return `
+                <div class="stack-expense-card">
+                    <div class="stack-expense-head">
+                        <div>
+                            <div class="stack-expense-id"><i data-lucide="file-badge-2" style="width:12px; height:12px;"></i>${item.display_id || `EXP-${item.id}`}</div>
+                            <div class="stack-expense-purpose">${item.purpose}</div>
+                        </div>
+                        <div class="stack-expense-amount"><i data-lucide="indian-rupee" style="width:14px; height:14px;"></i>₹ ${parseFloat(item.amount).toLocaleString('en-IN', {minimumFractionDigits: 2})}</div>
+                    </div>
+                    <div class="stack-expense-meta-grid">
+                        <div class="meta-item"><i data-lucide="map-pin" style="width:13px; height:13px;"></i><span>${item.from}</span></div>
+                        <div class="meta-item"><i data-lucide="arrow-right" style="width:13px; height:13px;"></i><span>${item.to}</span></div>
+                        <div class="meta-item"><i data-lucide="car-front" style="width:13px; height:13px;"></i><span>${item.mode}</span></div>
+                        <div class="meta-item"><i data-lucide="calendar-days" style="width:13px; height:13px;"></i><span>${formatDate(item.date)}</span></div>
+                        <div class="meta-item meta-item-wide"><i data-lucide="clock-3" style="width:13px; height:13px;"></i><span>Filled on: ${formatDateTime(item.created_at || item.updated_at || item.date)}</span></div>
+                    </div>
+                    <div class="stack-expense-statuses">
+                        <span class="status-tag ${String(item.manager_status).toLowerCase()}">Manager: ${item.manager_status}</span>
+                        <span class="status-tag ${String(item.hr_status).toLowerCase()}">HR: ${item.hr_status}</span>
+                        <span class="status-tag ${String(item.accountant_status).toLowerCase()}">Senior Manager: ${item.accountant_status}</span>
+                        <span class="status-tag ${String(item.status).toLowerCase()}">Overall: ${item.status}</span>
+                    </div>
+                    <div class="stack-expense-actions">
+                        <button class="btn-icon view" title="View Details" onclick="openDetailsFromStack(${item.id}, ${stackIndex})"><i data-lucide="eye"></i><span>View</span></button>
+                        ${canMarkPaid ? `<button class="btn-icon pay" title="Mark as Paid" onclick="markExpensePaid(${item.id}, '${stack.key}')"><i data-lucide="badge-indian-rupee"></i><span>Mark Paid</span></button>` : ''}
+                        ${item.needs_action ? (
+                            item.can_act ? `
+                                <button class="btn-icon approve" title="${canQuickApprove ? 'Approve' : 'Verify distance first'}" ${canQuickApprove ? '' : 'disabled'} onclick="updateStatus(${item.id}, 'Approved'); closeStackModal();"><i data-lucide="check"></i><span>Approve</span></button>
+                                <button class="btn-icon reject" title="${canQuickReject ? 'Reject' : 'Verify distance first'}" ${canQuickReject ? '' : 'disabled'} onclick="updateStatus(${item.id}, 'Rejected'); closeStackModal();"><i data-lucide="x"></i><span>Reject</span></button>
+                            ` : `
+                                <button class="btn-icon locked" title="${item.window_message}" style="background: #fff7ed; color: #ea580c; border: 1px dashed #fed7aa; cursor: help; width: auto; padding: 0 12px;">
+                                    <i data-lucide="lock" style="width: 14px; height: 14px;"></i><span>Locked</span>
+                                </button>
+                            `
+                        ) : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        modal.classList.add('active');
+        initIcons();
+
+        const refreshBulkBtnState = () => {
+            const approveBtn = document.getElementById('bulkApproveBtn');
+            const rejectBtn = document.getElementById('bulkRejectBtn');
+            const checks = Array.from(document.querySelectorAll('.bulk-expense-check'));
+            const selectedCount = checks.filter((c) => c.checked).length;
+            const totalCount = checks.length;
+            const checkpoints = Array.from(document.querySelectorAll('.bulk-checkpoint'));
+            const allCheckpointDone = checkpoints.length > 0 && checkpoints.every((c) => c.checked);
+            const canProceed = selectedCount > 0 && allCheckpointDone;
+            if (approveBtn) approveBtn.disabled = !canProceed;
+            if (rejectBtn) rejectBtn.disabled = !canProceed;
+
+            const selectedMeta = document.getElementById('bulkSelectedCount');
+            if (selectedMeta) {
+                selectedMeta.textContent = `Selected ${selectedCount} of ${totalCount}`;
+            }
+        };
+
+        const selectAll = document.getElementById('bulkSelectAllExpenses');
+        if (selectAll) {
+            selectAll.addEventListener('change', () => {
+                document.querySelectorAll('.bulk-expense-check').forEach((el) => {
+                    el.checked = selectAll.checked;
+                });
+                refreshBulkBtnState();
+            });
+        }
+
+        document.querySelectorAll('.bulk-expense-check').forEach((el) => {
+            el.addEventListener('change', () => {
+                const checks = Array.from(document.querySelectorAll('.bulk-expense-check'));
+                const checked = checks.filter((c) => c.checked).length;
+                if (selectAll) selectAll.checked = checked > 0 && checked === checks.length;
+                refreshBulkBtnState();
+            });
+        });
+
+        document.querySelectorAll('.bulk-checkpoint').forEach((el) => {
+            el.addEventListener('change', refreshBulkBtnState);
+        });
+
+        refreshBulkBtnState();
+    };
+
+    window.submitBulkApprove = async (stackKey) => {
+        await submitBulkDecision(stackKey, 'Approved');
+    };
+
+    window.submitBulkReject = async (stackKey) => {
+        await submitBulkDecision(stackKey, 'Rejected');
+    };
+
+    window.markExpensePaid = async (id, stackKey = '') => {
+        const item = state.expenses.find((e) => e.id == id);
+        if (!item) {
+            showToast('Expense not found', 'error');
+            return;
+        }
+
+        const canMarkPaid = Boolean(item.can_pay) && String(item.status || '').toLowerCase() === 'approved' && String(item.payment_status || '').toLowerCase() !== 'paid';
+        if (!canMarkPaid) {
+            showToast('This expense is not eligible to be marked as paid.', 'error');
+            return;
+        }
+
+        try {
+            const form = new FormData();
+            form.append('id', String(id));
+
+            const response = await fetch('api/pay_expense.php', {
+                method: 'POST',
+                body: form
+            });
+            const result = await response.json();
+
+            if (!result.success) {
+                showToast(result.message || 'Failed to mark as paid.', 'error');
+                return;
+            }
+
+            showToast(result.message || 'Expense marked as paid.', 'success');
+            await fetchExpenses();
+
+            if (currentItem && currentItem.id == id) {
+                openDetails(id);
+            }
+
+            if (stackKey) {
+                const newIndex = state.renderedStacks.findIndex((s) => s.key === stackKey);
+                if (newIndex >= 0) {
+                    openStackDetails(newIndex);
+                }
+            }
+        } catch (error) {
+            console.error('Mark paid error:', error);
+            showToast('Network error while marking expense as paid.', 'error');
+        }
+    };
+
+    const submitBulkDecision = async (stackKey, decision) => {
+        const selected = Array.from(document.querySelectorAll('.bulk-expense-check:checked')).map((el) => Number(el.value));
+        if (!selected.length) {
+            showToast('Select at least one verified entry.', 'error');
+            return;
+        }
+
+        const approveBtn = document.getElementById('bulkApproveBtn');
+        const rejectBtn = document.getElementById('bulkRejectBtn');
+        const reason = document.getElementById('bulkApproveReason')?.value.trim() || '';
+
+        if (decision === 'Rejected') {
+            const words = reason.split(/\s+/).filter(Boolean);
+            if (words.length < 10) {
+                showToast('For bulk reject, reason is mandatory with at least 10 words.', 'error');
+                return;
+            }
+        }
+
+        if (approveBtn) approveBtn.disabled = true;
+        if (rejectBtn) rejectBtn.disabled = true;
+
+        let successCount = 0;
+        let failureCount = 0;
+
+        for (const id of selected) {
+            try {
+                const response = await fetch('api/update_approval_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, status: decision, reason })
+                });
+                const result = await response.json();
+                if (result.success) successCount += 1;
+                else failureCount += 1;
+            } catch (e) {
+                failureCount += 1;
+            }
+        }
+
+        await fetchExpenses();
+
+        if (successCount > 0) {
+            const label = decision.toLowerCase();
+            showToast(`${successCount} expense(s) ${label} successfully${failureCount ? `, ${failureCount} failed.` : '.'}`, failureCount ? 'info' : 'success');
+        } else {
+            showToast(`Bulk ${decision.toLowerCase()} failed for selected entries.`, 'error');
+        }
+
+        const newIndex = state.renderedStacks.findIndex((s) => s.key === stackKey);
+        if (newIndex >= 0) {
+            openStackDetails(newIndex);
+        } else {
+            closeStackModal();
+        }
+    };
+
+    window.closeStackModal = () => {
+        const modal = document.getElementById('stackModal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.openDetailsFromStack = (id, stackIndex) => {
+        state.stackUi.activeStackIndex = Number.isFinite(stackIndex) ? stackIndex : null;
+        state.stackUi.reopenAfterDetailsClose = true;
+        closeStackModal();
+        openDetails(id);
     };
 
     // --- Verify Distance Logic ---
@@ -591,6 +1066,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Action Handlers (Open Modals) ---
     window.updateStatus = (id, status) => {
+        const item = state.expenses.find(e => e.id == id);
+        if (!item) {
+            showToast('Expense not found', 'error');
+            return;
+        }
+
+        const isVerified = hasDistanceVerification(item);
+        if (!isVerified) {
+            showToast('Please complete distance verification first.', 'error');
+            openDetails(id);
+            return;
+        }
+
         if (status === 'Approved') {
             window.showApprovalConfirm(id);
         } else {
@@ -689,6 +1177,101 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!reason) { alert('Please provide a reason for rejection.'); return; }
         await performStatusUpdate(currentActionId, 'Rejected', reason);
         closeActionModal('rejectModal');
+    };
+
+    window.showEditExpenseModal = (id) => {
+        const item = state.expenses.find(e => e.id == id);
+        if (!item) {
+            showToast('Expense not found', 'error');
+            return;
+        }
+
+        if (!hasDistanceVerification(item)) {
+            showToast('Please complete distance verification first.', 'error');
+            return;
+        }
+
+        document.getElementById('editExpenseId').value = item.id;
+        document.getElementById('editPurpose').value = item.purpose || '';
+        document.getElementById('editFrom').value = item.from || '';
+        document.getElementById('editTo').value = item.to || '';
+        document.getElementById('editMode').value = item.mode || '';
+        document.getElementById('editDate').value = item.date || '';
+        document.getElementById('editDistance').value = item.distance ?? '';
+        document.getElementById('editAmount').value = item.amount ?? '';
+
+        const modal = document.getElementById('editExpenseModal');
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+        loadTransportRates().then(() => {
+            applyEditAmountRules();
+        });
+        initIcons();
+    };
+
+    window.submitExpenseEdit = async () => {
+        applyEditAmountRules();
+
+        const id = document.getElementById('editExpenseId')?.value;
+        const purpose = document.getElementById('editPurpose')?.value.trim() || '';
+        const from_location = document.getElementById('editFrom')?.value.trim() || '';
+        const to_location = document.getElementById('editTo')?.value.trim() || '';
+        const mode_of_transport = document.getElementById('editMode')?.value.trim() || '';
+        const travel_date = document.getElementById('editDate')?.value || '';
+        const distance = parseFloat(document.getElementById('editDistance')?.value || '0');
+        const amount = parseFloat(document.getElementById('editAmount')?.value || '0');
+
+        if (!id) {
+            showToast('Missing expense reference', 'error');
+            return;
+        }
+
+        if (!purpose || !from_location || !to_location || !mode_of_transport || !travel_date) {
+            showToast('Please fill all required fields.', 'error');
+            return;
+        }
+
+        if (!Number.isFinite(distance) || distance < 0) {
+            showToast('Distance must be a valid non-negative number.', 'error');
+            return;
+        }
+
+        if (!Number.isFinite(amount) || amount < 0) {
+            showToast('Amount must be a valid non-negative number.', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch('api/update_expense_details.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id,
+                    purpose,
+                    from_location,
+                    to_location,
+                    mode_of_transport,
+                    travel_date,
+                    distance,
+                    amount
+                })
+            });
+
+            const result = await response.json();
+            if (!result.success) {
+                showToast(result.message || 'Failed to update expense', 'error');
+                return;
+            }
+
+            closeActionModal('editExpenseModal');
+            showToast(result.message || 'Expense updated successfully', 'success');
+
+            await fetchExpenses();
+            openDetails(id);
+        } catch (error) {
+            console.error('Edit expense error:', error);
+            showToast('Network error while updating expense', 'error');
+        }
     };
 
     const performStatusUpdate = async (id, status, reason) => {
@@ -804,21 +1387,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const blurTarget = document.getElementById('blurTarget');
         const vBar = document.getElementById('verificationBar');
         
-        // --- BLIND VERIFICATION RESTORATION ---
-        // A user only 'unlocks' the details for THEMSELVES after THEY enter the distance.
-        // ⚠️ Senior Manager (L3) is EXEMPT — L1 and L2 have already cross-verified distance.
-        let isVerified = false;
-        if (item.acting_level === 'Senior Manager (L3)') {
-            // L3 skips distance check — L1 + L2 already verified independently
-            isVerified = true;
-        } else if (item.acting_level === 'Manager (L1)') {
-            isVerified = (item.confirmed_distance !== null && item.confirmed_distance !== "");
-        } else if (item.acting_level === 'HR (L2)') {
-            isVerified = (item.hr_confirmed_distance !== null && item.hr_confirmed_distance !== "");
-        } else {
-            // Admin: always unlocked
-            isVerified = true;
-        }
+        // A user only unlocks details for themselves after they enter their own distance.
+        const isVerified = hasDistanceVerification(item);
 
         if (isVerified) {
             if (blurTarget) blurTarget.classList.remove('blur-content');
@@ -837,16 +1407,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.closeModal = () => {
         document.getElementById('expenseModal').classList.remove('active');
+
+        if (state.stackUi.reopenAfterDetailsClose && state.stackUi.activeStackIndex !== null) {
+            const indexToOpen = state.stackUi.activeStackIndex;
+            state.stackUi.reopenAfterDetailsClose = false;
+            openStackDetails(indexToOpen);
+        }
     };
 
     const renderFooterActions = (item, isVerified) => {
         const footer = document.getElementById('modalFooterActions');
         footer.innerHTML = '<button class="btn-minimal" onclick="closeModal()">Dismiss</button>';
+        const canMarkPaid = Boolean(item.can_pay) && String(item.status || '').toLowerCase() === 'approved' && String(item.payment_status || '').toLowerCase() !== 'paid';
+
+        if (canMarkPaid) {
+            footer.innerHTML += `<button class="btn-icon pay" onclick="markExpensePaid(${item.id})"><i data-lucide="badge-indian-rupee"></i> Mark as Paid</button>`;
+        }
+
+        if (item.can_edit !== false) {
+            footer.innerHTML += `<button class="btn-icon edit" title="${isVerified ? 'Edit expense' : 'Verify distance first in details'}" ${isVerified ? '' : 'disabled'} onclick="showEditExpenseModal(${item.id})"><i data-lucide="pencil"></i> Edit</button>`;
+        }
         if (item.needs_action) {
             if (item.can_act) {
                 footer.innerHTML += `
                     <button class="btn-icon approve" ${isVerified ? '' : 'disabled'} onclick="showApprovalConfirm(${item.id})"><i data-lucide="check"></i> Approve</button>
-                    <button class="btn-icon reject" onclick="updateStatus(${item.id}, 'Rejected')"><i data-lucide="x"></i> Reject</button>
+                    <button class="btn-icon reject" ${isVerified ? '' : 'disabled'} onclick="updateStatus(${item.id}, 'Rejected')"><i data-lucide="x"></i> Reject</button>
                 `;
             } else {
                 footer.innerHTML += `
@@ -866,6 +1451,38 @@ document.addEventListener('DOMContentLoaded', () => {
         return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
+    function parseBackendDateTime(dateTimeStr) {
+        if (!dateTimeStr) return null;
+        const raw = String(dateTimeStr).trim();
+        if (!raw) return null;
+
+        // Supports MySQL formats: YYYY-MM-DD and YYYY-MM-DD HH:mm:ss
+        let normalized = raw;
+        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(raw)) {
+            normalized = raw.replace(' ', 'T');
+        }
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+            normalized = `${raw}T00:00:00`;
+        }
+
+        const ts = new Date(normalized).getTime();
+        return Number.isNaN(ts) ? null : ts;
+    }
+
+    function formatDateTime(dateTimeStr) {
+        const ts = parseBackendDateTime(dateTimeStr);
+        if (!ts) return 'Not available';
+        const dt = new Date(ts);
+        return dt.toLocaleString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
+
     function showToast(message, type = 'info') {
         const toast = document.createElement('div');
         toast.style.cssText = `position:fixed; bottom:20px; right:20px; padding:12px 24px; border-radius:8px; color:#fff; z-index:10000; background:${type==='success'?'#10b981':type==='error'?'#ef4444':'#3b82f6'};`;
@@ -879,6 +1496,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clearAllBtn) clearAllBtn.addEventListener('click', clearFilters);
     if (globalSearch) globalSearch.addEventListener('input', applyFilters);
     if (refreshBtn) refreshBtn.addEventListener('click', fetchExpenses);
+
+    const editModeInput = document.getElementById('editMode');
+    const editDistanceInput = document.getElementById('editDistance');
+    if (editModeInput) editModeInput.addEventListener('input', applyEditAmountRules);
+    if (editDistanceInput) editDistanceInput.addEventListener('input', applyEditAmountRules);
 
 
     // Initial load

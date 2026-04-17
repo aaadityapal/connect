@@ -173,7 +173,7 @@ button {
     text-align: left;
     padding: 1.8rem;
     overflow: hidden;
-    gap: 1rem;
+    gap: 0.45rem;
     background-color: #ffffff;
     border: 1px solid #f1f5f9;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.015); /* Ultra soft shadow */
@@ -182,7 +182,7 @@ button {
 
 /* Override inner container for left alignment */
 .hr-card > div:first-child {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.1rem;
 }
 
 .hr-card .icon-box {
@@ -207,12 +207,15 @@ button {
 .hr-policy-container {
     flex: 1;
     width: 100%;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
-    align-items: center; /* keep vertical center relative to container */
+    flex-direction: column;
+    align-items: flex-start;
     justify-content: flex-start; /* Left align */
     margin: 0;
+    padding-top: 0;
     min-height: 0;
+    position: relative;
 }
 
 .hr-policy-text {
@@ -223,6 +226,78 @@ button {
     animation: slideUpFade 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
     word-wrap: break-word;
     max-width: 100%;
+    width: 100%;
+}
+
+.hr-corner-dots {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    margin-top: auto;
+    padding-top: 0.45rem;
+    width: 100%;
+    min-height: 0.7rem;
+    line-height: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.hr-corner-dot {
+    display: block;
+    flex: 0 0 auto;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: #fca5a5;
+    opacity: 0.95;
+    transform: scale(1);
+    transform-origin: center;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.hr-corner-dot.active {
+    background: #dc2626;
+    transform: scale(1.45);
+}
+
+.hr-corner-nav {
+    display: none;
+    position: static;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    margin-left: 0.45rem;
+}
+
+.hr-corner-nav-btn {
+    border: 1px solid #fca5a5;
+    background: #fff;
+    color: #dc2626;
+    border-radius: 999px;
+    width: 1.35rem;
+    height: 1.35rem;
+    padding: 0;
+    font-size: 0.6rem;
+    font-weight: 600;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    box-shadow: none;
+}
+
+.hr-corner-nav-btn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+    color: #991b1b;
+}
+
+.hr-corner-nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* Minimal override for the policy button to prevent dark colors */
@@ -3010,10 +3085,14 @@ button {
 }
 
 .hr-policy-container {
-    height: 3rem;
-    overflow: hidden;
+    min-height: 3rem;
+    height: auto;
+    overflow: visible;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: 0;
     margin-bottom: 0.25rem;
 }
 

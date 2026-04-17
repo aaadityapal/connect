@@ -186,6 +186,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
+    function formatDateTime(value) {
+        if (!value) return '-';
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) return String(value);
+        return d.toLocaleString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
     function toDateInputValue(value) {
         const raw = String(value || '').trim();
         if (!raw) return '';
@@ -273,7 +286,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         id: Number(f.id) || 0,
                         file_name: f.file_name || 'Untitled file',
                         file_path: f.file_path || '',
-                        type: f.type || ''
+                        type: f.type || '',
+                        uploaded_by: Number(f.uploaded_by) || 0,
+                        uploaded_by_name: String(f.uploaded_by_name || '').trim(),
+                        uploaded_at: f.uploaded_at || ''
                     }))
                 };
             });
@@ -458,12 +474,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         </button>
                         <div class="substage-media" style="display:${isSubstageOpen ? 'block' : 'none'};">
                             ${media.length > 0
-                                ? `<ul>${media.map((file) => {
+                                ? `<ul>${media.map((file, fileIndex) => {
                                     const fileName = typeof file === 'string' ? file : (file.file_name || 'Untitled file');
                                     const filePath = typeof file === 'string' ? '' : (file.file_path || '');
+                                    const uploadedBy = typeof file === 'string'
+                                        ? ''
+                                        : (String(file.uploaded_by_name || '').trim() || (Number(file.uploaded_by) > 0 ? `User ${file.uploaded_by}` : 'Unknown'));
+                                    const uploadedAt = typeof file === 'string' ? '-' : formatDateTime(file.uploaded_at || '');
                                     return `
                                     <li class="media-file-item">
-                                        <span class="media-file-name">${fileName}</span>
+                                        <div class="media-file-info">
+                                            <span class="media-file-name"><span class="media-file-serial">${fileIndex + 1}.</span> ${fileName}</span>
+                                            <span class="media-file-meta">Uploaded by ${escapeHtml(uploadedBy)} on ${escapeHtml(uploadedAt)}</span>
+                                        </div>
                                         <div class="media-actions">
                                             <button type="button" class="media-action-btn" data-action="view" data-file-name="${fileName}" data-file-path="${filePath}" title="View file">
                                                 <i data-lucide="eye" style="width:14px;height:14px;"></i>

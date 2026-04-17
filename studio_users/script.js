@@ -3,6 +3,164 @@ document.addEventListener("DOMContentLoaded", () => {
     const hrCard = document.querySelector('.hr-card');
     const hrPolicyText = document.getElementById('hrPolicyText');
 
+    function ensureHRTypeBadge() {
+        if (!hrCard) return null;
+        let badge = document.getElementById('hrCornerTypeBadge');
+        if (badge) return badge;
+
+        const titleEl = hrCard.querySelector('h3');
+        if (!titleEl) return null;
+
+        badge = document.createElement('span');
+        badge.id = 'hrCornerTypeBadge';
+        badge.style.display = 'none';
+        badge.style.marginLeft = '0.5rem';
+        badge.style.padding = '0.12rem 0.45rem';
+        badge.style.borderRadius = '999px';
+        badge.style.fontSize = '0.68rem';
+        badge.style.fontWeight = '700';
+        badge.style.letterSpacing = '0.02em';
+        badge.style.verticalAlign = 'middle';
+        titleEl.appendChild(badge);
+        return badge;
+    }
+
+    function setHRTypeBadge(type) {
+        const badge = ensureHRTypeBadge();
+        if (!badge) return;
+
+        if (type === 'policy') {
+            badge.textContent = 'Policy';
+            badge.style.display = 'inline-flex';
+            badge.style.background = '#ecfdf5';
+            badge.style.color = '#047857';
+            badge.style.border = '1px solid #a7f3d0';
+            return;
+        }
+
+        if (type === 'notice') {
+            badge.textContent = 'Notice';
+            badge.style.display = 'inline-flex';
+            badge.style.background = '#eff6ff';
+            badge.style.color = '#1d4ed8';
+            badge.style.border = '1px solid #bfdbfe';
+            return;
+        }
+
+        badge.style.display = 'none';
+    }
+
+    function ensureHRDotsContainer() {
+        if (!hrCard || !hrPolicyText) return null;
+        let dots = document.getElementById('hrCornerDots');
+        if (dots) return dots;
+
+        const wrap = hrPolicyText.parentElement;
+        if (!wrap) return null;
+
+        dots = document.createElement('div');
+        dots.id = 'hrCornerDots';
+        dots.className = 'hr-corner-dots';
+        wrap.appendChild(dots);
+        return dots;
+    }
+
+    function renderHRDots(total, activeIndex) {
+        const dots = ensureHRDotsContainer();
+        if (!dots) return;
+
+        if (!total || total <= 1) {
+            dots.innerHTML = '';
+            dots.style.display = 'none';
+            return;
+        }
+
+        const safeActive = Math.max(0, Math.min(activeIndex || 0, total - 1));
+        dots.style.display = 'flex';
+        dots.innerHTML = Array.from({ length: total }, (_, i) => {
+            const isActive = i === safeActive;
+            return `<span class="hr-corner-dot${isActive ? ' active' : ''}" aria-hidden="true"></span>`;
+        }).join('');
+    }
+
+    function ensureHRNavControls() {
+        if (!hrCard || !hrPolicyText) return null;
+        let nav = document.getElementById('hrCornerNav');
+        if (nav) return nav;
+
+        const titleEl = hrCard.querySelector('h3');
+        if (!titleEl || !titleEl.parentElement) return null;
+        const headerGroup = titleEl.parentElement;
+
+        nav = document.createElement('div');
+        nav.id = 'hrCornerNav';
+        nav.className = 'hr-corner-nav';
+        nav.innerHTML = `
+            <button type="button" id="hrCornerPrevBtn" class="hr-corner-nav-btn" aria-label="Previous HR update">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button type="button" id="hrCornerNextBtn" class="hr-corner-nav-btn" aria-label="Next HR update">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        `;
+        headerGroup.appendChild(nav);
+
+        const prevBtn = nav.querySelector('#hrCornerPrevBtn');
+        const nextBtn = nav.querySelector('#hrCornerNextBtn');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                stepHRItem(-1);
+            });
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                stepHRItem(1);
+            });
+        }
+
+        return nav;
+    }
+
+    function renderHRNavControls(total) {
+        const nav = ensureHRNavControls();
+        if (!nav) return;
+
+        const prevBtn = nav.querySelector('#hrCornerPrevBtn');
+        const nextBtn = nav.querySelector('#hrCornerNextBtn');
+        const hasMultiple = !!total && total > 1;
+
+        nav.style.display = hasMultiple ? 'flex' : 'none';
+        if (prevBtn) prevBtn.disabled = !hasMultiple;
+        if (nextBtn) nextBtn.disabled = !hasMultiple;
+    }
+
+    function startHRAutoRotate() {
+        const items = window.dynamicHRItems || dynamicHRItems || [];
+        if (window.hrInterval) {
+            clearInterval(window.hrInterval);
+            window.hrInterval = null;
+        }
+        if (items.length <= 1) return;
+
+        window.hrInterval = setInterval(() => {
+            window.hrIdx = (window.hrIdx + 1) % items.length;
+            showHRItem(window.hrIdx);
+        }, 45000);
+    }
+
+    function stepHRItem(delta) {
+        const items = window.dynamicHRItems || dynamicHRItems || [];
+        const total = items.length;
+        if (!total) return;
+        window.hrIdx = (window.hrIdx + delta + total) % total;
+        showHRItem(window.hrIdx);
+        startHRAutoRotate();
+    }
+
     // ── Task assignment / edit success sound ──────────────────────────
     const _taskSound = new Audio('tones/task_allotment.mp3');
     _taskSound.preload = 'auto';
@@ -2004,6 +2162,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // --- Combined Dynamic HR Items (Policies + Notices) ---
+    // Shape: { type: 'policy' | 'notice', title: string, subtitle?: string }
     let dynamicHRItems = [];
 
     async function loadHRDashboardData() {
@@ -2018,7 +2177,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 // --- Add Hardcoded Policies to general rotation for visibility ---
                 mandatoryPolicies.forEach(p => {
-                    if (!p.db_id) dynamicHRItems.push(`🏢 Policy: ${p.title} — General Information`);
+                    if (!p.db_id) {
+                        dynamicHRItems.push({
+                            type: 'policy',
+                            title: p.title,
+                            subtitle: 'General Information'
+                        });
+                    }
                 });
 
                 // --- Sync DB Mandatory Policies to Local Mandatory Array ---
@@ -2039,7 +2204,11 @@ document.addEventListener("DOMContentLoaded", () => {
                             });
                         }
                     }
-                    dynamicHRItems.push(`🏢 Policy: ${p.heading} — ${p.short_desc}`);
+                    dynamicHRItems.push({
+                        type: 'policy',
+                        title: p.heading,
+                        subtitle: p.summary || p.short_desc || ''
+                    });
                 });
                 
                 // --- Sync DB Mandatory Notices to Local Mandatory Array ---
@@ -2065,8 +2234,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
 
                     // Add to rotation — attachment accessible via HR Corner modal
-                    const noticeText = `📢 Notice: ${n.title}`;
-                    dynamicHRItems.push(noticeText);
+                    dynamicHRItems.push({
+                        type: 'notice',
+                        title: n.title,
+                        subtitle: n.summary || n.short_desc || ''
+                    });
                 });
 
                 // Keep global reference fresh for rotation restart
@@ -2077,21 +2249,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (dynamicHRItems.length > 0) {
                     showHRItem(0);
-                    if (window.hrInterval) clearInterval(window.hrInterval);
-                    window.hrInterval = setInterval(() => {
-                        window.hrIdx = (window.hrIdx + 1) % dynamicHRItems.length;
-                        showHRItem(window.hrIdx);
-                    }, 6500); 
+                    renderHRNavControls(dynamicHRItems.length);
+                    startHRAutoRotate();
                 } else {
+                    setHRTypeBadge(null);
+                    renderHRDots(0, 0);
+                    renderHRNavControls(0);
                     if (hrPolicyText) hrPolicyText.textContent = "No recent HR updates.";
                 }
             } else {
                 const msg = (data && data.message) ? String(data.message) : 'Unable to load HR updates.';
                 console.error('[HR Corner] API returned error:', msg, data);
+                setHRTypeBadge(null);
+                renderHRDots(0, 0);
+                renderHRNavControls(0);
                 if (hrPolicyText) hrPolicyText.textContent = msg;
             }
         } catch (e) {
             console.error("[HR Corner] Error fetching data:", e);
+            setHRTypeBadge(null);
+            renderHRDots(0, 0);
+            renderHRNavControls(0);
             if (hrPolicyText) hrPolicyText.textContent = "Error loading updates.";
         }
     }
@@ -2113,13 +2291,25 @@ document.addEventListener("DOMContentLoaded", () => {
     window.hrIdx = 0;
     function showHRItem(index) {
         if (!hrPolicyText || !dynamicHRItems[index]) return;
+
+        const escapeHTML = (value) => String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
         
-        const content = dynamicHRItems[index];
+        const item = dynamicHRItems[index];
+        const title = String(item?.title || '');
+        const subtitle = String(item?.subtitle || '').trim();
         const card = document.querySelector('.hr-card');
         const iconBox = card.querySelector('.icon-box');
 
+        setHRTypeBadge(item?.type || null);
+        renderHRDots(dynamicHRItems.length, index);
+
         // Dynamic Sizing Logic (similar to original showPolicy)
-        const plainText = content.replace(/<[^>]*>/g, ''); // strip HTML for length check
+        const plainText = `${title} ${subtitle}`.trim();
         if (plainText.length > 100) {
             hrPolicyText.style.fontSize = '0.9rem';
         } else {
@@ -2130,7 +2320,12 @@ document.addEventListener("DOMContentLoaded", () => {
         hrPolicyText.style.transform = 'translateY(8px)';
 
         setTimeout(() => {
-            hrPolicyText.innerHTML = content;
+            hrPolicyText.innerHTML = `
+                <div style="font-weight:700; color:#0f172a; line-height:1.25; margin-bottom:${subtitle ? '0.24rem' : '0'};">
+                    ${escapeHTML(title)}
+                </div>
+                ${subtitle ? `<div style="font-weight:500; color:#64748b; font-size:0.9em; line-height:1.35;">${escapeHTML(subtitle)}</div>` : ''}
+            `;
             hrPolicyText.style.opacity = '1';
             hrPolicyText.style.transform = 'translateY(0)';
         }, 300);
@@ -2143,7 +2338,13 @@ document.addEventListener("DOMContentLoaded", () => {
         function updateHRCornerDisplay() {
             const pendingPolicy = mandatoryPolicies.find(p => !p.accepted);
             if (pendingPolicy) {
+                setHRTypeBadge(pendingPolicy.notif_db_id ? 'notice' : 'policy');
                 if (window.hrInterval) { clearInterval(window.hrInterval); window.hrInterval = null; }
+                const items = window.dynamicHRItems || [];
+                const normalizedPendingTitle = String(pendingPolicy.title || '').replace(/^📢\s*/, '').trim();
+                const pendingIdx = items.findIndex(it => String(it?.title || '').trim() === normalizedPendingTitle);
+                renderHRDots(items.length, pendingIdx >= 0 ? pendingIdx : (window.hrIdx || 0));
+                renderHRNavControls(0);
                 const card = document.querySelector('.hr-card');
                 const announcementEl = document.getElementById('hrAnnouncement');
                 if (announcementEl) announcementEl.style.display = 'flex';
@@ -2184,10 +2385,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (card) { card.style.border = ''; card.style.boxShadow = ''; }
                 if (!window.hrInterval && (window.dynamicHRItems || []).length > 0) {
                     showHRItem(window.hrIdx % window.dynamicHRItems.length);
-                    window.hrInterval = setInterval(() => {
-                        window.hrIdx = (window.hrIdx + 1) % window.dynamicHRItems.length;
-                        showHRItem(window.hrIdx);
-                    }, 6500);
+                    renderHRNavControls((window.dynamicHRItems || []).length);
+                    startHRAutoRotate();
                 }
             }
         }

@@ -5,6 +5,7 @@
 session_start();
 header('Content-Type: application/json');
 require_once '../../config/db_connect.php';
+require_once __DIR__ . '/hr_summary_helper.php';
 
 function ensure_hr_compliance_table_exists(PDO $pdo): void {
     // Stores per-user acknowledgement with a version marker so a policy can require re-ack on update.
@@ -163,6 +164,10 @@ try {
     ");
     $stmtP->execute(['uid' => $userUid, 'uname1' => $username, 'uname2' => $username]);
     $policies = $stmtP->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($policies as &$p) {
+        $p['summary'] = hr_generate_extractive_summary($p['short_desc'] ?? '', $p['long_desc'] ?? '', 40);
+    }
+    unset($p);
 
     // Fetch latest 10 active notices, joining similarly
     $noticeMandatorySelect = $noticeHasMandatory ? 'n.is_mandatory' : '1 as is_mandatory';
@@ -186,13 +191,17 @@ try {
     ");
     $stmtN->execute(['uid' => $userUid, 'uname1' => $username, 'uname2' => $username]);
     $notices = $stmtN->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($notices as &$n) {
+        $n['summary'] = hr_generate_extractive_summary($n['short_desc'] ?? '', $n['long_desc'] ?? '', 40);
+    }
+    unset($n);
 
     echo json_encode([
         'success' => true,
         'policies' => $policies,
         'notices' => $notices
     ]);
-} catch (PDOException $e) {
-    echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+} catch (Throwable $e) {
+    echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
 }
 ?>

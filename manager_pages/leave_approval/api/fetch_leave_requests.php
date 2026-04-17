@@ -42,7 +42,11 @@ try {
 
     $grouped = [];
     foreach ($rows as $row) {
-        $key = $row['user_id'] . '_' . $row['created_at'] . '_' . substr($row['reason'], 0, 50);
+        // Keep bulk requests grouped, but split mixed leave types into separate cards/rows.
+        $key = $row['user_id']
+            . '_' . $row['created_at']
+            . '_' . $row['leave_type']
+            . '_' . substr($row['reason'], 0, 50);
         
         if (!isset($grouped[$key])) {
             $grouped[$key] = [

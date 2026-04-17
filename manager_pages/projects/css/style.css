@@ -520,12 +520,32 @@ body {
     padding: 0.4rem 0.48rem 0.4rem 0.55rem;
 }
 
+.media-file-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.08rem;
+}
+
 .media-file-name {
     color: #304a60;
     font-size: 0.81rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.media-file-serial {
+    color: #496682;
+    font-weight: 700;
+}
+
+.media-file-meta {
+    color: #69839a;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .media-actions {

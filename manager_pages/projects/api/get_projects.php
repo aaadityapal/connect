@@ -426,6 +426,14 @@ try {
                 }
                 $substageCreatedBy = isset($substageRow['created_by']) ? (int)$substageRow['created_by'] : 0;
                 if ($substageCreatedBy > 0) $allUserIds[$substageCreatedBy] = true;
+
+                $files = $substageRow['files'] ?? [];
+                foreach ($files as $fileRow) {
+                    $uploadedBy = isset($fileRow['uploaded_by']) ? (int)$fileRow['uploaded_by'] : 0;
+                    if ($uploadedBy > 0) {
+                        $allUserIds[$uploadedBy] = true;
+                    }
+                }
             }
         }
     }
@@ -472,6 +480,18 @@ try {
                 $substageRow['assigned_by_name'] = $substageCreatedBy > 0
                     ? ($userNameById[$substageCreatedBy] ?? ('User ' . $substageCreatedBy))
                     : '';
+
+                $files = $substageRow['files'] ?? [];
+
+                foreach ($files as &$fileRow) {
+                    $uploadedBy = isset($fileRow['uploaded_by']) ? (int)$fileRow['uploaded_by'] : 0;
+                    $fileRow['uploaded_by_name'] = $uploadedBy > 0
+                        ? ($userNameById[$uploadedBy] ?? ('User ' . $uploadedBy))
+                        : '';
+                }
+                unset($fileRow);
+
+                $substageRow['files'] = $files;
             }
             unset($substageRow);
 

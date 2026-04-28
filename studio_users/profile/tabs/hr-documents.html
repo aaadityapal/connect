@@ -200,79 +200,25 @@
     </style>
 
 
-<section class="card section-hr-documents">
+<section class="card section-hr-documents" id="hr-documents-section">
     <h2 class="section-title">HR & Career Documents</h2>
 
-    <div class="sub-tabs">
+    <div class="sub-tabs" id="dynamic-sub-tabs">
         <button class="sub-tab-btn active" data-subtarget="policies">Company Policies</button>
-        <button class="sub-tab-btn" data-subtarget="salary-slips">Salary Slips</button>
-        <button class="sub-tab-btn" data-subtarget="offer-letters">Offer Letters</button>
-        <button class="sub-tab-btn" data-subtarget="appraisal-letters">Appraisals</button>
-        <button class="sub-tab-btn" data-subtarget="experience-letters">Experience Letters</button>
     </div>
 
-                <!-- Policies Section -->
-                <div class="sub-tab-page active" id="policies">
-                    <div id="hr-policies-container">
-                        <div class="ag-skeleton-container" style="padding: 20px; text-align: center;">
-                            <span style="font-size: 0.85rem; color: #94a3b8;">Loading official policies...</span>
-                        </div>
-                    </div>
+    <!-- Group all tab pages in this container -->
+    <div id="dynamic-tab-pages">
+        <!-- Policies Section -->
+        <div class="sub-tab-page active" id="policies">
+            <div id="hr-policies-container">
+                <div class="ag-skeleton-container" style="padding: 20px; text-align: center;">
+                    <span style="font-size: 0.85rem; color: #94a3b8;">Loading official policies...</span>
                 </div>
-
-                <!-- Salary Slips Section -->
-                <div class="sub-tab-page" id="salary-slips">
-                    <div class="salary-filter-bar" style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 16px; border: 1px solid #e2e8f0; align-items: center;">
-                        <div class="filter-inputs" style="flex: 1; display: flex; gap: 0.75rem;">
-                            <select id="filter-salary-month" style="flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; background: #fff; color: #1e293b; outline: none;">
-                                <option value="">Filter by Month</option>
-                                <option value="01">January</option>
-                                <option value="02">February</option>
-                                <option value="03">March</option>
-                                <option value="04">April</option>
-                                <option value="05">May</option>
-                                <option value="06">June</option>
-                                <option value="07">July</option>
-                                <option value="08">August</option>
-                                <option value="09">September</option>
-                                <option value="10">October</option>
-                                <option value="11">November</option>
-                                <option value="12">December</option>
-                            </select>
-                            <select id="filter-salary-year" style="flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; background: #fff; color: #1e293b; outline: none;">
-                                <option value="">Filter by Year</option>
-                                <script>
-                                    const currentYear = new Date().getFullYear();
-                                    for(let y = currentYear; y >= 2020; y--) {
-                                        document.write(`<option value="${y}">${y}</option>`);
-                                    }
-                                </script>
-                            </select>
-                        </div>
-                        <button id="btn-clear-salary-filters" style="padding: 10px 16px; border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; font-size: 0.8rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s;"
-                                onmouseover="this.style.background='#f1f5f9'; this.style.color='#1e293b';"
-                                onmouseout="this.style.background='#fff'; this.style.color='#64748b';">
-                            Clear
-                        </button>
-                    </div>
-                    <div id="hr-salary-slips-container"></div>
-                </div>
-
-                <!-- Offer Letters Section -->
-                <div class="sub-tab-page" id="offer-letters">
-                    <div id="hr-offer-letters-container"></div>
-                </div>
-
-                <!-- Appraisal Letters Section -->
-                <div class="sub-tab-page" id="appraisal-letters">
-                    <div id="hr-appraisal-letters-container"></div>
-                </div>
-
-                <!-- Experience Letters Section -->
-                <div class="sub-tab-page" id="experience-letters">
-                    <div id="hr-experience-letters-container"></div>
-                </div>
-            </section>
+            </div>
+        </div>
+    </div>
+</section>
 
             <!-- HR Acknowledgment Modal -->
             <div id="acknowledge-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">

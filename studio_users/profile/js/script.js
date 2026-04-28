@@ -1835,12 +1835,10 @@ function resetAgDocumentUI() {
 // ── HR Documents Fetch & Rendering ───────────────────────────
 async function initHRDocuments() {
     const policiesContainer = document.getElementById('hr-policies-container');
-    const salaryContainer = document.getElementById('hr-salary-slips-container');
-    const offerContainer = document.getElementById('hr-offer-letters-container');
-    const appraisalContainer = document.getElementById('hr-appraisal-letters-container');
-    const expContainer = document.getElementById('hr-experience-letters-container');
+    const dynamicSubTabs = document.getElementById('dynamic-sub-tabs');
+    const dynamicTabPages = document.getElementById('dynamic-tab-pages');
 
-    if (!policiesContainer) return;
+    if (!policiesContainer || !dynamicSubTabs || !dynamicTabPages) return;
 
     try {
         const response = await fetch('../api/fetch_hr_documents.php');
@@ -1849,71 +1847,178 @@ async function initHRDocuments() {
         if (result.status === 'success') {
             const allDocs = result.hr_documents || [];
             
-            // Initial Filtering
+            // Render Policies directly
             const policies = allDocs.filter(d => (d.type || '').toLowerCase().includes('policy'));
-            const salary = allDocs.filter(d => (d.type || '').toLowerCase().includes('salary') || (d.type || '').toLowerCase().includes('slip'));
-            const offer = allDocs.filter(d => (d.type || '').toLowerCase().includes('offer'));
-            const appraisal = allDocs.filter(d => (d.type || '').toLowerCase().includes('appraisal'));
-            const experience = allDocs.filter(d => (d.type || '').toLowerCase().includes('experience'));
-
             renderHRDocs(policies, policiesContainer, 'policy');
-            renderHRDocs(salary, salaryContainer, 'salary');
-            renderHRDocs(offer, offerContainer, 'offer');
-            renderHRDocs(appraisal, appraisalContainer, 'appraisal');
-            renderHRDocs(experience, expContainer, 'experience');
 
-            // ── Salary Filtering Logic ───────────────────────────
-            const monthFilter = document.getElementById('filter-salary-month');
-            const yearFilter = document.getElementById('filter-salary-year');
-            const clearBtn = document.getElementById('btn-clear-salary-filters');
+            // Group other documents by their exact 'type' label
+            const groups = {};
+            allDocs.forEach(d => {
+                const typeName = d.type || 'Other';
+                if (typeName.toLowerCase().includes('policy')) return; // handled above
 
-            if (monthFilter && yearFilter) {
-                // Determine current running month and year
-                const now = new Date();
-                const runningMonth = String(now.getMonth() + 1).padStart(2, '0');
-                const runningYear = String(now.getFullYear());
+                if (!groups[typeName]) groups[typeName] = [];
+                groups[typeName].push(d);
+            });
 
-                // Force visual selection in the dropdowns
-                monthFilter.value = runningMonth;
-                yearFilter.value = runningYear;
+            // Clean up pre-existing dynamic tabs in case of re-initialization
+            const existingDynTabs = dynamicSubTabs.querySelectorAll('.sub-tab-btn:not([data-subtarget="policies"])');
+            existingDynTabs.forEach(node => node.remove());
 
-                const applySalaryFilters = () => {
-                    let filtered = [...salary];
-                    const mValue = monthFilter.value;
-                    const yValue = yearFilter.value;
+            const existingDynPages = dynamicTabPages.querySelectorAll('.sub-tab-page:not(#policies)');
+            existingDynPages.forEach(node => node.remove());
 
-                    if (mValue) {
-                        filtered = filtered.filter(d => {
-                            const date = new Date(d.upload_date);
-                            return String(date.getMonth() + 1).padStart(2, '0') === mValue;
-                        });
+            // Build dynamic tabs
+            for (const [typeName, docs] of Object.entries(groups)) {
+                const slug = typeName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                
+                // 1. Create Button
+                const btn = document.createElement('button');
+                btn.className = 'sub-tab-btn';
+                btn.setAttribute('data-subtarget', slug);
+                btn.innerText = typeName;
+                dynamicSubTabs.appendChild(btn);
+
+                // 2. Create Page Container
+                const page = document.createElement('div');
+                page.className = 'sub-tab-page';
+                page.id = slug;
+
+                // Special handling: inject filter bar for Salary Slips
+                if (typeName.toLowerCase() === 'salary slip') {
+                    const currentYear = new Date().getFullYear();
+                    let yearOptions = '';
+                    for (let y = currentYear; y >= 2020; y--) {
+                        yearOptions += `<option value="${y}">${y}</option>`;
                     }
-                    if (yValue) {
-                        filtered = filtered.filter(d => {
-                            const date = new Date(d.upload_date);
-                            return String(date.getFullYear()) === yValue;
-                        });
-                    }
-                    renderHRDocs(filtered, salaryContainer, 'policy');
-                };
 
-                // Trigger filtering immediately for the running month
-                applySalaryFilters();
+                    page.innerHTML = `
+                        <div class="salary-filter-bar" style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; background: #f8fafc; padding: 1rem; border-radius: 16px; border: 1px solid #e2e8f0; align-items: center;">
+                            <div class="filter-inputs" style="flex: 1; display: flex; gap: 0.75rem;">
+                                <select id="filter-salary-month" style="flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; background: #fff; color: #1e293b; outline: none;">
+                                    <option value="">Filter by Month</option>
+                                    <option value="01">January</option>
+                                    <option value="02">February</option>
+                                    <option value="03">March</option>
+                                    <option value="04">April</option>
+                                    <option value="05">May</option>
+                                    <option value="06">June</option>
+                                    <option value="07">July</option>
+                                    <option value="08">August</option>
+                                    <option value="09">September</option>
+                                    <option value="10">October</option>
+                                    <option value="11">November</option>
+                                    <option value="12">December</option>
+                                </select>
+                                <select id="filter-salary-year" style="flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 0.85rem; background: #fff; color: #1e293b; outline: none;">
+                                    <option value="">Filter by Year</option>
+                                    ${yearOptions}
+                                </select>
+                            </div>
+                            <button id="btn-clear-salary-filters" style="padding: 10px 16px; border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; font-size: 0.8rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s;"
+                                    onmouseover="this.style.background='#f1f5f9'; this.style.color='#1e293b';"
+                                    onmouseout="this.style.background='#fff'; this.style.color='#64748b';">
+                                Clear
+                            </button>
+                        </div>
+                        <div id="hr-${slug}-container"></div>
+                    `;
+                } else {
+                    page.innerHTML = `<div id="hr-${slug}-container"></div>`;
+                }
 
-                monthFilter.onchange = applySalaryFilters;
-                yearFilter.onchange = applySalaryFilters;
-                clearBtn.onclick = () => {
-                    monthFilter.value = "";
-                    yearFilter.value = "";
-                    renderHRDocs(salary, salaryContainer, 'policy');
-                };
+                dynamicTabPages.appendChild(page);
+
+                // Render Documents for this group
+                const container = document.getElementById(`hr-${slug}-container`);
+                renderHRDocs(docs, container, slug);
+
+                // Re-bind salary filter logic if we just created it
+                if (typeName.toLowerCase() === 'salary slip') {
+                    const monthFilter = document.getElementById('filter-salary-month');
+                    const yearFilter = document.getElementById('filter-salary-year');
+                    const clearBtn = document.getElementById('btn-clear-salary-filters');
+
+                    const now = new Date();
+                    monthFilter.value = String(now.getMonth() + 1).padStart(2, '0');
+                    yearFilter.value = String(now.getFullYear());
+
+                    const applySalaryFilters = () => {
+                        let filtered = [...docs];
+                        const mValue = monthFilter.value;
+                        const yValue = yearFilter.value;
+
+                        if (mValue) {
+                            filtered = filtered.filter(d => {
+                                const date = new Date(d.upload_date);
+                                return String(date.getMonth() + 1).padStart(2, '0') === mValue;
+                            });
+                        }
+                        if (yValue) {
+                            filtered = filtered.filter(d => {
+                                const date = new Date(d.upload_date);
+                                return String(date.getFullYear()) === yValue;
+                            });
+                        }
+                        renderHRDocs(filtered, container, 'policy'); // uses actual Category in viewUrl due to doc.source_category
+                    };
+
+                    applySalaryFilters();
+                    monthFilter.onchange = applySalaryFilters;
+                    yearFilter.onchange = applySalaryFilters;
+                    clearBtn.onclick = () => {
+                        monthFilter.value = "";
+                        yearFilter.value = "";
+                        renderHRDocs(docs, container, 'policy');
+                    };
+                }
             }
+
+            // Re-initialize sub tab listeners for the newly added tabs
+            initSubTabs();
+
         } else {
             policiesContainer.innerHTML = `<p style="padding:20px; color:#ef4444; font-size:0.85rem;">Failed to load documents: ${result.message}</p>`;
         }
     } catch (err) {
         console.error("Error loading HR documents:", err);
     }
+}
+
+function normalizeHrCategory(value, typeLabel) {
+    const raw = String(value || '').trim().toLowerCase();
+    const label = String(typeLabel || '').trim().toLowerCase();
+
+    const map = {
+        policy: 'policy',
+        policies: 'policy',
+        'hr-policy': 'policy',
+        'hr-policies': 'policy',
+        salary: 'salary',
+        'salary-slip': 'salary',
+        'salary slips': 'salary',
+        offer: 'offer',
+        'offer-letter': 'offer',
+        appraisal: 'appraisal',
+        'appraisal-letter': 'appraisal',
+        experience: 'experience',
+        'experience-letter': 'experience',
+        confidential: 'confidential',
+        'confidential-document': 'confidential'
+    };
+
+    if (map[raw]) {
+        return map[raw];
+    }
+
+    if (label.includes('policy')) return 'policy';
+    if (label.includes('salary')) return 'salary';
+    if (label.includes('offer')) return 'offer';
+    if (label.includes('appraisal')) return 'appraisal';
+    if (label.includes('experience')) return 'experience';
+    if (label.includes('confidential')) return 'confidential';
+
+    return 'policy';
 }
 
 function renderHRDocs(docs, container, category) {
@@ -1965,8 +2070,9 @@ function renderHRDocs(docs, container, category) {
                        (['jpg','jpeg','png'].includes(ext) ? 'img' : 'file');
         const theme = colors[typeKey];
 
-        const viewUrl = `../../hr_document_handler.php?id=${doc.id}&action=view&category=${category}`;
-        const downloadUrl = `../../hr_document_handler.php?id=${doc.id}&action=download&category=${category}`;
+        const actualCategory = normalizeHrCategory(doc.source_category || category, doc.type);
+        const viewUrl = `../../hr_document_handler.php?id=${doc.id}&action=view&category=${actualCategory}`;
+        const downloadUrl = `../../hr_document_handler.php?id=${doc.id}&action=download&category=${actualCategory}`;
 
         html += `
             <div class="doc-card-premium">

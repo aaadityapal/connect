@@ -22,36 +22,55 @@ try {
         CASE 
             WHEN da.acknowledged_at IS NOT NULL THEN 'Acknowledged'
             ELSE 'Pending'
-        END as acknowledgment_status
+        END as acknowledgment_status,
+        'policy' as source_category
     FROM hr_documents d
     LEFT JOIN document_acknowledgments da ON d.id = da.document_id AND da.user_id = ?
     WHERE d.status = 'published')
 
     UNION ALL
 
-    (SELECT id, 'Salary Slip' as type, filename, original_name as name, upload_date, file_size, SUBSTRING_INDEX(filename, '.', -1) as extension, status as acknowledgment_status
+    (SELECT id, 'Salary Slip' as type, filename, original_name as name, upload_date, file_size, SUBSTRING_INDEX(filename, '.', -1) as extension, 'Verified' as acknowledgment_status, 'salary' as source_category
      FROM salary_slips WHERE user_id = ?)
 
     UNION ALL
 
-    (SELECT id, 'Offer Letter' as type, file_name as filename, original_name as name, upload_date, file_size, SUBSTRING_INDEX(file_name, '.', -1) as extension, status as acknowledgment_status
+    (SELECT id, 'Offer Letter' as type, file_name as filename, original_name as name, upload_date, file_size, SUBSTRING_INDEX(file_name, '.', -1) as extension, 'Verified' as acknowledgment_status, 'offer' as source_category
      FROM offer_letters WHERE user_id = ?)
 
     UNION ALL
 
-    (SELECT id, 'Appraisal' as type, filename, original_name as name, upload_date, file_size, SUBSTRING_INDEX(filename, '.', -1) as extension, status as acknowledgment_status
+    (SELECT id, 'Appraisal' as type, filename, original_name as name, upload_date, file_size, SUBSTRING_INDEX(filename, '.', -1) as extension, 'Verified' as acknowledgment_status, 'appraisal' as source_category
      FROM appraisals WHERE user_id = ?)
 
     UNION ALL
 
-    (SELECT id, 'Experience Letter' as type, filename, original_name as name, upload_date, file_size, SUBSTRING_INDEX(filename, '.', -1) as extension, status as acknowledgment_status
+    (SELECT id, 'Experience Letter' as type, filename, original_name as name, upload_date, file_size, SUBSTRING_INDEX(filename, '.', -1) as extension, 'Verified' as acknowledgment_status, 'experience' as source_category
      FROM experience_letters WHERE user_id = ?)
+
+    UNION ALL
+
+    (SELECT 
+        id, 
+        document_type_label as type, 
+        file_stored_name as filename, 
+        file_original_name as name, 
+        document_date as upload_date, 
+        file_size, 
+        SUBSTRING_INDEX(file_original_name, '.', -1) as extension, 
+        'Verified' as acknowledgment_status,
+        'confidential' as source_category
+     FROM employee_confiedential_documents 
+     WHERE employee_id = ? 
+       AND (visibility_mode = 'all' OR (visibility_mode = 'specific_users' AND FIND_IN_SET(?, REPLACE(COALESCE(visibility_user_ids, ''), ' ', '')) > 0))
+       AND COALESCE(is_deleted, 0) = 0
+    )
 
     ORDER BY upload_date DESC";
 
     $stmt = $pdo->prepare($sql);
     $userId = $_SESSION['user_id'];
-    $stmt->execute([$userId, $userId, $userId, $userId, $userId]);
+    $stmt->execute([$userId, $userId, $userId, $userId, $userId, $userId, $userId]);
     $hrDocs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Format file sizes

@@ -219,9 +219,10 @@ function canShow($menuId, $perms) {
         $showPwReset = canShow('password-reset-mng', $_permissions);
         $showWorkReport = canShow('employee-work-report', $_permissions);
         $showEmployeesProfile = canShow('employees-profile', $_permissions);
+        $showEmployeesConfiedentialDocuments = canShow('employees-confiedential-documents', $_permissions);
         $showEmployeesAttendance = canShow('employees-attendance', $_permissions);
         $showOtApproval = canShow('overtime-approval-mng', $_permissions);
-        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesAttendance || $showOtApproval):
+        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval):
         ?>
             <div class="menu-title">Management</div>
             <?php if ($showOtApproval): ?>
@@ -322,6 +323,15 @@ function canShow($menuId, $perms) {
                 <div class="tooltip">Employees Profile</div>
             </a>
             <?php endif; ?>
+            <?php if ($showEmployeesConfiedentialDocuments): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/employees_confiedential_documents/index.php'; return false;"
+                class="menu-item" data-page="employees-confiedential-documents">
+                <i data-lucide="shield" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Employees Confiedential Docs</span>
+                <div class="tooltip">Employees Confiedential Documents</div>
+            </a>
+            <?php endif; ?>
             <?php if ($showEmployeesAttendance): ?>
             <a href="#"
                 onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/employees_attendance/index.php'; return false;"
@@ -334,6 +344,14 @@ function canShow($menuId, $perms) {
         <?php endif; ?>
 
         <div class="menu-title">System</div>
+        <?php if (canShow('confiedential-docs-permission', $_permissions)): ?>
+        <a href="#" onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/confiedential_documents_permissions/index.php'; return false;" class="menu-item" data-page="confiedential-docs-permission">
+            <i data-lucide="shield" class="menu-icon" style="width:17px;height:17px;"></i>
+            <span class="menu-text">Confiedential Docs Permission</span>
+            <div class="tooltip">Confiedential Docs Permission</div>
+        </a>
+        <?php endif; ?>
+
         <?php if (canShow('settings', $_permissions)): ?>
         <a href="settings.php" class="menu-item" data-page="settings">
             <i data-lucide="settings-2" class="menu-icon" style="width:17px;height:17px;"></i>

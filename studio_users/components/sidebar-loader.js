@@ -56,6 +56,8 @@
         if (path.includes('/manager_pages/travel_expenses_approval/')) return 'travel-exp-approval-mng';
         if (path.includes('/manager_pages/password_reset/')) return 'password-reset-mng';
         if (path.includes('/manager_pages/employees_profile/')) return 'employees-profile';
+        if (path.includes('/manager_pages/employees_confiedential_documents/')) return 'employees-confiedential-documents';
+        if (path.includes('/manager_pages/confiedential_documents_permissions/')) return 'confiedential-docs-permission';
         if (path.includes('/manager_pages/employees_attendance/')) return 'employees-attendance';
         if (path.includes('/manager_pages/overtime_approvel/unsubmitted_perms.php')) return 'unsubmitted-ot-permissions';
         if (path.includes('/manager_pages/overtime_approvel/')) return 'overtime-approval-mng';
@@ -78,6 +80,8 @@
         const fileMap = {
             'index'           : 'index',
             'employees-profile' : 'employees-profile',
+            'employees-confiedential-documents': 'employees-confiedential-documents',
+            'confiedential-docs-permission': 'confiedential-docs-permission',
             'employees-attendance': 'employees-attendance',
             'travel-expenses' : 'travel-expenses',
             'overtime'        : 'overtime',

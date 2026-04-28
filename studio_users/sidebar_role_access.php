@@ -54,11 +54,13 @@ $menu_items = [
         'password-reset-mng' => ['label' => 'Password Reset', 'icon' => 'key-round'],
         'employee-work-report' => ['label' => 'Employee Work Report', 'icon' => 'file-text'],
         'employees-profile' => ['label' => 'Employees Profile', 'icon' => 'users'],
+        'employees-confiedential-documents' => ['label' => 'Employees Confiedential Documents', 'icon' => 'shield'],
         'employees-attendance' => ['label' => 'Employees Attendance', 'icon' => 'user-check'],
         'overtime-approval-mng' => ['label' => 'Overtime Approval', 'icon' => 'clock-8']
     ],
     'System' => [
         'settings'                      => ['label' => 'Settings',                      'icon' => 'settings-2'],
+        'confiedential-docs-permission' => ['label' => 'Confiedential Docs Permission', 'icon' => 'shield'],
         'geofence-locations'            => ['label' => 'Geofence Settings',             'icon' => 'map-pin'],
         'geofence-approval-mapping'     => ['label' => 'Geofence Approval Mapping',     'icon' => 'map-pinned'],
         'project-permissions'           => ['label' => 'Project Permission',             'icon' => 'shield-check'],

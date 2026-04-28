@@ -11,6 +11,26 @@ if (!isset($_SESSION['user_id'])) {
 $action = $_GET['action'] ?? 'view';
 $id = (int)($_GET['id'] ?? 0);
 $category = $_GET['category'] ?? 'policy';
+$category = strtolower(trim((string)$category));
+
+// Normalize common aliases to supported categories.
+$categoryMap = [
+    'policies' => 'policy',
+    'hr-policy' => 'policy',
+    'hr-policies' => 'policy',
+    'salary-slip' => 'salary',
+    'salary-slips' => 'salary',
+    'offer-letter' => 'offer',
+    'appraisal-letter' => 'appraisal',
+    'experience-letter' => 'experience',
+    'confiedential' => 'confidential',
+    'confiedential-document' => 'confidential',
+    'confidential-document' => 'confidential'
+];
+
+if (isset($categoryMap[$category])) {
+    $category = $categoryMap[$category];
+}
 $userId = $_SESSION['user_id'];
 $userRole = $_SESSION['role'] ?? 'User';
 
@@ -43,6 +63,10 @@ try {
             $stmt = $pdo->prepare("SELECT filename, original_name, user_id FROM experience_letters WHERE id = ?");
             $stmt->execute([$id]);
             break;
+        case 'confidential':
+            $stmt = $pdo->prepare("SELECT file_stored_name as filename, file_original_name as original_name, employee_id as user_id, file_mime as mime FROM employee_confiedential_documents WHERE id = ?");
+            $stmt->execute([$id]);
+            break;
         default:
             exit('Invalid category');
     }
@@ -55,17 +79,26 @@ try {
     }
 
     // 3. Authorization Check: Must be HR OR the owner of the document
-    if ($category !== 'policy' && $userRole !== 'HR' && $document['user_id'] != $userId) {
+    if ($category === 'confidential') {
+        if ($userRole !== 'admin' && $userRole !== 'Manager' && $document['user_id'] != $userId && $userRole !== 'HR') {
+            http_response_code(403);
+            exit('Unauthorized access to this document');
+        }
+    } else if ($category !== 'policy' && $userRole !== 'HR' && $document['user_id'] != $userId) {
         http_response_code(403);
         exit('Unauthorized access to this document');
     }
 
     // 4. File Path Resolution
-    $filePath = $uploadDir . $document['filename'];
-    if (!file_exists($filePath)) {
-        // Try alternate location if not found in HR dir
-        $altPath = 'uploads/career_documents/' . $document['filename'];
-        $filePath = file_exists($altPath) ? $altPath : $filePath;
+    if ($category === 'confidential') {
+        $filePath = 'uploads/employee_confiedential_documents/' . $document['user_id'] . '/' . $document['filename'];
+    } else {
+        $filePath = $uploadDir . $document['filename'];
+        if (!file_exists($filePath)) {
+            // Try alternate location if not found in HR dir
+            $altPath = 'uploads/career_documents/' . $document['filename'];
+            $filePath = file_exists($altPath) ? $altPath : $filePath;
+        }
     }
 
     if (!file_exists($filePath)) {

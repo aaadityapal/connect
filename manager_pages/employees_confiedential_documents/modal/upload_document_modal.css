@@ -1,0 +1,359 @@
+.upload-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.32);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 1rem;
+}
+
+.upload-modal-overlay.is-open {
+    display: flex;
+}
+
+.upload-modal-card {
+    width: min(760px, 100%);
+    background: #fbfcfd;
+    border-radius: 12px;
+    border: 1px solid #dce3ea;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.14);
+    overflow: hidden;
+}
+
+.upload-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #e5ebf1;
+    background: #f3f6f8;
+}
+
+.upload-modal-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #1e293b;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.upload-modal-close {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid #d5dde6;
+    background: #ffffff;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.upload-modal-form {
+    padding: 0.95rem 1rem 1rem;
+}
+
+.upload-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.upload-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.upload-field[hidden] {
+    display: none !important;
+}
+
+.upload-field-full {
+    grid-column: 1 / -1;
+}
+
+.upload-field span {
+    font-size: 0.82rem;
+    color: #475569;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.upload-field span em {
+    font-style: normal;
+}
+
+.upload-field input,
+.upload-field select,
+.upload-field textarea {
+    border: 1px solid #d5dde6;
+    border-radius: 9px;
+    padding: 0.54rem 0.62rem;
+    font-family: inherit;
+    font-size: 0.86rem;
+    color: #0f172a;
+    background: #ffffff;
+    outline: none;
+}
+
+.upload-field textarea {
+    resize: vertical;
+}
+
+.upload-field input:focus,
+.upload-field select:focus,
+.upload-field textarea:focus {
+    border-color: #6b8ca8;
+    box-shadow: 0 0 0 2px rgba(107, 140, 168, 0.12);
+}
+
+.upload-field small {
+    color: #64748b;
+    font-size: 0.72rem;
+}
+
+.upload-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    border-top: 1px solid #e5ebf1;
+    padding-top: 0.85rem;
+    margin-top: 0.85rem;
+}
+
+.upload-btn-cancel,
+.upload-btn-submit {
+    border: none;
+    border-radius: 9px;
+    padding: 0.5rem 0.82rem;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    cursor: pointer;
+}
+
+.upload-btn-cancel {
+    background: #edf2f5;
+    color: #475569;
+}
+
+.upload-btn-submit {
+    background: #356f8b;
+    color: #ffffff;
+}
+
+@media (max-width: 700px) {
+    .upload-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.upload-progress-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.38);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1300;
+    padding: 1rem;
+}
+
+.upload-progress-overlay.is-open {
+    display: flex;
+}
+
+.upload-progress-card {
+    width: min(360px, 100%);
+    border-radius: 12px;
+    border: 1px solid #d5dde6;
+    background: #ffffff;
+    box-shadow: 0 16px 44px rgba(15, 23, 42, 0.2);
+    padding: 1rem;
+    text-align: center;
+}
+
+.upload-progress-card h4 {
+    margin: 0.2rem 0 0;
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+.upload-progress-card p {
+    margin: 0.3rem 0 0;
+    font-size: 0.82rem;
+    color: #64748b;
+}
+
+.upload-spinner {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    border: 3px solid #dbe4ec;
+    border-top-color: #356f8b;
+    margin: 0 auto;
+    animation: upload-spin 0.9s linear infinite;
+}
+
+@keyframes upload-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.ui-notice-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.38);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1350;
+    padding: 1rem;
+}
+
+.ui-notice-overlay.is-open {
+    display: flex;
+}
+
+.ui-notice-card {
+    width: min(420px, 100%);
+    background: #ffffff;
+    border: 1px solid #dbe3ec;
+    border-radius: 12px;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.22);
+    padding: 1rem;
+}
+
+.ui-notice-card h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+.ui-notice-card p {
+    margin: 0.45rem 0 0;
+    color: #475569;
+    font-size: 0.84rem;
+}
+
+.ui-notice-actions {
+    margin-top: 0.9rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ui-notice-actions button {
+    border: none;
+    border-radius: 8px;
+    background: #356f8b;
+    color: #ffffff;
+    padding: 0.42rem 0.82rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ui-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.38);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1360;
+    padding: 1rem;
+}
+
+.ui-confirm-overlay.is-open {
+    display: flex;
+}
+
+.ui-confirm-card {
+    width: min(460px, 100%);
+    background: #ffffff;
+    border: 1px solid #dbe3ec;
+    border-radius: 12px;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.22);
+    padding: 1rem;
+}
+
+.ui-confirm-card h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+.ui-confirm-card p {
+    margin: 0.45rem 0 0;
+    color: #475569;
+    font-size: 0.84rem;
+}
+
+.ui-confirm-details {
+    margin-top: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.ui-confirm-detail-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 0.45rem;
+    padding: 0.45rem 0.55rem;
+    font-size: 0.8rem;
+}
+
+.ui-confirm-detail-row:not(:last-child) {
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.ui-confirm-detail-row strong {
+    color: #334155;
+}
+
+.ui-confirm-detail-row span {
+    color: #0f172a;
+    word-break: break-word;
+}
+
+.ui-confirm-actions {
+    margin-top: 0.9rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.45rem;
+}
+
+.ui-confirm-actions button {
+    border: none;
+    border-radius: 8px;
+    padding: 0.42rem 0.82rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ui-confirm-actions .btn-cancel {
+    background: #edf2f5;
+    color: #475569;
+}
+
+.ui-confirm-actions .btn-confirm {
+    background: #b91c1c;
+    color: #ffffff;
+}

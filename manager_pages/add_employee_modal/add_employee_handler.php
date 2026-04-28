@@ -253,6 +253,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
 
+        $new_id = $pdo->lastInsertId();
+
+        // ─── Auto-Allot Leave Bank ────────────────────────────────────────────
+        // Mirrors the same logic in process_add_user.php and process_signup.php.
+        // Seeds one leave_bank row per active leave type for the current year.
+        try {
+            $year = date('Y');
+            $ltStmt = $pdo->query("SELECT id, max_days FROM leave_types WHERE status = 'active'");
+            $bankStmt = $pdo->prepare(
+                "INSERT IGNORE INTO leave_bank (user_id, leave_type_id, total_balance, remaining_balance, year)
+                 VALUES (?, ?, ?, ?, ?)"
+            );
+            foreach ($ltStmt->fetchAll(PDO::FETCH_ASSOC) as $lt) {
+                $max = (float)$lt['max_days'];
+                $bankStmt->execute([$new_id, $lt['id'], $max, $max, $year]);
+            }
+        } catch (Exception $e) {
+            // Non-fatal — log but don't block the employee creation
+            error_log('[add_employee_handler] leave_bank seed failed: ' . $e->getMessage());
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         $_SESSION['add_employee_success'] = [
             'unique_id' => $unique_id,
             'username' => $username,

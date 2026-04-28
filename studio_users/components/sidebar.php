@@ -222,7 +222,8 @@ function canShow($menuId, $perms) {
         $showEmployeesConfiedentialDocuments = canShow('employees-confiedential-documents', $_permissions);
         $showEmployeesAttendance = canShow('employees-attendance', $_permissions);
         $showOtApproval = canShow('overtime-approval-mng', $_permissions);
-        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval):
+        $showShifts = canShow('shifts-management', $_permissions);
+        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval || $showShifts):
         ?>
             <div class="menu-title">Management</div>
             <?php if ($showOtApproval): ?>
@@ -232,6 +233,15 @@ function canShow($menuId, $perms) {
                 <i data-lucide="clock-8" class="menu-icon" style="width:17px;height:17px;"></i>
                 <span class="menu-text">Overtime Approval</span>
                 <div class="tooltip">Overtime Approval</div>
+            </a>
+            <?php endif; ?>
+            <?php if (canShow('shifts-management', $_permissions)): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../shifts.php'; return false;"
+                class="menu-item" data-page="shifts-management">
+                <i data-lucide="calendar-clock" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Shift Management</span>
+                <div class="tooltip">Shift Management</div>
             </a>
             <?php endif; ?>
             <?php if ($showLeaveApp): ?>

@@ -56,7 +56,8 @@ $menu_items = [
         'employees-profile' => ['label' => 'Employees Profile', 'icon' => 'users'],
         'employees-confiedential-documents' => ['label' => 'Employees Confiedential Documents', 'icon' => 'shield'],
         'employees-attendance' => ['label' => 'Employees Attendance', 'icon' => 'user-check'],
-        'overtime-approval-mng' => ['label' => 'Overtime Approval', 'icon' => 'clock-8']
+        'overtime-approval-mng' => ['label' => 'Overtime Approval', 'icon' => 'clock-8'],
+        'shifts-management' => ['label' => 'Shift Management', 'icon' => 'calendar-clock'],
     ],
     'System' => [
         'settings'                      => ['label' => 'Settings',                      'icon' => 'settings-2'],

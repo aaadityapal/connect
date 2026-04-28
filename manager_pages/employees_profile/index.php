@@ -79,6 +79,11 @@ $signupContent = ($signupPath && is_readable($signupPath)) ? file_get_contents($
 $signupRoleOptions = extractSelectOptionsFromSignup($signupContent, 'role');
 $signupReportingManagers = extractSelectOptionsFromSignup($signupContent, 'reporting_manager');
 
+$addEmployeeSuccess = $_SESSION['add_employee_success'] ?? null;
+if ($addEmployeeSuccess) {
+    unset($_SESSION['add_employee_success']);
+}
+
 if (empty($signupRoleOptions)) {
     $signupRoleOptions = [
         'admin', 'HR', 'Senior Manager (Studio)', 'Senior Manager (Site)',
@@ -86,10 +91,22 @@ if (empty($signupRoleOptions)) {
         'Design Team', 'Working Team', 'Interior Designer', 'Senior Interior Designer',
         'Junior Interior Designer', 'Lead Interior Designer', 'Associate Interior Designer',
         'Interior Design Coordinator', 'Interior Design Assistant', 'FF&E Designer',
-        'Interior Stylist', 'Interior Design Intern', 'Draughtsman', '3D Designing Team',
-        'Studio Trainees', 'Graphic Designer', 'Business Developer', 'Social Media Manager',
+        'Interior Stylist', 'Interior Design Intern', 'Interior Architect', 'Fit-out Manager',
+        'Architect', 'Senior Architect', 'Junior Architect', 'Project Architect',
+        'Architectural Designer', 'Landscape Architect', 'Urban Planner',
+        'BIM Coordinator', 'BIM Modeler', 'CAD Technician', 'Draughtsman',
+        '3D Visualizer', 'Render Artist', '3D Designing Team', 'Studio Trainees',
+        'Graphic Designer', 'Business Developer', 'Social Media Manager',
         'Social Media Marketing', 'Site Manager', 'Site Coordinator', 'Site Supervisor',
-        'Site Trainee', 'Relationship Manager', 'Sales Manager', 'Sales Consultant',
+        'Site Engineer', 'Civil Engineer', 'Structural Engineer', 'MEP Engineer',
+        'Quantity Surveyor', 'Planning Engineer', 'Estimation Engineer',
+        'Construction Manager', 'Project Manager', 'QA/QC Engineer',
+        'Safety Officer', 'Document Controller', 'Storekeeper', 'Site Trainee',
+        'IT Manager', 'IT Administrator', 'System Administrator', 'Network Administrator',
+        'IT Support Engineer', 'Helpdesk Technician', 'Software Engineer',
+        'Accounts Manager', 'Accountant', 'Accounts Executive', 'Finance Manager',
+        'Accounts Payable', 'Accounts Receivable', 'Payroll Executive',
+        'Relationship Manager', 'Sales Manager', 'Sales Consultant',
         'Field Sales Representative', 'Purchase Manager', 'Purchase Executive', 'Sales',
         'Purchase', 'Maid Back Office'
     ];
@@ -102,7 +119,14 @@ if (empty($signupReportingManagers)) {
         'Sr. Manager (Relationship Manager)',
         'Sr. Manager (Operations)',
         'Sr. Manager (HR)',
-        'Sr. Manager (Purchase)'
+        'Sr. Manager (Sales)',
+        'Sr. Manager (Marketing)',
+        'Sr. Manager (Social Media)',
+        'Sr. Manager (Purchase)',
+        'Sr. Manager (Finance)',
+        'Sr. Manager (Accounts)',
+        'Sr. Manager (IT)',
+        'Sr. Manager (Site)'
     ];
 }
 
@@ -151,6 +175,7 @@ function formatLastActiveAt($status, $statusChangedDate) {
     <!-- CSS Dependencies -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../add_employee_modal/modal.css">
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
@@ -160,6 +185,7 @@ function formatLastActiveAt($status, $statusChangedDate) {
         window.SIDEBAR_BASE_PATH = '../../studio_users/';
         window.EMPLOYEE_ROLE_OPTIONS = <?php echo json_encode($signupRoleOptions, JSON_UNESCAPED_UNICODE); ?>;
         window.REPORTING_MANAGER_OPTIONS = <?php echo json_encode($signupReportingManagers, JSON_UNESCAPED_UNICODE); ?>;
+        window.CURRENT_USER_ROLE = <?php echo json_encode($user_role, JSON_UNESCAPED_UNICODE); ?>;
     </script>
     <script src="../../studio_users/components/sidebar-loader.js" defer></script>
 </head>
@@ -370,6 +396,65 @@ function formatLastActiveAt($status, $statusChangedDate) {
         </div>
     </div>
 
+    <?php include __DIR__ . '/../add_employee_modal/modal.php'; ?>
+
+    <?php if ($addEmployeeSuccess): ?>
+        <div id="addEmployeeSuccessModal" class="ae-success-modal" aria-hidden="true">
+            <div class="ae-success-modal__backdrop"></div>
+            <div class="ae-success-modal__panel" role="dialog" aria-modal="true" aria-labelledby="aeSuccessTitle">
+                <button type="button" class="ae-success-modal__close" data-ae-success-close="true" aria-label="Close">
+                    <i data-lucide="x"></i>
+                </button>
+                <div class="ae-success-modal__content">
+                    <h3 id="aeSuccessTitle">Employee Created</h3>
+                    <p class="ae-success-modal__subtitle">Share these details with the employee.</p>
+                    <div class="ae-success-modal__grid">
+                        <div>
+                            <span>Employee ID</span>
+                            <strong><?php echo htmlspecialchars((string)$addEmployeeSuccess['unique_id']); ?></strong>
+                        </div>
+                        <div>
+                            <span>Username</span>
+                            <strong><?php echo htmlspecialchars((string)$addEmployeeSuccess['username']); ?></strong>
+                        </div>
+                        <div>
+                            <span>Email</span>
+                            <strong><?php echo htmlspecialchars((string)$addEmployeeSuccess['email']); ?></strong>
+                        </div>
+                        <div>
+                            <span>Role</span>
+                            <strong><?php echo htmlspecialchars((string)$addEmployeeSuccess['role']); ?></strong>
+                        </div>
+                        <div>
+                            <span>Reporting Manager</span>
+                            <strong><?php echo htmlspecialchars((string)($addEmployeeSuccess['reporting_manager'] ?: 'N/A')); ?></strong>
+                        </div>
+                        <div>
+                            <span>Joining Date</span>
+                            <strong><?php echo htmlspecialchars((string)($addEmployeeSuccess['joining_date'] ?: 'N/A')); ?></strong>
+                        </div>
+                        <div>
+                            <span>Department</span>
+                            <strong><?php echo htmlspecialchars((string)($addEmployeeSuccess['department'] ?: 'General')); ?></strong>
+                        </div>
+                        <div>
+                            <span>Phone</span>
+                            <strong><?php echo htmlspecialchars((string)($addEmployeeSuccess['phone'] ?: 'N/A')); ?></strong>
+                        </div>
+                        <div class="ae-success-modal__span">
+                            <span>Temporary Password</span>
+                            <strong><?php echo htmlspecialchars((string)$addEmployeeSuccess['temp_password']); ?></strong>
+                        </div>
+                    </div>
+                    <div class="ae-success-modal__actions">
+                        <button type="button" class="ae-btn ae-btn--ghost" data-ae-success-close="true">Close</button>
+                        <button type="button" class="ae-btn ae-btn--primary" id="copyEmployeeDetails">Copy Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
     <!-- Action Notice Modal -->
     <div id="actionNoticeModal" class="notice-overlay" aria-hidden="true">
         <div class="notice-card" role="dialog" aria-modal="true" aria-labelledby="noticeTitle" aria-describedby="noticeMessage">
@@ -383,5 +468,75 @@ function formatLastActiveAt($status, $statusChangedDate) {
 
     <!-- Scripts -->
     <script src="script.js" defer></script>
+    <script src="../add_employee_modal/modal.js" defer></script>
+    <?php if ($addEmployeeSuccess): ?>
+        <script>
+            window.ADD_EMPLOYEE_SUCCESS = <?php echo json_encode($addEmployeeSuccess, JSON_UNESCAPED_UNICODE); ?>;
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const modal = document.getElementById('addEmployeeSuccessModal');
+                const copyBtn = document.getElementById('copyEmployeeDetails');
+
+                if (!modal || !window.ADD_EMPLOYEE_SUCCESS) {
+                    return;
+                }
+
+                modal.setAttribute('aria-hidden', 'false');
+                modal.classList.add('is-open');
+
+                function closeSuccessModal() {
+                    modal.setAttribute('aria-hidden', 'true');
+                    modal.classList.remove('is-open');
+                }
+
+                modal.addEventListener('click', function (event) {
+                    const target = event.target;
+                    if (target && target.closest && target.closest('[data-ae-success-close="true"]')) {
+                        closeSuccessModal();
+                    }
+                });
+
+                if (copyBtn) {
+                    copyBtn.addEventListener('click', function () {
+                        const data = window.ADD_EMPLOYEE_SUCCESS;
+                        const lines = [
+                            'Employee Details',
+                            'Employee ID: ' + (data.unique_id || ''),
+                            'Username: ' + (data.username || ''),
+                            'Email: ' + (data.email || ''),
+                            'Role: ' + (data.role || ''),
+                            'Reporting Manager: ' + (data.reporting_manager || 'N/A'),
+                            'Joining Date: ' + (data.joining_date || 'N/A'),
+                            'Department: ' + (data.department || 'General'),
+                            'Phone: ' + (data.phone || 'N/A'),
+                            'Temporary Password: ' + (data.temp_password || '')
+                        ];
+                        const text = lines.join('\n');
+
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(text).then(function () {
+                                copyBtn.textContent = 'Copied';
+                                setTimeout(function () {
+                                    copyBtn.textContent = 'Copy Details';
+                                }, 1600);
+                            });
+                        } else {
+                            const textarea = document.createElement('textarea');
+                            textarea.value = text;
+                            document.body.appendChild(textarea);
+                            textarea.select();
+                            document.execCommand('copy');
+                            document.body.removeChild(textarea);
+                            copyBtn.textContent = 'Copied';
+                            setTimeout(function () {
+                                copyBtn.textContent = 'Copy Details';
+                            }, 1600);
+                        }
+                    });
+                }
+            });
+        </script>
+    <?php endif; ?>
 </body>
 </html>

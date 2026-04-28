@@ -880,8 +880,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <option value="FF&E Designer">FF&E Designer</option>
                                     <option value="Interior Stylist">Interior Stylist</option>
                                     <option value="Interior Design Intern">Interior Design Intern</option>
+                                    <option value="Interior Architect">Interior Architect</option>
+                                    <option value="Fit-out Manager">Fit-out Manager</option>
+                                    <option value="Architect">Architect</option>
+                                    <option value="Senior Architect">Senior Architect</option>
+                                    <option value="Junior Architect">Junior Architect</option>
+                                    <option value="Project Architect">Project Architect</option>
+                                    <option value="Architectural Designer">Architectural Designer</option>
+                                    <option value="Landscape Architect">Landscape Architect</option>
+                                    <option value="Urban Planner">Urban Planner</option>
+                                    <option value="BIM Coordinator">BIM Coordinator</option>
+                                    <option value="BIM Modeler">BIM Modeler</option>
+                                    <option value="CAD Technician">CAD Technician</option>
                                     <option value="Draughtsman">Draughtsman</option>
                                     <option value="3D Designing Team">3D Designing Team</option>
+                                    <option value="3D Visualizer">3D Visualizer</option>
+                                    <option value="Render Artist">Render Artist</option>
                                     <option value="Studio Trainees">Studio Trainees</option>
                                     <option value="Graphic Designer">Graphic Designer</option>
                                     <option value="Business Developer">Business Developer</option>
@@ -890,6 +904,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <option value="Site Manager">Site Manager</option>
                                     <option value="Site Coordinator">Site Coordinator</option>
                                     <option value="Site Supervisor">Site Supervisor</option>
+                                    <option value="Site Engineer">Site Engineer</option>
+                                    <option value="Civil Engineer">Civil Engineer</option>
+                                    <option value="Structural Engineer">Structural Engineer</option>
+                                    <option value="MEP Engineer">MEP Engineer</option>
+                                    <option value="Quantity Surveyor">Quantity Surveyor</option>
+                                    <option value="Planning Engineer">Planning Engineer</option>
+                                    <option value="Estimation Engineer">Estimation Engineer</option>
+                                    <option value="Construction Manager">Construction Manager</option>
+                                    <option value="Project Manager">Project Manager</option>
+                                    <option value="QA/QC Engineer">QA/QC Engineer</option>
+                                    <option value="Safety Officer">Safety Officer</option>
+                                    <option value="Document Controller">Document Controller</option>
+                                    <option value="Storekeeper">Storekeeper</option>
                                     <option value="Site Trainee">Site Trainee</option>
                                     <option value="Relationship Manager">Relationship Manager</option>
                                     <option value="Sales Manager">Sales Manager</option>
@@ -897,6 +924,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                     <option value="Field Sales Representative">Field Sales Representative</option>
                                     <option value="Purchase Manager">Purchase Manager</option>
                                     <option value="Purchase Executive">Purchase Executive</option>
+                                    <option value="IT Manager">IT Manager</option>
+                                    <option value="IT Administrator">IT Administrator</option>
+                                    <option value="System Administrator">System Administrator</option>
+                                    <option value="Network Administrator">Network Administrator</option>
+                                    <option value="IT Support Engineer">IT Support Engineer</option>
+                                    <option value="Helpdesk Technician">Helpdesk Technician</option>
+                                    <option value="Software Engineer">Software Engineer</option>
+                                    <option value="Accounts Manager">Accounts Manager</option>
+                                    <option value="Accountant">Accountant</option>
+                                    <option value="Accounts Executive">Accounts Executive</option>
+                                    <option value="Finance Manager">Finance Manager</option>
+                                    <option value="Accounts Payable">Accounts Payable</option>
+                                    <option value="Accounts Receivable">Accounts Receivable</option>
+                                    <option value="Payroll Executive">Payroll Executive</option>
                                     <option value="Sales">Sales</option>
                                     <option value="Purchase">Purchase</option>
                                     <option value="Maid Back Office">Maid Back Office</option>
@@ -921,6 +962,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                         Manager)</option>
                                     <option value="Sr. Manager (Operations)">Sr. Manager (Operations)</option>
                                     <option value="Sr. Manager (HR)">Sr. Manager (HR)</option>
+                                    <option value="Sr. Manager (Sales)">Sr. Manager (Sales)</option>
+                                    <option value="Sr. Manager (Marketing)">Sr. Manager (Marketing)</option>
+                                    <option value="Sr. Manager (Social Media)">Sr. Manager (Social Media)</option>
+                                    <option value="Sr. Manager (Purchase)">Sr. Manager (Purchase)</option>
+                                    <option value="Sr. Manager (Finance)">Sr. Manager (Finance)</option>
+                                    <option value="Sr. Manager (Accounts)">Sr. Manager (Accounts)</option>
+                                    <option value="Sr. Manager (IT)">Sr. Manager (IT)</option>
+                                    <option value="Sr. Manager (Site)">Sr. Manager (Site)</option>
                                 </select>
                             </div>
                         </div>

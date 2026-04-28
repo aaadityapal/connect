@@ -34,7 +34,7 @@ try {
             a.overtime_reason as attendance_overtime_report,
             oreq.overtime_description as request_overtime_report,
             COALESCE(NULLIF(oreq.overtime_description, ''), NULLIF(a.overtime_reason, ''), '') as overtime_report,
-            a.overtime_status as raw_status,
+            COALESCE(NULLIF(oreq.status, ''), NULLIF(a.overtime_status, ''), 'pending') as raw_status,
             a.overtime_hours as raw_overtime_hours,
             COALESCE(oreq.overtime_hours, TIME_TO_SEC(a.overtime_hours) / 3600) as accepted_ot_decimal,
             a.overtime_manager_id,
@@ -45,7 +45,7 @@ try {
             COALESCE(oreq.resubmit_count, 0) as resubmit_count
         FROM attendance a
         LEFT JOIN overtime_requests oreq 
-               ON (a.id = oreq.attendance_id OR (a.date = oreq.date AND a.user_id = oreq.user_id))
+               ON a.id = oreq.attendance_id
         LEFT JOIN user_shifts us 
                ON a.user_id = us.user_id 
               AND a.date >= us.effective_from 

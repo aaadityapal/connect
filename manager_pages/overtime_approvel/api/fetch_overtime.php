@@ -104,22 +104,28 @@ try {
     $formattedData = array_map(function ($row) {
         $daysDiff = (time() - strtotime($row['date'])) / 86400; // 86400 seconds in a day
         $attendanceStatus = strtolower(trim((string)($row['attendance_status'] ?? '')));
-        $isSubmitted = !empty($row['submittedAt']);
-        
-        // Resolve status
+
+        // isSubmitted: true if oreq row has submitted_at, OR if attendance.overtime_status
+        // is 'submitted'/'approved'/'rejected'/'paid' (handles cases where oreq JOIN misses)
+        $isSubmitted = !empty($row['submittedAt'])
+                    || in_array($attendanceStatus, ['submitted', 'approved', 'rejected', 'paid'], true);
+
+        // Resolve status — priority: oreq.status > isSubmitted flag > attendance terminal states
         $status = 'Pending';
         if (!empty($row['oreq_status'])) {
             $status = ucfirst($row['oreq_status']);
         } else if ($isSubmitted) {
-            // Mark as submitted only when the employee actually submitted
-            $status = 'Submitted';
-        } else if (in_array($attendanceStatus, ['approved', 'rejected', 'paid'], true)) {
-            // Keep terminal attendance states visible for older records without overtime_requests rows
-            $status = ucfirst($attendanceStatus);
+            // Fallback: if attendance shows a non-pending state, reflect it
+            if (in_array($attendanceStatus, ['approved', 'rejected', 'paid'], true)) {
+                $status = ucfirst($attendanceStatus);
+            } else {
+                // attendance_status = 'submitted' or oreq had submitted_at
+                $status = 'Submitted';
+            }
         }
 
-        // Expiration Rule: If > 15 days old and not yet submitted by the user, it is Expired.
-        // Submitted requests stay actionable (approve/reject) and must not expire.
+        // Expiration Rule: Only expire if > 15 days old AND genuinely never submitted.
+        // Any record that has been submitted/approved/rejected must NEVER be expired.
         if ($daysDiff > 15 && strtolower($status) === 'pending' && !$isSubmitted) {
             $status = 'Expired';
         }

@@ -1,0 +1,418 @@
+:root {
+    --ae-ink: #0f1115;
+    --ae-muted: #6b7280;
+    --ae-border: rgba(15, 23, 42, 0.12);
+    --ae-surface: #ffffff;
+    --ae-accent: #111827;
+    --ae-shadow: 0 20px 60px rgba(12, 18, 28, 0.22);
+}
+
+.ae-modal {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 2000;
+}
+
+.ae-modal.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.ae-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 10, 14, 0.62);
+    backdrop-filter: blur(4px);
+}
+
+.ae-modal__panel {
+    position: relative;
+    width: min(980px, 92vw);
+    max-height: 88vh;
+    overflow: hidden;
+    background: var(--ae-surface);
+    border-radius: 18px;
+    box-shadow: var(--ae-shadow);
+    display: grid;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.ae-modal__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: #fafafa;
+    display: grid;
+    place-items: center;
+    color: var(--ae-ink);
+    cursor: pointer;
+    z-index: 3;
+}
+
+.ae-modal__content {
+    display: grid;
+    grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+    min-height: 520px;
+}
+
+.ae-modal__hero {
+    padding: 34px 28px;
+    background: #f8fafc;
+    color: var(--ae-ink);
+    display: grid;
+    align-content: start;
+    gap: 12px;
+    border-right: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.ae-hero__badge {
+    align-self: start;
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #eef2f7;
+    color: #4b5563;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.ae-modal__hero h2 {
+    font-size: 24px;
+    margin: 0;
+}
+
+.ae-modal__hero p {
+    margin: 0;
+    color: var(--ae-muted);
+    line-height: 1.5;
+}
+
+.ae-hero__stats {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: grid;
+    gap: 10px;
+}
+
+.ae-hero__stats li {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.ae-stat__label {
+    display: block;
+    font-size: 12px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.ae-stat__value {
+    display: block;
+    margin-top: 6px;
+    font-size: 15px;
+    color: var(--ae-ink);
+}
+
+.ae-form {
+    padding: 30px 34px 24px;
+    overflow-y: auto;
+}
+
+.ae-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.ae-field {
+    display: grid;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--ae-muted);
+    position: relative;      /* anchor for the absolute status message */
+    padding-bottom: 18px;    /* reserve space so message never overlaps next row */
+}
+
+.ae-field.is-hidden {
+    display: none;
+}
+
+.ae-field span {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.ae-field__hint {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+/* ── Username availability status ─────────────────────── */
+.ae-field__status {
+    position: absolute;          /* float below input — does NOT affect grid height */
+    bottom: 2px;
+    left: 0;
+    right: 0;
+    display: block;
+    font-size: 11.5px;
+    line-height: 1.2;
+    transition: color 0.2s ease, opacity 0.2s ease;
+    opacity: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ae-field__status:not(:empty) {
+    opacity: 1;
+}
+
+.ae-field__status--checking {
+    color: #94a3b8;
+}
+
+.ae-field__status--taken {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+.ae-field__status--available {
+    color: #16a34a;
+    font-weight: 600;
+}
+
+/* Red border on the input when taken */
+#aeUsernameField.is-taken input {
+    border-color: #fca5a5;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Green border on the input when available */
+#aeUsernameField.is-available input {
+    border-color: #86efac;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.08);
+}
+
+/* Spinner dots for loading state */
+@keyframes ae-dot-blink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40%           { opacity: 1; }
+}
+.ae-field__status--checking::after {
+    content: ' ';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-left: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: ae-dot-blink 1.2s infinite ease-in-out;
+    vertical-align: middle;
+}
+
+/* Shake animation for taken username on submit attempt */
+@keyframes ae-shake {
+    0%   { transform: translateX(0); }
+    20%  { transform: translateX(-5px); }
+    40%  { transform: translateX(5px); }
+    60%  { transform: translateX(-4px); }
+    80%  { transform: translateX(4px); }
+    100% { transform: translateX(0); }
+}
+
+
+
+.ae-field input,
+.ae-field select,
+.ae-field textarea {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    background: #ffffff;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: var(--ae-ink);
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ae-field input:focus,
+.ae-field select:focus,
+.ae-field textarea:focus {
+    outline: none;
+    border-color: rgba(17, 24, 39, 0.35);
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+}
+
+.ae-field--full {
+    grid-column: 1 / -1;
+}
+
+.ae-form__footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 16px;
+}
+
+.ae-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 12px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.ae-btn--ghost {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.ae-btn--primary {
+    background: var(--ae-accent);
+    color: #fff;
+    box-shadow: 0 10px 18px rgba(17, 24, 39, 0.18);
+}
+
+.ae-btn--primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.ae-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.ae-success-modal {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 2100;
+}
+
+.ae-success-modal.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.ae-success-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 10, 14, 0.62);
+    backdrop-filter: blur(4px);
+}
+
+.ae-success-modal__panel {
+    position: relative;
+    width: min(720px, 92vw);
+    background: var(--ae-surface);
+    border-radius: 18px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: var(--ae-shadow);
+    z-index: 2;
+}
+
+.ae-success-modal__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    background: #fafafa;
+    display: grid;
+    place-items: center;
+    color: var(--ae-ink);
+    cursor: pointer;
+}
+
+.ae-success-modal__content {
+    padding: 28px 32px 30px;
+    display: grid;
+    gap: 16px;
+}
+
+.ae-success-modal__subtitle {
+    margin: 0;
+    color: var(--ae-muted);
+}
+
+.ae-success-modal__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 20px;
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.ae-success-modal__grid div {
+    display: grid;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--ae-muted);
+}
+
+.ae-success-modal__grid strong {
+    color: var(--ae-ink);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.ae-success-modal__span {
+    grid-column: 1 / -1;
+}
+
+.ae-success-modal__actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+    .ae-success-modal__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+    .ae-modal__content {
+        grid-template-columns: 1fr;
+    }
+
+    .ae-modal__hero {
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        border-right: none;
+    }
+
+    .ae-form {
+        padding: 24px;
+    }
+
+    .ae-grid {
+        grid-template-columns: 1fr;
+    }
+}

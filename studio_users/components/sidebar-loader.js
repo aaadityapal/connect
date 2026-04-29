@@ -63,6 +63,7 @@
         if (path.includes('/manager_pages/overtime_approvel/unsubmitted_perms.php')) return 'unsubmitted-ot-permissions';
         if (path.includes('/manager_pages/overtime_approvel/')) return 'overtime-approval-mng';
         if (path.endsWith('/shifts.php') || path.includes('/shifts.php')) return 'shifts-management';
+        if (path.includes('/purchase_manager_dashboard.php')) return 'site-expenses';
         if (path.includes('/manager_pages/projects/')) return 'projects';
         if (path.includes('/projects'))           return 'projects';
         if (path.includes('/site-updates'))       return 'site-updates';
@@ -104,6 +105,7 @@
             'travel_expenses_mapping' : 'travel-exp-mapping',
             'shifts'                  : 'shifts-management',
             'saturday_agenda'         : 'saturday-agenda',
+            'purchase_manager_dashboard' : 'site-expenses',
         };
 
         return fileMap[file] || file;

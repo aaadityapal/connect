@@ -224,7 +224,8 @@ function canShow($menuId, $perms) {
         $showOtApproval = canShow('overtime-approval-mng', $_permissions);
         $showShifts = canShow('shifts-management', $_permissions);
         $showSaturdayAgenda = canShow('saturday-agenda', $_permissions);
-        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval || $showShifts || $showSaturdayAgenda):
+        $showSiteExpenses = canShow('site-expenses', $_permissions);
+        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval || $showShifts || $showSaturdayAgenda || $showSiteExpenses):
         ?>
             <div class="menu-title">Management</div>
             <?php if ($showOtApproval): ?>
@@ -252,6 +253,15 @@ function canShow($menuId, $perms) {
                 <i data-lucide="calendar-days" class="menu-icon" style="width:17px;height:17px;"></i>
                 <span class="menu-text">Saturday Agenda</span>
                 <div class="tooltip">Saturday Agenda</div>
+            </a>
+            <?php endif; ?>
+            <?php if ($showSiteExpenses): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../purchase_manager_dashboard.php'; return false;"
+                class="menu-item" data-page="site-expenses">
+                <i data-lucide="receipt" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Site Expenses</span>
+                <div class="tooltip">Site Expenses</div>
             </a>
             <?php endif; ?>
             <?php if ($showLeaveApp): ?>

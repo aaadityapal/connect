@@ -1,18 +1,33 @@
 <?php
 session_start();
 
-// Check if user is logged in
+// ── Must be logged in ────────────────────────────────────────────────────────
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
-// Check if user has Purchase Manager role
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
-    header("Location: unauthorized.php");
-    exit;
-}
+// ── Permission check via sidebar_permissions table ───────────────────────────
+// Any role that has can_access = 1 for 'site-expenses' may enter this page.
+// Admins bypass the check entirely (they always have full access).
+require_once 'config/db_connect.php';
 
+$_currentRole = $_SESSION['role'] ?? '';
+
+if (strtolower($_currentRole) !== 'admin') {
+    $stmtAccess = $pdo->prepare(
+        "SELECT can_access FROM sidebar_permissions
+          WHERE role = ? AND menu_id = 'site-expenses'
+          LIMIT 1"
+    );
+    $stmtAccess->execute([$_currentRole]);
+    $accessRow = $stmtAccess->fetch(PDO::FETCH_ASSOC);
+
+    if (!$accessRow || (int)$accessRow['can_access'] !== 1) {
+        header("Location: unauthorized.php");
+        exit;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -24,6 +39,17 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Lucide Icons (required by sidebar) -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <!-- Sidebar: set base path BEFORE loader so it resolves paths correctly -->
+    <script>
+        // This page lives at /connect/ (root).
+        // The loader internally appends 'components/sidebar.php', so base = 'studio_users/'
+        window.SIDEBAR_BASE_PATH = 'studio_users/';
+    </script>
+    <script src="studio_users/components/sidebar-loader.js" defer></script>
 
     <style>
         * {
@@ -38,16 +64,26 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
             color: #333;
         }
 
+        /* ── Sidebar integration ── */
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            background: #f5f7fa;
+        }
+
+        /* Legacy .container kept for any inner uses */
         .container {
             display: flex;
             min-height: 100vh;
+            width: 100%;
         }
 
         .main-content {
             flex: 1;
-            margin-left: 280px;
+            min-width: 0;
             transition: margin-left 0.3s ease;
             padding: 20px 30px;
+            overflow-x: hidden;
         }
 
         .header {
@@ -1664,9 +1700,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Purchase Manager') {
 </head>
 
 <body>
-    <div class="container">
-        <!-- Include the side panel -->
-        <?php include 'includes/manager_panel.php'; ?>
+    <div class="dashboard-container">
+
+        <!-- Sidebar injected here by sidebar-loader.js -->
+        <div id="sidebar-mount"></div>
 
         <!-- Main Content -->
         <div class="main-content">

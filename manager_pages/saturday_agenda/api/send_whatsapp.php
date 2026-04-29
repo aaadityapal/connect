@@ -101,6 +101,7 @@ if (isset($_FILES['pdf_file']) && $_FILES['pdf_file']['error'] === UPLOAD_ERR_OK
 }
 
 try {
+    $actorId = (int)($_SESSION['user_id'] ?? 0);
     $inQuery = implode(',', array_fill(0, count($userIds), '?'));
     $stmt = $pdo->prepare("SELECT id, username, phone FROM users WHERE id IN ($inQuery) AND phone IS NOT NULL AND phone != '' AND LOWER(status) = 'active'");
     $stmt->execute($userIds);
@@ -148,6 +149,42 @@ try {
             $failedCount++;
             $logs[] = ['user' => $name, 'status' => 'FAIL', 'error' => $result['response'] ?? ''];
         }
+    }
+
+    try {
+        $description = sprintf(
+            'Sent Saturday agenda WhatsApp to %d user(s). Success: %d, Failed: %d',
+            count($users),
+            $sentCount,
+            $failedCount
+        );
+        $metadata = [
+            'module' => 'saturday_agenda',
+            'event' => 'whatsapp_sent',
+            'user_ids' => array_values($userIds),
+            'sent_count' => $sentCount,
+            'failed_count' => $failedCount,
+            'pdf_name' => $uploadedPdfName,
+            'pdf_url' => $uploadedPdfUrl,
+        ];
+
+        $logStmt = $pdo->prepare(
+            "INSERT INTO global_activity_logs
+                (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read, is_dismissed)
+             VALUES
+                (:user_id, :action_type, :entity_type, :entity_id, :description, :metadata, NOW(), 0, 0)"
+        );
+
+        $logStmt->execute([
+            ':user_id' => $actorId,
+            ':action_type' => 'agenda_whatsapp_sent',
+            ':entity_type' => 'saturday_agenda',
+            ':entity_id' => null,
+            ':description' => $description,
+            ':metadata' => json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        ]);
+    } catch (Throwable $logError) {
+        error_log('saturday_agenda send log skipped: ' . $logError->getMessage());
     }
 
     echo json_encode([

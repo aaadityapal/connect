@@ -59,3 +59,31 @@ echo json_encode([
     'success' => true,
     'archives' => $archives
 ]);
+
+try {
+    $actorId = (int)($_SESSION['user_id'] ?? 0);
+    $description = 'Viewed Saturday agenda archive list.';
+    $metadata = [
+        'module' => 'saturday_agenda',
+        'event' => 'archive_viewed',
+        'archive_months' => count($archives)
+    ];
+
+    $logStmt = $pdo->prepare(
+        "INSERT INTO global_activity_logs
+            (user_id, action_type, entity_type, entity_id, description, metadata, created_at, is_read, is_dismissed)
+         VALUES
+            (:user_id, :action_type, :entity_type, :entity_id, :description, :metadata, NOW(), 0, 0)"
+    );
+
+    $logStmt->execute([
+        ':user_id' => $actorId,
+        ':action_type' => 'agenda_archive_viewed',
+        ':entity_type' => 'saturday_agenda',
+        ':entity_id' => null,
+        ':description' => $description,
+        ':metadata' => json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+    ]);
+} catch (Throwable $logError) {
+    error_log('saturday_agenda archive log skipped: ' . $logError->getMessage());
+}

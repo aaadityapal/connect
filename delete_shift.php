@@ -3,7 +3,8 @@ session_start();
 require_once 'config.php';
 
 // Check authentication and authorization
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] !== 'HR' && !isset($_SESSION['temp_admin_access']))) {
+$_allowedRoles = ['HR', 'admin'];
+if (!isset($_SESSION['user_id']) || (!in_array($_SESSION['role'], $_allowedRoles) && !isset($_SESSION['temp_admin_access']))) {
     header('Location: login.php');
     exit();
 }

@@ -57,6 +57,7 @@
         if (path.includes('/manager_pages/password_reset/')) return 'password-reset-mng';
         if (path.includes('/manager_pages/employees_profile/')) return 'employees-profile';
         if (path.includes('/manager_pages/employees_confiedential_documents/')) return 'employees-confiedential-documents';
+        if (path.includes('/manager_pages/saturday_agenda')) return 'saturday-agenda';
         if (path.includes('/manager_pages/confiedential_documents_permissions/')) return 'confiedential-docs-permission';
         if (path.includes('/manager_pages/employees_attendance/')) return 'employees-attendance';
         if (path.includes('/manager_pages/overtime_approvel/unsubmitted_perms.php')) return 'unsubmitted-ot-permissions';
@@ -102,6 +103,7 @@
             'attendance_permissions_access' : 'attendance-action-permissions',
             'travel_expenses_mapping' : 'travel-exp-mapping',
             'shifts'                  : 'shifts-management',
+            'saturday_agenda'         : 'saturday-agenda',
         };
 
         return fileMap[file] || file;

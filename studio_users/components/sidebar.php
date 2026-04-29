@@ -223,7 +223,8 @@ function canShow($menuId, $perms) {
         $showEmployeesAttendance = canShow('employees-attendance', $_permissions);
         $showOtApproval = canShow('overtime-approval-mng', $_permissions);
         $showShifts = canShow('shifts-management', $_permissions);
-        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval || $showShifts):
+        $showSaturdayAgenda = canShow('saturday-agenda', $_permissions);
+        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval || $showShifts || $showSaturdayAgenda):
         ?>
             <div class="menu-title">Management</div>
             <?php if ($showOtApproval): ?>
@@ -242,6 +243,15 @@ function canShow($menuId, $perms) {
                 <i data-lucide="calendar-clock" class="menu-icon" style="width:17px;height:17px;"></i>
                 <span class="menu-text">Shift Management</span>
                 <div class="tooltip">Shift Management</div>
+            </a>
+            <?php endif; ?>
+            <?php if ($showSaturdayAgenda): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/saturday_agenda/index.php'; return false;"
+                class="menu-item" data-page="saturday-agenda">
+                <i data-lucide="calendar-days" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Saturday Agenda</span>
+                <div class="tooltip">Saturday Agenda</div>
             </a>
             <?php endif; ?>
             <?php if ($showLeaveApp): ?>

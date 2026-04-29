@@ -58,6 +58,7 @@ $menu_items = [
         'employees-attendance' => ['label' => 'Employees Attendance', 'icon' => 'user-check'],
         'overtime-approval-mng' => ['label' => 'Overtime Approval', 'icon' => 'clock-8'],
         'shifts-management' => ['label' => 'Shift Management', 'icon' => 'calendar-clock'],
+        'saturday-agenda' => ['label' => 'Saturday Agenda', 'icon' => 'calendar-days'],
     ],
     'System' => [
         'settings'                      => ['label' => 'Settings',                      'icon' => 'settings-2'],

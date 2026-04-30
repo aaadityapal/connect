@@ -60,6 +60,7 @@ $menu_items = [
         'shifts-management' => ['label' => 'Shift Management', 'icon' => 'calendar-clock'],
         'saturday-agenda' => ['label' => 'Saturday Agenda', 'icon' => 'calendar-days'],
         'site-expenses' => ['label' => 'Site Expenses', 'icon' => 'receipt'],
+        'employees-performance' => ['label' => 'Employee Performance', 'icon' => 'bar-chart-3'],
     ],
     'System' => [
         'settings'                      => ['label' => 'Settings',                      'icon' => 'settings-2'],

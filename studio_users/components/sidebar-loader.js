@@ -60,6 +60,7 @@
         if (path.includes('/manager_pages/saturday_agenda')) return 'saturday-agenda';
         if (path.includes('/manager_pages/confiedential_documents_permissions/')) return 'confiedential-docs-permission';
         if (path.includes('/manager_pages/employees_attendance/')) return 'employees-attendance';
+        if (path.includes('/manager_pages/employees_performance/')) return 'employees-performance';
         if (path.includes('/manager_pages/overtime_approvel/unsubmitted_perms.php')) return 'unsubmitted-ot-permissions';
         if (path.includes('/manager_pages/overtime_approvel/')) return 'overtime-approval-mng';
         if (path.endsWith('/shifts.php') || path.includes('/shifts.php')) return 'shifts-management';
@@ -106,6 +107,7 @@
             'shifts'                  : 'shifts-management',
             'saturday_agenda'         : 'saturday-agenda',
             'purchase_manager_dashboard' : 'site-expenses',
+            'employees_performance'   : 'employees-performance',
         };
 
         return fileMap[file] || file;

@@ -1,0 +1,54 @@
+/* =====================================================
+   GLOBAL.CSS — Employees Performance Design System
+   ===================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --bg-page: #f1f5f9; --bg-card: #ffffff;
+    --text-primary: #0f172a; --text-secondary: #475569; --text-muted: #94a3b8;
+    --brand: #7c3aed; --brand-dark: #6d28d9; --brand-mid: #8b5cf6;
+    --brand-light: rgba(124,58,237,0.10); --brand-glow: rgba(124,58,237,0.18);
+    --green: #10b981; --green-light: rgba(16,185,129,0.12);
+    --red: #ef4444;   --red-light:   rgba(239,68,68,0.12);
+    --cyan: #0ea5e9;  --cyan-light:  rgba(14,165,233,0.12);
+    --orange: #f97316;--orange-light:rgba(249,115,22,0.12);
+    --amber: #f59e0b; --amber-light: rgba(245,158,11,0.12);
+    --border: #e2e8f0;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.07);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.10);
+    --shadow-card: 0 2px 8px rgba(124,58,237,0.07), 0 1px 3px rgba(0,0,0,0.05);
+    --radius-sm: 10px; --radius-md: 16px; --radius-lg: 22px;
+    --font: 'Inter', system-ui, sans-serif;
+    --transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size: 13px; scroll-behavior: smooth; }
+body { font-family: var(--font); background: var(--bg-page); color: var(--text-primary); line-height: 1.6; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes shimmer { 0%{background-position:-800px 0} 100%{background-position:800px 0} }
+@keyframes spin { to{transform:rotate(360deg)} }
+@keyframes barGrow { from{width:0%} to{width:var(--bar-width,0%)} }
+@keyframes modalIn { from{opacity:0;transform:translateY(28px) scale(0.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes backdropIn { from{opacity:0} to{opacity:1} }
+@keyframes pulseGlow { 0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,0)} 50%{box-shadow:0 0 0 8px rgba(124,58,237,0.12)} }
+
+.skeleton { background: linear-gradient(90deg,#f0f4f8 25%,#e8ecf0 50%,#f0f4f8 75%); background-size:800px 100%; animation: shimmer 1.5s infinite; border-radius: var(--radius-sm); }
+
+.perf-badge { display:inline-flex;align-items:center;gap:0.3rem;padding:0.25rem 0.65rem;border-radius:99px;font-size:0.72rem;font-weight:700;letter-spacing:0.02em;white-space:nowrap; }
+.badge-excellent { background:#d1fae5;color:#065f46; }
+.badge-good      { background:#dbeafe;color:#1e40af; }
+.badge-average   { background:#fef3c7;color:#92400e; }
+.badge-poor      { background:#fee2e2;color:#991b1b; }
+.badge-na        { background:#f3f4f6;color:#6b7280;border:1px solid #d1d5db; }
+.text-muted  { color: var(--text-muted); }
+.text-brand  { color: var(--brand); }
+.fw-600 { font-weight:600; }
+.fw-700 { font-weight:700; }

@@ -225,7 +225,8 @@ function canShow($menuId, $perms) {
         $showShifts = canShow('shifts-management', $_permissions);
         $showSaturdayAgenda = canShow('saturday-agenda', $_permissions);
         $showSiteExpenses = canShow('site-expenses', $_permissions);
-        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval || $showShifts || $showSaturdayAgenda || $showSiteExpenses):
+        $showEmployeesPerformance = canShow('employees-performance', $_permissions);
+        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval || $showShifts || $showSaturdayAgenda || $showSiteExpenses || $showEmployeesPerformance):
         ?>
             <div class="menu-title">Management</div>
             <?php if ($showOtApproval): ?>
@@ -369,6 +370,15 @@ function canShow($menuId, $perms) {
                 <i data-lucide="user-check" class="menu-icon" style="width:17px;height:17px;"></i>
                 <span class="menu-text">Employees Attendance</span>
                 <div class="tooltip">Employees Attendance</div>
+            </a>
+            <?php endif; ?>
+            <?php if ($showEmployeesPerformance): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/employees_performance/index.php'; return false;"
+                class="menu-item" data-page="employees-performance">
+                <i data-lucide="bar-chart-3" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Employee Performance</span>
+                <div class="tooltip">Employee Performance</div>
             </a>
             <?php endif; ?>
         <?php endif; ?>

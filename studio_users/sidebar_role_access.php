@@ -29,9 +29,10 @@ $menu_items = [
         'profile' => ['label' => 'My Profile', 'icon' => 'user-round']
     ],
     'Leave & Expenses' => [
-        'apply-leave' => ['label' => 'Apply Leave', 'icon' => 'calendar-check'],
-        'travel-expenses' => ['label' => 'Travel Expenses', 'icon' => 'receipt'],
-        'overtime' => ['label' => 'Overtime', 'icon' => 'alarm-clock']
+        'apply-leave'        => ['label' => 'Apply Leave',         'icon' => 'calendar-check'],
+        'travel-expenses'    => ['label' => 'Travel Expenses',     'icon' => 'receipt'],
+        'overtime'           => ['label' => 'Overtime',            'icon' => 'alarm-clock'],
+        'food-reimbursement' => ['label' => 'Food Reimbursement',  'icon' => 'utensils'],
     ],
     'Work' => [
         'projects' => ['label' => 'Projects', 'icon' => 'folder-kanban'],
@@ -61,6 +62,9 @@ $menu_items = [
         'saturday-agenda' => ['label' => 'Saturday Agenda', 'icon' => 'calendar-days'],
         'site-expenses' => ['label' => 'Site Expenses', 'icon' => 'receipt'],
         'employees-performance' => ['label' => 'Employee Performance', 'icon' => 'bar-chart-3'],
+        'food-reimbursement-mapping' => ['label' => 'Food Reimbursement Mapping', 'icon' => 'utensils-crossed'],
+        'food-reimbursement-setup'   => ['label' => 'Food Reimbursement Setup',   'icon' => 'settings-2'],
+        'food-reimbursement-approval'=> ['label' => 'Food Reimbursement Approval','icon' => 'check-square'],
     ],
     'System' => [
         'settings'                      => ['label' => 'Settings',                      'icon' => 'settings-2'],

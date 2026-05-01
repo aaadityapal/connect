@@ -47,6 +47,7 @@
         if (path.includes('/leave_pages/'))       return 'apply-leave';
         if (path.includes('/travel_exp/'))        return 'travel-expenses';
         if (path.includes('/overtime_page/'))     return 'overtime';
+        if (path.includes('/food_reimbursement/')) return 'food-reimbursement';
         if (path.includes('/attendance_recrds/')) return 'worksheet';
         if (path.includes('/hr_backend/'))        return 'hr-corner';
         if (path.includes('/hierarchy'))          return 'hierarchy';
@@ -63,6 +64,9 @@
         if (path.includes('/manager_pages/employees_performance/')) return 'employees-performance';
         if (path.includes('/manager_pages/overtime_approvel/unsubmitted_perms.php')) return 'unsubmitted-ot-permissions';
         if (path.includes('/manager_pages/overtime_approvel/')) return 'overtime-approval-mng';
+        if (path.includes('/manager_pages/food_reimbursement_mapping/')) return 'food-reimbursement-mapping';
+        if (path.includes('/manager_pages/food_reimbursement_setup/'))   return 'food-reimbursement-setup';
+        if (path.includes('/manager_pages/food_reimbursement_approval/')) return 'food-reimbursement-approval';
         if (path.endsWith('/shifts.php') || path.includes('/shifts.php')) return 'shifts-management';
         if (path.includes('/purchase_manager_dashboard.php')) return 'site-expenses';
         if (path.includes('/manager_pages/projects/')) return 'projects';
@@ -108,6 +112,10 @@
             'saturday_agenda'         : 'saturday-agenda',
             'purchase_manager_dashboard' : 'site-expenses',
             'employees_performance'   : 'employees-performance',
+            'food_reimbursement'         : 'food-reimbursement',
+            'food_reimbursement_mapping'  : 'food-reimbursement-mapping',
+            'food_reimbursement_setup'    : 'food-reimbursement-setup',
+            'food_reimbursement_approval' : 'food-reimbursement-approval',
         };
 
         return fileMap[file] || file;

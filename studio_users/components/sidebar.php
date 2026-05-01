@@ -113,7 +113,8 @@ function canShow($menuId, $perms) {
         $showLeave = canShow('apply-leave', $_permissions);
         $showTravel = canShow('travel-expenses', $_permissions);
         $showOvertime = canShow('overtime', $_permissions);
-        if ($showLeave || $showTravel || $showOvertime): 
+        $showFoodReimbursement = canShow('food-reimbursement', $_permissions);
+        if ($showLeave || $showTravel || $showOvertime || $showFoodReimbursement): 
         ?>
         <div class="menu-title">Leave &amp; Expenses</div>
         <?php if ($showLeave): ?>
@@ -141,6 +142,15 @@ function canShow($menuId, $perms) {
             <i data-lucide="alarm-clock" class="menu-icon" style="width:17px;height:17px;"></i>
             <span class="menu-text">Overtime</span>
             <div class="tooltip">Overtime</div>
+        </a>
+        <?php endif; ?>
+        <?php if ($showFoodReimbursement): ?>
+        <a href="#"
+            onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + 'food_reimbursement/index.php'; return false;"
+            class="menu-item" data-page="food-reimbursement">
+            <i data-lucide="utensils" class="menu-icon" style="width:17px;height:17px;"></i>
+            <span class="menu-text">Food Reimbursement</span>
+            <div class="tooltip">Food Reimbursement</div>
         </a>
         <?php endif; ?>
         <?php endif; ?>
@@ -226,7 +236,10 @@ function canShow($menuId, $perms) {
         $showSaturdayAgenda = canShow('saturday-agenda', $_permissions);
         $showSiteExpenses = canShow('site-expenses', $_permissions);
         $showEmployeesPerformance = canShow('employees-performance', $_permissions);
-        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval || $showShifts || $showSaturdayAgenda || $showSiteExpenses || $showEmployeesPerformance):
+        $showFoodRmbMapping = canShow('food-reimbursement-mapping', $_permissions);
+        $showFoodRmbSetup   = canShow('food-reimbursement-setup', $_permissions);
+        $showFoodRmbApproval= canShow('food-reimbursement-approval', $_permissions);
+        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval || $showShifts || $showSaturdayAgenda || $showSiteExpenses || $showEmployeesPerformance || $showFoodRmbMapping || $showFoodRmbSetup || $showFoodRmbApproval):
         ?>
             <div class="menu-title">Management</div>
             <?php if ($showOtApproval): ?>
@@ -379,6 +392,33 @@ function canShow($menuId, $perms) {
                 <i data-lucide="bar-chart-3" class="menu-icon" style="width:17px;height:17px;"></i>
                 <span class="menu-text">Employee Performance</span>
                 <div class="tooltip">Employee Performance</div>
+            </a>
+            <?php endif; ?>
+            <?php if ($showFoodRmbMapping): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/food_reimbursement_mapping/index.php'; return false;"
+                class="menu-item" data-page="food-reimbursement-mapping">
+                <i data-lucide="utensils-crossed" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Food Reimb. Mapping</span>
+                <div class="tooltip">Food Reimbursement Mapping</div>
+            </a>
+            <?php endif; ?>
+            <?php if ($showFoodRmbSetup): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/food_reimbursement_setup/index.php'; return false;"
+                class="menu-item" data-page="food-reimbursement-setup">
+                <i data-lucide="settings-2" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Food Reimb. Setup</span>
+                <div class="tooltip">Food Reimbursement Setup</div>
+            </a>
+            <?php endif; ?>
+            <?php if ($showFoodRmbApproval): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/food_reimbursement_approval/index.php'; return false;"
+                class="menu-item" data-page="food-reimbursement-approval">
+                <i data-lucide="check-square" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Food Reimb. Approval</span>
+                <div class="tooltip">Food Reimbursement Approval</div>
             </a>
             <?php endif; ?>
         <?php endif; ?>

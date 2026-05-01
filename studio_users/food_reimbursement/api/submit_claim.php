@@ -72,7 +72,7 @@ try {
     $logFetch->execute([':aid' => $attendanceId]);
     $claimDetails = $logFetch->fetch(PDO::FETCH_ASSOC);
 
-    // Log the activity
+    // Log the activity for the user
     $dateFmt = $claimDetails ? date('d M Y', strtotime($claimDetails['date'])) : '';
     $logDesc = "Submitted food reimbursement claim for processing for {$dateFmt}.";
     $logMeta = [
@@ -82,6 +82,26 @@ try {
         'date'     => $claimDetails['date'] ?? null
     ];
     logUserActivity($pdo, $userId, 'food_claim_submitted', 'food_reimbursement', $logDesc, $attendanceId, $logMeta);
+
+    // Get the user's name to use in the notification
+    $uStmt = $pdo->prepare("SELECT username FROM users WHERE id = :uid");
+    $uStmt->execute([':uid' => $userId]);
+    $uName = $uStmt->fetchColumn() ?: 'An employee';
+
+    // Fetch Manager and HR to notify them
+    $mapStmt = $pdo->prepare("SELECT manager_id, hr_id FROM food_reimbursement_mapping WHERE employee_id = :uid");
+    $mapStmt->execute([':uid' => $userId]);
+    $mapping = $mapStmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($mapping) {
+        $notifDesc = "{$uName} submitted a food reimbursement claim for {$dateFmt}.";
+        if (!empty($mapping['manager_id'])) {
+            logUserActivity($pdo, $mapping['manager_id'], 'food_claim_review_required', 'food_reimbursement', $notifDesc, $attendanceId, $logMeta);
+        }
+        if (!empty($mapping['hr_id'])) {
+            logUserActivity($pdo, $mapping['hr_id'], 'food_claim_review_required', 'food_reimbursement', $notifDesc, $attendanceId, $logMeta);
+        }
+    }
 
     echo json_encode(['success' => true]);
 

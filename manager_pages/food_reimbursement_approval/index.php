@@ -23,6 +23,10 @@ if (!isset($_SESSION['user_id'])) {
     <script>window.SIDEBAR_BASE_PATH = '../../studio_users/';</script>
     <script src="../../studio_users/components/sidebar-loader.js" defer></script>
     
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
         /* ─── Reset & Base ─────────────────────────────────────── */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -68,7 +72,7 @@ if (!isset($_SESSION['user_id'])) {
         .filter-bar { padding: 1.25rem 1.75rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
         
         .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        table { width: 100%; min-width: 1000px; border-collapse: collapse; table-layout: fixed; }
         thead tr { background: #f8fafc; border-bottom: 2px solid #e2e8f0; }
         th { padding: 0.9rem 1.5rem; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; white-space: nowrap; text-align: left; }
         td { padding: 1rem 1.5rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; text-align: left; }
@@ -159,6 +163,57 @@ if (!isset($_SESSION['user_id'])) {
         .btn-confirm-approve:hover { background: #15803d; }
         .btn-confirm-reject { background: #dc2626; color: white; }
         .btn-confirm-reject:hover { background: #b91c1c; }
+
+        .btn-export { background: #fff; border: 1px solid #cbd5e1; color: #475569; border-radius: 8px; padding: 0.5rem 1rem; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; transition: 0.2s; }
+        .btn-export:hover { background: #f8fafc; border-color: #94a3b8; color: #1e293b; }
+        .btn-export-excel:hover { color: #16a34a; border-color: #16a34a; }
+        .btn-export-pdf:hover { color: #dc2626; border-color: #dc2626; }
+
+        /* Summary Cards */
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        @media (max-width: 1024px) { .summary-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 520px)  { .summary-grid { grid-template-columns: 1fr; } }
+        
+        .summary-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.04); position: relative; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+        .summary-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .summary-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: 12px 12px 0 0; }
+        
+        .summary-card--amber::before { background: #f59e0b; }
+        .summary-card--blue::before  { background: #3b82f6; }
+        .summary-card--green::before { background: #10b981; }
+        .summary-card--rose::before  { background: #f43f5e; }
+        
+        .summary-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .summary-card--amber .summary-icon { background: #fef3c7; color: #d97706; }
+        .summary-card--blue  .summary-icon { background: #dbeafe; color: #2563eb; }
+        .summary-card--green .summary-icon { background: #d1fae5; color: #059669; }
+        .summary-card--rose  .summary-icon { background: #ffe4e6; color: #e11d48; }
+
+        .summary-label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+        .summary-value { display: block; font-size: 1.4rem; font-weight: 800; color: #0f172a; margin-top: 2px; }
+        /* ─── Responsive Adjustments ────────────────────────────── */
+        @media (max-width: 768px) {
+            .dashboard-container { flex-direction: column; }
+            #sidebar-mount { position: relative; height: auto; z-index: 1000; }
+            .main-content { width: 100%; }
+            .page-topbar { padding: 1rem 1.25rem; flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+            .page-container { padding: 1rem 1.25rem; }
+            .summary-card { padding: 1rem; flex-direction: row; }
+            .filter-bar { padding: 1rem; }
+            .filter-bar > div { flex-direction: column; width: 100%; align-items: stretch; }
+            .filter-bar select { width: 100%; }
+        }
+
+        @media (max-width: 480px) {
+            .page-topbar { padding: 0.8rem 1rem; }
+            .page-container { padding: 0.8rem 1rem; }
+            .summary-grid { gap: 0.75rem; }
+            .card { border-radius: 12px; }
+            td, th { padding: 0.75rem 1rem; }
+            .btn { font-size: 0.75rem; padding: 0.4rem 0.75rem; }
+            /* Hide non-critical table columns on very small screens, let them scroll horizontally */
+            .table-wrapper { margin: 0 -1rem; padding: 0 1rem; }
+        }
     </style>
 </head>
 <body>
@@ -181,6 +236,38 @@ if (!isset($_SESSION['user_id'])) {
         </div>
 
         <div class="page-container">
+            <!-- Summary Cards -->
+            <div class="summary-grid">
+                <div class="summary-card summary-card--amber">
+                    <div class="summary-icon"><i data-lucide="clock" style="width:20px;height:20px;"></i></div>
+                    <div>
+                        <span class="summary-label">Pending Approval</span>
+                        <span class="summary-value" id="statPendingCount">0</span>
+                    </div>
+                </div>
+                <div class="summary-card summary-card--blue">
+                    <div class="summary-icon"><i data-lucide="wallet" style="width:20px;height:20px;"></i></div>
+                    <div>
+                        <span class="summary-label">Amount Pending</span>
+                        <span class="summary-value" id="statPendingAmt">₹0</span>
+                    </div>
+                </div>
+                <div class="summary-card summary-card--green">
+                    <div class="summary-icon"><i data-lucide="check-circle-2" style="width:20px;height:20px;"></i></div>
+                    <div>
+                        <span class="summary-label">Amount Disbursed</span>
+                        <span class="summary-value" id="statPaidAmt">₹0</span>
+                    </div>
+                </div>
+                <div class="summary-card summary-card--rose">
+                    <div class="summary-icon"><i data-lucide="alert-circle" style="width:20px;height:20px;"></i></div>
+                    <div>
+                        <span class="summary-label">Action Required</span>
+                        <span class="summary-value" id="statActionCount">0</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Filter Bar -->
             <div class="filter-bar" style="margin-bottom: 1rem; border-radius: 12px;">
                 <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
@@ -198,13 +285,27 @@ if (!isset($_SESSION['user_id'])) {
                         <option value="">All Years</option>
                         <!-- Populated dynamically -->
                     </select>
-                    <select id="filterStatus" style="padding: 0.5rem; border-radius: 8px; border: 1px solid #cbd5e1; outline:none; min-width:130px;">
+                    <select id="filterStatus" style="padding: 0.5rem; border-radius: 8px; border: 1px solid #cbd5e1; outline:none; min-width:140px;">
                         <option value="">All Statuses</option>
-                        <option value="pending">Pending</option>
+                        <option value="pending">Pending (Any)</option>
+                        <option value="manager_pending">Manager Pending</option>
+                        <option value="hr_pending">HR Pending</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
-                        <option value="paid">Paid</option>
                     </select>
+                    <select id="filterPayment" style="padding: 0.5rem; border-radius: 8px; border: 1px solid #cbd5e1; outline:none; min-width:130px;">
+                        <option value="">Payment Status</option>
+                        <option value="paid">Paid</option>
+                        <option value="unpaid">Unpaid</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:0.75rem; align-items:center;">
+                    <button class="btn-export btn-export-excel" onclick="exportToExcel()">
+                        <i data-lucide="file-spreadsheet" style="width:16px;height:16px;"></i> Excel
+                    </button>
+                    <button class="btn-export btn-export-pdf" onclick="exportToPDF()">
+                        <i data-lucide="file-text" style="width:16px;height:16px;"></i> PDF
+                    </button>
                 </div>
             </div>
 
@@ -313,12 +414,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function escapeHTML(str) { return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
     let allClaims = [];
+    let currentFilteredClaims = [];
     
     // Filter Elements
     const filterUser = document.getElementById('filterUser');
     const filterMonth = document.getElementById('filterMonth');
     const filterYear = document.getElementById('filterYear');
     const filterStatus = document.getElementById('filterStatus');
+    const filterPayment = document.getElementById('filterPayment');
 
     // Populate Year Dropdown dynamically
     const currentYear = new Date().getFullYear();
@@ -328,8 +431,12 @@ document.addEventListener('DOMContentLoaded', () => {
         filterYear.appendChild(opt);
     }
     
-    [filterUser, filterMonth, filterYear, filterStatus].forEach(el => {
-        el.addEventListener('change', applyFilters);
+    // Set Default Month and Year
+    filterYear.value = String(currentYear);
+    filterMonth.value = String(new Date().getMonth() + 1).padStart(2, '0');
+    
+    [filterUser, filterMonth, filterYear, filterStatus, filterPayment].forEach(el => {
+        if (el) el.addEventListener('change', applyFilters);
     });
 
     // Load Data
@@ -372,6 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const mVal = filterMonth.value;
         const yVal = filterYear.value;
         const sVal = filterStatus.value;
+        const pVal = filterPayment.value;
 
         if (uVal) filtered = filtered.filter(c => c.employee_name === uVal);
         if (mVal || yVal) {
@@ -386,7 +494,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (sVal) {
             filtered = filtered.filter(c => {
-                if (sVal === 'paid') return c.payment_status === 'paid';
+                if (sVal === 'manager_pending') return c.manager_status === 'pending';
+                if (sVal === 'hr_pending') return c.hr_status === 'pending';
                 if (sVal === 'rejected') return c.manager_status === 'rejected' || c.hr_status === 'rejected';
                 if (sVal === 'approved') return c.manager_status === 'approved' && c.hr_status === 'approved';
                 if (sVal === 'pending') return c.manager_status === 'pending' || c.hr_status === 'pending';
@@ -394,7 +503,53 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        if (pVal) {
+            filtered = filtered.filter(c => {
+                if (pVal === 'paid') return c.payment_status === 'paid';
+                if (pVal === 'unpaid') return c.payment_status === 'unpaid' || c.payment_status === 'pending' || !c.payment_status;
+                return true;
+            });
+        }
+
+        currentFilteredClaims = filtered;
+
+        updateSummaryCards(filtered);
         renderTable(filtered);
+    }
+
+    function updateSummaryCards(filtered) {
+        let pendingCount = 0;
+        let pendingAmt = 0;
+        let paidAmt = 0;
+        let actionCount = 0;
+
+        filtered.forEach(c => {
+            const isManagerPending = (c.manager_status === 'pending');
+            const isHrPending = (c.hr_status === 'pending');
+            
+            // Pending Approval Count (if manager or HR is pending)
+            if (isManagerPending || isHrPending) {
+                pendingCount++;
+            }
+
+            // Amounts
+            const price = parseFloat(c.price_per_meal || 100);
+            if (c.payment_status === 'paid') {
+                paidAmt += price;
+            } else {
+                pendingAmt += price;
+            }
+
+            // Action Required (can current user act?)
+            if (c.can_approve_manager || c.can_approve_hr || c.can_mark_paid) {
+                actionCount++;
+            }
+        });
+
+        document.getElementById('statPendingCount').textContent = pendingCount;
+        document.getElementById('statPendingAmt').textContent = '₹' + pendingAmt.toFixed(2);
+        document.getElementById('statPaidAmt').textContent = '₹' + paidAmt.toFixed(2);
+        document.getElementById('statActionCount').textContent = actionCount;
     }
 
     // Render Table
@@ -438,9 +593,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="btn btn-pay" title="Mark Paid" onclick="processClaim(${c.id}, 'pay', 'payment')"><i data-lucide="check-circle"></i> Pay</button>
                 `;
             } else {
+                 let lockText = 'Locked';
+                 if (c.manager_status === 'pending' && !c.can_approve_manager) {
+                     lockText = 'Waiting for Manager Action';
+                 } else if (c.manager_status === 'rejected' || c.hr_status === 'rejected') {
+                     lockText = 'Waiting for Resubmit';
+                 } else if (c.manager_status === 'approved' && c.hr_status === 'pending' && !c.can_approve_hr) {
+                     lockText = 'Waiting for HR Action';
+                 } else if (c.hr_status === 'approved' && c.payment_status === 'unpaid' && !c.can_mark_paid) {
+                     lockText = 'Waiting for Payment';
+                 } else if (c.payment_status === 'paid') {
+                     lockText = 'Paid';
+                 }
+
                  actionButtons = `
-                    <button class="btn" title="Action locked until user resubmits or pending other approval" disabled style="opacity:0.6; cursor:not-allowed; background:#f8fafc; color:#64748b; border:1px solid #cbd5e1; display:inline-flex; align-items:center; gap:4px; padding:0.35rem 0.6rem; border-radius:6px; font-size:0.8rem; font-weight:500;">
-                        <i data-lucide="lock" style="width:13px;height:13px;"></i> Locked
+                    <button class="btn" title="Action locked until user resubmits or pending other approval" disabled style="opacity:0.6; cursor:not-allowed; background:#f8fafc; color:#64748b; border:1px solid #cbd5e1; display:inline-flex; align-items:center; gap:4px; padding:0.35rem 0.6rem; border-radius:6px; font-size:0.8rem; font-weight:500; white-space: nowrap;">
+                        <i data-lucide="lock" style="width:13px;height:13px;"></i> ${lockText}
                     </button>
                  `;
             }
@@ -603,6 +771,138 @@ document.addEventListener('DOMContentLoaded', () => {
             showToast("Network error occurred.", 'error');
         }
     }
+
+    // Export functions
+    window.exportToExcel = function() {
+        if (!currentFilteredClaims.length) {
+            showToast('No data to export', 'error');
+            return;
+        }
+        
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Employee,Email,Date,Time,Amount,Manager Status,HR Status,Payment Status\n";
+
+        let totalClaims = 0;
+        let pendingAmt = 0;
+        let paidAmt = 0;
+
+        currentFilteredClaims.forEach(c => {
+            totalClaims++;
+            const price = parseFloat(c.price_per_meal || 100);
+            if (c.payment_status === 'paid') {
+                paidAmt += price;
+            } else {
+                pendingAmt += price;
+            }
+
+            const row = [
+                `"${(c.employee_name || '').replace(/"/g, '""')}"`,
+                `"${(c.employee_email || '').replace(/"/g, '""')}"`,
+                c.date,
+                c.punch_out_fmt,
+                price.toFixed(2),
+                c.manager_status || 'pending',
+                c.hr_status || 'pending',
+                c.payment_status || 'unpaid'
+            ].join(',');
+            csvContent += row + "\n";
+        });
+
+        // Add Summary Section
+        csvContent += "\n";
+        csvContent += "--- SUMMARY ---\n";
+        csvContent += "Metric,Value\n";
+        csvContent += `Total Claims,${totalClaims}\n`;
+        csvContent += `Total Amount Pending,${pendingAmt.toFixed(2)}\n`;
+        csvContent += `Total Amount Paid,${paidAmt.toFixed(2)}\n`;
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `food_reimbursement_export_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    window.exportToPDF = function() {
+        if (!currentFilteredClaims.length) {
+            showToast('No data to export', 'error');
+            return;
+        }
+
+        if (!window.jspdf || !window.jspdf.jsPDF) {
+            showToast('PDF library still loading. Please try again in a second.', 'error');
+            return;
+        }
+
+        const doc = new window.jspdf.jsPDF();
+        
+        doc.setFontSize(18);
+        doc.text("Food Reimbursement Report", 14, 22);
+        
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+
+        const tableColumn = ["Employee", "Date & Time", "Amount", "Manager", "HR", "Payment"];
+        const tableRows = [];
+        
+        let totalClaims = 0;
+        let pendingAmt = 0;
+        let paidAmt = 0;
+
+        currentFilteredClaims.forEach(c => {
+            totalClaims++;
+            const priceVal = parseFloat(c.price_per_meal || 100);
+            if (c.payment_status === 'paid') {
+                paidAmt += priceVal;
+            } else {
+                pendingAmt += priceVal;
+            }
+
+            const priceStr = 'Rs. ' + priceVal.toFixed(2);
+            tableRows.push([
+                c.employee_name,
+                `${c.date} ${c.punch_out_fmt}`,
+                priceStr,
+                c.manager_status || 'pending',
+                c.hr_status || 'pending',
+                c.payment_status || 'unpaid'
+            ]);
+        });
+
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 38,
+            theme: 'grid',
+            styles: { fontSize: 9 },
+            headStyles: { fillColor: [59, 130, 246] }
+        });
+
+        // Add Summary Table
+        const finalY = doc.lastAutoTable.finalY || 38;
+        doc.setFontSize(13);
+        doc.setTextColor(15, 23, 42);
+        doc.text("Summary", 14, finalY + 12);
+        
+        doc.autoTable({
+            head: [["Metric", "Value"]],
+            body: [
+                ["Total Claims", totalClaims],
+                ["Total Amount Pending", 'Rs. ' + pendingAmt.toFixed(2)],
+                ["Total Amount Paid", 'Rs. ' + paidAmt.toFixed(2)]
+            ],
+            startY: finalY + 16,
+            theme: 'grid',
+            styles: { fontSize: 10 },
+            headStyles: { fillColor: [15, 23, 42] },
+            columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } }
+        });
+
+        doc.save(`food_reimbursement_report_${new Date().toISOString().slice(0,10)}.pdf`);
+    };
 
     // Initial Load
     loadClaims();

@@ -70,7 +70,7 @@ try {
 
     // Fetch Employee and Manager details for logging
     $empStmt = $pdo->prepare("
-        SELECT u.username AS emp_name, frm.manager_id 
+        SELECT u.username AS emp_name, frm.manager_id, frm.hr_id 
         FROM users u 
         LEFT JOIN food_reimbursement_mapping frm ON u.id = frm.employee_id 
         WHERE u.id = :uid
@@ -79,6 +79,7 @@ try {
     $empInfo = $empStmt->fetch(PDO::FETCH_ASSOC);
     $empName = $empInfo ? $empInfo['emp_name'] : 'Employee';
     $managerId = $empInfo ? $empInfo['manager_id'] : null;
+    $hrId = $empInfo ? $empInfo['hr_id'] : null;
 
     $newCount = $claim['resubmit_count'] + 1;
     $logMeta = [
@@ -90,10 +91,15 @@ try {
     $empLogDesc = "You resubmitted your rejected food reimbursement claim. (Attempt {$newCount}/3).";
     logUserActivity($pdo, $userId, 'food_claim_resubmitted', 'food_reimbursement', $empLogDesc, $attendanceId, $logMeta);
 
-    // Log for Manager (if mapped)
-    if ($managerId) {
+    // Log for Manager and HR (if mapped)
+    if ($managerId || $hrId) {
         $mgrLogDesc = "{$empName} has resubmitted their rejected food reimbursement claim. (Attempt {$newCount}/3).";
-        logUserActivity($pdo, $managerId, 'food_claim_resubmitted', 'food_reimbursement', $mgrLogDesc, $attendanceId, $logMeta);
+        if ($managerId) {
+            logUserActivity($pdo, $managerId, 'food_claim_resubmitted', 'food_reimbursement', $mgrLogDesc, $attendanceId, $logMeta);
+        }
+        if ($hrId) {
+            logUserActivity($pdo, $hrId, 'food_claim_resubmitted', 'food_reimbursement', $mgrLogDesc, $attendanceId, $logMeta);
+        }
     }
 
     echo json_encode(['success' => true]);

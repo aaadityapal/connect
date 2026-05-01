@@ -1769,6 +1769,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     'task_completion_rejected':   { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-ban',                  label: 'Task Completion Rejected'},
                     'task_progress_updated':      { color: '#2563eb', bg: '#eff6ff', icon: 'fa-solid fa-sliders',             label: 'Task Progress Updated'   },
                     'task_deleted':              { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-trash-can',             label: 'Task Deleted'            },
+                    'task_carried_over':         { color: '#64748b', bg: '#f8fafc', icon: 'fa-solid fa-angles-right',          label: 'Task Carried Over'       },
                     'deadline_snooze':           { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-calendar-xmark',       label: 'Deadline Snoozed'        },
                     'extend_deadline':           { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-clock-rotate-left',    label: 'Deadline Extended'       },
 
@@ -1797,6 +1798,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     'leave_edited':              { color: '#a855f7', bg: '#faf5ff', icon: 'fa-solid fa-pen-to-square',        label: 'Leave Edited'            },
                     'leave_rejected':            { color: '#e11d48', bg: '#fff1f2', icon: 'fa-solid fa-calendar-xmark',       label: 'Leave Rejected'          },
                     'leave_deleted':             { color: '#6b7280', bg: '#f9fafb', icon: 'fa-solid fa-calendar-minus',       label: 'Leave Deleted'           },
+                    'leave_status_update':       { color: '#3b82f6', bg: '#eff6ff', icon: 'fa-solid fa-clipboard-user',       label: 'Leave Status Update'     },
+
+                    // ── Food Reimbursement ─────────────────────────────────────────────
+                    'food_claim_submitted':      { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-utensils',             label: 'Food Claim Submitted'    },
+                    'food_claim_review_required':{ color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-file-invoice',         label: 'Food Claim Review Required'},
+                    'food_claim_resubmitted':    { color: '#6366f1', bg: '#eef2ff', icon: 'fa-solid fa-rotate-right',         label: 'Food Claim Resubmitted'  },
+                    'food_claim_approved':       { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-check-double',         label: 'Food Claim Approved'     },
+                    'food_claim_rejected':       { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-ban',                  label: 'Food Claim Rejected'     },
+                    'food_claim_paid':           { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-money-check-dollar',   label: 'Food Claim Paid'         },
+                    'food_claim_updated':        { color: '#8b5cf6', bg: '#faf5ff', icon: 'fa-solid fa-pen-to-square',        label: 'Food Claim Updated'      },
+
+                    // ── HR Policy ──────────────────────────────────────────────────────
+                    'hr_acknowledged':           { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-clipboard-check',      label: 'Hr Acknowledged'         },
                 };
                 const hasOvertimeReport = log.action_type === 'punch_out' && !!(log._meta && log._meta.overtime_report);
                 const cfg = hasOvertimeReport

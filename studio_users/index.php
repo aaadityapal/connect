@@ -536,6 +536,12 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
                                 <span id="currentTime" class="el-19">3:19:40 PM</span>
                                 <span class="timezone el-442">IST</span>
                             </div>
+                            <span class="dh-datetime-sep">|</span>
+                            <div class="dh-datetime-item dh-weather-widget" title="Live Weather">
+                                <i data-lucide="cloud-sun" style="width:14px;height:14px;" id="weatherIcon"></i>
+                                <span id="currentTemp" style="font-weight: 700;">28°C</span>
+                                <span id="weatherDesc" style="font-size: 0.65rem; color: #9ca3af; margin-left: 2px; text-transform: capitalize;">Partly Cloudy</span>
+                            </div>
                         </div> <!-- close wrapper div -->
                     </div>
                 </div> <!-- close dh-nav-left -->
@@ -1674,6 +1680,23 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
         // Initial load
         document.addEventListener('DOMContentLoaded', refreshDashboardTaskList);
     </script>
+    <!-- Weather Modal -->
+    <div id="weatherModal" class="modal-overlay">
+        <div class="modal-content weather-modal-content">
+            <div class="modal-header">
+                <div class="modal-icon" style="background: rgba(14, 165, 233, 0.1); color: #0ea5e9;"><i class="fa-solid fa-cloud-sun"></i></div>
+                <h3 style="font-weight: 700; margin-left: 0.5rem; flex: 1;">7-Day Forecast</h3>
+                <button class="close-modal" id="closeWeatherModal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <div class="weather-forecast-container" id="weatherForecastContainer">
+                    <div style="text-align:center; padding: 2rem; color: #9ca3af;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Loading forecast...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </body>
 

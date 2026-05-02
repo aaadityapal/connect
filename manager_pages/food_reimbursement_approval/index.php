@@ -571,7 +571,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const hour = parseInt((c.punch_out_fmt || '00:00').split(':')[0], 10);
             let timeClass = 'late-mild';
             if (hour >= 23) timeClass = 'late-severe';
-            else if (hour >= 22) timeClass = 'late-high';
 
             const price = parseFloat(c.price_per_meal || 100).toFixed(2);
 

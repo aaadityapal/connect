@@ -50,7 +50,7 @@ if (!isset($_SESSION['user_id'])) {
                         </div>
                         <div>
                             <h1 class="page-title">Food Reimbursement</h1>
-                            <p class="page-subtitle">Nights you worked past 9 PM — eligible for food reimbursement</p>
+                            <p class="page-subtitle">Nights you worked past 10 PM — eligible for food reimbursement</p>
                         </div>
                     </div>
                 </div>

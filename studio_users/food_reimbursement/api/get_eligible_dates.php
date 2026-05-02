@@ -2,8 +2,8 @@
 /**
  * food_reimbursement/api/get_eligible_dates.php
  *
- * Returns attendance rows for the logged-in user where punch_out >= 21:00:00
- * (i.e. they left after 9:00 PM).
+ * Returns attendance rows for the logged-in user where punch_out >= 22:00:00
+ * (i.e. they left after 10:00 PM).
  * Optionally filtered by ?month=YYYY-MM
  */
 session_start();
@@ -38,7 +38,7 @@ try {
             a.punch_out,
             a.status,
             a.work_report,
-            TIMESTAMPDIFF(MINUTE, CONCAT(a.date, ' 21:00:00'), a.punch_out) AS late_minutes,
+            TIMESTAMPDIFF(MINUTE, CONCAT(a.date, ' 22:00:00'), a.punch_out) AS late_minutes,
             frc.claim_status,
             frc.manager_status,
             frc.hr_status,
@@ -61,7 +61,7 @@ try {
         LEFT JOIN food_reimbursement_price frp ON a.user_id = frp.user_id
         WHERE a.user_id = ?
           AND a.punch_out IS NOT NULL
-          AND TIME(a.punch_out) >= '21:00:00'
+          AND TIME(a.punch_out) >= '22:00:00'
           {$monthClause}
         ORDER BY a.date DESC
     ";

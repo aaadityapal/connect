@@ -8242,3 +8242,94 @@ tr.task-list-row[data-task-priority="Green"] td:first-child {
         transform: translateY(0) scale(1);
     }
 }
+
+/* Minimalistic Weather Modal Styles */
+.weather-modal-content {
+    max-width: 950px !important;
+    background: #ffffff;
+    border-radius: 2rem !important;
+    overflow: hidden;
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.12);
+}
+
+.weather-forecast-container {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+    cursor: grab;
+}
+
+.weather-forecast-container:active {
+    cursor: grabbing;
+}
+
+.weather-forecast-container::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari and Opera */
+}
+
+.weather-day-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem 0.5rem;
+    background: transparent;
+    border-radius: 1.5rem;
+    border: none;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    min-width: 85px;
+    flex: 1;
+}
+
+.weather-day-card:hover {
+    background: #f8fafc;
+    transform: translateY(-8px);
+}
+
+.weather-day-name {
+    font-weight: 500;
+    font-size: 0.85rem;
+    color: #64748b;
+    margin-bottom: 1rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.weather-day-icon {
+    font-size: 2.2rem;
+    margin-bottom: 1.2rem;
+    text-align: center;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+}
+
+.weather-day-temp {
+    text-align: center;
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 1.15rem;
+}
+
+.weather-day-temp span {
+    color: #94a3b8;
+    font-weight: 400;
+    font-size: 0.85rem;
+    margin-left: 0.2rem;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    #weatherModal {
+        align-items: flex-start !important;
+        padding-top: 5vh;
+    }
+    
+    .weather-modal-content {
+        width: 95% !important;
+        margin: 0 auto;
+    }
+}

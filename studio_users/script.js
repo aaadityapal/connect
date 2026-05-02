@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
             })
-            .catch(() => {}); // Silent failure — non-critical
+            .catch(() => { }); // Silent failure — non-critical
     }, 5000);
     // ─────────────────────────────────────────────────────────────────
 
@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (historyObj && typeof historyObj === 'object' && !Array.isArray(historyObj)) {
                 historyCount = Object.keys(historyObj).length;
             }
-        } catch (_) {}
+        } catch (_) { }
 
         return status === 'completed' || completedByList.length > 0 || historyCount > 0;
     }
@@ -1525,7 +1525,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const closeNotif = document.getElementById('closeNotif');
         const markAllReadBtn = document.getElementById('markAllReadBtn');
         const clearNotifBtn = document.getElementById('clearNotifBtn');
-        
+
         // --- Notification Sound ---
         const notifSound = new Audio('tones/global_notification.mp3');
         notifSound.volume = 1.0;
@@ -1603,7 +1603,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (pendingSound && !isDrawerOpen) {
                 pendingSound = false;
                 notifSound.currentTime = 0;
-                notifSound.play().catch(() => {});
+                notifSound.play().catch(() => { });
             }
             document.removeEventListener('click', unlockAudio);
             document.removeEventListener('keydown', unlockAudio);
@@ -1615,7 +1615,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (isDrawerOpen) return;
             if (audioUnlocked) {
                 notifSound.currentTime = 0;
-                notifSound.play().catch(() => {});
+                notifSound.play().catch(() => { });
             } else {
                 pendingSound = true; // will fire on next interaction
             }
@@ -1625,17 +1625,17 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const res = await fetch('api/fetch_activity_logs.php');
                 const result = await res.json();
-                if(result.status === 'success') {
+                if (result.status === 'success') {
                     renderNotifications(result.data);
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error("Failed to load notifications", e);
             }
         }
         window.fetchNotifications = fetchNotifications;
 
         function renderNotifications(logs) {
-            if(!notifContent) return;
+            if (!notifContent) return;
             notifContent.innerHTML = '';
             let unreadCount = 0;
 
@@ -1658,10 +1658,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     .replace(/"/g, '&quot;')
                     .replace(/'/g, '&#039;');
             }
-            
-            if(!logs || logs.length === 0) {
+
+            if (!logs || logs.length === 0) {
                 notifContent.innerHTML = '<div style="padding: 20px; text-align: center; color: #94a3b8;"><i class="fa-regular fa-bell-slash" style="font-size:1.5rem; margin-bottom:8px; display:block;"></i> No recent notifications</div>';
-                if(notifBadge) { notifBadge.style.display = 'none'; notifBadge.textContent = '0'; }
+                if (notifBadge) { notifBadge.style.display = 'none'; notifBadge.textContent = '0'; }
                 lastSeenMaxId = 0;
                 initialNotifScanDone = true;
                 return;
@@ -1671,10 +1671,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const todayLogs = [];
             const yesterdayLogs = [];
             const olderLogs = [];
-            
+
             const today = new Date();
-            today.setHours(0,0,0,0);
-            
+            today.setHours(0, 0, 0, 0);
+
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
 
@@ -1682,17 +1682,17 @@ document.addEventListener("DOMContentLoaded", () => {
             let batchMaxId = 0;
             logs.forEach(log => {
                 const logId = parseInt(log.id) || 0;
-                if(logId > batchMaxId) batchMaxId = logId;
-                if(log.is_read == 0) unreadCount++;
+                if (logId > batchMaxId) batchMaxId = logId;
+                if (log.is_read == 0) unreadCount++;
 
                 // Parse metadata once for each log (used by UI rendering)
                 log._meta = safeParseMetadata(log.metadata);
 
                 const logDate = new Date(log.created_at);
-                logDate.setHours(0,0,0,0);
-                if(logDate.getTime() === today.getTime()) {
+                logDate.setHours(0, 0, 0, 0);
+                if (logDate.getTime() === today.getTime()) {
                     todayLogs.push(log);
-                } else if(logDate.getTime() === yesterday.getTime()) {
+                } else if (logDate.getTime() === yesterday.getTime()) {
                     yesterdayLogs.push(log);
                 } else {
                     olderLogs.push(log);
@@ -1738,8 +1738,8 @@ document.addEventListener("DOMContentLoaded", () => {
             // ------------------------------------------------
 
             // Update badge
-            if(notifBadge) {
-                if(unreadCount > 0) {
+            if (notifBadge) {
+                if (unreadCount > 0) {
                     notifBadge.style.display = 'flex';
                     notifBadge.textContent = unreadCount;
                 } else {
@@ -1747,70 +1747,71 @@ document.addEventListener("DOMContentLoaded", () => {
                     notifBadge.textContent = '0';
                 }
             }
-            
+
             function buildLogHTML(log) {
                 // Color + icon mapping per action type
                 const typeConfig = {
                     // ── Attendance ─────────────────────────────────────────────────────
-                    'punch_in':                  { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-fingerprint',          label: 'Punched In'              },
-                    'punch_out':                 { color: '#ef4444', bg: '#fff5f5', icon: 'fa-solid fa-right-from-bracket',   label: 'Punched Out'             },
-                    'update_attendance':         { color: '#8b5cf6', bg: '#faf5ff', icon: 'fa-solid fa-user-pen',             label: 'Attendance Modified'     },
-                    'attendance_geofence_approved': { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-circle-check',      label: 'Geofence Approved'       },
-                    'attendance_geofence_rejected': { color: '#dc2626', bg: '#fef2f2', icon: 'fa-solid fa-ban',               label: 'Geofence Rejected'       },
+                    'punch_in': { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-fingerprint', label: 'Punched In' },
+                    'punch_out': { color: '#ef4444', bg: '#fff5f5', icon: 'fa-solid fa-right-from-bracket', label: 'Punched Out' },
+                    'update_attendance': { color: '#8b5cf6', bg: '#faf5ff', icon: 'fa-solid fa-user-pen', label: 'Attendance Modified' },
+                    'attendance_geofence_approved': { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-circle-check', label: 'Geofence Approved' },
+                    'attendance_geofence_rejected': { color: '#dc2626', bg: '#fef2f2', icon: 'fa-solid fa-ban', label: 'Geofence Rejected' },
 
                     // ── Tasks ──────────────────────────────────────────────────────────
-                    'task_assigned':             { color: '#8b5cf6', bg: '#f5f3ff', icon: 'fa-solid fa-list-check',           label: 'Task Assigned'           },
-                    'task_created':              { color: '#3b82f6', bg: '#eff6ff', icon: 'fa-solid fa-circle-plus',          label: 'Task Created'            },
-                    'task_completed':            { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-circle-check',         label: 'Task Completed'          },
-                    'task_partially_completed':  { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-users-between-lines',  label: 'Task Partially Completed'},
-                    'task_still_pending':        { color: '#fb7185', bg: '#fff1f2', icon: 'fa-solid fa-hourglass-half',       label: 'Pending Your Completion' },
-                    'task_completed_for_approval':{ color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-file-signature',      label: 'Approval Needed'         },
-                    'task_completion_approved':   { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-thumbs-up',            label: 'Task Completion Approved'},
-                    'task_completion_rejected':   { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-ban',                  label: 'Task Completion Rejected'},
-                    'task_progress_updated':      { color: '#2563eb', bg: '#eff6ff', icon: 'fa-solid fa-sliders',             label: 'Task Progress Updated'   },
-                    'task_deleted':              { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-trash-can',             label: 'Task Deleted'            },
-                    'task_carried_over':         { color: '#64748b', bg: '#f8fafc', icon: 'fa-solid fa-angles-right',          label: 'Task Carried Over'       },
-                    'deadline_snooze':           { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-calendar-xmark',       label: 'Deadline Snoozed'        },
-                    'extend_deadline':           { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-clock-rotate-left',    label: 'Deadline Extended'       },
+                    'task_assigned': { color: '#8b5cf6', bg: '#f5f3ff', icon: 'fa-solid fa-list-check', label: 'Task Assigned' },
+                    'task_created': { color: '#3b82f6', bg: '#eff6ff', icon: 'fa-solid fa-circle-plus', label: 'Task Created' },
+                    'task_completed': { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-circle-check', label: 'Task Completed' },
+                    'task_partially_completed': { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-users-between-lines', label: 'Task Partially Completed' },
+                    'task_still_pending': { color: '#fb7185', bg: '#fff1f2', icon: 'fa-solid fa-hourglass-half', label: 'Pending Your Completion' },
+                    'task_completed_for_approval': { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-file-signature', label: 'Approval Needed' },
+                    'task_completion_approved': { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-thumbs-up', label: 'Task Completion Approved' },
+                    'task_completion_rejected': { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-ban', label: 'Task Completion Rejected' },
+                    'task_progress_updated': { color: '#2563eb', bg: '#eff6ff', icon: 'fa-solid fa-sliders', label: 'Task Progress Updated' },
+                    'task_deleted': { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-trash-can', label: 'Task Deleted' },
+                    'task_carried_over': { color: '#64748b', bg: '#f8fafc', icon: 'fa-solid fa-angles-right', label: 'Task Carried Over' },
+                    'deadline_snooze': { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-calendar-xmark', label: 'Deadline Snoozed' },
+                    'extend_deadline': { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-clock-rotate-left', label: 'Deadline Extended' },
 
                     // ── Travel Expenses ────────────────────────────────────────────────
-                    'travel_added':              { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-plane-departure',      label: 'Travel Added'            },
-                    'travel_updated':            { color: '#6366f1', bg: '#eef2ff', icon: 'fa-solid fa-file-pen',             label: 'Travel Updated'          },
-                    'travel_deleted':            { color: '#f43f5e', bg: '#fff1f2', icon: 'fa-solid fa-plane-slash',          label: 'Travel Deleted'          },
-                    'travel_approved':           { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-plane-circle-check',   label: 'Travel Approved'         },
-                    'travel_rejected':           { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-plane-circle-xmark',   label: 'Travel Rejected'         },
-                    'travel_paid':               { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-money-bill-transfer',  label: 'Travel Paid'             },
+                    'travel_added': { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-plane-departure', label: 'Travel Added' },
+                    'travel_updated': { color: '#6366f1', bg: '#eef2ff', icon: 'fa-solid fa-file-pen', label: 'Travel Updated' },
+                    'travel_deleted': { color: '#f43f5e', bg: '#fff1f2', icon: 'fa-solid fa-plane-slash', label: 'Travel Deleted' },
+                    'travel_approved': { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-plane-circle-check', label: 'Travel Approved' },
+                    'travel_rejected': { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-plane-circle-xmark', label: 'Travel Rejected' },
+                    'travel_paid': { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-money-bill-transfer', label: 'Travel Paid' },
                     // aliases (kept for safety)
-                    'travel_expense_added':      { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-plane-departure',      label: 'Travel Added'            },
-                    'travel_expense_edited':     { color: '#6366f1', bg: '#eef2ff', icon: 'fa-solid fa-file-pen',             label: 'Travel Updated'          },
-                    'travel_expense_deleted':    { color: '#f43f5e', bg: '#fff1f2', icon: 'fa-solid fa-plane-slash',          label: 'Travel Deleted'          },
+                    'travel_expense_added': { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-plane-departure', label: 'Travel Added' },
+                    'travel_expense_edited': { color: '#6366f1', bg: '#eef2ff', icon: 'fa-solid fa-file-pen', label: 'Travel Updated' },
+                    'travel_expense_deleted': { color: '#f43f5e', bg: '#fff1f2', icon: 'fa-solid fa-plane-slash', label: 'Travel Deleted' },
 
                     // ── Overtime ───────────────────────────────────────────────────────
-                    'overtime_submitted':        { color: '#f97316', bg: '#fff7ed', icon: 'fa-solid fa-business-time',        label: 'Overtime Submitted'      },
-                    'overtime_added':            { color: '#f97316', bg: '#fff7ed', icon: 'fa-solid fa-business-time',        label: 'Overtime Submitted'      },
-                    'overtime_approved':         { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-user-check',           label: 'Overtime Approved'       },
-                    'overtime_rejected':         { color: '#dc2626', bg: '#fef2f2', icon: 'fa-solid fa-user-xmark',           label: 'Overtime Rejected'       },
-                    'overtime_edited':           { color: '#d97706', bg: '#fffbeb', icon: 'fa-solid fa-pen-ruler',            label: 'Overtime Edited'         },
+                    'overtime_submitted': { color: '#f97316', bg: '#fff7ed', icon: 'fa-solid fa-business-time', label: 'Overtime Submitted' },
+                    'overtime_added': { color: '#f97316', bg: '#fff7ed', icon: 'fa-solid fa-business-time', label: 'Overtime Submitted' },
+                    'overtime_approved': { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-user-check', label: 'Overtime Approved' },
+                    'overtime_rejected': { color: '#dc2626', bg: '#fef2f2', icon: 'fa-solid fa-user-xmark', label: 'Overtime Rejected' },
+                    'overtime_edited': { color: '#d97706', bg: '#fffbeb', icon: 'fa-solid fa-pen-ruler', label: 'Overtime Edited' },
 
                     // ── Leave ──────────────────────────────────────────────────────────
-                    'leave_applied':             { color: '#22c55e', bg: '#f0fdf4', icon: 'fa-solid fa-calendar-check',       label: 'Leave Applied'           },
-                    'leave_approved':            { color: '#22c55e', bg: '#f0fdf4', icon: 'fa-solid fa-calendar-check',       label: 'Leave Approved'          },
-                    'leave_edited':              { color: '#a855f7', bg: '#faf5ff', icon: 'fa-solid fa-pen-to-square',        label: 'Leave Edited'            },
-                    'leave_rejected':            { color: '#e11d48', bg: '#fff1f2', icon: 'fa-solid fa-calendar-xmark',       label: 'Leave Rejected'          },
-                    'leave_deleted':             { color: '#6b7280', bg: '#f9fafb', icon: 'fa-solid fa-calendar-minus',       label: 'Leave Deleted'           },
-                    'leave_status_update':       { color: '#3b82f6', bg: '#eff6ff', icon: 'fa-solid fa-clipboard-user',       label: 'Leave Status Update'     },
+                    'leave_applied': { color: '#22c55e', bg: '#f0fdf4', icon: 'fa-solid fa-calendar-check', label: 'Leave Applied' },
+                    'leave_approved': { color: '#22c55e', bg: '#f0fdf4', icon: 'fa-solid fa-calendar-check', label: 'Leave Approved' },
+                    'leave_edited': { color: '#a855f7', bg: '#faf5ff', icon: 'fa-solid fa-pen-to-square', label: 'Leave Edited' },
+                    'leave_rejected': { color: '#e11d48', bg: '#fff1f2', icon: 'fa-solid fa-calendar-xmark', label: 'Leave Rejected' },
+                    'leave_deleted': { color: '#6b7280', bg: '#f9fafb', icon: 'fa-solid fa-calendar-minus', label: 'Leave Deleted' },
+                    'leave_status_update': { color: '#3b82f6', bg: '#eff6ff', icon: 'fa-solid fa-clipboard-user', label: 'Leave Status Update' },
 
                     // ── Food Reimbursement ─────────────────────────────────────────────
-                    'food_claim_submitted':      { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-utensils',             label: 'Food Claim Submitted'    },
-                    'food_claim_review_required':{ color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-file-invoice',         label: 'Food Claim Review Required'},
-                    'food_claim_resubmitted':    { color: '#6366f1', bg: '#eef2ff', icon: 'fa-solid fa-rotate-right',         label: 'Food Claim Resubmitted'  },
-                    'food_claim_approved':       { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-check-double',         label: 'Food Claim Approved'     },
-                    'food_claim_rejected':       { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-ban',                  label: 'Food Claim Rejected'     },
-                    'food_claim_paid':           { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-money-check-dollar',   label: 'Food Claim Paid'         },
-                    'food_claim_updated':        { color: '#8b5cf6', bg: '#faf5ff', icon: 'fa-solid fa-pen-to-square',        label: 'Food Claim Updated'      },
+                    'food_claim_submitted': { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-utensils', label: 'Food Claim Submitted' },
+                    'food_claim_review_required': { color: '#f59e0b', bg: '#fffbeb', icon: 'fa-solid fa-file-invoice', label: 'Food Claim Review Required' },
+                    'food_claim_resubmitted': { color: '#6366f1', bg: '#eef2ff', icon: 'fa-solid fa-rotate-right', label: 'Food Claim Resubmitted' },
+                    'food_claim_approved': { color: '#10b981', bg: '#f0fdf4', icon: 'fa-solid fa-check-double', label: 'Food Claim Approved' },
+                    'food_claim_rejected': { color: '#ef4444', bg: '#fef2f2', icon: 'fa-solid fa-ban', label: 'Food Claim Rejected' },
+                    'food_claim_paid': { color: '#16a34a', bg: '#f0fdf4', icon: 'fa-solid fa-money-check-dollar', label: 'Food Claim Paid' },
+                    'food_claim_updated': { color: '#8b5cf6', bg: '#faf5ff', icon: 'fa-solid fa-pen-to-square', label: 'Food Claim Updated' },
 
                     // ── HR Policy ──────────────────────────────────────────────────────
-                    'hr_acknowledged':           { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-clipboard-check',      label: 'Hr Acknowledged'         },
+                    'hr_acknowledged': { color: '#0ea5e9', bg: '#f0f9ff', icon: 'fa-solid fa-clipboard-check', label: 'Hr Acknowledged' },
+                    'employee_confidential_document_uploaded': { color: '#6366f1', bg: '#f5f3ff', icon: 'fa-solid fa-file-shield', label: 'Document Uploaded' },
                 };
                 const hasOvertimeReport = log.action_type === 'punch_out' && !!(log._meta && log._meta.overtime_report);
                 const cfg = hasOvertimeReport
@@ -1818,8 +1819,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     : (typeConfig[log.action_type] || { color: '#64748b', bg: '', icon: 'fa-solid fa-bell', label: formatActionType(log.action_type) });
 
                 const logDate = new Date(log.created_at);
-                const timeStr = logDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const dateStr = logDate.toLocaleDateString([], {month:'short', day:'numeric'});
+                const timeStr = logDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const dateStr = logDate.toLocaleDateString([], { month: 'short', day: 'numeric' });
                 const fullTimeStr = `${dateStr} at ${timeStr}`;
 
                 let displayDescription = log.description;
@@ -1829,7 +1830,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const tName = log._meta.target_name;
                     const dDate = log._meta.date || '';
                     const updates = log._meta.updates_string || '';
-                    
+
                     if (aName.toLowerCase() === loggedInName.toLowerCase()) {
                         displayDescription = `You modified attendance for ${tName} on ${dDate}. Updates: ${updates}.`;
                     } else if (tName.toLowerCase() === loggedInName.toLowerCase()) {
@@ -1863,15 +1864,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 return type.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
             }
 
-            if(todayLogs.length > 0) {
+            if (todayLogs.length > 0) {
                 notifContent.innerHTML += `<div style="padding: 10px 16px; font-weight: 700; color: #64748b; font-size: 0.75rem; text-transform: uppercase; background: #f8fafc; border-bottom: 1px solid #f1f5f9;">Today</div>`;
                 todayLogs.forEach(l => notifContent.innerHTML += buildLogHTML(l));
             }
-            if(yesterdayLogs.length > 0) {
+            if (yesterdayLogs.length > 0) {
                 notifContent.innerHTML += `<div style="padding: 10px 16px; font-weight: 700; color: #64748b; font-size: 0.75rem; text-transform: uppercase; background: #f8fafc; border-bottom: 1px solid #f1f5f9; border-top: 1px solid #e2e8f0;">Yesterday</div>`;
                 yesterdayLogs.forEach(l => notifContent.innerHTML += buildLogHTML(l));
             }
-            if(olderLogs.length > 0) {
+            if (olderLogs.length > 0) {
                 notifContent.innerHTML += `<div style="padding: 10px 16px; font-weight: 700; color: #64748b; font-size: 0.75rem; text-transform: uppercase; background: #f8fafc; border-bottom: 1px solid #f1f5f9; border-top: 1px solid #e2e8f0;">Earlier</div>`;
                 olderLogs.forEach(l => notifContent.innerHTML += buildLogHTML(l));
             }
@@ -1882,17 +1883,17 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 await fetch('api/notification_actions.php', {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({action})
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action })
                 });
                 fetchNotifications();
-            } catch(e) { console.error('Error with notif action', e); }
+            } catch (e) { console.error('Error with notif action', e); }
         }
 
-        if(markAllReadBtn) {
+        if (markAllReadBtn) {
             markAllReadBtn.addEventListener('click', () => { runNotifAction('mark_all_read'); });
         }
-        if(clearNotifBtn) {
+        if (clearNotifBtn) {
             clearNotifBtn.addEventListener('click', () => { runNotifAction('clear_all'); });
         }
 
@@ -2184,11 +2185,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const res = await fetch('api/get_hr_dashboard_content.php?v=' + Date.now());
             const data = await res.json();
             console.log("[HR Sync Debug]", data);
-            
+
             if (data.success) {
                 dynamicHRItems = [];
                 window.dynamicHRItems = dynamicHRItems;
-                
+
                 // --- Add Hardcoded Policies to general rotation for visibility ---
                 mandatoryPolicies.forEach(p => {
                     if (!p.db_id) {
@@ -2224,7 +2225,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         subtitle: p.summary || p.short_desc || ''
                     });
                 });
-                
+
                 // --- Sync DB Mandatory Notices to Local Mandatory Array ---
                 data.notices.forEach(n => {
                     const localSessionAccepted = sessionStorage.getItem(`hrNotice_db_accepted_${n.id}`) === 'true';
@@ -2312,7 +2313,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
-        
+
         const item = dynamicHRItems[index];
         const title = String(item?.title || '');
         const subtitle = String(item?.subtitle || '').trim();
@@ -2596,7 +2597,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (currentPolicyIndex === mandatoryPolicies.length - 1) {
                 // Close
                 if (closePolicyModal) closePolicyModal.click();
-                if (typeof renderPolicySteps === 'function') renderPolicySteps(); 
+                if (typeof renderPolicySteps === 'function') renderPolicySteps();
                 if (typeof updateHRCornerDisplay === 'function') updateHRCornerDisplay();
                 alert("All HR updates acknowledged successfully!");
             } else {
@@ -2684,6 +2685,223 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof window.fetchMyTasks === 'function') window.fetchMyTasks('daily');
     // Initial Badge Update
     renderPolicySteps();
+
+    // ── Live Weather Update ────────────────────────────────────────────────
+    (function initWeather() {
+        const tempEl = document.getElementById('currentTemp');
+        const descEl = document.getElementById('weatherDesc');
+        const iconEl = document.getElementById('weatherIcon');
+
+        if (!tempEl || !descEl || !iconEl) return;
+
+        // OpenWeatherMap API Key (Please replace 'YOUR_OPENWEATHER_API_KEY' with your actual key)
+        const apiKey = 'a0d58d37c63d434877ed006cb021a73c';
+
+        function updateWeatherUI(temp, desc, iconCode) {
+            tempEl.textContent = `${Math.round(temp)}°C`;
+            descEl.textContent = desc;
+
+            // Map OpenWeather icon code to Lucide icons
+            let lucideIcon = 'cloud-sun';
+            const code = iconCode.substring(0, 2);
+            if (code === '01') lucideIcon = 'sun';
+            else if (code === '02') lucideIcon = 'cloud-sun';
+            else if (code === '03' || code === '04') lucideIcon = 'cloud';
+            else if (code === '09' || code === '10') lucideIcon = 'cloud-rain';
+            else if (code === '11') lucideIcon = 'cloud-lightning';
+            else if (code === '13') lucideIcon = 'snowflake';
+            else if (code === '50') lucideIcon = 'align-justify'; // mist/fog
+
+            // Update icon and re-render lucide icons if window.lucide exists
+            iconEl.setAttribute('data-lucide', lucideIcon);
+            if (window.lucide && window.lucide.createIcons) {
+                window.lucide.createIcons();
+            }
+        }
+
+        function fetchWeather(lat, lon) {
+            // Fallback to open-meteo if no API key is provided
+            if (apiKey === 'a0d58d37c63d434877ed006cb021a73c') {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.current_weather) {
+                            const temp = data.current_weather.temperature;
+                            const code = data.current_weather.weathercode;
+                            // Basic mapping for open-meteo weather codes
+                            let desc = "Clear";
+                            let icon = "01d";
+                            if (code >= 1 && code <= 3) { desc = "Partly Cloudy"; icon = "02d"; }
+                            else if (code >= 45 && code <= 48) { desc = "Foggy"; icon = "50d"; }
+                            else if (code >= 51 && code <= 67) { desc = "Rainy"; icon = "09d"; }
+                            else if (code >= 71 && code <= 77) { desc = "Snowy"; icon = "13d"; }
+                            else if (code >= 80 && code <= 82) { desc = "Showers"; icon = "09d"; }
+                            else if (code >= 95) { desc = "Thunderstorm"; icon = "11d"; }
+
+                            updateWeatherUI(temp, desc, icon);
+                        }
+                    })
+                    .catch(err => console.error("Weather fetch error:", err));
+                return;
+            }
+
+            // OpenWeatherMap API call
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.main && data.weather && data.weather.length > 0) {
+                        const temp = data.main.temp;
+                        const desc = data.weather[0].description;
+                        const iconCode = data.weather[0].icon;
+                        updateWeatherUI(temp, desc, iconCode);
+                    }
+                })
+                .catch(err => console.error("Weather fetch error:", err));
+        }
+
+        // Get user location using browser geolocation
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    fetchWeather(position.coords.latitude, position.coords.longitude);
+                },
+                (error) => {
+                    console.warn("Geolocation denied or error. Using default fallback location.", error);
+                    // Fallback to New Delhi if location is denied
+                    fetchWeather(28.6139, 77.2090);
+                }
+            );
+        } else {
+            console.warn("Geolocation not supported by this browser.");
+        }
+
+        // --- Weather Modal Logic ---
+        const weatherWidget = document.querySelector('.dh-weather-widget');
+        if (weatherWidget) {
+            weatherWidget.style.cursor = 'pointer';
+            weatherWidget.addEventListener('click', () => {
+                const modal = document.getElementById('weatherModal');
+                if (modal) {
+                    modal.classList.add('visible');
+                    modal.classList.add('open');
+                    fetchSevenDayForecast();
+                }
+            });
+        }
+
+        const closeWeatherModal = document.getElementById('closeWeatherModal');
+        if (closeWeatherModal) {
+            closeWeatherModal.addEventListener('click', () => {
+                const modal = document.getElementById('weatherModal');
+                if (modal) {
+                    modal.classList.remove('open');
+                    setTimeout(() => modal.classList.remove('visible'), 300);
+                }
+            });
+        }
+
+        function fetchSevenDayForecast() {
+            const container = document.getElementById('weatherForecastContainer');
+            if (!container) return;
+
+            container.innerHTML = `<div style="text-align:center; padding: 2rem; color: #9ca3af;"><i class="fa-solid fa-spinner fa-spin"></i> Loading forecast...</div>`;
+
+            if (!navigator.geolocation) {
+                container.innerHTML = `<div style="text-align:center; padding: 2rem; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Geolocation not supported.</div>`;
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                
+                // Always use open-meteo for the 7-day forecast as it's free and doesn't require an API key
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto`;
+                
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.daily) {
+                            let html = '';
+                            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                            
+                            for (let i = 0; i < 7; i++) {
+                                const dateObj = new Date(data.daily.time[i]);
+                                const dayName = i === 0 ? 'Today' : days[dateObj.getDay()];
+                                const maxT = Math.round(data.daily.temperature_2m_max[i]);
+                                const minT = Math.round(data.daily.temperature_2m_min[i]);
+                                const code = data.daily.weathercode[i];
+                                
+                                let iconHtml = '<i class="fa-solid fa-sun" style="color: #f59e0b;"></i>';
+                                if (code >= 1 && code <= 3) iconHtml = '<i class="fa-solid fa-cloud-sun" style="color: #6366f1;"></i>';
+                                else if (code >= 45 && code <= 48) iconHtml = '<i class="fa-solid fa-smog" style="color: #94a3b8;"></i>';
+                                else if (code >= 51 && code <= 67) iconHtml = '<i class="fa-solid fa-cloud-rain" style="color: #3b82f6;"></i>';
+                                else if (code >= 71 && code <= 77) iconHtml = '<i class="fa-solid fa-snowflake" style="color: #0ea5e9;"></i>';
+                                else if (code >= 80 && code <= 82) iconHtml = '<i class="fa-solid fa-cloud-showers-heavy" style="color: #3b82f6;"></i>';
+                                else if (code >= 95) iconHtml = '<i class="fa-solid fa-cloud-bolt" style="color: #eab308;"></i>';
+
+                                html += `
+                                    <div class="weather-day-card">
+                                        <div class="weather-day-name">${dayName}</div>
+                                        <div class="weather-day-icon">${iconHtml}</div>
+                                        <div class="weather-day-temp">${maxT}° <span>${minT}°</span></div>
+                                    </div>
+                                `;
+                            }
+                            container.innerHTML = html;
+                        }
+                    })
+                    .catch(err => {
+                        container.innerHTML = `<div style="text-align:center; padding: 2rem; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to load forecast.</div>`;
+                        console.error("Forecast fetch error:", err);
+                    });
+            }, () => {
+                // Fallback to New Delhi
+                const lat = 28.6139;
+                const lon = 77.2090;
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto`;
+                
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data.daily) {
+                            let html = '';
+                            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                            
+                            for (let i = 0; i < 7; i++) {
+                                const dateObj = new Date(data.daily.time[i]);
+                                const dayName = i === 0 ? 'Today' : days[dateObj.getDay()];
+                                const maxT = Math.round(data.daily.temperature_2m_max[i]);
+                                const minT = Math.round(data.daily.temperature_2m_min[i]);
+                                const code = data.daily.weathercode[i];
+                                
+                                let iconHtml = '<i class="fa-solid fa-sun" style="color: #f59e0b;"></i>';
+                                if (code >= 1 && code <= 3) iconHtml = '<i class="fa-solid fa-cloud-sun" style="color: #6366f1;"></i>';
+                                else if (code >= 45 && code <= 48) iconHtml = '<i class="fa-solid fa-smog" style="color: #94a3b8;"></i>';
+                                else if (code >= 51 && code <= 67) iconHtml = '<i class="fa-solid fa-cloud-rain" style="color: #3b82f6;"></i>';
+                                else if (code >= 71 && code <= 77) iconHtml = '<i class="fa-solid fa-snowflake" style="color: #0ea5e9;"></i>';
+                                else if (code >= 80 && code <= 82) iconHtml = '<i class="fa-solid fa-cloud-showers-heavy" style="color: #3b82f6;"></i>';
+                                else if (code >= 95) iconHtml = '<i class="fa-solid fa-cloud-bolt" style="color: #eab308;"></i>';
+
+                                html += `
+                                    <div class="weather-day-card">
+                                        <div class="weather-day-name">${dayName}</div>
+                                        <div class="weather-day-icon">${iconHtml}</div>
+                                        <div class="weather-day-temp">${maxT}° <span>${minT}°</span></div>
+                                    </div>
+                                `;
+                            }
+                            container.innerHTML = html;
+                        }
+                    })
+                    .catch(err => {
+                        container.innerHTML = `<div style="text-align:center; padding: 2rem; color: #ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Failed to load forecast.</div>`;
+                    });
+            });
+        }
+    })();
 
 
     // Punch In / Punch Out Toggle Logic
@@ -2851,23 +3069,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 const unacknowledgedNotif = latestHRNotification && !latestHRNotification.acknowledged;
 
                 if (unacceptedPolicy || unacknowledgedNotif) {
-                    console.log("[Compliance Trace]", { 
-                        mandatoryPolicies, 
-                        latestHRNotification, 
-                        unacceptedPolicy, 
-                        unacknowledgedNotif 
+                    console.log("[Compliance Trace]", {
+                        mandatoryPolicies,
+                        latestHRNotification,
+                        unacceptedPolicy,
+                        unacknowledgedNotif
                     });
                     alert("You cannot punch out yet. Please review and accept all pending HR policies and notifications in the HR Corner.");
-                    
+
                     // Directly open the Compliance Hub for the user
                     const pendingPolicy = mandatoryPolicies.find(p => !p.accepted);
                     if (pendingPolicy) {
                         const idx = mandatoryPolicies.indexOf(pendingPolicy);
                         if (typeof loadPolicy === 'function') loadPolicy(idx);
                         const pModal = document.getElementById('policyModal');
-                        if (pModal) { 
-                            pModal.classList.add('visible'); 
-                            pModal.classList.add('open'); 
+                        if (pModal) {
+                            pModal.classList.add('visible');
+                            pModal.classList.add('open');
                         }
                     }
                     return; // Stop here, do not toggle state
@@ -4854,12 +5072,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById('otFooterSubmit').style.display = 'flex';
 
                 // ── Load managers into dropdown ──────────────────────────────
-                const otMgrSelect  = document.getElementById('otManagerSelect');
+                const otMgrSelect = document.getElementById('otManagerSelect');
                 const otMgrLoading = document.getElementById('otManagerLoading');
                 if (otMgrSelect && otMgrSelect.options.length <= 1) { // Only fetch if not already populated
                     try {
                         if (otMgrLoading) otMgrLoading.style.display = 'block';
-                        const res  = await fetch('overtime_page/api_overtime.php');
+                        const res = await fetch('overtime_page/api_overtime.php');
                         const data = await res.json();
                         if (data.managers && Array.isArray(data.managers)) {
                             otMgrSelect.innerHTML = '<option value="">Select Manager</option>';
@@ -4972,9 +5190,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         try {
                             const otPayload = new FormData();
                             otPayload.append('attendance_id', data.attendance_id);
-                            otPayload.append('manager_id',    otManagerId);
-                            otPayload.append('report',        overtimeReasonText);
-                            const otRes  = await fetch('overtime_page/api_submit_overtime.php', {
+                            otPayload.append('manager_id', otManagerId);
+                            otPayload.append('report', overtimeReasonText);
+                            const otRes = await fetch('overtime_page/api_submit_overtime.php', {
                                 method: 'POST',
                                 body: otPayload
                             });

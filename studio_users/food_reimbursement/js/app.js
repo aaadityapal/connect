@@ -3,7 +3,7 @@
  * FOOD REIMBURSEMENT MODULE — js/app.js
  * =====================================================
  * Fetches attendance rows where user punched out after
- * 9:00 PM and displays them as eligible food-reimbursement
+ * 10:00 PM and displays them as eligible food-reimbursement
  * claims.
  */
 
@@ -269,8 +269,7 @@
       // Row highlight class based on how late
       let rowClass = '';
       if (punchOutHour >= 23)      rowClass = 'row-severe';
-      else if (punchOutHour >= 22) rowClass = 'row-high';
-      else                          rowClass = 'row-mild';
+      else                         rowClass = 'row-mild';
 
       const tr = document.createElement('tr');
       tr.className = rowClass;
@@ -378,10 +377,9 @@
     if (!c) return;
 
     const punchOutHour = parseInt((c.punch_out || '00:00:00').split(':')[0], 10);
-    let severity = 'Mild (9–10 PM)';
+    let severity = 'Mild (10–11 PM)';
     let sevColor  = 'var(--clr-amber)';
     if (punchOutHour >= 23)      { severity = 'Severe (11 PM+)'; sevColor = 'var(--clr-red)'; }
-    else if (punchOutHour >= 22) { severity = 'High (10–11 PM)'; sevColor = 'var(--clr-brand)'; }
 
     viewModalBody.innerHTML = `
       <div class="detail-grid">

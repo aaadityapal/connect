@@ -2694,8 +2694,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!tempEl || !descEl || !iconEl) return;
 
-        // OpenWeatherMap API Key (Please replace 'YOUR_OPENWEATHER_API_KEY' with your actual key)
-        const apiKey = 'a0d58d37c63d434877ed006cb021a73c';
+        // OpenWeatherMap API Key (Provided via PHP in index.php)
+        const apiKey = window.WEATHER_API_KEY || '';
 
         function updateWeatherUI(temp, desc, iconCode) {
             tempEl.textContent = `${Math.round(temp)}°C`;
@@ -2720,8 +2720,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         function fetchWeather(lat, lon) {
-            // Fallback to open-meteo if no API key is provided
-            if (apiKey === 'a0d58d37c63d434877ed006cb021a73c') {
+            // Fallback to open-meteo if no API key is provided or if it's the previous hardcoded key (for safety)
+            if (!apiKey || apiKey === 'a0d58d37c63d434877ed006cb021a73c') {
                 const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
                 fetch(url)
                     .then(res => res.json())

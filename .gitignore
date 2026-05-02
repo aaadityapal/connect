@@ -5,3 +5,4 @@ webhook.php
 whatsapp_router.php
 cron_alerts.php
 cron_alerts.log
+config/constants.php

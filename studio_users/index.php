@@ -54,6 +54,7 @@ function getPersonColor($name)
 }
 
 require_once '../config/db_connect.php';
+require_once '../config/constants.php';
 
 $user_id = $_SESSION['user_id'];
 $stmt = $pdo->prepare("SELECT username, designation, role, profile_picture FROM users WHERE id = ?");
@@ -103,6 +104,7 @@ $efficiency = $periodTotalTasks > 0 ? round(($periodCompletedTasks / $periodTota
 <script>
     window.loggedUserName = <?php echo json_encode($username); ?>;
     window.loggedUserId = <?php echo json_encode((int)$user_id); ?>;
+    window.WEATHER_API_KEY = <?php echo json_encode(defined('OPENWEATHER_API_KEY') ? OPENWEATHER_API_KEY : ''); ?>;
 </script>
 <!DOCTYPE html>
 <html lang="en">

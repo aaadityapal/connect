@@ -7,6 +7,12 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 require_once __DIR__ . '/../../config/db_connect.php';
+require_once __DIR__ . '/../../whatsapp/WhatsAppService.php';
+
+function normalize_whatsapp_phone($phone) {
+    $digits = preg_replace('/\D+/', '', (string)$phone);
+    return $digits;
+}
 
 function normalize_role($role, $custom_role) {
     $role = trim((string)$role);
@@ -272,6 +278,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Exception $e) {
             // Non-fatal — log but don't block the employee creation
             error_log('[add_employee_handler] leave_bank seed failed: ' . $e->getMessage());
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
+        // ─── WhatsApp Welcome + Team Announcement ───────────────────────────
+        try {
+            $waService = new WhatsAppService();
+
+            $newUserPhone = normalize_whatsapp_phone($phone);
+            if ($newUserPhone !== '') {
+                $waService->sendTemplateMessage(
+                    $newUserPhone,
+                    'employee_onboarding_welcome_v2',
+                    'en_US',
+                    [$username, $role]
+                );
+            }
+
+            $teamStmt = $pdo->prepare(
+                "SELECT phone FROM users WHERE LOWER(status) = 'active' AND phone IS NOT NULL AND phone != '' AND id != ?"
+            );
+            $teamStmt->execute([$new_id]);
+            $teamPhones = $teamStmt->fetchAll(PDO::FETCH_COLUMN);
+
+            $sentPhones = [];
+            foreach ($teamPhones as $teamPhone) {
+                $normalizedPhone = normalize_whatsapp_phone($teamPhone);
+                if ($normalizedPhone === '' || isset($sentPhones[$normalizedPhone])) {
+                    continue;
+                }
+                $sentPhones[$normalizedPhone] = true;
+                $waService->sendTemplateMessage(
+                    $normalizedPhone,
+                    'team_new_employee_announcement',
+                    'en_US',
+                    [$username, $role]
+                );
+            }
+        } catch (Exception $e) {
+            error_log('[add_employee_handler] WhatsApp send failed: ' . $e->getMessage());
         }
         // ─────────────────────────────────────────────────────────────────────
 

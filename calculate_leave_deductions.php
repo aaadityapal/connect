@@ -199,8 +199,9 @@ try {
     // Calculate deductions for each leave
     foreach ($leaves as $leave) {
         $leaveType = strtolower(str_replace(' ', '_', $leave['leave_type'] ?? 'other'));
-        $numDays = intval($leave['num_days']);
-        $deduction = 0;
+        $isHalfDay  = stripos($leave['leave_type'] ?? '', 'half') !== false;
+        $numDays    = $isHalfDay ? 0.5 : intval($leave['num_days']);
+        $deduction  = 0;
         $deductionType = '';
         
         switch ($leaveType) {

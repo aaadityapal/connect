@@ -166,9 +166,10 @@ try {
     $employeeData = [];
     
     foreach ($employees as $employee) {
-        // Fetch salary record for the specific month/year if it exists
+        // Fetch salary record
         $salaryStmt = $pdo->prepare("
-            SELECT base_salary FROM employee_salary_records 
+            SELECT base_salary, base_salary_effective_from, tds_percentage, tds_effective_from
+            FROM employee_salary_records 
             WHERE user_id = ? AND month = ? AND year = ? AND deleted_at IS NULL
             ORDER BY created_at DESC LIMIT 1
         ");
@@ -177,18 +178,28 @@ try {
         
         if ($salaryRecord) {
             $baseSalary = $salaryRecord['base_salary'];
+            $baseSalaryEffectiveFrom = $salaryRecord['base_salary_effective_from'];
+            $tdsPercentage = floatval($salaryRecord['tds_percentage']);
+            $tdsEffectiveFrom = $salaryRecord['tds_effective_from'];
         } else {
             // Fallback: Get the most recent salary record for this user (any month/year)
             $fallbackStmt = $pdo->prepare("
-                SELECT base_salary FROM employee_salary_records 
+                SELECT base_salary, base_salary_effective_from, tds_percentage, tds_effective_from
+                FROM employee_salary_records 
                 WHERE user_id = ? AND deleted_at IS NULL
                 ORDER BY year DESC, month DESC LIMIT 1
             ");
             $fallbackStmt->execute([$employee['id']]);
             $fallbackRecord = $fallbackStmt->fetch(PDO::FETCH_ASSOC);
             $baseSalary = $fallbackRecord ? $fallbackRecord['base_salary'] : 50000;
+            $baseSalaryEffectiveFrom = $fallbackRecord ? $fallbackRecord['base_salary_effective_from'] : null;
+            $tdsPercentage = $fallbackRecord ? floatval($fallbackRecord['tds_percentage']) : 0.00;
+            $tdsEffectiveFrom = $fallbackRecord ? $fallbackRecord['tds_effective_from'] : null;
         }
-        
+
+        // Gross Salary = Base Salary + TDS amount (used as the base for all rate calculations)
+        $grossSalary = round($baseSalary * (1 + $tdsPercentage / 100), 2);
+
         // Calculate working days based on user_shifts and shifts with weekly offs
         $workingDays = calculateWorkingDays($pdo, $employee['id'], $month, $year);
         
@@ -353,18 +364,22 @@ try {
             
             $leaveStmt = $pdo->prepare("
                 SELECT SUM(
-                    DATEDIFF(
-                        LEAST(end_date, ?),
-                        GREATEST(start_date, ?)
-                    ) + 1
+                    CASE
+                        WHEN LOWER(lt.name) LIKE '%half%' THEN 0.5
+                        ELSE DATEDIFF(
+                            LEAST(lr.end_date, ?),
+                            GREATEST(lr.start_date, ?)
+                        ) + 1
+                    END
                 ) as total_leave_days
-                FROM leave_request
-                WHERE user_id = ?
-                AND status = 'approved'
+                FROM leave_request lr
+                LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+                WHERE lr.user_id = ?
+                AND lr.status = 'approved'
                 AND (
-                    (MONTH(start_date) = ? AND YEAR(start_date) = ?) OR
-                    (MONTH(end_date) = ? AND YEAR(end_date) = ?) OR
-                    (start_date < ? AND end_date > ?)
+                    (MONTH(lr.start_date) = ? AND YEAR(lr.start_date) = ?) OR
+                    (MONTH(lr.end_date) = ? AND YEAR(lr.end_date) = ?) OR
+                    (lr.start_date < ? AND lr.end_date > ?)
                 )
             ");
             
@@ -378,8 +393,8 @@ try {
             ]);
             $leaveResult = $leaveStmt->fetch(PDO::FETCH_ASSOC);
             $leaveTaken = $leaveResult['total_leave_days'] ?? 0;
-            // Ensure it's a positive integer
-            $leaveTaken = max(0, intval($leaveTaken));
+            // Use floatval to preserve 0.5 half-day values
+            $leaveTaken = max(0, floatval($leaveTaken));
         } catch (PDOException $e) {
             error_log("Error fetching leave data for user " . $employee['id'] . ": " . $e->getMessage());
             $leaveTaken = 0;
@@ -390,7 +405,7 @@ try {
         try {
             // Calculate working days
             $workingDaysCount = $workingDays;
-            $oneDaySalary = $workingDaysCount > 0 ? $baseSalary / $workingDaysCount : 0;
+            $oneDaySalary = $workingDaysCount > 0 ? $grossSalary / $workingDaysCount : 0;
             
             // Fetch month boundaries
             $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
@@ -534,7 +549,7 @@ try {
         
         // Calculate late deductions
         // Daily salary calculation
-        $dailySalary = $workingDays > 0 ? $baseSalary / $workingDays : 0;
+        $dailySalary = $workingDays > 0 ? $grossSalary / $workingDays : 0;
         
         // Regular late deduction: Every 3 late days = 0.5 day deduction
         $lateDaysDeductionDays = floor($lateDays / 3) * 0.5;
@@ -673,7 +688,7 @@ try {
                 // One day salary = base_salary / working_days
                 // One hour salary = one_day_salary / shift_hours
                 // Overtime amount = overtime_hours * one_hour_salary
-                $oneDaySalary = $baseSalary / $workingDays;
+                $oneDaySalary = $grossSalary / $workingDays;
                 $oneHourSalary = $oneDaySalary / $shiftHours;
                 $overtimeAmount = round($overtimeHours * $oneHourSalary, 2);
             }
@@ -782,12 +797,20 @@ try {
         // Round to 2 decimal places
         $salaryCalculatedDays = round($salaryCalculatedDays, 2);
 
+        // TDS amount & Gross Salary (used for display)
+        $tdsAmount = round($baseSalary * ($tdsPercentage / 100), 2);
+
         $employeeData[] = [
-            'id' => $employee['id'], // Add user ID
+            'id' => $employee['id'],
             'employee_id' => $employee['employee_id'] ?? $employee['id'],
             'name' => $employee['name'],
             'role' => $employee['role'],
             'base_salary' => $baseSalary,
+            'base_salary_effective_from' => $baseSalaryEffectiveFrom,
+            'tds_percentage' => $tdsPercentage,
+            'tds_effective_from' => $tdsEffectiveFrom,
+            'tds_amount' => $tdsAmount,
+            'gross_salary' => $grossSalary,
             'working_days' => $workingDays,
             'present_days' => $presentDays,
             'late_days' => $lateDays,

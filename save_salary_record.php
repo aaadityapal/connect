@@ -32,9 +32,24 @@ foreach ($requiredFields as $field) {
 $employee_id = trim($input['employee_id']);
 $user_id = intval($input['user_id']);
 $base_salary = floatval($input['base_salary']);
+$tds_percentage = isset($input['tds_percentage']) ? floatval($input['tds_percentage']) : 0.00;
 $month = intval($input['month']);
 $year = intval($input['year']);
 $remarks = isset($input['remarks']) ? trim($input['remarks']) : null;
+
+// Effective-from dates (optional) — validate format if provided
+$base_salary_effective_from = null;
+if (!empty($input['base_salary_effective_from'])) {
+    $d = DateTime::createFromFormat('Y-m-d', $input['base_salary_effective_from']);
+    $base_salary_effective_from = ($d && $d->format('Y-m-d') === $input['base_salary_effective_from'])
+        ? $input['base_salary_effective_from'] : null;
+}
+$tds_effective_from = null;
+if (!empty($input['tds_effective_from'])) {
+    $d = DateTime::createFromFormat('Y-m-d', $input['tds_effective_from']);
+    $tds_effective_from = ($d && $d->format('Y-m-d') === $input['tds_effective_from'])
+        ? $input['tds_effective_from'] : null;
+}
 
 // Validate values
 if ($user_id <= 0) {
@@ -46,6 +61,12 @@ if ($user_id <= 0) {
 if ($base_salary < 0) {
     http_response_code(400);
     echo json_encode(['status' => 'error', 'message' => 'Base salary cannot be negative']);
+    exit;
+}
+
+if ($tds_percentage < 0 || $tds_percentage > 100) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'TDS percentage must be between 0 and 100']);
     exit;
 }
 
@@ -85,12 +106,17 @@ try {
         // Update existing record
         $updateStmt = $pdo->prepare("
             UPDATE employee_salary_records 
-            SET base_salary = ?, remarks = ?, updated_by = ?, updated_at = NOW()
+            SET base_salary = ?, base_salary_effective_from = ?,
+                tds_percentage = ?, tds_effective_from = ?,
+                remarks = ?, updated_by = ?, updated_at = NOW()
             WHERE user_id = ? AND month = ? AND year = ? AND deleted_at IS NULL
         ");
         
         $updateStmt->execute([
             $base_salary,
+            $base_salary_effective_from,
+            $tds_percentage,
+            $tds_effective_from,
             $remarks,
             $_SESSION['user_id'],
             $user_id,
@@ -104,14 +130,18 @@ try {
         // Insert new record
         $insertStmt = $pdo->prepare("
             INSERT INTO employee_salary_records 
-            (employee_id, user_id, base_salary, month, year, remarks, created_by, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+            (employee_id, user_id, base_salary, base_salary_effective_from,
+             tds_percentage, tds_effective_from, month, year, remarks, created_by, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
         
         $insertStmt->execute([
             $employee_id,
             $user_id,
             $base_salary,
+            $base_salary_effective_from,
+            $tds_percentage,
+            $tds_effective_from,
             $month,
             $year,
             $remarks,

@@ -59,6 +59,8 @@
         if (path.includes('/manager_pages/employees_profile/')) return 'employees-profile';
         if (path.includes('/manager_pages/employees_confiedential_documents/')) return 'employees-confiedential-documents';
         if (path.includes('/manager_pages/saturday_agenda')) return 'saturday-agenda';
+        if (path.includes('/manager_pages/Salary%20Slips/') || path.includes('/manager_pages/Salary Slips/')) return 'salary-slips';
+        if (path.includes('/manager_pages/Employee%20Salary/') || path.includes('/manager_pages/Employee Salary/')) return 'employee-salary';
         if (path.includes('/manager_pages/confiedential_documents_permissions/')) return 'confiedential-docs-permission';
         if (path.includes('/manager_pages/employees_attendance/')) return 'employees-attendance';
         if (path.includes('/manager_pages/employees_performance/')) return 'employees-performance';

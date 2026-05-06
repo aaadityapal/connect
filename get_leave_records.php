@@ -123,17 +123,19 @@ try {
         
         $leaveTypeDisplay = ($record['leave_type_name'] ?? 'N/A') . $shortLeaveType;
         
+        $isHalfDay = stripos($record['leave_type_name'] ?? '', 'half') !== false;
+        
         $formattedRecords[] = [
-            'start_date' => $record['start_date'],
-            'end_date' => $record['end_date'],
+            'start_date'         => $record['start_date'],
+            'end_date'           => $record['end_date'],
             'start_date_display' => $startDate->format('d M Y'),
-            'end_date_display' => $endDate->format('d M Y'),
-            'date_range' => $startDate->format('d M Y') . ' to ' . $endDate->format('d M Y'),
-            'leave_type' => $leaveTypeDisplay,
-            'num_days' => intval($record['num_days']),
-            'reason' => $record['reason'] ?? 'No reason provided',
-            'status' => $record['status'],
-            'short_leave_type' => $shortLeaveType
+            'end_date_display'   => $endDate->format('d M Y'),
+            'date_range'         => $startDate->format('d M Y') . ' to ' . $endDate->format('d M Y'),
+            'leave_type'         => $leaveTypeDisplay,
+            'num_days'           => $isHalfDay ? 0.5 : intval($record['num_days']),
+            'reason'             => $record['reason'] ?? 'No reason provided',
+            'status'             => $record['status'],
+            'short_leave_type'   => $shortLeaveType
         ];
     }
     

@@ -176,17 +176,33 @@ try {
             'minutes_late' => $minutesLate,
             'short_leave' => $shortLeaveText,
             'punch_in_photo' => !empty($r['punch_in_photo']) ? $r['punch_in_photo'] : null,
+            // Eligible for SL only if punch_in <= shift_start + 90 min
+            'is_sl_eligible' => $minutesLate <= 90,
         ];
     }
 
     $monthName = date('F Y', strtotime($firstDayOfMonth));
+
+    // Fetch short leave remaining balance for this user
+    $shortLeaveBal = 0;
+    try {
+        $balStmt = $pdo->prepare("
+            SELECT remaining_balance FROM leave_bank
+            WHERE user_id = ? AND leave_type_id = 11 AND year = ?
+            LIMIT 1
+        ");
+        $balStmt->execute([$userId, $year]);
+        $balRow = $balStmt->fetch(PDO::FETCH_ASSOC);
+        $shortLeaveBal = $balRow ? floatval($balRow['remaining_balance']) : 0;
+    } catch (Exception $e) { $shortLeaveBal = 0; }
 
     echo json_encode([
         'status' => 'success',
         'monthYear' => $monthName,
         'shift_start_time' => $shiftStartTime,
         'records' => $records,
-        'count' => count($records)
+        'count' => count($records),
+        'short_leave_balance' => $shortLeaveBal
     ]);
 
 } catch (PDOException $e) {

@@ -62,6 +62,8 @@ $menu_items = [
         'saturday-agenda' => ['label' => 'Saturday Agenda', 'icon' => 'calendar-days'],
         'site-expenses' => ['label' => 'Site Expenses', 'icon' => 'receipt'],
         'employees-performance' => ['label' => 'Employee Performance', 'icon' => 'bar-chart-3'],
+        'salary-slips' => ['label' => 'Salary Slips', 'icon' => 'file-text'],
+        'employee-salary' => ['label' => 'Employee Salary', 'icon' => 'wallet'],
         'food-reimbursement-mapping' => ['label' => 'Food Reimbursement Mapping', 'icon' => 'utensils-crossed'],
         'food-reimbursement-setup'   => ['label' => 'Food Reimbursement Setup',   'icon' => 'settings-2'],
         'food-reimbursement-approval'=> ['label' => 'Food Reimbursement Approval','icon' => 'check-square'],

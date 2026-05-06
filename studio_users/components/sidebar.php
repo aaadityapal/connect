@@ -236,10 +236,12 @@ function canShow($menuId, $perms) {
         $showSaturdayAgenda = canShow('saturday-agenda', $_permissions);
         $showSiteExpenses = canShow('site-expenses', $_permissions);
         $showEmployeesPerformance = canShow('employees-performance', $_permissions);
+        $showSalarySlips = canShow('salary-slips', $_permissions);
+        $showEmployeeSalary = canShow('employee-salary', $_permissions);
         $showFoodRmbMapping = canShow('food-reimbursement-mapping', $_permissions);
         $showFoodRmbSetup   = canShow('food-reimbursement-setup', $_permissions);
         $showFoodRmbApproval= canShow('food-reimbursement-approval', $_permissions);
-        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval || $showShifts || $showSaturdayAgenda || $showSiteExpenses || $showEmployeesPerformance || $showFoodRmbMapping || $showFoodRmbSetup || $showFoodRmbApproval):
+        if ($showLeaveApp || $showTravelApp || $showHierarchy || $showMngMap || $showOtMap || $showTxMap || $showPwReset || $showWorkReport || $showEmployeesProfile || $showEmployeesConfiedentialDocuments || $showEmployeesAttendance || $showOtApproval || $showShifts || $showSaturdayAgenda || $showSiteExpenses || $showEmployeesPerformance || $showSalarySlips || $showEmployeeSalary || $showFoodRmbMapping || $showFoodRmbSetup || $showFoodRmbApproval):
         ?>
             <div class="menu-title">Management</div>
             <?php if ($showOtApproval): ?>
@@ -392,6 +394,24 @@ function canShow($menuId, $perms) {
                 <i data-lucide="bar-chart-3" class="menu-icon" style="width:17px;height:17px;"></i>
                 <span class="menu-text">Employee Performance</span>
                 <div class="tooltip">Employee Performance</div>
+            </a>
+            <?php endif; ?>
+            <?php if ($showSalarySlips): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/Salary Slips/index.php'; return false;"
+                class="menu-item" data-page="salary-slips">
+                <i data-lucide="file-text" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Salary Slips</span>
+                <div class="tooltip">Salary Slips</div>
+            </a>
+            <?php endif; ?>
+            <?php if ($showEmployeeSalary): ?>
+            <a href="#"
+                onclick="window.location.href = (window.SIDEBAR_BASE_PATH || '') + '../manager_pages/Employee Salary/index.php'; return false;"
+                class="menu-item" data-page="employee-salary">
+                <i data-lucide="wallet" class="menu-icon" style="width:17px;height:17px;"></i>
+                <span class="menu-text">Employee Salary</span>
+                <div class="tooltip">Employee Salary</div>
             </a>
             <?php endif; ?>
             <?php if ($showFoodRmbMapping): ?>

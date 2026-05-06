@@ -486,7 +486,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        if (fieldKey === 'designation' || fieldKey === 'status') {
+        if (fieldKey === 'status') {
             return `
                 <div class="edit-item">
                     <label>${escapeHtml(label)}</label>

@@ -168,14 +168,14 @@ function populateTable(employees) {
                 <td>${emp.employee_id || 'N/A'}</td>
                 <td>${emp.name || 'N/A'}</td>
                 <td>${emp.role || 'N/A'}</td>
-                <td>₹${formatNumber(emp.base_salary || 0)}</td>
+                <td class="tds-total-cell">₹${formatNumber(Number(emp.base_salary || 0).toFixed(2))}</td>
                 <td class="tds-cell">
                     <span id="tds-value-${emp.id}" style="font-weight:600;">${Number(emp.tds_percentage || 0).toFixed(2)}%</span>
                     <span class="info-icon" style="cursor:pointer; margin-left:4px;" title="Click Edit to update TDS">
                         <i class="fas fa-percent" style="font-size:0.75rem; color:#718096;"></i>
                     </span>
                 </td>
-                <td class="tds-total-cell">₹${formatNumber((Number(emp.base_salary || 0) + Number(emp.tds_amount || 0)).toFixed(2))}</td>
+                <td title="Payable Salary = Gross Salary − TDS%">₹${formatNumber((Number(emp.base_salary || 0) * (1 - Number(emp.tds_percentage || 0) / 100)).toFixed(2))}</td>
                 <td>
                     ${emp.working_days || 0}
                     <span class="info-icon" data-type="working-days" onclick="showWorkingDaysDetails(${emp.id}, '${emp.name}', ${emp.working_days}, 0)" style="cursor: pointer;">
@@ -242,6 +242,15 @@ function populateTable(employees) {
                     ₹${formatNumber((Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1))).toFixed(2))}
                 </td>
                 <td>
+                    ₹${formatNumber((Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1)) * (Number(emp.tds_percentage || 0) / 100)).toFixed(2))}
+                </td>
+                <td>
+                    ₹${formatNumber(Math.max(0,
+                        Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1))
+                        - Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1)) * (Number(emp.tds_percentage || 0) / 100)
+                    ).toFixed(2))}
+                </td>
+                <td>
                     ${emp.overtime_hours || 0}
                     <span class="info-icon" data-type="overtime-hours" onclick="showOvertimeDetails(${emp.id}, '${emp.name}')" style="cursor: pointer;">
                         <i class="fas fa-info-circle"></i>
@@ -252,13 +261,35 @@ function populateTable(employees) {
                     ₹${formatNumber(emp.overtime_amount || 0)}
                 </td>
                 <td>
-                    ₹${formatNumber((Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1)) + Number(emp.overtime_amount || 0)).toFixed(2))}
+                    ₹${(() => {
+                        const otTds = Number(emp.overtime_amount || 0) * (Number(emp.tds_percentage || 0) / 100);
+                        return formatNumber(otTds.toFixed(2));
+                    })()}
+                </td>
+                <td>
+                    ₹${(() => {
+                        const otAmt = Number(emp.overtime_amount || 0);
+                        const otTds = otAmt * (Number(emp.tds_percentage || 0) / 100);
+                        return formatNumber(Math.max(0, otAmt - otTds).toFixed(2));
+                    })()}
+                </td>
+                <td>
+                    ₹${(() => {
+                        // Total TDS Amount = Net Payable Salary TDS + OT TDS
+                        const netSalary = Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1));
+                        const netTds    = netSalary * (Number(emp.tds_percentage || 0) / 100);
+                        const otTds     = Number(emp.overtime_amount || 0) * (Number(emp.tds_percentage || 0) / 100);
+                        return formatNumber((netTds + otTds).toFixed(2));
+                    })()}
                 </td>
                 <td style="background:#fef9c3; font-weight:700; color:#713f12;">
                     ₹${(() => {
-                        const finalSalary = Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1)) + Number(emp.overtime_amount || 0);
-                        const tdsDeduction = finalSalary * (Number(emp.tds_percentage || 0) / 100);
-                        return formatNumber(Math.max(0, finalSalary - tdsDeduction).toFixed(2));
+                        // Total Payable Salary = Payable Salary After Deduction + Payable OT after Deduction
+                        const netSalary  = Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1));
+                        const netPayable = netSalary * (1 - Number(emp.tds_percentage || 0) / 100);
+                        const otAmt      = Number(emp.overtime_amount || 0);
+                        const otPayable  = otAmt * (1 - Number(emp.tds_percentage || 0) / 100);
+                        return formatNumber(Math.max(0, netPayable + otPayable).toFixed(2));
                     })()}
                 </td>
                 <td style="display: flex; gap: 10px; justify-content: center;">
@@ -676,10 +707,15 @@ function performReportGeneration(month, year, reportBtn, originalText) {
                 '4th Saturday Deduction',
                 'Penalty Days',
                 'Salary Calculated Days',
-                'Net Salary',
+                'Net Payable Salary',
+                'Net Payable Salary TDS',
+                'Payable Salary After Deduction',
                 'Overtime Hours',
                 'Overtime Amount',
-                'Final Salary'
+                'OT TDS',
+                'Payable OT after Deduction',
+                'Total TDS Amount (Govt. Amount)',
+                'Total Payable Salary'
             ];
 
             // Create data rows
@@ -701,10 +737,21 @@ function performReportGeneration(month, year, reportBtn, originalText) {
                     emp.fourth_saturday_deduction || 0,
                     emp.penalty_days || 0,
                     emp.salary_calculated_days || 0,
-                    emp.net_salary || 0,
+                    Number((Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / (Number(emp.working_days || 1)))).toFixed(2)),
+                    Number((Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / (Number(emp.working_days || 1))) * (Number(emp.tds_percentage || 0) / 100)).toFixed(2)),
+                    Number(Math.max(0, Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / (Number(emp.working_days || 1))) * (1 - Number(emp.tds_percentage || 0) / 100)).toFixed(2)),
                     emp.overtime_hours || 0,
                     emp.overtime_amount || 0,
-                    emp.final_salary || 0
+                    Number((Number(emp.overtime_amount || 0) * (Number(emp.tds_percentage || 0) / 100)).toFixed(2)),
+                    Number((Math.max(0, Number(emp.overtime_amount || 0) * (1 - Number(emp.tds_percentage || 0) / 100))).toFixed(2)),
+                    Number((
+                        Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / (Number(emp.working_days || 1))) * (Number(emp.tds_percentage || 0) / 100)
+                        + Number(emp.overtime_amount || 0) * (Number(emp.tds_percentage || 0) / 100)
+                    ).toFixed(2)),
+                    Number((Math.max(0,
+                        Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / (Number(emp.working_days || 1))) * (1 - Number(emp.tds_percentage || 0) / 100)
+                        + Number(emp.overtime_amount || 0) * (1 - Number(emp.tds_percentage || 0) / 100)
+                    )).toFixed(2))
                 ]);
             });
 
@@ -742,11 +789,14 @@ function performReportGeneration(month, year, reportBtn, originalText) {
                 13: 'FFD32F2F', // Penalty Days
                 // Salary Calculation - Teal
                 14: 'FF16A085', // Salary Calculated Days
-                15: 'FF16A085', // Net Salary
+                15: 'FFE65100', // Net Payable Salary TDS (Deep Orange)
+                16: 'FF16A085', // Net Payable Salary
                 // Overtime - Cyan
-                16: 'FF0097A7', // Overtime Hours
-                17: 'FF0097A7', // Overtime Amount
-                18: 'FF1B5E20'  // Final Salary (Dark Green)
+                17: 'FF0097A7', // Overtime Hours
+                18: 'FF0097A7', // Overtime Amount
+                19: 'FFE65100', // OT TDS (Deep Orange)
+                20: 'FF2E7D32', // Payable OT after Deduction (Dark Green)
+                21: 'FF1B5E20'  // Total Payable Salary (Dark Green)
             };
 
             // Color header row with category colors
@@ -782,11 +832,14 @@ function performReportGeneration(month, year, reportBtn, originalText) {
                 11: 'FFFFE0B2', // Light Orange
                 12: 'FFFFCDD2', // Light Red
                 13: 'FFFFCDD2', // Light Red
-                14: 'FFB2DFDB', // Light Teal
-                15: 'FFB2DFDB', // Light Teal
-                16: 'FFB3E5FC', // Light Cyan
-                17: 'FFB3E5FC', // Light Cyan
-                18: 'FFC8E6C9'  // Light Green
+                14: 'FFB2DFDB', // Light Teal (Salary Calculated Days)
+                15: 'FFFFE0B2', // Light Orange (Net Payable Salary TDS)
+                16: 'FFB2DFDB', // Light Teal (Net Payable Salary)
+                17: 'FFB3E5FC', // Light Cyan (Overtime Hours)
+                18: 'FFB3E5FC', // Light Cyan (Overtime Amount)
+                19: 'FFFFE0B2', // Light Orange (OT TDS)
+                20: 'FFC8E6C9', // Light Green (Payable OT after Deduction)
+                21: 'FFC8E6C9'  // Light Green (Total Payable Salary)
             };
 
             // Color data rows with light colors
@@ -865,9 +918,12 @@ function performReportGeneration(month, year, reportBtn, originalText) {
                 { wch: 18 },  // 4th Saturday Deduction
                 { wch: 14 },  // Penalty Days
                 { wch: 20 },  // Salary Calculated Days
-                { wch: 14 },  // Net Salary
+                { wch: 20 },  // Net Payable Salary TDS
+                { wch: 18 },  // Net Payable Salary
                 { wch: 16 },  // Overtime Hours
                 { wch: 16 },  // Overtime Amount
+                { wch: 12 },  // OT TDS
+                { wch: 22 },  // Payable OT after Deduction
                 { wch: 15 }   // Final Salary
             ];
 
@@ -992,10 +1048,15 @@ function performExport(month, year, exportBtn, originalText) {
                 '1+ Hour Late Deduction',
                 '4th Saturday Deduction',
                 'Salary Calculated Days',
-                'Net Salary',
+                'Net Payable Salary',
+                'Net Payable Salary TDS',
+                'Payable Salary After Deduction',
                 'Overtime Hours',
                 'Overtime Amount',
-                'Final Salary'
+                'OT TDS',
+                'Payable OT after Deduction',
+                'Total TDS Amount (Govt. Amount)',
+                'Total Payable Salary'
             ];
 
             // Create data rows
@@ -1016,10 +1077,21 @@ function performExport(month, year, exportBtn, originalText) {
                     emp.one_hour_late_deduction || 0,
                     emp.fourth_saturday_deduction || 0,
                     emp.salary_calculated_days || 0,
-                    emp.net_salary || 0,
+                    Number((Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / (Number(emp.working_days || 1)))).toFixed(2)),
+                    Number((Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / (Number(emp.working_days || 1))) * (Number(emp.tds_percentage || 0) / 100)).toFixed(2)),
+                    Number(Math.max(0, Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / (Number(emp.working_days || 1))) * (1 - Number(emp.tds_percentage || 0) / 100)).toFixed(2)),
                     emp.overtime_hours || 0,
                     emp.overtime_amount || 0,
-                    emp.final_salary || 0
+                    Number((Number(emp.overtime_amount || 0) * (Number(emp.tds_percentage || 0) / 100)).toFixed(2)),
+                    Number((Math.max(0, Number(emp.overtime_amount || 0) * (1 - Number(emp.tds_percentage || 0) / 100))).toFixed(2)),
+                    Number((
+                        Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / (Number(emp.working_days || 1))) * (Number(emp.tds_percentage || 0) / 100)
+                        + Number(emp.overtime_amount || 0) * (Number(emp.tds_percentage || 0) / 100)
+                    ).toFixed(2)),
+                    Number((Math.max(0,
+                        Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / (Number(emp.working_days || 1))) * (1 - Number(emp.tds_percentage || 0) / 100)
+                        + Number(emp.overtime_amount || 0) * (1 - Number(emp.tds_percentage || 0) / 100)
+                    )).toFixed(2))
                 ]);
             });
 
@@ -1098,9 +1170,12 @@ function performExport(month, year, exportBtn, originalText) {
                 { wch: 15 },  // 1+ Hour Late Deduction
                 { wch: 15 },  // 4th Saturday Deduction
                 { wch: 15 },  // Salary Calculated Days
-                { wch: 15 },  // Net Salary
+                { wch: 18 },  // Net Payable Salary TDS
+                { wch: 18 },  // Net Payable Salary
                 { wch: 15 },  // Overtime Hours
                 { wch: 15 },  // Overtime Amount
+                { wch: 12 },  // OT TDS
+                { wch: 22 },  // Payable OT after Deduction
                 { wch: 15 }   // Final Salary
             ];
 
@@ -1193,7 +1268,16 @@ function showPresentDaysDetails(userId, employeeName) {
                     const highlight = rec.is_weekly_off ? 'background:#fff7ed;' : '';
                     const weeklyBadge = rec.is_weekly_off ? '<span class="badge badge-warning" style="margin-left:8px; background:#fef3c7; color:#92400e; padding:4px 6px; border-radius:4px; font-size:0.75rem;">Weekly Off</span>' : '';
                     const presentOnWeeklyOffNote = rec.is_weekly_off ? ' <strong style="color:#92400e; font-size:0.9rem;">(Present on weekly off)</strong>' : '';
-                    html += `<tr style="border-bottom:1px solid #e2e8f0; ${highlight}"><td style="padding:8px">${displayDate} ${weeklyBadge}</td><td style="padding:8px">${dayName}${presentOnWeeklyOffNote}</td><td style="padding:8px">${rec.punch_in || '-' }${rec.punch_in_photo ? ` <a href="${rec.punch_in_photo}" target="_blank">📷</a>` : ''}</td><td style="padding:8px">${rec.punch_out || '-'}${rec.punch_out_photo ? ` <a href="${rec.punch_out_photo}" target="_blank">📷</a>` : ''}</td><td style="padding:8px">${rec.working_hours || '-'}</td><td style="padding:8px">${rec.overtime_hours || '-'}</td></tr>`;
+                    // Show overtime hours only if >= 90 minutes (1h 30m); otherwise show '-'
+                    const _otDisplay = (() => {
+                        if (!rec.overtime_hours) return '-';
+                        const _p = rec.overtime_hours.split(':');
+                        const _totalMins = parseInt(_p[0] || 0) * 60 + parseInt(_p[1] || 0);
+                        return _totalMins >= 90 ? rec.overtime_hours : '-';
+                    })();
+                    const _inBtn  = rec.punch_in_photo  ? ` <button onclick="showAttendancePhoto('${encodeURIComponent(rec.punch_in_photo)}','Punch In')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0 2px;" title="View Punch In Photo">📷</button>` : '';
+                    const _outBtn = rec.punch_out_photo ? ` <button onclick="showAttendancePhoto('${encodeURIComponent(rec.punch_out_photo)}','Punch Out')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0 2px;" title="View Punch Out Photo">📷</button>` : '';
+                    html += `<tr style="border-bottom:1px solid #e2e8f0; ${highlight}"><td style="padding:8px">${displayDate} ${weeklyBadge}</td><td style="padding:8px">${dayName}${presentOnWeeklyOffNote}</td><td style="padding:8px">${rec.punch_in || '-'}${_inBtn}</td><td style="padding:8px">${rec.punch_out || '-'}${_outBtn}</td><td style="padding:8px">${rec.working_hours || '-'}</td><td style="padding:8px">${_otDisplay}</td></tr>`;
                 } else {
                     // No record for this date
                     const weeklyBadge = isWeekly ? '<span class="badge" style="margin-left:8px; background:#f1f5f9; color:#4a5568; padding:3px 6px; border-radius:4px; font-size:0.75rem;">Weekly Off</span>' : '';
@@ -1212,6 +1296,84 @@ function showPresentDaysDetails(userId, employeeName) {
 
 function closePresentDaysModal() {
     document.getElementById('presentDaysModal').style.display = 'none';
+}
+
+/**
+ * Show an attendance photo (punch-in or punch-out) in an inline lightbox.
+ * Handles three storage formats:
+ *   1. data:image/... base64 string  → used directly
+ *   2. http/https URL                → used directly
+ *   3. bare filename / relative path → prepended with ../../uploads/attendance/
+ */
+function showAttendancePhoto(encodedPath, label) {
+    const raw = decodeURIComponent(encodedPath);
+    let src;
+    if (!raw || raw === 'null') {
+        alert('No photo available.');
+        return;
+    }
+    if (raw.startsWith('data:image') || raw.startsWith('http')) {
+        src = raw;
+    } else if (raw.includes('uploads/attendance/')) {
+        // Already has the folder prefix; resolve from connect root
+        src = '../../' + raw.replace(/^\/+/, '');
+    } else {
+        // Bare filename — build full path relative to connect root
+        src = '../../uploads/attendance/' + raw.replace(/.*\//, '');
+    }
+
+    // Remove any existing lightbox
+    const existing = document.getElementById('_attPhotoLightbox');
+    if (existing) existing.remove();
+
+    // Build lightbox
+    const overlay = document.createElement('div');
+    overlay.id = '_attPhotoLightbox';
+    overlay.style.cssText = [
+        'position:fixed', 'inset:0', 'z-index:99999',
+        'background:rgba(0,0,0,0.82)',
+        'display:flex', 'align-items:center', 'justify-content:center',
+        'flex-direction:column', 'gap:12px'
+    ].join(';');
+
+    // Close on backdrop click
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) overlay.remove();
+    });
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:12px;padding:20px;max-width:90vw;max-height:90vh;display:flex;flex-direction:column;align-items:center;gap:12px;overflow:auto;';
+
+    // Header
+    const header = document.createElement('div');
+    header.style.cssText = 'width:100%;display:flex;justify-content:space-between;align-items:center;';
+    const title = document.createElement('span');
+    title.textContent = label + ' Photo';
+    title.style.cssText = 'font-weight:600;font-size:1rem;color:#1a202c;';
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✕';
+    closeBtn.style.cssText = 'background:none;border:none;font-size:1.25rem;cursor:pointer;color:#718096;line-height:1;';
+    closeBtn.onclick = () => overlay.remove();
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    // Image
+    const img = document.createElement('img');
+    img.alt = label + ' photo';
+    img.style.cssText = 'max-width:75vw;max-height:70vh;object-fit:contain;border-radius:6px;display:block;';
+    img.onerror = function() {
+        img.style.display = 'none';
+        const errMsg = document.createElement('p');
+        errMsg.textContent = '⚠️ Could not load photo. The file may be missing or the path is incorrect.';
+        errMsg.style.cssText = 'color:#e53e3e;font-size:0.9rem;text-align:center;padding:20px;';
+        box.appendChild(errMsg);
+    };
+    img.src = src;
+
+    box.appendChild(header);
+    box.appendChild(img);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
 }
 
 // Late Days modal logic
@@ -1401,6 +1563,7 @@ function closeOneHourLateDaysModal() {
 
 // ─── Short Leave Floating Popup ───────────────────────────────────────────────
 let _slPopup = { userId: null, date: null, lateType: null, checkboxEl: null };
+let _slJustOpened = false; // guard: prevent click-outside closing the popup in the same tick it opened
 
 function openShortLeavePopup(checkboxEl, userId, date, displayDate, lateType) {
     if (!checkboxEl.checked) { closeShortLeavePopup(); return; }
@@ -1409,9 +1572,16 @@ function openShortLeavePopup(checkboxEl, userId, date, displayDate, lateType) {
 
     const popup = document.getElementById('shortLeavePopup');
     const reasonInput = document.getElementById('slPopupReason');
+    const saveBtn = document.getElementById('slPopupSaveBtn');
+
     document.getElementById('slPopupDate').textContent = `Date: ${displayDate}`;
     reasonInput.value = '';
     reasonInput.style.borderColor = '#d1d5db';
+    reasonInput.placeholder = 'Enter reason (required)...';
+
+    // Always reset button state in case a previous apply left it in a bad state
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = '&#10003; Save &amp; Apply';
 
     // Position popup near the checkbox
     const rect = checkboxEl.getBoundingClientRect();
@@ -1424,6 +1594,11 @@ function openShortLeavePopup(checkboxEl, userId, date, displayDate, lateType) {
     popup.style.left = left + 'px';
     popup.style.top  = top  + 'px';
     popup.style.display = 'block';
+
+    // Set guard flag so click-outside listener ignores this same click event
+    _slJustOpened = true;
+    setTimeout(() => { _slJustOpened = false; }, 0);
+
     reasonInput.focus();
 }
 
@@ -1474,16 +1649,28 @@ function submitShortLeavePopup() {
             }
             // Update balance badge
             const infoId = _slPopup.lateType === 'late' ? 'lateDaysUserInfo' : 'oneHourLateDaysUserInfo';
+            const tbodyId = _slPopup.lateType === 'late' ? 'lateDaysTbody' : 'oneHourLateDaysTbody';
             const badge = document.querySelector(`#${infoId} span`);
             if (badge) {
                 const newBal = Number(data.remaining_balance || 0);
                 badge.textContent = `Short Leave Balance: ${newBal}`;
                 badge.style.background = newBal > 0 ? '#dcfce7' : '#fee2e2';
                 badge.style.color      = newBal > 0 ? '#166534' : '#991b1b';
+                // Only disable checkboxes inside THIS user's modal tbody
                 if (newBal <= 0) {
-                    document.querySelectorAll('input[type="checkbox"][id^="sl-"]').forEach(cb => {
-                        if (!cb.checked) cb.disabled = true;
-                    });
+                    const modalTbody = document.getElementById(tbodyId);
+                    if (modalTbody) {
+                        modalTbody.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                            if (!cb.checked) {
+                                cb.disabled = true;
+                                const label = cb.closest('label');
+                                if (label) {
+                                    label.style.cursor  = 'not-allowed';
+                                    label.style.opacity = '0.4';
+                                }
+                            }
+                        });
+                    }
                 }
             }
             // Close popup cleanly (don't uncheck — it stays checked as visual confirmation)
@@ -1506,9 +1693,16 @@ function submitShortLeavePopup() {
 
 // Close popup when clicking outside
 document.addEventListener('click', function(e) {
+    // If popup was just opened in this same event tick, ignore
+    if (_slJustOpened) return;
+
     const popup = document.getElementById('shortLeavePopup');
     if (popup && popup.style.display !== 'none') {
-        if (!popup.contains(e.target) && !e.target.closest('input[id^="sl-"]')) {
+        // Allow clicks inside popup, on the checkbox, or on the label wrapping it
+        const isInsidePopup = popup.contains(e.target);
+        const isCheckbox    = !!e.target.closest('[id^="sl-"]');
+        const isLabel       = !!e.target.closest('label');
+        if (!isInsidePopup && !isCheckbox && !isLabel) {
             closeShortLeavePopup();
         }
     }

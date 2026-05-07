@@ -64,23 +64,28 @@ try {
         exit;
     }
 
-    // 2. Check leave bank balance for short leave
-    $bankStmt = $pdo->prepare("
-        SELECT id, remaining_balance
-        FROM leave_bank
-        WHERE user_id = ?
-          AND leave_type_id = ?
-          AND year = ?
-        LIMIT 1
-    ");
-    $bankStmt->execute([$targetUserId, $SHORT_LEAVE_TYPE_ID, $currentYear]);
-    $bankRecord = $bankStmt->fetch(PDO::FETCH_ASSOC);
+    // 2. Check short leave balance for this month (2 per month, computed from leave_request)
+    $mStart = date('Y-m-01', strtotime($date));
+    $mEnd   = date('Y-m-t',  strtotime($date));
 
-    if (!$bankRecord || floatval($bankRecord['remaining_balance']) <= 0) {
+    $usedStmt = $pdo->prepare("
+        SELECT COUNT(*) as used
+        FROM leave_request
+        WHERE user_id = ?
+          AND leave_type = (SELECT id FROM leave_types WHERE LOWER(name) LIKE '%short%' LIMIT 1)
+          AND status != 'rejected'
+          AND start_date BETWEEN ? AND ?
+    ");
+    $usedStmt->execute([$targetUserId, $mStart, $mEnd]);
+    $usedRow  = $usedStmt->fetch(PDO::FETCH_ASSOC);
+    $mUsed    = $usedRow ? intval($usedRow['used']) : 0;
+    $remaining = max(0, 2 - $mUsed);
+
+    if ($remaining <= 0) {
         $pdo->rollBack();
         echo json_encode([
-            'status' => 'error',
-            'message' => 'Employee has no short leave balance remaining'
+            'status'  => 'error',
+            'message' => 'Employee has no short leave balance remaining for this month'
         ]);
         exit;
     }
@@ -137,33 +142,16 @@ try {
 
     $newLeaveId = $pdo->lastInsertId();
 
-    // 5. Deduct 1 from leave bank remaining_balance
-    $deductStmt = $pdo->prepare("
-        UPDATE leave_bank
-        SET remaining_balance = remaining_balance - 1
-        WHERE id = ?
-          AND remaining_balance > 0
-    ");
-    $deductStmt->execute([$bankRecord['id']]);
-
-    if ($deductStmt->rowCount() === 0) {
-        $pdo->rollBack();
-        echo json_encode(['status' => 'error', 'message' => 'Failed to deduct leave balance']);
-        exit;
-    }
-
     $pdo->commit();
 
-    // Fetch updated balance
-    $newBalStmt = $pdo->prepare("SELECT remaining_balance FROM leave_bank WHERE id = ?");
-    $newBalStmt->execute([$bankRecord['id']]);
-    $newBal = $newBalStmt->fetchColumn();
+    // Remaining balance = 2 - (already used + 1 just inserted)
+    $newBal = max(0, 2 - ($mUsed + 1));
 
     echo json_encode([
-        'status'          => 'success',
-        'message'         => 'Short leave applied and approved successfully',
-        'leave_id'        => $newLeaveId,
-        'remaining_balance' => floatval($newBal)
+        'status'            => 'success',
+        'message'           => 'Short leave applied and approved successfully',
+        'leave_id'          => $newLeaveId,
+        'remaining_balance' => $newBal
     ]);
 
 } catch (PDOException $e) {

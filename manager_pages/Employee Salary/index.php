@@ -142,9 +142,9 @@ $selectedYear = intval($selectedYear);
                                 <th>Employee ID</th>
                                 <th>Name</th>
                                 <th>Role</th>
-                                <th>Base Salary</th>
-                                <th>TDS (%)</th>
                                 <th>Gross Salary</th>
+                                <th>TDS (%)</th>
+                                <th>Payable Salary</th>
                                 <th>Working Days</th>
                                 <th>Present Days</th>
                                 <th>Late Days</th>
@@ -161,11 +161,15 @@ $selectedYear = intval($selectedYear);
                                         <span class="info-tooltip">Calculated = present days + casual (full) + half-day (0.5) + compensate (0.5) - late deductions (every 3 late = 0.5 day) - 1+hr late (0.5 per) - 4th Saturday penalty (2 days)</span>
                                     </span>
                                 </th>
-                                <th>Net Salary</th>
+                                <th>Net Payable Salary</th>
+                                <th>Net Payable Salary TDS<br><small style="font-weight:400; font-size:0.75rem;">(Net × TDS%)</small></th>
+                                <th>Payable Salary After Deduction<br><small style="font-weight:400; font-size:0.75rem;">(Net Payable - TDS)</small></th>
                                 <th>Overtime Hours</th>
                                 <th>Overtime Amount</th>
-                                <th>Final Salary</th>
-                                <th style="background:#fef9c3; color:#713f12;">Payable Salary<br><small style="font-weight:400; font-size:0.75rem;">(Final - TDS)</small></th>
+                                <th>OT TDS</th>
+                                <th>Payable OT after Deduction<br><small style="font-weight:400; font-size:0.75rem;">(OT - TDS)</small></th>
+                                <th>Total TDS Amount<br><small style="font-weight:400; font-size:0.75rem;">(Govt. Amount)</small></th>
+                                <th style="background:#fef9c3; color:#713f12;">Total Payable Salary<br><small style="font-weight:400; font-size:0.75rem;">(Net Payable + Payable OT after Deduction)</small></th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -252,19 +256,19 @@ $selectedYear = intval($selectedYear);
             <form id="editSalaryForm" style="display:flex; flex-direction:column; flex:1; min-height:0;">
                 <div style="padding:20px 30px; overflow-y:auto; flex:1;">
 
-                <!-- Base Salary Section -->
+                <!-- Gross Salary Section -->
                 <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:6px; padding:14px; margin-bottom:16px;">
                     <p style="font-weight:700; color:#0369a1; margin:0 0 12px 0; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.04em;">
-                        <i class="fas fa-rupee-sign"></i> Base Salary
+                        <i class="fas fa-rupee-sign"></i> Gross Salary
                     </p>
                     <div class="form-group" style="margin-bottom:10px;">
-                        <label for="newBaseSalary">Amount (₹)</label>
-                        <input type="number" id="newBaseSalary" name="newBaseSalary" step="0.01" min="0" required placeholder="e.g. 50000">
+                        <label for="newBaseSalary">Amount (₹) <small style="color:#6b7280; font-weight:400;">(this is the Gross — Payable = Gross − TDS%)</small></label>
+                        <input type="number" id="newBaseSalary" name="newBaseSalary" step="0.01" min="0" required placeholder="e.g. 33000">
                     </div>
                     <div class="form-group" style="margin-bottom:0;">
                         <label for="baseSalaryEffectiveFrom">Effective From</label>
                         <input type="date" id="baseSalaryEffectiveFrom" name="baseSalaryEffectiveFrom">
-                        <small style="color:#718096; font-size:0.82rem;">Date from which this base salary applies. Leave blank if immediately.</small>
+                        <small style="color:#718096; font-size:0.82rem;">Date from which this gross salary applies. Leave blank if immediately.</small>
                     </div>
                 </div>
 

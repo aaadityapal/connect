@@ -183,17 +183,25 @@ try {
 
     $monthName = date('F Y', strtotime($firstDayOfMonth));
 
-    // Fetch short leave remaining balance for this user
+    // Fetch short leave remaining balance for this user.
+    // Short Leave gives 2 per month. Balance = max(0, 2 - used_this_month).
+    // Count from leave_request (NOT leave_bank — SL has no stored balance row).
     $shortLeaveBal = 0;
     try {
+        $mStart = $firstDayOfMonth;
+        $mEnd   = date('Y-m-t', strtotime($firstDayOfMonth));
         $balStmt = $pdo->prepare("
-            SELECT remaining_balance FROM leave_bank
-            WHERE user_id = ? AND leave_type_id = 11 AND year = ?
-            LIMIT 1
+            SELECT COUNT(*) as used
+            FROM leave_request
+            WHERE user_id = ?
+              AND leave_type = (SELECT id FROM leave_types WHERE LOWER(name) LIKE '%short%' LIMIT 1)
+              AND status != 'rejected'
+              AND start_date BETWEEN ? AND ?
         ");
-        $balStmt->execute([$userId, $year]);
+        $balStmt->execute([$userId, $mStart, $mEnd]);
         $balRow = $balStmt->fetch(PDO::FETCH_ASSOC);
-        $shortLeaveBal = $balRow ? floatval($balRow['remaining_balance']) : 0;
+        $mUsed  = $balRow ? floatval($balRow['used']) : 0;
+        $shortLeaveBal = max(0, 2.0 - $mUsed);
     } catch (Exception $e) { $shortLeaveBal = 0; }
 
     echo json_encode([

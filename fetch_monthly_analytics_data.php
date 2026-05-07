@@ -197,8 +197,9 @@ try {
             $tdsEffectiveFrom = $fallbackRecord ? $fallbackRecord['tds_effective_from'] : null;
         }
 
-        // Gross Salary = Base Salary + TDS amount (used as the base for all rate calculations)
-        $grossSalary = round($baseSalary * (1 + $tdsPercentage / 100), 2);
+        // base_salary stored in DB IS the Gross Salary (what user types in edit modal)
+        // Payable Salary = Gross - TDS deduction = base_salary * (1 - tds%/100)
+        $grossSalary = $baseSalary;
 
         // Calculate working days based on user_shifts and shifts with weekly offs
         $workingDays = calculateWorkingDays($pdo, $employee['id'], $month, $year);
@@ -292,8 +293,8 @@ try {
         $lateDays = 0;
         if ($userShift && !empty($userShift['start_time'])) {
             $shiftStartTime = $userShift['start_time'];
-            // Add 15 minutes grace period
-            $graceTime = date('H:i:s', strtotime($shiftStartTime . ' +15 minutes'));
+            // Add 15 minutes grace period — any punch-in up to HH:15:59 is not late
+            $graceTime = date('H:i:s', strtotime($shiftStartTime . ' +15 minutes +59 seconds'));
             
             // Count late days: punch_in > grace_time (more than 15 minutes late)
             // Exclude days with short leave
@@ -633,78 +634,104 @@ try {
             $fourthSaturdayDeduction = 0;
         }
 
-        // Calculate overtime hours (fetch from overtime_requests table where status = 'approved')
-        $overtimeHours = 0;
+        // Calculate overtime hours — dynamically recalculated using the same formula
+        // as the overtime page (api_overtime.php) to guarantee consistency.
+        // Rule   : punch_out must exceed shift end_time by >= 90 mins.
+        // Formula: OT = floor(diffMins / 30) * 0.5  (rounds DOWN to nearest 30-min chunk).
+        // Only approved overtime_requests records are counted (INNER JOIN).
+        $overtimeHours  = 0;
         $overtimeAmount = 0;
         try {
-            $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
+            $monthStr        = str_pad($month, 2, '0', STR_PAD_LEFT);
             $firstDayOfMonth = "$year-$monthStr-01";
-            $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
-            
-            // Fetch user's shift hours from shifts table via user_shifts
+            $lastDayOfMonth  = date('Y-m-t', strtotime($firstDayOfMonth));
+
+            // Fetch user's shift start_time / end_time to calculate shift duration
             $shiftHoursStmt = $pdo->prepare("
                 SELECT s.start_time, s.end_time
                 FROM user_shifts us
                 JOIN shifts s ON us.shift_id = s.id
                 WHERE us.user_id = ?
-                AND (
-                    (us.effective_from IS NULL AND us.effective_to IS NULL) OR
-                    (us.effective_from <= ? AND (us.effective_to IS NULL OR us.effective_to >= ?))
-                )
+                  AND (
+                      (us.effective_from IS NULL AND us.effective_to IS NULL) OR
+                      (us.effective_from <= ? AND (us.effective_to IS NULL OR us.effective_to >= ?))
+                  )
                 ORDER BY us.effective_from DESC
                 LIMIT 1
             ");
             $shiftHoursStmt->execute([$employee['id'], $lastDayOfMonth, $firstDayOfMonth]);
             $shiftHoursResult = $shiftHoursStmt->fetch(PDO::FETCH_ASSOC);
-            
-            // Calculate shift hours from start_time and end_time
-            $shiftHours = 8; // Default to 8 hours
+
+            $shiftHours   = 8;    // Default shift duration
+            $shiftEndTime = null; // Fallback shift end time string
+
             if ($shiftHoursResult && $shiftHoursResult['start_time'] && $shiftHoursResult['end_time']) {
-                $startTime = new DateTime($shiftHoursResult['start_time']);
-                $endTime = new DateTime($shiftHoursResult['end_time']);
-                
-                // Handle case where end_time is next day (e.g., 22:00 to 06:00)
-                if ($endTime < $startTime) {
-                    $endTime->modify('+1 day');
-                }
-                
-                $interval = $startTime->diff($endTime);
-                $shiftHours = floatval($interval->h) + (floatval($interval->i) / 60);
+                $stDT         = new DateTime($shiftHoursResult['start_time']);
+                $etDT         = new DateTime($shiftHoursResult['end_time']);
+                $shiftEndTime = $shiftHoursResult['end_time'];
+                if ($etDT < $stDT) { $etDT->modify('+1 day'); }
+                $iv         = $stDT->diff($etDT);
+                $shiftHours = floatval($iv->h) + (floatval($iv->i) / 60);
             }
-            
-            $overtimeStmt = $pdo->prepare("
-                SELECT SUM(overtime_hours) as total_overtime_hours
-                FROM overtime_requests
-                WHERE user_id = ?
-                AND DATE(date) BETWEEN ? AND ?
-                AND status = 'approved'
-            ");
-            $overtimeStmt->execute([$employee['id'], $firstDayOfMonth, $lastDayOfMonth]);
-            $overtimeResult = $overtimeStmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($overtimeResult && $overtimeResult['total_overtime_hours'] !== null) {
-                $overtimeHours = floatval($overtimeResult['total_overtime_hours']);
-                // Calculate overtime amount:
-                // One day salary = base_salary / working_days
-                // One hour salary = one_day_salary / shift_hours
-                // Overtime amount = overtime_hours * one_hour_salary
-                $oneDaySalary = $grossSalary / $workingDays;
-                $oneHourSalary = $oneDaySalary / $shiftHours;
-                $overtimeAmount = round($overtimeHours * $oneHourSalary, 2);
+
+            if ($shiftEndTime) {
+                // Join attendance with approved overtime_requests so only approved OT days are counted.
+                // Use the per-row shift end_time from the shifts table; fall back to $shiftEndTime.
+                $otStmt = $pdo->prepare("
+                    SELECT a.punch_out,
+                           COALESCE(s.end_time, ?) AS end_time
+                    FROM attendance a
+                    INNER JOIN overtime_requests oreq
+                           ON oreq.attendance_id = a.id
+                          AND oreq.user_id       = a.user_id
+                          AND oreq.status        = 'approved'
+                    LEFT JOIN user_shifts us
+                           ON us.user_id = a.user_id
+                          AND a.date >= us.effective_from
+                          AND (us.effective_to IS NULL OR a.date <= us.effective_to)
+                    LEFT JOIN shifts s ON us.shift_id = s.id
+                    WHERE a.user_id = ?
+                      AND DATE(a.date) BETWEEN ? AND ?
+                      AND a.punch_out IS NOT NULL
+                      AND a.punch_out != ''
+                ");
+                $otStmt->execute([$shiftEndTime, $employee['id'], $firstDayOfMonth, $lastDayOfMonth]);
+                $otRows = $otStmt->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($otRows as $otRow) {
+                    $shiftEndTs = strtotime($otRow['end_time']);
+                    $punchOutTs = strtotime($otRow['punch_out']);
+                    if ($punchOutTs > $shiftEndTs) {
+                        $diffMins = floor(($punchOutTs - $shiftEndTs) / 60);
+                        // Must be at least 90 min past shift end
+                        if ($diffMins >= 90) {
+                            // Round DOWN to nearest 30-min chunk (identical to api_overtime.php)
+                            $overtimeHours += floor($diffMins / 30) * 0.5;
+                        }
+                    }
+                }
+
+                $overtimeHours = round($overtimeHours, 2);
+
+                if ($overtimeHours > 0 && $workingDays > 0 && $shiftHours > 0) {
+                    $oneDaySalary   = $grossSalary / $workingDays;
+                    $oneHourSalary  = $oneDaySalary / $shiftHours;
+                    $overtimeAmount = round($overtimeHours * $oneHourSalary, 2);
+                }
             }
         } catch (PDOException $e) {
             error_log("Error calculating overtime for user " . $employee['id'] . ": " . $e->getMessage());
-            $overtimeHours = 0;
+            $overtimeHours  = 0;
             $overtimeAmount = 0;
         } catch (Exception $e) {
             error_log("Error calculating shift hours for user " . $employee['id'] . ": " . $e->getMessage());
-            $overtimeHours = 0;
+            $overtimeHours  = 0;
             $overtimeAmount = 0;
         }
         
         // Calculate salary calculated days
         // Start from present days - but cap present days to working days first
-        $presentDaysCapped = floatval(min($presentDays, $workingDays));
+        $presentDaysCapped    = floatval(min($presentDays, $workingDays));
         $salaryCalculatedDays = $presentDaysCapped;
 
         // Add/Subtract leave credits from approved leaves fetched earlier ($leaves from leave deduction block)
@@ -797,7 +824,7 @@ try {
         // Round to 2 decimal places
         $salaryCalculatedDays = round($salaryCalculatedDays, 2);
 
-        // TDS amount & Gross Salary (used for display)
+        // TDS deduction amount (deducted from gross to get payable salary)
         $tdsAmount = round($baseSalary * ($tdsPercentage / 100), 2);
 
         $employeeData[] = [

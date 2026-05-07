@@ -1237,7 +1237,9 @@ function showPresentDaysDetails(userId, employeeName) {
 
             const records = data.records || [];
             const weeklyOffs = (data.weekly_offs || []).map(d => String(d).trim().toLowerCase());
-            const presentCount = records.length;
+            
+            // Calculate total: half_day counts as 0.5, anything else as 1.0
+            const presentCount = records.reduce((sum, r) => sum + (r.status === 'half_day' ? 0.5 : 1), 0);
             document.getElementById('presentDaysUserInfo').innerText = `${employeeName} — ${data.monthYear} — ${presentCount} present day(s)`;
 
             // Build a map of records by date for quick lookup
@@ -1277,7 +1279,10 @@ function showPresentDaysDetails(userId, employeeName) {
                     })();
                     const _inBtn  = rec.punch_in_photo  ? ` <button onclick="showAttendancePhoto('${encodeURIComponent(rec.punch_in_photo)}','Punch In')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0 2px;" title="View Punch In Photo">📷</button>` : '';
                     const _outBtn = rec.punch_out_photo ? ` <button onclick="showAttendancePhoto('${encodeURIComponent(rec.punch_out_photo)}','Punch Out')" style="background:none;border:none;cursor:pointer;font-size:1rem;padding:0 2px;" title="View Punch Out Photo">📷</button>` : '';
-                    html += `<tr style="border-bottom:1px solid #e2e8f0; ${highlight}"><td style="padding:8px">${displayDate} ${weeklyBadge}</td><td style="padding:8px">${dayName}${presentOnWeeklyOffNote}</td><td style="padding:8px">${rec.punch_in || '-'}${_inBtn}</td><td style="padding:8px">${rec.punch_out || '-'}${_outBtn}</td><td style="padding:8px">${rec.working_hours || '-'}</td><td style="padding:8px">${_otDisplay}</td></tr>`;
+                    
+                    const halfDayBadge = rec.status === 'half_day' ? '<span class="badge" style="margin-left:8px; background:#e0e7ff; color:#3730a3; padding:4px 6px; border-radius:4px; font-size:0.75rem;">Half Day</span>' : '';
+                    
+                    html += `<tr style="border-bottom:1px solid #e2e8f0; ${highlight}"><td style="padding:8px">${displayDate} ${weeklyBadge} ${halfDayBadge}</td><td style="padding:8px">${dayName}${presentOnWeeklyOffNote}</td><td style="padding:8px">${rec.punch_in || '-'}${_inBtn}</td><td style="padding:8px">${rec.punch_out || '-'}${_outBtn}</td><td style="padding:8px">${rec.working_hours || '-'}</td><td style="padding:8px">${_otDisplay}</td></tr>`;
                 } else {
                     // No record for this date
                     const weeklyBadge = isWeekly ? '<span class="badge" style="margin-left:8px; background:#f1f5f9; color:#4a5568; padding:3px 6px; border-radius:4px; font-size:0.75rem;">Weekly Off</span>' : '';

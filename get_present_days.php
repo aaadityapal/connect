@@ -30,8 +30,9 @@ try {
     $weeklyOffs = [];
     try {
         $shiftStmt = $pdo->prepare(
-            "SELECT us.weekly_offs, us.effective_from, us.effective_to
+            "SELECT us.weekly_offs, us.effective_from, us.effective_to, s.start_time, s.end_time
              FROM user_shifts us
+             LEFT JOIN shifts s ON us.shift_id = s.id
              WHERE us.user_id = ?
              AND (
                  (us.effective_from IS NULL AND us.effective_to IS NULL) OR
@@ -60,9 +61,18 @@ try {
         $weeklyOffs = [];
     }
 
+    $halfShiftSeconds = 4.5 * 3600; // default to 4.5 hours
+    if (isset($userShift) && !empty($userShift['start_time']) && !empty($userShift['end_time'])) {
+        $start = strtotime($userShift['start_time']);
+        $end = strtotime($userShift['end_time']);
+        $shiftDuration = $end - $start;
+        if ($shiftDuration < 0) { $shiftDuration += 24 * 3600; }
+        $halfShiftSeconds = $shiftDuration / 2;
+    }
+
     // Fetch attendance rows where punch_in and punch_out present
     $stmt = $pdo->prepare(
-        "SELECT id, user_id, date, punch_in, punch_out, working_hours, overtime_hours, punch_in_photo, punch_out_photo
+        "SELECT id, user_id, date, status, punch_in, punch_out, working_hours, overtime_hours, punch_in_photo, punch_out_photo
          FROM attendance
          WHERE user_id = ?
          AND DATE(date) BETWEEN ? AND ?
@@ -79,14 +89,39 @@ try {
         $d = new DateTime($r['date']);
         $dayName = $d->format('l');
         $isWeeklyOff = in_array($dayName, $weeklyOffs);
+        
+        $isHalfDay = ($r['status'] === 'half_day');
+        $displayWorkingHours = $r['working_hours'];
+
+        if (!empty($r['punch_in']) && !empty($r['punch_out'])) {
+            $inTime = strtotime($r['punch_in']);
+            $outTime = strtotime($r['punch_out']);
+            if ($inTime !== false && $outTime !== false) {
+                $whSecs = $outTime - $inTime;
+                if ($whSecs < 0) { $whSecs += 24 * 3600; }
+                
+                // Override the display working hours with the correctly calculated value
+                $whHours = floor($whSecs / 3600);
+                $whMins = floor(($whSecs % 3600) / 60);
+                $whRemainderSecs = $whSecs % 60;
+                $displayWorkingHours = sprintf('%02d:%02d:%02d', $whHours, $whMins, $whRemainderSecs);
+
+                // Dynamically mark as half day if worked less than half shift
+                if ($whSecs < $halfShiftSeconds) {
+                    $isHalfDay = true;
+                }
+            }
+        }
+
         $records[] = [
             'id' => $r['id'],
             'date' => $d->format('Y-m-d'),
             'displayDate' => $d->format('d-M-Y'),
             'day' => $dayName,
+            'status' => $isHalfDay ? 'half_day' : $r['status'],
             'punch_in' => $r['punch_in'],
             'punch_out' => $r['punch_out'],
-            'working_hours' => $r['working_hours'],
+            'working_hours' => $displayWorkingHours,
             'overtime_hours' => $r['overtime_hours'],
             'punch_in_photo' => !empty($r['punch_in_photo']) ? $r['punch_in_photo'] : null,
             'punch_out_photo' => !empty($r['punch_out_photo']) ? $r['punch_out_photo'] : null,

@@ -64,7 +64,8 @@ try {
             lr.reason,
             lr.time_from,
             lr.time_to,
-            DATEDIFF(lr.end_date, lr.start_date) + 1 as num_days,
+            lr.duration,
+            DATEDIFF(lr.end_date, lr.start_date) + 1 as calculated_days,
             lr.status,
             lt.name as leave_type_name
         FROM leave_request lr
@@ -125,6 +126,12 @@ try {
         
         $isHalfDay = stripos($record['leave_type_name'] ?? '', 'half') !== false;
         
+        // If the database has a specific duration (like 0.5 for a half-day casual leave), use it!
+        // Otherwise, fallback to the DATEDIFF calculation.
+        $actualDays = (isset($record['duration']) && floatval($record['duration']) > 0) 
+            ? floatval($record['duration']) 
+            : ($isHalfDay ? 0.5 : intval($record['calculated_days']));
+        
         $formattedRecords[] = [
             'start_date'         => $record['start_date'],
             'end_date'           => $record['end_date'],
@@ -132,7 +139,7 @@ try {
             'end_date_display'   => $endDate->format('d M Y'),
             'date_range'         => $startDate->format('d M Y') . ' to ' . $endDate->format('d M Y'),
             'leave_type'         => $leaveTypeDisplay,
-            'num_days'           => $isHalfDay ? 0.5 : intval($record['num_days']),
+            'num_days'           => $actualDays,
             'reason'             => $record['reason'] ?? 'No reason provided',
             'status'             => $record['status'],
             'short_leave_type'   => $shortLeaveType

@@ -204,28 +204,9 @@ try {
         // Calculate working days based on user_shifts and shifts with weekly offs
         $workingDays = calculateWorkingDays($pdo, $employee['id'], $month, $year);
         
-        // Fetch present days from attendance table
-        // Present days are counted when both punch_in and punch_out are not NULL/empty
-        $presentDaysStmt = $pdo->prepare("
-            SELECT COUNT(*) as present_days
-            FROM attendance
-            WHERE user_id = ?
-            AND MONTH(date) = ?
-            AND YEAR(date) = ?
-            AND punch_in IS NOT NULL
-            AND punch_in != ''
-            AND punch_out IS NOT NULL
-            AND punch_out != ''
-        ");
-        $presentDaysStmt->execute([$employee['id'], $month, $year]);
-        $presentDaysResult = $presentDaysStmt->fetch(PDO::FETCH_ASSOC);
-        $presentDays = $presentDaysResult['present_days'] ?? 0;
-        
-        // Fetch late days from attendance table
-        // Late is counted when punch_in time is more than 15 minutes after shift start time
-        // First, get the user's shift start time
+        // Fetch user's shift start time and end time early to calculate dynamic half day threshold
         $shiftStmt = $pdo->prepare("
-            SELECT s.start_time
+            SELECT s.start_time, s.end_time
             FROM user_shifts us
             LEFT JOIN shifts s ON us.shift_id = s.id
             WHERE us.user_id = ?
@@ -238,6 +219,41 @@ try {
         ");
         $shiftStmt->execute([$employee['id']]);
         $userShift = $shiftStmt->fetch(PDO::FETCH_ASSOC);
+        
+        $halfShiftSeconds = 4.5 * 3600; // default 4.5 hours
+        if ($userShift && !empty($userShift['start_time']) && !empty($userShift['end_time'])) {
+            $start = strtotime($userShift['start_time']);
+            $end = strtotime($userShift['end_time']);
+            $shiftDuration = $end - $start;
+            if ($shiftDuration < 0) { $shiftDuration += 24 * 3600; }
+            $halfShiftSeconds = $shiftDuration / 2;
+        }
+
+        // Fetch present days from attendance table
+        // half_day status OR working_hours < half shift counts as 0.5, full present counts as 1.0
+        $presentDaysStmt = $pdo->prepare("
+            SELECT SUM(
+                CASE 
+                    WHEN status = 'half_day' THEN 0.5 
+                    WHEN MOD(TIME_TO_SEC(punch_out) - TIME_TO_SEC(punch_in) + 86400, 86400) < ? THEN 0.5 
+                    ELSE 1 
+                END
+            ) as present_days
+            FROM attendance
+            WHERE user_id = ?
+            AND MONTH(date) = ?
+            AND YEAR(date) = ?
+            AND punch_in IS NOT NULL
+            AND punch_in != ''
+            AND punch_out IS NOT NULL
+            AND punch_out != ''
+        ");
+        $presentDaysStmt->execute([$halfShiftSeconds, $employee['id'], $month, $year]);
+        $presentDaysResult = $presentDaysStmt->fetch(PDO::FETCH_ASSOC);
+        $presentDays = $presentDaysResult['present_days'] ?? 0;
+        
+        // Fetch late days from attendance table
+        // Late is counted when punch_in time is more than 15 minutes after shift start time
         
         // Fetch ONLY MORNING short leave dates for this month to exclude from late day calculations
         // Evening short leaves should NOT reduce late punch-in counts
@@ -366,6 +382,7 @@ try {
             $leaveStmt = $pdo->prepare("
                 SELECT SUM(
                     CASE
+                        WHEN lr.start_date = lr.end_date AND lr.duration > 0 THEN lr.duration
                         WHEN LOWER(lt.name) LIKE '%half%' THEN 0.5
                         ELSE DATEDIFF(
                             LEAST(lr.end_date, ?),
@@ -420,7 +437,8 @@ try {
                     lr.start_date,
                     lr.end_date,
                     lt.name as leave_type,
-                    DATEDIFF(lr.end_date, lr.start_date) + 1 as num_days
+                    lr.duration,
+                    DATEDIFF(lr.end_date, lr.start_date) + 1 as calculated_days
                 FROM leave_request lr
                 LEFT JOIN leave_types lt ON lr.leave_type = lt.id
                 WHERE lr.user_id = ?
@@ -448,7 +466,13 @@ try {
             $yearlyLeaveStmt = $pdo->prepare("
                 SELECT 
                     lt.name as leave_type,
-                    SUM(DATEDIFF(lr.end_date, lr.start_date) + 1) as total_days
+                    SUM(
+                        CASE
+                            WHEN lr.start_date = lr.end_date AND lr.duration > 0 THEN lr.duration
+                            WHEN LOWER(lt.name) LIKE '%half%' THEN 0.5
+                            ELSE DATEDIFF(lr.end_date, lr.start_date) + 1
+                        END
+                    ) as total_days
                 FROM leave_request lr
                 LEFT JOIN leave_types lt ON lr.leave_type = lt.id
                 WHERE lr.user_id = ?
@@ -481,7 +505,12 @@ try {
             // Calculate deductions for each leave
             foreach ($leaves as $leave) {
                 $leaveType = strtolower(str_replace(' ', '_', $leave['leave_type'] ?? 'other'));
-                $numDays = intval($leave['num_days']);
+                
+                $isHalfDay = stripos($leave['leave_type'] ?? '', 'half') !== false;
+                $numDays = (isset($leave['duration']) && floatval($leave['duration']) > 0 && $leave['start_date'] === $leave['end_date']) 
+                    ? floatval($leave['duration']) 
+                    : ($isHalfDay ? 0.5 : intval($leave['calculated_days']));
+                
                 $deduction = 0;
                 
                 switch ($leaveType) {
@@ -745,7 +774,11 @@ try {
         if (!empty($leaves) && is_array($leaves)) {
             foreach ($leaves as $lv) {
                 $lt = strtolower(str_replace(' ', '_', $lv['leave_type'] ?? 'other'));
-                $numDays = intval($lv['num_days']);
+                
+                $isHalfDay = stripos($lv['leave_type'] ?? '', 'half') !== false;
+                $numDays = (isset($lv['duration']) && floatval($lv['duration']) > 0 && $lv['start_date'] === $lv['end_date']) 
+                    ? floatval($lv['duration']) 
+                    : ($isHalfDay ? 0.5 : intval($lv['calculated_days']));
 
                 switch ($lt) {
                     case 'casual_leave':
@@ -758,8 +791,9 @@ try {
                     case 'half day':
                     case 'half_day_leave':
                     case 'half day leave':
-                        // Half day is a deduction of 0.5 per day - SUBTRACT from salary
-                        $leaveCreditsToAdd -= 0.5 * $numDays;
+                        // Half day leave is an approved leave for half a day - ADD 0.5 to salary days
+                        // (Employee already got 0.5 from Present Days for the hours they worked)
+                        $leaveCreditsToAdd += 0.5 * $numDays;
                         $halfDayCount += $numDays;
                         break;
                     case 'compensate_leave':

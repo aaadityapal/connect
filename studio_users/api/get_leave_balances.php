@@ -174,7 +174,7 @@ try {
             $b['lockMessage'] = $parentalLockMessage;
         }
 
-        if (strpos($nameStr, 'casual') !== false && !$isEligibleForCasual) {
+        if ((strpos($nameStr, 'casual') !== false || strpos($nameStr, 'sick') !== false) && !$isEligibleForCasual) {
             $b['is_locked'] = true;
             $b['lockMessage'] = $casualLockMessage;
         }

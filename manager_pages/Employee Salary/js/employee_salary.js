@@ -1236,27 +1236,24 @@ function showPresentDaysDetails(userId, employeeName) {
             }
 
             const records = data.records || [];
+            const leaves = data.leaves || {};
             const weeklyOffs = (data.weekly_offs || []).map(d => String(d).trim().toLowerCase());
             
-            // Calculate total: half_day counts as 0.5, anything else as 1.0
-            const presentCount = records.reduce((sum, r) => sum + (r.status === 'half_day' ? 0.5 : 1), 0);
-            document.getElementById('presentDaysUserInfo').innerText = `${employeeName} — ${data.monthYear} — ${presentCount} present day(s)`;
-
             // Build a map of records by date for quick lookup
             const recMap = {};
             records.forEach(r => { recMap[r.date] = r; });
-
-            const tbody = document.getElementById('presentDaysTbody');
-            let html = '';
 
             // Determine last day of month
             const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
             const monthIndex = parseInt(month) - 1;
             const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+            let totalPresentCount = 0;
+            let html = '';
+            const tbody = document.getElementById('presentDaysTbody');
+
             for (let day = 1; day <= lastDay; day++) {
                 const dt = new Date(parseInt(year), monthIndex, day);
-                // Format date in local timezone (not UTC) to avoid off-by-one errors
                 const year_pad = dt.getFullYear();
                 const month_pad = String(dt.getMonth() + 1).padStart(2, '0');
                 const day_pad = String(dt.getDate()).padStart(2, '0');
@@ -1266,11 +1263,47 @@ function showPresentDaysDetails(userId, employeeName) {
                 const isWeekly = weeklyOffs.indexOf(dayName.toLowerCase()) !== -1;
 
                 const rec = recMap[iso];
+                const dayLeaves = leaves[iso] || [];
+                
+                let leaveBadgesHtml = '';
+                let paidLeaveCredit = 0;
+                
+                dayLeaves.forEach(lv => {
+                    const lType = lv.type.toLowerCase();
+                    const isPaid = lType.includes('casual') || lType.includes('compensate');
+                    
+                    if (isPaid) {
+                        paidLeaveCredit += lv.duration;
+                    }
+                    
+                    let badgeColor = 'background:#f3f4f6; color:#374151;';
+                    if (lType.includes('casual')) {
+                        badgeColor = 'background:#dcfce7; color:#166534;';
+                    } else if (lType.includes('compensate')) {
+                        badgeColor = 'background:#fef9c3; color:#854d0e;';
+                    } else if (lType.includes('unpaid')) {
+                        badgeColor = 'background:#fee2e2; color:#991b1b;';
+                    } else if (lType.includes('half')) {
+                        badgeColor = 'background:#e0e7ff; color:#3730a3;';
+                    }
+                    
+                    leaveBadgesHtml += `<span class="badge" style="margin-left:8px; ${badgeColor} padding:4px 6px; border-radius:4px; font-size:0.75rem;">${lv.type}</span>`;
+                });
+
+                let punchCredit = 0;
+                if (rec) {
+                    punchCredit = (rec.status === 'half_day' ? 0.5 : 1.0);
+                }
+
+                // Total credit for the day is sum of punch and paid leaves, capped at 1.0
+                const dailyCredit = Math.min(1.0, punchCredit + paidLeaveCredit);
+                totalPresentCount += dailyCredit;
+
                 if (rec) {
                     const highlight = rec.is_weekly_off ? 'background:#fff7ed;' : '';
                     const weeklyBadge = rec.is_weekly_off ? '<span class="badge badge-warning" style="margin-left:8px; background:#fef3c7; color:#92400e; padding:4px 6px; border-radius:4px; font-size:0.75rem;">Weekly Off</span>' : '';
                     const presentOnWeeklyOffNote = rec.is_weekly_off ? ' <strong style="color:#92400e; font-size:0.9rem;">(Present on weekly off)</strong>' : '';
-                    // Show overtime hours only if >= 90 minutes (1h 30m); otherwise show '-'
+                    
                     const _otDisplay = (() => {
                         if (!rec.overtime_hours) return '-';
                         const _p = rec.overtime_hours.split(':');
@@ -1282,14 +1315,15 @@ function showPresentDaysDetails(userId, employeeName) {
                     
                     const halfDayBadge = rec.status === 'half_day' ? '<span class="badge" style="margin-left:8px; background:#e0e7ff; color:#3730a3; padding:4px 6px; border-radius:4px; font-size:0.75rem;">Half Day</span>' : '';
                     
-                    html += `<tr style="border-bottom:1px solid #e2e8f0; ${highlight}"><td style="padding:8px">${displayDate} ${weeklyBadge} ${halfDayBadge}</td><td style="padding:8px">${dayName}${presentOnWeeklyOffNote}</td><td style="padding:8px">${rec.punch_in || '-'}${_inBtn}</td><td style="padding:8px">${rec.punch_out || '-'}${_outBtn}</td><td style="padding:8px">${rec.working_hours || '-'}</td><td style="padding:8px">${_otDisplay}</td></tr>`;
+                    html += `<tr style="border-bottom:1px solid #e2e8f0; ${highlight}"><td style="padding:8px">${displayDate} ${weeklyBadge} ${halfDayBadge} ${leaveBadgesHtml}</td><td style="padding:8px">${dayName}${presentOnWeeklyOffNote}</td><td style="padding:8px">${rec.punch_in || '-'}${_inBtn}</td><td style="padding:8px">${rec.punch_out || '-'}${_outBtn}</td><td style="padding:8px">${rec.working_hours || '-'}</td><td style="padding:8px">${_otDisplay}</td></tr>`;
                 } else {
                     // No record for this date
                     const weeklyBadge = isWeekly ? '<span class="badge" style="margin-left:8px; background:#f1f5f9; color:#4a5568; padding:3px 6px; border-radius:4px; font-size:0.75rem;">Weekly Off</span>' : '';
-                    html += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px">${displayDate} ${weeklyBadge}</td><td style="padding:8px">${dayName}</td><td style="padding:8px">-</td><td style="padding:8px">-</td><td style="padding:8px">-</td><td style="padding:8px">-</td></tr>`;
+                    html += `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px">${displayDate} ${weeklyBadge} ${leaveBadgesHtml}</td><td style="padding:8px">${dayName}</td><td style="padding:8px">-</td><td style="padding:8px">-</td><td style="padding:8px">-</td><td style="padding:8px">-</td></tr>`;
                 }
             }
 
+            document.getElementById('presentDaysUserInfo').innerText = `${employeeName} — ${data.monthYear} — ${totalPresentCount.toFixed(1)} present day(s)`;
             tbody.innerHTML = html;
             document.getElementById('presentDaysModal').style.display = 'block';
         })

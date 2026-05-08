@@ -122,6 +122,15 @@ try {
         $casualLockMessage = "Opens after 90 days";
     }
 
+    // Trainee / Intern overrides
+    $roleLower = strtolower($userRole);
+    if (strpos($roleLower, 'intern') !== false || strpos($roleLower, 'trainee') !== false) {
+        $isEligibleForParental = false;
+        $parentalLockMessage = "Not available for Interns/Trainees";
+        $isEligibleForCasual = false;
+        $casualLockMessage = "Not available for Interns/Trainees";
+    }
+
     // Remove maternity leave if gender is male
     if ($userGender === 'male') {
         $balances = array_filter($balances, function($b) {

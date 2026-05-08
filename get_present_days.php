@@ -129,12 +129,61 @@ try {
         ];
     }
 
+    // Fetch approved leaves for the month
+    $leaveStmt = $pdo->prepare("
+        SELECT 
+            lr.start_date,
+            lr.end_date,
+            lt.name as leave_type,
+            lr.duration
+        FROM leave_request lr
+        LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+        WHERE lr.user_id = ?
+        AND lr.status = 'approved'
+        AND (
+            (MONTH(lr.start_date) = ? AND YEAR(lr.start_date) = ?) OR
+            (MONTH(lr.end_date) = ? AND YEAR(lr.end_date) = ?) OR
+            (lr.start_date <= ? AND lr.end_date >= ?)
+        )
+    ");
+    $leaveStmt->execute([
+        $userId,
+        $month, $year,
+        $month, $year,
+        $lastDayOfMonth, $firstDayOfMonth
+    ]);
+    $leaves = $leaveStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Build a map of leaves by date (handles multiple leaves per day)
+    $leaveMap = [];
+    foreach ($leaves as $lv) {
+        $start = new DateTime($lv['start_date']);
+        $end = new DateTime($lv['end_date']);
+        $interval = new DateInterval('P1D');
+        $period = new DatePeriod($start, $interval, $end->modify('+1 day'));
+
+        foreach ($period as $date) {
+            $dateStr = $date->format('Y-m-d');
+            // Only add if it's within current month
+            if (date('m', strtotime($dateStr)) == $month && date('Y', strtotime($dateStr)) == $year) {
+                if (!isset($leaveMap[$dateStr])) {
+                    $leaveMap[$dateStr] = [];
+                }
+                $leaveMap[$dateStr][] = [
+                    'type' => $lv['leave_type'],
+                    'duration' => floatval($lv['duration'] ?: 1)
+                ];
+            }
+        }
+    }
+
     $monthName = date('F Y', strtotime($firstDayOfMonth));
 
     echo json_encode([
         'status' => 'success',
         'monthYear' => $monthName,
         'records' => $records,
+        'leaves' => $leaveMap,
         'weekly_offs' => $weeklyOffs,
         'count' => count($records)
     ]);

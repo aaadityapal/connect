@@ -306,69 +306,10 @@ try {
             $shortLeaveDates = [];
         }
         
+        // Late days are now calculated inside the leave deduction block below
+        // to ensure they are aware of half-day leaves.
         $lateDays = 0;
-        if ($userShift && !empty($userShift['start_time'])) {
-            $shiftStartTime = $userShift['start_time'];
-            // Add 15 minutes grace period — any punch-in up to HH:15:59 is not late
-            $graceTime = date('H:i:s', strtotime($shiftStartTime . ' +15 minutes +59 seconds'));
-            
-            // Count late days: punch_in > grace_time (more than 15 minutes late)
-            // Exclude days with short leave
-            $lateDaysStmt = $pdo->prepare("
-                SELECT DATE(date) as late_date
-                FROM attendance
-                WHERE user_id = ?
-                AND MONTH(date) = ?
-                AND YEAR(date) = ?
-                AND punch_in IS NOT NULL
-                AND punch_in != ''
-                AND TIME(punch_in) > ?
-            ");
-            $lateDaysStmt->execute([$employee['id'], $month, $year, $graceTime]);
-            $lateDaysResults = $lateDaysStmt->fetchAll(PDO::FETCH_COLUMN);
-            
-            // Count late days excluding short leave dates
-            foreach ($lateDaysResults as $lateDate) {
-                if (!isset($shortLeaveDates[$lateDate])) {
-                    $lateDays++;
-                }
-            }
-        }
-        
-        // Fetch 1+ hour late days from attendance table
-        // 1+ hour late is when punch_in is 1 hour or more after shift start time
         $oneHourLateDays = 0;
-        if ($userShift && !empty($userShift['start_time'])) {
-            $shiftStartTime = $userShift['start_time'];
-            // Calculate 1 hour after shift start time
-            $oneHourLateTime = date('H:i:s', strtotime($shiftStartTime . ' +1 hour'));
-            
-            // Count 1+ hour late days: punch_in >= 1 hour after shift start
-            // Exclude days with short leave
-            $oneHourLateStmt = $pdo->prepare("
-                SELECT DATE(date) as late_date
-                FROM attendance
-                WHERE user_id = ?
-                AND MONTH(date) = ?
-                AND YEAR(date) = ?
-                AND punch_in IS NOT NULL
-                AND punch_in != ''
-                AND TIME(punch_in) >= ?
-            ");
-            $oneHourLateStmt->execute([$employee['id'], $month, $year, $oneHourLateTime]);
-            $oneHourLateResults = $oneHourLateStmt->fetchAll(PDO::FETCH_COLUMN);
-            
-            // Count 1+ hour late days excluding short leave dates
-            foreach ($oneHourLateResults as $lateDate) {
-                if (!isset($shortLeaveDates[$lateDate])) {
-                    $oneHourLateDays++;
-                }
-            }
-            
-            // Adjust regular late days: exclude 1+ hour late from late days count
-            // 1+ hour late should not be counted in regular late days
-            $lateDays = max(0, $lateDays - $oneHourLateDays);
-        }
         
         // Fetch leave taken from leave_request table
         // Count only approved leaves for the selected month and year
@@ -459,6 +400,69 @@ try {
             ]);
             
             $leaves = $leaveDeductionStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Build a map of approved leave durations by date
+            $dailyLeaveMap = [];
+            foreach ($leaves as $lv) {
+                $start = new DateTime($lv['start_date']);
+                $end = new DateTime($lv['end_date']);
+                $interval = new DateInterval('P1D');
+                $period = new DatePeriod($start, $interval, $end->modify('+1 day'));
+                foreach ($period as $date) {
+                    $d = $date->format('Y-m-d');
+                    if (!isset($dailyLeaveMap[$d])) $dailyLeaveMap[$d] = 0;
+                    $dailyLeaveMap[$d] += (isset($lv['duration']) && floatval($lv['duration']) > 0 && $lv['start_date'] === $lv['end_date']) 
+                        ? floatval($lv['duration']) 
+                        : (stripos($lv['leave_type'] ?? '', 'half') !== false ? 0.5 : intval($lv['calculated_days']));
+                }
+            }
+            
+            // Fetch all attendance records to calculate lates accurately
+            $attendanceStmt = $pdo->prepare("
+                SELECT date, punch_in FROM attendance
+                WHERE user_id = ? AND MONTH(date) = ? AND YEAR(date) = ?
+                AND punch_in IS NOT NULL AND punch_in != ''
+            ");
+            $attendanceStmt->execute([$employee['id'], $month, $year]);
+            $attendanceRecords = $attendanceStmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            $lateDays = 0;
+            $oneHourLateDays = 0;
+            
+            if ($userShift && !empty($userShift['start_time']) && !empty($userShift['end_time'])) {
+                $sTime = strtotime($userShift['start_time']);
+                $eTime = strtotime($userShift['end_time']);
+                $duration = $eTime - $sTime;
+                if ($duration < 0) $duration += 24 * 3600;
+                $halfShiftSecs = $duration / 2;
+                
+                foreach ($attendanceRecords as $att) {
+                    $attDate = $att['date'];
+                    if (isset($shortLeaveDates[$attDate])) continue; // Skip if short leave approved
+                    
+                    $punchTime = strtotime($att['punch_in']);
+                    $baseStart = $sTime;
+                    
+                    // If user has a 0.5 day leave and punched in late in the day, assume second half shift
+                    if (isset($dailyLeaveMap[$attDate]) && $dailyLeaveMap[$attDate] >= 0.5) {
+                        $afternoonThreshold = $sTime + $halfShiftSecs - 3600; // 1 hour before half-shift starts
+                        if ($punchTime > $afternoonThreshold) {
+                            $baseStart = $sTime + $halfShiftSecs;
+                        }
+                    }
+                    
+                    $diff = $punchTime - $baseStart;
+                    
+                    // 15 minute grace period (959 seconds to match HH:15:59 logic)
+                    if ($diff > 959) {
+                        if ($diff >= 3600) {
+                            $oneHourLateDays++;
+                        } else {
+                            $lateDays++;
+                        }
+                    }
+                }
+            }
             
             $yearStartDate = "$year-01-01";
             $currentMonthDate = $lastDayOfMonth;
@@ -567,6 +571,12 @@ try {
                 $leaveDeduction += $deduction;
             }
             
+            // Add deduction for "Absent" days (days with no punch and no approved leave)
+            // Absent Days = Working Days - (Present Days + Leave Taken)
+            $absentDays = max(0, $workingDays - ($presentDays + $leaveTaken));
+            $absentDeduction = $absentDays * $oneDaySalary;
+            $leaveDeduction += $absentDeduction;
+
             $leaveDeduction = round($leaveDeduction, 2);
             
         } catch (PDOException $e) {
@@ -798,7 +808,8 @@ try {
                         break;
                     case 'compensate_leave':
                     case 'compensate leave':
-                        // Compensate leave is already counted in present days, do not add again
+                        // Compensate leave counts as full day(s) - ADD to salary/present days
+                        $leaveCreditsToAdd += $numDays;
                         $compensateCount += $numDays;
                         break;
                     default:
@@ -861,6 +872,14 @@ try {
         // TDS deduction amount (deducted from gross to get payable salary)
         $tdsAmount = round($baseSalary * ($tdsPercentage / 100), 2);
 
+        // Final Leave Deduction = (Working Days - (Present + Paid Leaves Credits)) * Salary
+        // This ensures the deduction column perfectly balances with the Salary Calculated Days
+        $paidDaysCredits = $presentDaysCapped + $leaveCreditsToAdd;
+        $leaveDeduction = max(0, $workingDays - $paidDaysCredits) * $oneDaySalary;
+
+        // Present days display: count punches + paid leaves (Casual/Compensate)
+        $displayPresentDays = $presentDays + $leaveCreditsToAdd;
+
         $employeeData[] = [
             'id' => $employee['id'],
             'employee_id' => $employee['employee_id'] ?? $employee['id'],
@@ -873,7 +892,7 @@ try {
             'tds_amount' => $tdsAmount,
             'gross_salary' => $grossSalary,
             'working_days' => $workingDays,
-            'present_days' => $presentDays,
+            'present_days' => round($displayPresentDays, 2),
             'late_days' => $lateDays,
             'one_hour_late' => $oneHourLateDays,
             'leave_taken' => $leaveTaken,

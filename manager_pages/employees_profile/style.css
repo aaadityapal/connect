@@ -872,6 +872,44 @@ body {
     color: var(--text-primary);
 }
 
+/* Identity Badge Styling */
+.info-item.identity-badge {
+    background: linear-gradient(135deg, #ffffff, #f9fafb);
+    border: 1.5px dashed var(--border-color);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+    grid-column: span 2;
+}
+
+.info-item.identity-badge label {
+    margin-bottom: 0.5rem;
+}
+
+.info-item.identity-badge .label-icon {
+    color: var(--primary);
+    width: 14px;
+    height: 14px;
+}
+
+.info-item.identity-badge .info-value {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--primary);
+    text-align: center;
+    background: #f3f4f6;
+    padding: 0.65rem;
+    border-radius: 8px;
+    border: 1px inset rgba(0,0,0,0.05);
+    margin-top: 0.25rem;
+    display: block;
+}
+
 .json-list {
     display: grid;
     gap: 0.55rem;

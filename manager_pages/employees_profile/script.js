@@ -451,7 +451,9 @@ document.addEventListener('DOMContentLoaded', () => {
             account_number: bankObj.account_number || employee?.account_number || employee?.bank_account_number || '',
             ifsc_code: bankObj.ifsc_code || employee?.ifsc_code || '',
             branch_name: bankObj.branch_name || employee?.branch_name || '',
-            account_type: bankObj.account_type || employee?.account_type || ''
+            account_type: bankObj.account_type || employee?.account_type || '',
+            aadhar_number: bankObj.aadhar_number || employee?.aadhar_number || '',
+            pan_number: bankObj.pan_number || employee?.pan_number || ''
         };
     }
 
@@ -701,32 +703,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
 
                 <div class="profile-tab-panel" data-panel="edit-account">
-                    <div class="edit-grid">
-                        <div class="edit-item">
-                            <label>Bank Name</label>
-                            <input type="text" class="edit-input" id="edit-bank-name" value="${escapeHtml(bank.bank_name)}" placeholder="Enter bank name" />
+                    <section class="edit-section-block">
+                        <div class="repeater-head main">
+                            <h4>Identification Details</h4>
                         </div>
-                        <div class="edit-item">
-                            <label>Account Holder</label>
-                            <input type="text" class="edit-input" id="edit-account-holder" value="${escapeHtml(bank.account_holder)}" placeholder="Enter account holder" />
+                        <div class="edit-grid">
+                            <div class="edit-item">
+                                <label>Aadhar Number</label>
+                                <input type="text" class="edit-input" id="edit-aadhar-number" value="${escapeHtml(bank.aadhar_number)}" placeholder="Enter 16-digit Aadhar" maxlength="16" />
+                            </div>
+                            <div class="edit-item">
+                                <label>PAN Number</label>
+                                <input type="text" class="edit-input" id="edit-pan-number" value="${escapeHtml(bank.pan_number)}" placeholder="Enter PAN number" />
+                            </div>
                         </div>
-                        <div class="edit-item">
-                            <label>Account Number</label>
-                            <input type="text" class="edit-input" id="edit-account-number" value="${escapeHtml(bank.account_number)}" placeholder="Enter account number" />
+                    </section>
+
+                    <section class="edit-section-block">
+                        <div class="repeater-head main">
+                            <h4>Bank Account Details</h4>
                         </div>
-                        <div class="edit-item">
-                            <label>IFSC Code</label>
-                            <input type="text" class="edit-input" id="edit-ifsc-code" value="${escapeHtml(bank.ifsc_code)}" placeholder="Enter IFSC code" />
+                        <div class="edit-grid">
+                            <div class="edit-item">
+                                <label>Bank Name</label>
+                                <input type="text" class="edit-input" id="edit-bank-name" value="${escapeHtml(bank.bank_name)}" placeholder="Enter bank name" />
+                            </div>
+                            <div class="edit-item">
+                                <label>Account Holder</label>
+                                <input type="text" class="edit-input" id="edit-account-holder" value="${escapeHtml(bank.account_holder)}" placeholder="Enter account holder" />
+                            </div>
+                            <div class="edit-item">
+                                <label>Account Number</label>
+                                <input type="text" class="edit-input" id="edit-account-number" value="${escapeHtml(bank.account_number)}" placeholder="Enter account number" />
+                            </div>
+                            <div class="edit-item">
+                                <label>IFSC Code</label>
+                                <input type="text" class="edit-input" id="edit-ifsc-code" value="${escapeHtml(bank.ifsc_code)}" placeholder="Enter IFSC code" />
+                            </div>
+                            <div class="edit-item">
+                                <label>Branch Name</label>
+                                <input type="text" class="edit-input" id="edit-branch-name" value="${escapeHtml(bank.branch_name)}" placeholder="Enter branch name" />
+                            </div>
+                            <div class="edit-item">
+                                <label>Account Type</label>
+                                <input type="text" class="edit-input" id="edit-account-type" value="${escapeHtml(bank.account_type)}" placeholder="e.g. savings" />
+                            </div>
                         </div>
-                        <div class="edit-item">
-                            <label>Branch Name</label>
-                            <input type="text" class="edit-input" id="edit-branch-name" value="${escapeHtml(bank.branch_name)}" placeholder="Enter branch name" />
-                        </div>
-                        <div class="edit-item">
-                            <label>Account Type</label>
-                            <input type="text" class="edit-input" id="edit-account-type" value="${escapeHtml(bank.account_type)}" placeholder="e.g. savings" />
-                        </div>
-                    </div>
+                    </section>
                 </div>
 
                 <div class="modal-footer">
@@ -823,7 +846,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 account_number: document.getElementById('edit-account-number')?.value?.trim() || '',
                 ifsc_code: document.getElementById('edit-ifsc-code')?.value?.trim() || '',
                 branch_name: document.getElementById('edit-branch-name')?.value?.trim() || '',
-                account_type: document.getElementById('edit-account-type')?.value?.trim() || ''
+                account_type: document.getElementById('edit-account-type')?.value?.trim() || '',
+                aadhar_number: document.getElementById('edit-aadhar-number')?.value?.trim() || '',
+                pan_number: document.getElementById('edit-pan-number')?.value?.trim() || ''
             };
 
             payload.education_background = JSON.stringify(education);
@@ -992,7 +1017,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 ['swift_code', ['swift_code', 'swift'] ],
                 ['iban', ['iban'] ],
                 ['routing_number', ['routing_number', 'routing'] ],
-                ['micr_code', ['micr_code', 'micr'] ]
+                ['micr_code', ['micr_code', 'micr'] ],
+                ['aadhar_number', ['aadhar_number', 'aadhar'] ],
+                ['pan_number', ['pan_number', 'pan'] ]
             ];
 
             aliases.forEach(([targetKey, possibleKeys]) => {
@@ -1018,6 +1045,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (/(emergency|contact)/.test(normalized)) return 'phone-call';
         if (/(gender)/.test(normalized)) return 'users';
         if (/(dob|birth|date)/.test(normalized)) return 'calendar';
+        if (/(aadhar|pan)/.test(normalized)) return 'id-card';
         if (/(address|city|state|country|zip|pincode|postal)/.test(normalized)) return 'map-pin';
         if (/(role|designation|department|team|manager)/.test(normalized)) return 'briefcase';
         if (/(education|qualification|degree|university|college|institute|course|specialization)/.test(normalized)) return 'graduation-cap';
@@ -1076,17 +1104,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return '<div class="profile-empty">No data available.</div>';
         }
 
-        return fields.map(([key, value]) => `
-            <div class="info-item">
-                <label>
-                    <span class="label-with-icon">
-                        <i data-lucide="${iconForField(key)}" class="label-icon"></i>
-                        <span>${escapeHtml(toLabel(key))}</span>
-                    </span>
-                </label>
-                <div class="info-value">${formatValueHtml(key, value)}</div>
-            </div>
-        `).join('');
+        return fields.map(([key, value]) => {
+            const isIdentity = /(aadhar|pan)/i.test(key);
+            const extraClass = isIdentity ? ' identity-badge' : '';
+            return `
+                <div class="info-item${extraClass}">
+                    <label>
+                        <span class="label-with-icon">
+                            <i data-lucide="${iconForField(key)}" class="label-icon"></i>
+                            <span>${escapeHtml(toLabel(key))}</span>
+                        </span>
+                    </label>
+                    <div class="info-value">${formatValueHtml(key, value)}</div>
+                </div>
+            `;
+        }).join('');
     }
 
     function sortByPreferredOrder(fields, preferredOrder = []) {
@@ -1186,6 +1218,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             ],
             account: [
+                {
+                    title: 'Identification Details',
+                    keys: [
+                        'aadhar_number',
+                        'aadhar',
+                        'pan_number',
+                        'pan'
+                    ]
+                },
                 {
                     title: 'Bank Account Details',
                     keys: [

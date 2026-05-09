@@ -234,13 +234,12 @@ try {
 
     $pdo->beginTransaction();
 
-    // 7. Insert Requests (Auto-Approved for Manual Entry)
+    // 7. Insert Requests (Pending for manager and HR)
     $insStmt = $pdo->prepare("INSERT INTO leave_request (
         user_id, leave_type, start_date, end_date, reason, duration, 
-        time_from, time_to, status, day_type, manager_action_by, 
-        manager_approval, manager_action_at, manager_action_reason,
+        time_from, time_to, status, day_type, manager_approval,
         created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'approved', ?, ?, 'approved', NOW(), 'Manual Entry by Manager', NOW())");
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, 'pending', NOW())");
 
     $insertedIds = [];
     foreach ($datesRequested as $date) {
@@ -249,7 +248,7 @@ try {
         
         $insStmt->execute([
             $userId, $typeId, $date, $date, $reason, $duration,
-            $timeFrom, $timeTo, $dtVal, $managerId
+            $timeFrom, $timeTo, $dtVal
         ]);
         $insertedIds[] = $pdo->lastInsertId();
     }

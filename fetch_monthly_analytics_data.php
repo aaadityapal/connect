@@ -780,6 +780,7 @@ try {
         $halfDayCount = 0;
         $compensateCount = 0;
         $leaveCreditsToAdd = 0;
+        $sumUnpaidLeaveDays = 0;
         
         if (!empty($leaves) && is_array($leaves)) {
             foreach ($leaves as $lv) {
@@ -789,6 +790,8 @@ try {
                 $numDays = (isset($lv['duration']) && floatval($lv['duration']) > 0 && $lv['start_date'] === $lv['end_date']) 
                     ? floatval($lv['duration']) 
                     : ($isHalfDay ? 0.5 : intval($lv['calculated_days']));
+
+                $deductionDays = 0;
 
                 switch ($lt) {
                     case 'casual_leave':
@@ -805,6 +808,7 @@ try {
                         // (Employee already got 0.5 from Present Days for the hours they worked)
                         $leaveCreditsToAdd += 0.5 * $numDays;
                         $halfDayCount += $numDays;
+                        $deductionDays = $numDays - (0.5 * $numDays);
                         break;
                     case 'compensate_leave':
                     case 'compensate leave':
@@ -812,15 +816,31 @@ try {
                         $leaveCreditsToAdd += $numDays;
                         $compensateCount += $numDays;
                         break;
+                    case 'short_leave':
+                    case 'short leave':
+                        $deductionDays = 0;
+                        break;
                     default:
-                        // other leave types (short_leave, sick, unpaid etc.) generally do not add salary days here
+                        // other leave types (sick, unpaid etc.) generally do not add salary days here
+                        $deductionDays = $numDays;
                         break;
                 }
+                $sumUnpaidLeaveDays += $deductionDays;
             }
         }
         
+        // Calculate unauthorized absent days to apply 1.5x penalty
+        $paidDaysCredits = $presentDaysCapped + $leaveCreditsToAdd;
+        $totalUnpaidDays = max(0, $workingDays - $paidDaysCredits);
+        $absentDays = max(0, $totalUnpaidDays - $sumUnpaidLeaveDays);
+
         // Add/Subtract leave credits but ensure total stays within [0, workingDays] before deductions
         $salaryCalculatedDays = floatval(min(max($salaryCalculatedDays + $leaveCreditsToAdd, 0), $workingDays));
+        
+        // Deduct extra 0.5 day penalty for each unauthorized absent day
+        if ($absentDays > 0) {
+            $salaryCalculatedDays -= 0.5 * $absentDays;
+        }
 
         // Subtract deductions due to late arrivals
         // Regular late deduction days (every 3 late days => 0.5 day)
@@ -872,10 +892,10 @@ try {
         // TDS deduction amount (deducted from gross to get payable salary)
         $tdsAmount = round($baseSalary * ($tdsPercentage / 100), 2);
 
-        // Final Leave Deduction = (Working Days - (Present + Paid Leaves Credits)) * Salary
-        // This ensures the deduction column perfectly balances with the Salary Calculated Days
+        // Final Leave Deduction
+        // Normal unpaid days (e.g. sick) get 1.0 deduction. Unauthorized absent days get 1.5 deduction (so +0.5x penalty).
         $paidDaysCredits = $presentDaysCapped + $leaveCreditsToAdd;
-        $leaveDeduction = max(0, $workingDays - $paidDaysCredits) * $oneDaySalary;
+        $leaveDeduction = ($totalUnpaidDays + (0.5 * $absentDays)) * $oneDaySalary;
 
         // Present days display: count punches + paid leaves (Casual/Compensate)
         $displayPresentDays = $presentDays + $leaveCreditsToAdd;

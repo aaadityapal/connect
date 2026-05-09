@@ -28,18 +28,29 @@ $mgrReason  = $input['manager_reason'] ?? '';
 $hrReason   = $input['hr_reason'] ?? '';
 
 try {
-    // 0. Verify current status for workflow rules
-    $vStmt = $pdo->prepare("SELECT manager_approval FROM leave_request WHERE id = ?");
-    $vStmt->execute([$requestId]);
-    $currentReq = $vStmt->fetch(PDO::FETCH_ASSOC);
-    $wasManagerApproved = ($currentReq && strtolower((string)$currentReq['manager_approval']) === 'approved');
+    // 0. Load seed row and define grouping for bulk updates
+    $seedStmt = $pdo->prepare("SELECT id, user_id, leave_type, created_at, reason, manager_approval, status, start_date, end_date FROM leave_request WHERE id = ?");
+    $seedStmt->execute([$requestId]);
+    $seed = $seedStmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($currentReq) {
-        $isHRAttemptingApprove = ($manager_role === 'hr' && $actionType === 'approve');
-        if ($isHRAttemptingApprove && ($currentReq['manager_approval'] !== 'approved')) {
-            echo json_encode(['success' => false, 'message' => 'Approval for the manager is pending.']);
-            exit();
-        }
+    if (!$seed) {
+        echo json_encode(['success' => false, 'message' => 'Leave request not found']);
+        exit();
+    }
+
+    $wasManagerApproved = (strtolower((string)$seed['manager_approval']) === 'approved');
+
+    $groupParams = [
+        ':target_user_id' => $seed['user_id'],
+        ':created_at' => $seed['created_at'],
+        ':leave_type' => $seed['leave_type'],
+        ':reason' => $seed['reason']
+    ];
+
+    $isHRAttemptingApprove = ($manager_role === 'hr' && $actionType === 'approve');
+    if ($isHRAttemptingApprove && strtolower((string)$seed['manager_approval']) !== 'approved') {
+        echo json_encode(['success' => false, 'message' => 'Approval for the manager is pending.']);
+        exit();
     }
 
     // 1. Determine update fields
@@ -68,7 +79,10 @@ try {
                       hr_action_reason = :hr_reason,
                       hr_action_by = :hr_user_id,
                       hr_action_at = NOW()
-                  WHERE id = :id";
+                                    WHERE user_id = :target_user_id
+                    AND created_at = :created_at
+                    AND leave_type = :leave_type
+                    AND reason <=> :reason";
         $stmt = $pdo->prepare($query);
         $stmt->execute([
             ':mgr_status'  => $mgrFinalStatus,
@@ -77,7 +91,10 @@ try {
             ':hr_status'   => $hrFinalStatus,
             ':hr_reason'   => $hrFinalReason,
             ':hr_user_id'  => $user_id,
-            ':id'          => $requestId
+            ':target_user_id' => $groupParams[':target_user_id'],
+            ':created_at'  => $groupParams[':created_at'],
+            ':leave_type'  => $groupParams[':leave_type'],
+            ':reason'      => $groupParams[':reason']
         ]);
     } else {
         // Just manager - but if they REJECT, it also rejects for HR automatically
@@ -91,39 +108,48 @@ try {
                           hr_action_reason = :hr_linked_reason,
                           hr_action_by = :hr_user_id,
                           hr_action_at = NOW()
-                      WHERE id = :id";
+                                            WHERE user_id = :target_user_id
+                        AND created_at = :created_at
+                        AND leave_type = :leave_type
+                        AND reason <=> :reason";
             $stmt = $pdo->prepare($query);
             $stmt->execute([
                 ':mgr_reason'  => $mgrReason,
                 ':hr_linked_reason' => "Manager rejected your leave with reason: " . $mgrReason,
                 ':mgr_user_id' => $user_id,
                 ':hr_user_id'  => $user_id,
-                ':id'          => $requestId
+                ':target_user_id' => $groupParams[':target_user_id'],
+                ':created_at'  => $groupParams[':created_at'],
+                ':leave_type'  => $groupParams[':leave_type'],
+                ':reason'      => $groupParams[':reason']
             ]);
         } else {
             $query = "UPDATE leave_request 
                       SET manager_approval = :status,
                           manager_action_reason = :mgr_reason,
-                          manager_action_by = :user_id,
+                          manager_action_by = :action_user_id,
                           manager_action_at = NOW()
-                      WHERE id = :id";
+                      WHERE user_id = :target_user_id
+                        AND created_at = :created_at
+                        AND leave_type = :leave_type
+                        AND reason <=> :reason";
             $stmt = $pdo->prepare($query);
             $stmt->execute([
                 ':status'      => $status,
                 ':mgr_reason'  => $mgrReason,
-                ':user_id'     => $user_id,
-                ':id'          => $requestId
+                ':action_user_id' => $user_id,
+                ':target_user_id' => $groupParams[':target_user_id'],
+                ':created_at'  => $groupParams[':created_at'],
+                ':leave_type'  => $groupParams[':leave_type'],
+                ':reason'      => $groupParams[':reason']
             ]);
         }
     }
 
     if ($stmt->rowCount() > 0) {
         // 2. Fetch the requesting employee's ID for notification
-        $empQuery = "SELECT user_id, leave_type FROM leave_request WHERE id = :id";
-        $empStmt = $pdo->prepare($empQuery);
-        $empStmt->execute([':id' => $requestId]);
-        $leaveData = $empStmt->fetch();
-        $employeeId = $leaveData['user_id'];
+        $employeeId = $seed['user_id'];
+        $leaveData = ['leave_type' => $seed['leave_type']];
 
         // 3. Log Activity for the EMPLOYEE (Notification) + PERFORMER (Audit)
         $performerName = $_SESSION['username'] ?? 'System';
@@ -291,6 +317,3 @@ try {
 } catch (PDOException $e) {
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
-
-
-

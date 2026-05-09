@@ -89,7 +89,7 @@ try {
     
     $records = $leaveStmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Format the records for display
+    // Format the records for display (split multi-day leaves into per-day rows)
     $formattedRecords = [];
     foreach ($records as $record) {
         $startDate = new DateTime($record['start_date']);
@@ -123,27 +123,39 @@ try {
         }
         
         $leaveTypeDisplay = ($record['leave_type_name'] ?? 'N/A') . $shortLeaveType;
-        
+
         $isHalfDay = stripos($record['leave_type_name'] ?? '', 'half') !== false;
-        
-        // If the database has a specific duration (like 0.5 for a half-day casual leave), use it!
-        // Otherwise, fallback to the DATEDIFF calculation.
-        $actualDays = (isset($record['duration']) && floatval($record['duration']) > 0) 
-            ? floatval($record['duration']) 
-            : ($isHalfDay ? 0.5 : intval($record['calculated_days']));
-        
-        $formattedRecords[] = [
-            'start_date'         => $record['start_date'],
-            'end_date'           => $record['end_date'],
-            'start_date_display' => $startDate->format('d M Y'),
-            'end_date_display'   => $endDate->format('d M Y'),
-            'date_range'         => $startDate->format('d M Y') . ' to ' . $endDate->format('d M Y'),
-            'leave_type'         => $leaveTypeDisplay,
-            'num_days'           => $actualDays,
-            'reason'             => $record['reason'] ?? 'No reason provided',
-            'status'             => $record['status'],
-            'short_leave_type'   => $shortLeaveType
-        ];
+        $durationValue = isset($record['duration']) ? floatval($record['duration']) : 0;
+
+        // Constrain to selected month range
+        $rangeStart = new DateTime(max($record['start_date'], $firstDayOfMonth));
+        $rangeEnd = new DateTime(min($record['end_date'], $lastDayOfMonth));
+
+        $current = clone $rangeStart;
+        while ($current <= $rangeEnd) {
+            $currentDateDisplay = $current->format('d M Y');
+            $isSingleDay = ($record['start_date'] === $record['end_date']);
+
+            // For single-day leaves, honor explicit duration (e.g. 0.5). Otherwise, default to full day.
+            $actualDays = ($isSingleDay && $durationValue > 0)
+                ? $durationValue
+                : ($isHalfDay ? 0.5 : 1);
+
+            $formattedRecords[] = [
+                'start_date'         => $current->format('Y-m-d'),
+                'end_date'           => $current->format('Y-m-d'),
+                'start_date_display' => $currentDateDisplay,
+                'end_date_display'   => $currentDateDisplay,
+                'date_range'         => $currentDateDisplay . ' to ' . $currentDateDisplay,
+                'leave_type'         => $leaveTypeDisplay,
+                'num_days'           => $actualDays,
+                'reason'             => $record['reason'] ?? 'No reason provided',
+                'status'             => $record['status'],
+                'short_leave_type'   => $shortLeaveType
+            ];
+
+            $current->modify('+1 day');
+        }
     }
     
     // Return success response

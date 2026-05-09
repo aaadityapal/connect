@@ -324,14 +324,16 @@ try {
     
     $paidDaysCredits = $presentDaysCapped + $leaveCreditsToAdd;
     $totalUnpaidDays = max(0, $workingDaysCount - $paidDaysCredits);
-    $totalLeaveDeduction = $totalUnpaidDays * $oneDaySalary;
     
     // Calculate absent days by subtracting the unpaid leave days from total unpaid days
     // Ensure it doesn't go below 0
     $absentDays = max(0, $totalUnpaidDays - $sumUnpaidLeaveDays);
     
+    $totalLeaveDeduction = ($totalUnpaidDays + (0.5 * $absentDays)) * $oneDaySalary;
+    
     if ($absentDays > 0) {
-        $absentDeduction = round($absentDays * $oneDaySalary, 2);
+        // Absent days get 1.5x deduction penalty
+        $absentDeduction = round($absentDays * 1.5 * $oneDaySalary, 2);
         
         $deductions['leave_deductions'][] = [
             'leave_id' => 0,
@@ -340,7 +342,7 @@ try {
             'end_date' => '-',
             'num_days' => round($absentDays, 2),
             'deduction' => $absentDeduction,
-            'deduction_type' => 'Automatic deduction for missing days'
+            'deduction_type' => 'Automatic deduction for missing days (1.5x penalty)'
         ];
     }
     

@@ -80,8 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function populateTypeFilter() {
         if (!typeFilter) return;
-        const types = [...new Set(leaveRequests.map(r => r.type))];
-        typeFilter.innerHTML = '<option value="All">All Types</option>' + 
+        const defaults = ['Paternity Leave', 'Maternity Leave'];
+        const types = [...new Set([...leaveRequests.map(r => r.type), ...defaults])]
+            .filter(Boolean)
+            .sort((a, b) => a.localeCompare(b));
+        typeFilter.innerHTML = '<option value="All">All Types</option>' +
             types.map(t => `<option value="${t}">${t}</option>`).join('');
     }
     
@@ -193,6 +196,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="btn-icon reject" title="Reject Request" onclick='openActionModal("reject", ${JSON.stringify(req).replace(/'/g, "&apos;")})'>
                             <i data-lucide="x" style="width: 16px; height: 16px;"></i>
                         </button>
+                        <button class="btn-icon reject" title="Delete Request" onclick='openActionModal("delete", ${JSON.stringify(req).replace(/'/g, "&apos;")})'>
+                            <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                        </button>
                     </div>
                 </td>
             `;
@@ -273,6 +279,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!modal) return;
 
         const isApprove = type === 'approve';
+        const isDelete = type === 'delete';
         const userRole = document.getElementById('currentUserRole').value.toLowerCase();
         const isAdmin  = userRole === 'admin';
 
@@ -328,11 +335,28 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.style.cursor = 'pointer';
         }
 
-        title.innerText = isApprove ? 'Approve Leave' : 'Reject Leave';
-        icon.className = `header-icon ${isApprove ? 'approve' : 'reject'}`;
-        icon.setAttribute('data-lucide', isApprove ? 'check-circle' : 'x-circle');
-        submitBtn.innerText = isApprove ? 'Confirm Approval' : 'Confirm Rejection';
-        submitBtn.className = isApprove ? 'btn-primary' : 'btn-danger';
+        if (isDelete) {
+            const warnDiv = document.createElement('div');
+            warnDiv.className = 'workflow-warning';
+            warnDiv.style = 'background: #fef2f2; color: #b91c1c; padding: 10px; border-radius: 8px; border: 1px solid #fecaca; margin-bottom: 1rem; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 8px;';
+            warnDiv.innerHTML = `<i data-lucide="alert-triangle" style="width: 16px; height: 16px;"></i> <span>This will permanently delete the leave request.</span>`;
+            form.prepend(warnDiv);
+            if (window.lucide) lucide.createIcons();
+        }
+
+        if (isDelete) {
+            title.innerText = 'Delete Leave';
+            icon.className = 'header-icon reject';
+            icon.setAttribute('data-lucide', 'trash-2');
+            submitBtn.innerText = 'Confirm Delete';
+            submitBtn.className = 'btn-danger';
+        } else {
+            title.innerText = isApprove ? 'Approve Leave' : 'Reject Leave';
+            icon.className = `header-icon ${isApprove ? 'approve' : 'reject'}`;
+            icon.setAttribute('data-lucide', isApprove ? 'check-circle' : 'x-circle');
+            submitBtn.innerText = isApprove ? 'Confirm Approval' : 'Confirm Rejection';
+            submitBtn.className = isApprove ? 'btn-primary' : 'btn-danger';
+        }
 
         // Remarks Requirements
         const mgrLabelStatus = document.getElementById('mgrReasonStatus');
@@ -347,7 +371,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Show/Hide sections
-        document.getElementById('hrReasonSection').style.display = isAdmin ? 'block' : 'none';
+        document.getElementById('mgrReasonSection').style.display = isDelete ? 'none' : 'block';
+        document.getElementById('hrReasonSection').style.display = (!isDelete && isAdmin) ? 'block' : 'none';
 
         // Clear previous
         document.getElementById('mgrReason').value = '';
@@ -371,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = Object.fromEntries(formData.entries());
 
         const isReject = data.action_type === 'reject';
+        const isDelete = data.action_type === 'delete';
         const userRole = document.getElementById('currentUserRole').value;
         const isAdmin  = userRole === 'admin';
 
@@ -393,7 +419,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loader) loader.style.display = 'flex';
 
         try {
-            const resp = await fetch('api/update_leave_status.php', {
+            const endpoint = isDelete ? 'api/delete_leave_request.php' : 'api/update_leave_status.php';
+            const resp = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -403,11 +430,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.success) {
                 closeActionModal();
                 closeDetailsModal();
-                showResponseModal('success', 'Action Applied', res.message || 'Leave status updated successfully.');
+                const okTitle = isDelete ? 'Deleted' : 'Action Applied';
+                const okMsg = res.message || (isDelete ? 'Leave request deleted successfully.' : 'Leave status updated successfully.');
+                showResponseModal('success', okTitle, okMsg);
                 await fetchLeaveRequests(); // Refresh table
                 await fetchLeaveBank();     // Refresh bank if visible
             } else {
-                showResponseModal('error', 'Action Failed', res.message || 'Error updating status.');
+                const failMsg = res.message || (isDelete ? 'Error deleting request.' : 'Error updating status.');
+                showResponseModal('error', 'Action Failed', failMsg);
             }
         } catch (error) {
             console.error('Error in handleLeaveAction:', error);

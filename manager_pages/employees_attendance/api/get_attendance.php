@@ -136,23 +136,32 @@ try {
                 $checkIn = $att['punch_in'] ? date('h:i A', strtotime($att['punch_in'])) : '--:--';
                 $checkOut = $att['punch_out'] ? date('h:i A', strtotime($att['punch_out'])) : '--:--';
                 
-                $punchInTime = $att['punch_in'] ?: ($dateIter === $currentDateStr ? $currentTime : '00:00:00');
-                
-                $baseStart = $user['start_time'] ?: '10:00:00';
-                // 15-minute grace period — compare at MINUTE granularity only.
-                // Stripping seconds ensures 09:15:59 is treated as 09:15 (on-time),
-                // and only 09:16:00+ (→ 09:16) is considered Late.
-                $lateThreshold = date('H:i', strtotime('+15 minutes', strtotime($baseStart)));
-                $punchInMinute = date('H:i', strtotime($punchInTime)); // strip seconds
-                
-                if ($punchInMinute > $lateThreshold) {
+                if (empty($att['punch_in']) && empty($att['punch_out'])) {
+                    $status = 'Absent';
+                    $stats['Absent']++;
+                } else if (empty($att['punch_in'])) {
                     $status = 'Late';
                     $stats['Late']++;
+                    $stats['Present']++;
                 } else {
-                    $status = 'On Time';
-                    $stats['On Time']++;
+                    $punchInTime = $att['punch_in'];
+                    
+                    $baseStart = $user['start_time'] ?: '10:00:00';
+                    // 15-minute grace period — compare at MINUTE granularity only.
+                    // Stripping seconds ensures 09:15:59 is treated as 09:15 (on-time),
+                    // and only 09:16:00+ (→ 09:16) is considered Late.
+                    $lateThreshold = date('H:i', strtotime('+15 minutes', strtotime($baseStart)));
+                    $punchInMinute = date('H:i', strtotime($punchInTime)); // strip seconds
+                    
+                    if ($punchInMinute > $lateThreshold) {
+                        $status = 'Late';
+                        $stats['Late']++;
+                    } else {
+                        $status = 'On Time';
+                        $stats['On Time']++;
+                    }
+                    $stats['Present']++;
                 }
-                $stats['Present']++;
 
                 // Count geofence issues (outside punch-in or punch-out)
                 $hasGeoIssue = !empty(trim((string)($att['punch_in_outside_reason'] ?? '')))

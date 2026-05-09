@@ -52,7 +52,7 @@
                 </div>
 
                 <!-- Manager Reason -->
-                <div class="form-group">
+                <div class="form-group" id="mgrReasonSection">
                     <label id="mgrReasonLabel" for="mgrReason">Manager's Remarks <span id="mgrReasonStatus"></span></label>
                     <textarea id="mgrReason" name="manager_reason" rows="3" placeholder="Enter your remarks here..."></textarea>
                     <small id="mgrReasonWarning" class="warning-text" style="display: none;">Rejection requires at least 10 words.</small>

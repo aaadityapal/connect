@@ -168,6 +168,25 @@ try {
             foreach ($balances as &$b) {
                 $nameStr = strtolower($b['leave_type']);
 
+                if (strpos($nameStr, 'paternity') !== false || strpos($nameStr, 'maternity') !== false || strpos($nameStr, 'parental') !== false) {
+                    $yearStart = $year . '-01-01';
+                    $yearEnd = $year . '-12-31';
+
+                    $usedStmt = $pdo->prepare("
+                        SELECT SUM(duration) as used
+                        FROM leave_request
+                        WHERE user_id = ?
+                        AND leave_type = ?
+                        AND status != 'rejected'
+                        AND start_date BETWEEN ? AND ?
+                    ");
+                    $usedStmt->execute([$user_id, $b['leave_type_id'], $yearStart, $yearEnd]);
+                    $usedRow = $usedStmt->fetch(PDO::FETCH_ASSOC);
+                    $totalUsed = $usedRow && $usedRow['used'] ? floatval($usedRow['used']) : 0;
+
+                    $b['remaining_balance'] = max(0, floatval($b['total_balance']) - $totalUsed);
+                }
+
                 if (strpos($nameStr, 'sick') !== false) {
                     if (!empty($userJoinDateStr)) {
                         $joinDate = new DateTime($userJoinDateStr);

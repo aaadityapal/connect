@@ -27,11 +27,19 @@ try {
         }
     }
     
-    $input = json_decode(file_get_contents('php://input'), true);
+    $rawInput = file_get_contents('php://input');
+    $input = json_decode($rawInput, true);
+    if (!is_array($input) || empty($input)) {
+        $input = $_POST;
+    }
     
     $userId    = $input['user_id'] ?? null;
     $typeId    = $input['leave_type_id'] ?? null;
-    $dayType   = $input['day_type'] ?? 'Full Day';
+    $dayTypeRaw = $input['day_type'] ?? 'Full Day';
+    $dayType   = trim($dayTypeRaw);
+    if (stripos($dayType, 'short') !== false) {
+        $dayType = 'Short Leave';
+    }
     $startDate = !empty($input['start_date']) ? $input['start_date'] : null;
     $endDate   = !empty($input['end_date']) ? $input['end_date'] : $startDate;
     $reason    = $input['reason'] ?? '';

@@ -77,7 +77,6 @@ try {
          WHERE user_id = ?
          AND DATE(date) BETWEEN ? AND ?
          AND punch_in IS NOT NULL AND punch_in != ''
-         AND punch_out IS NOT NULL AND punch_out != ''
          ORDER BY date ASC"
     );
 

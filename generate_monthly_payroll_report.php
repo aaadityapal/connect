@@ -30,7 +30,7 @@ if ($month < 1 || $month > 12 || $year < 2000 || $year > date('Y') + 5) {
  * Calculate working days for a user in a given month/year
  * Subtracts weekly off days and office holidays from total days in the month
  */
-function calculateWorkingDays($pdo, $userId, $month, $year) {
+function calculateWorkingDays($pdo, $userId, $month, $year, $startDate = null) {
     try {
         $month = intval($month);
         $year = intval($year);
@@ -38,6 +38,16 @@ function calculateWorkingDays($pdo, $userId, $month, $year) {
         $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
         $firstDayOfMonth = "$year-$monthStr-01";
         $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
+        $effectiveStart = $firstDayOfMonth;
+        if (!empty($startDate)) {
+            $startDate = date('Y-m-d', strtotime($startDate));
+            if ($startDate > $effectiveStart) {
+                $effectiveStart = $startDate;
+            }
+        }
+        if (strtotime($effectiveStart) > strtotime($lastDayOfMonth)) {
+            return 0;
+        }
         
         $shiftStmt = $pdo->prepare("
             SELECT us.weekly_offs, us.effective_from, us.effective_to
@@ -89,7 +99,7 @@ function calculateWorkingDays($pdo, $userId, $month, $year) {
         }
         
         $workingDaysCount = 0;
-        $currentDate = new DateTime($firstDayOfMonth);
+        $currentDate = new DateTime($effectiveStart);
         $endDate = new DateTime($lastDayOfMonth);
         
         while ($currentDate <= $endDate) {
@@ -125,6 +135,7 @@ try {
             u.designation,
             u.department,
             u.status,
+            u.joining_date,
             u.created_at,
             u.updated_at
         FROM users u
@@ -152,6 +163,16 @@ try {
     $totalSalaryWithOvertime = 0;
     $totalOvertimeAmount = 0;
     
+    // Define month boundaries for reuse
+    $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
+    $firstDayOfMonth = "$year-$monthStr-01";
+    $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
+
+    // Fetch office holidays once for the month
+    $holidayStmt = $pdo->prepare("SELECT DATE(holiday_date) as holiday_date FROM office_holidays WHERE DATE(holiday_date) BETWEEN ? AND ?");
+    $holidayStmt->execute([$firstDayOfMonth, $lastDayOfMonth]);
+    $monthHolidays = array_flip($holidayStmt->fetchAll(PDO::FETCH_COLUMN));
+
     foreach ($employees as $employee) {
         // Fetch salary record for the specific month/year if it exists
         $salaryStmt = $pdo->prepare("
@@ -175,23 +196,75 @@ try {
             $baseSalary = $fallbackRecord ? $fallbackRecord['base_salary'] : 50000;
         }
         
-        $workingDays = calculateWorkingDays($pdo, $employee['id'], $month, $year);
+        $periodStart = $firstDayOfMonth;
+        if (!empty($employee['joining_date'])) {
+            $joinDate = date('Y-m-d', strtotime($employee['joining_date']));
+            if ($joinDate > $periodStart) {
+                $periodStart = $joinDate;
+            }
+        }
+        $hasActiveDays = (strtotime($periodStart) <= strtotime($lastDayOfMonth));
+
+        $workingDays = $hasActiveDays ? calculateWorkingDays($pdo, $employee['id'], $month, $year, $periodStart) : 0;
         
-        // Present days
-        $presentDaysStmt = $pdo->prepare("
-            SELECT COUNT(*) as present_days
+        // Fetch Weekly Offs for this employee
+        $userShiftStmt = $pdo->prepare("SELECT weekly_offs FROM user_shifts WHERE user_id = ? AND ( (effective_from IS NULL AND effective_to IS NULL) OR (effective_from <= ? AND (effective_to IS NULL OR effective_to >= ?)) ) ORDER BY effective_from DESC LIMIT 1");
+        $userShiftStmt->execute([$employee['id'], $lastDayOfMonth, $firstDayOfMonth]);
+        $uShift = $userShiftStmt->fetch(PDO::FETCH_ASSOC);
+        $uWeeklyOffs = [];
+        if ($uShift && !empty($uShift['weekly_offs'])) {
+            $raw = trim($uShift['weekly_offs']);
+            if (strpos($raw, '[') === 0) { $uWeeklyOffs = json_decode($raw, true) ?: []; }
+            elseif (strpos($raw, ',') !== false) { $uWeeklyOffs = array_map('trim', explode(',', $raw)); }
+            else { $uWeeklyOffs = [$raw]; }
+        }
+
+        // Fetch present days following the user formula:
+        // present days = total month day - week off days - office holidays - no punch in except week off
+        
+        $attendanceStmt = $pdo->prepare("
+            SELECT DATE(date) as punch_date, status, punch_in, punch_out,
+                   MOD(TIME_TO_SEC(punch_out) - TIME_TO_SEC(punch_in) + 86400, 86400) as wh_sec
             FROM attendance
-            WHERE user_id = ?
-            AND MONTH(date) = ?
-            AND YEAR(date) = ?
-            AND punch_in IS NOT NULL
-            AND punch_in != ''
-            AND punch_out IS NOT NULL
-            AND punch_out != ''
+            WHERE user_id = ? AND MONTH(date) = ? AND YEAR(date) = ?
+            AND punch_in IS NOT NULL AND punch_in != ''
         ");
-        $presentDaysStmt->execute([$employee['id'], $month, $year]);
-        $presentDaysResult = $presentDaysStmt->fetch(PDO::FETCH_ASSOC);
-        $presentDays = $presentDaysResult['present_days'] ?? 0;
+        $attendanceStmt->execute([$employee['id'], $month, $year]);
+        $punches = $attendanceStmt->fetchAll(PDO::FETCH_ASSOC);
+        $punchMap = [];
+        foreach ($punches as $p) { $punchMap[$p['punch_date']] = $p; }
+
+        $presentDays = 0;
+        $curr = new DateTime($periodStart);
+        $end  = new DateTime($lastDayOfMonth);
+        if ($hasActiveDays) {
+        
+        // Define half-shift threshold for this employee's shift
+        $shiftThresholdStmt = $pdo->prepare("SELECT s.start_time, s.end_time FROM user_shifts us LEFT JOIN shifts s ON us.shift_id = s.id WHERE us.user_id = ? AND ( (us.effective_from IS NULL AND us.effective_to IS NULL) OR (us.effective_from <= CURDATE() AND (us.effective_to IS NULL OR us.effective_to >= CURDATE())) ) ORDER BY us.effective_from DESC LIMIT 1");
+        $shiftThresholdStmt->execute([$employee['id']]);
+        $uShiftTimes = $shiftThresholdStmt->fetch(PDO::FETCH_ASSOC);
+        $uHalfShiftSec = 4.5 * 3600;
+        if ($uShiftTimes && !empty($uShiftTimes['start_time']) && !empty($uShiftTimes['end_time'])) {
+            $sTs = strtotime($uShiftTimes['start_time']); $eTs = strtotime($uShiftTimes['end_time']);
+            $dur = $eTs - $sTs; if ($dur < 0) $dur += 86400; $uHalfShiftSec = $dur / 2;
+        }
+
+        while ($curr <= $end) {
+            $dStr = $curr->format('Y-m-d'); $dayN = $curr->format('l');
+            $isWO = in_array($dayN, $uWeeklyOffs); $isH = isset($monthHolidays[$dStr]);
+            if (!$isWO && !$isH) {
+                if (isset($punchMap[$dStr])) {
+                    $p = $punchMap[$dStr];
+                    $isHD = ($p['status'] === 'half_day');
+                    if (!$isHD && !empty($p['punch_out'])) {
+                        if ($p['wh_sec'] < $uHalfShiftSec) $isHD = true;
+                    }
+                    $presentDays += ($isHD ? 0.5 : 1.0);
+                }
+            }
+            $curr->modify('+1 day');
+        }
+        }
         
         // Get shift start time
         $shiftStmt = $pdo->prepare("
@@ -309,6 +382,7 @@ try {
         
         // Leave taken
         $leaveTaken = 0;
+        if ($hasActiveDays) {
         try {
             $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
             $firstDayOfMonth = "$year-$monthStr-01";
@@ -333,11 +407,11 @@ try {
             
             $leaveStmt->execute([
                 $lastDayOfMonth,
-                $firstDayOfMonth,
+                $periodStart,
                 $employee['id'],
                 $month, $year,
                 $month, $year,
-                $firstDayOfMonth, $lastDayOfMonth
+                $periodStart, $lastDayOfMonth
             ]);
             $leaveResult = $leaveStmt->fetch(PDO::FETCH_ASSOC);
             $leaveTaken = $leaveResult['total_leave_days'] ?? 0;
@@ -346,10 +420,12 @@ try {
             error_log("Error fetching leave data: " . $e->getMessage());
             $leaveTaken = 0;
         }
+        }
         
         // Leave deductions (same logic as fetch_monthly_analytics_data.php)
         $leaveDeduction = 0;
         $leaves = [];
+        if ($hasActiveDays) {
         try {
             $workingDaysCount = $workingDays;
             $oneDaySalary = $workingDaysCount > 0 ? $baseSalary / $workingDaysCount : 0;
@@ -381,7 +457,7 @@ try {
                 $employee['id'],
                 $month, $year,
                 $month, $year,
-                $lastDayOfMonth, $firstDayOfMonth
+                $lastDayOfMonth, $periodStart
             ]);
             
             $leaves = $leaveDeductionStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -490,6 +566,7 @@ try {
             error_log("Error in leave deduction calculation: " . $e->getMessage());
             $leaveDeduction = 0;
         }
+        }
         
         // Late deductions
         $dailySalary = $workingDays > 0 ? $baseSalary / $workingDays : 0;
@@ -522,7 +599,7 @@ try {
                 $fourthSaturday = $saturdays[3];
                 $today = date('Y-m-d');
                 
-                if ($fourthSaturday <= $today) {
+                if ($hasActiveDays && $fourthSaturday <= $today && $fourthSaturday >= $periodStart) {
                     $leaveCheckStmt = $pdo->prepare("
                         SELECT id
                         FROM leave_request
@@ -606,7 +683,7 @@ try {
                 AND DATE(date) BETWEEN ? AND ?
                 AND status = 'approved'
             ");
-            $overtimeStmt->execute([$employee['id'], $firstDayOfMonth, $lastDayOfMonth]);
+            $overtimeStmt->execute([$employee['id'], $periodStart, $lastDayOfMonth]);
             $overtimeResult = $overtimeStmt->fetch(PDO::FETCH_ASSOC);
             
             if ($overtimeResult && $overtimeResult['total_overtime_hours'] !== null) {

@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filteredData = leaveRequests.filter(req => {
             // Search match
             const matchesSearch = req.employee.toLowerCase().includes(filter) || 
-                                req.id.toLowerCase().includes(filter);
+                                String(req.id).toLowerCase().includes(filter);
             
             // Status match
             const matchesStatus = status === 'All' || req.manager_status === status;
@@ -880,6 +880,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         } else {
             document.getElementById('manualReasonWarning').style.display = 'none';
+        }
+
+        // Ensure short leave time fields are filled from shift info if missing
+        const dayTypeText = mDaySel ? mDaySel.options[mDaySel.selectedIndex]?.text || '' : '';
+        const isShortLeave = (data.day_type || '').toLowerCase().includes('short') || dayTypeText.toLowerCase().includes('short') || dayTypeText.toLowerCase().includes('morning') || dayTypeText.toLowerCase().includes('evening');
+        if (isShortLeave && (!data.time_from || !data.time_to)) {
+            const sInfo = window.currentManualShiftInfo;
+            if (sInfo && (sInfo.morning_range || sInfo.evening_range)) {
+                const range = dayTypeText.includes('Morning') ? sInfo.morning_range : sInfo.evening_range;
+                if (range && range.includes('-')) {
+                    const [start, end] = range.split('-').map(t => t.trim());
+                    data.time_from = data.time_from || start;
+                    data.time_to = data.time_to || end;
+                }
+            }
         }
 
         // Add Type Name for the API (if needed)

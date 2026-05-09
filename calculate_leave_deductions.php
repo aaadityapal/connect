@@ -4,16 +4,7 @@ require_once 'config/db_connect.php';
 
 /**
  * Calculate leave deductions based on leave type and company rules
- * 
- * Rules:
- * - Compensate Leave: No deduction (covered by compensate)
- * - Casual Leave: No deduction
- * - Sick Leave: First 6 leaves per year no deduction, beyond that deduct daily salary
- * - Half Day: Deduct 0.5 day salary
- * - Short Leave: No deduction
- * - Unpaid Leave: Deduct full day salary for each day
- * - Paternity: 7 days per year no deduction, beyond that deduct daily salary
- * - Maternity: 60 days per year no deduction, beyond that deduct daily salary
+ * Synchronized with dashboard (fetch_monthly_analytics_data.php)
  */
 
 if (!isset($_SESSION['user_id'])) {
@@ -33,7 +24,24 @@ if (!$user_id || !$month || !$year) {
 }
 
 try {
-    // Get base salary and working days
+    // Get month boundaries
+    $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
+    $firstDayOfMonth = "$year-$monthStr-01";
+    $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
+
+    // Joining date only affects absent penalty after joining
+    $periodStart = $firstDayOfMonth;
+    $joinStmt = $pdo->prepare("SELECT joining_date FROM users WHERE id = ?");
+    $joinStmt->execute([$user_id]);
+    $joinRow = $joinStmt->fetch(PDO::FETCH_ASSOC);
+    if (!empty($joinRow['joining_date'])) {
+        $joinDate = date('Y-m-d', strtotime($joinRow['joining_date']));
+        if ($joinDate > $periodStart) {
+            $periodStart = $joinDate;
+        }
+    }
+
+    // Get salary record
     $salaryStmt = $pdo->prepare("
         SELECT base_salary FROM employee_salary_records 
         WHERE user_id = ? AND month = ? AND year = ? AND deleted_at IS NULL
@@ -43,7 +51,6 @@ try {
     $salaryRecord = $salaryStmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$salaryRecord) {
-        // Try to get the most recent salary record
         $fallbackStmt = $pdo->prepare("
             SELECT base_salary FROM employee_salary_records 
             WHERE user_id = ? AND deleted_at IS NULL
@@ -55,16 +62,12 @@ try {
     } else {
         $baseSalary = $salaryRecord['base_salary'];
     }
-    
-    // Calculate working days (same logic as fetch_monthly_analytics_data.php)
-    $monthStr = str_pad($month, 2, '0', STR_PAD_LEFT);
-    $firstDayOfMonth = "$year-$monthStr-01";
-    $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
-    
-    // Get user's shift for weekly offs
+
+    // Get Weekly Offs
     $shiftStmt = $pdo->prepare("
-        SELECT us.weekly_offs, us.effective_from, us.effective_to
+        SELECT us.weekly_offs, us.effective_from, us.effective_to, s.start_time, s.end_time
         FROM user_shifts us
+        LEFT JOIN shifts s ON us.shift_id = s.id
         WHERE us.user_id = ?
         AND (
             (us.effective_from IS NULL AND us.effective_to IS NULL) OR
@@ -76,297 +79,260 @@ try {
     $shiftStmt->execute([$user_id, $lastDayOfMonth, $firstDayOfMonth]);
     $userShift = $shiftStmt->fetch(PDO::FETCH_ASSOC);
     
-    // Parse weekly offs
     $weeklyOffs = [];
     if ($userShift && !empty($userShift['weekly_offs'])) {
-        $weeklyOffsRaw = trim($userShift['weekly_offs']);
-        if (strpos($weeklyOffsRaw, '[') === 0) {
-            $decoded = json_decode($weeklyOffsRaw, true);
-            if (is_array($decoded)) $weeklyOffs = $decoded;
-        } elseif (strpos($weeklyOffsRaw, ',') !== false) {
-            $weeklyOffs = array_map('trim', explode(',', $weeklyOffsRaw));
-        } else {
-            $weeklyOffs = [$weeklyOffsRaw];
-        }
+        $raw = trim($userShift['weekly_offs']);
+        if (strpos($raw, '[') === 0) { $weeklyOffs = json_decode($raw, true) ?: []; }
+        elseif (strpos($raw, ',') !== false) { $weeklyOffs = array_map('trim', explode(',', $raw)); }
+        else { $weeklyOffs = [$raw]; }
     }
-    
+
+    // Get Half Shift Threshold
+    $halfShiftSecs = 4.5 * 3600;
+    if ($userShift && !empty($userShift['start_time']) && !empty($userShift['end_time'])) {
+        $sTs = strtotime($userShift['start_time']);
+        $eTs = strtotime($userShift['end_time']);
+        $dur = $eTs - $sTs;
+        if ($dur < 0) $dur += 86400;
+        $halfShiftSecs = $dur / 2;
+    }
+
     // Fetch office holidays
-    $holidayStmt = $pdo->prepare("
-        SELECT DATE(holiday_date) as holiday_date
-        FROM office_holidays
-        WHERE DATE(holiday_date) BETWEEN ? AND ?
-    ");
+    $holidayStmt = $pdo->prepare("SELECT DATE(holiday_date) as holiday_date FROM office_holidays WHERE DATE(holiday_date) BETWEEN ? AND ?");
     $holidayStmt->execute([$firstDayOfMonth, $lastDayOfMonth]);
-    $holidays = $holidayStmt->fetchAll(PDO::FETCH_COLUMN);
-    $officeHolidays = array_flip($holidays);
-    
-    // Calculate working days
+    $officeHolidays = array_flip($holidayStmt->fetchAll(PDO::FETCH_COLUMN));
+
+    // Calculate Working Days
     $workingDaysCount = 0;
-    $currentDate = new DateTime($firstDayOfMonth);
+    $currDate = new DateTime($firstDayOfMonth);
     $endDate = new DateTime($lastDayOfMonth);
-    
-    while ($currentDate <= $endDate) {
-        $dayOfWeek = $currentDate->format('l');
-        $currentDateStr = $currentDate->format('Y-m-d');
-        
-        $isWeeklyOff = in_array($dayOfWeek, $weeklyOffs);
-        $isHoliday = isset($officeHolidays[$currentDateStr]);
-        
-        if (!$isWeeklyOff && !$isHoliday) {
+    while ($currDate <= $endDate) {
+        $dayN = $currDate->format('l');
+        $dStr = $currDate->format('Y-m-d');
+        if (!in_array($dayN, $weeklyOffs) && !isset($officeHolidays[$dStr])) {
             $workingDaysCount++;
         }
-        
-        $currentDate->modify('+1 day');
+        $currDate->modify('+1 day');
     }
-    
-    // Calculate one day salary
     $oneDaySalary = $workingDaysCount > 0 ? $baseSalary / $workingDaysCount : 0;
-    
-    // Fetch all approved leaves for the month
-    $leaveStmt = $pdo->prepare("
-        SELECT 
-            lr.id,
-            lr.start_date,
-            lr.end_date,
-            lr.duration,
-            lt.name as leave_type,
-            DATEDIFF(lr.end_date, lr.start_date) + 1 as calculated_days
+
+    // Active working days (from join date)
+    $activeWorkingDays = 0;
+    $currDate = new DateTime($periodStart);
+    while ($currDate <= $endDate) {
+        $dayN = $currDate->format('l');
+        $dStr = $currDate->format('Y-m-d');
+        if (!in_array($dayN, $weeklyOffs) && !isset($officeHolidays[$dStr])) {
+            $activeWorkingDays++;
+        }
+        $currDate->modify('+1 day');
+    }
+
+    // Calculate Present Days (Sync with dashboard)
+    $attendanceStmt = $pdo->prepare("
+        SELECT DATE(date) as punch_date, status, punch_in, punch_out,
+               MOD(TIME_TO_SEC(punch_out) - TIME_TO_SEC(punch_in) + 86400, 86400) as wh_sec
+        FROM attendance
+        WHERE user_id = ? AND MONTH(date) = ? AND YEAR(date) = ?
+        AND punch_in IS NOT NULL AND punch_in != ''
+    ");
+    $attendanceStmt->execute([$user_id, $month, $year]);
+    $punches = $attendanceStmt->fetchAll(PDO::FETCH_ASSOC);
+    $punchMap = [];
+    foreach ($punches as $p) { $punchMap[$p['punch_date']] = $p; }
+
+    $presentDays = 0;
+    $presentDaysActive = 0;
+    $currDate = new DateTime($firstDayOfMonth);
+    while ($currDate <= $endDate) {
+        $dStr = $currDate->format('Y-m-d');
+        $dayN = $currDate->format('l');
+        if (!in_array($dayN, $weeklyOffs) && !isset($officeHolidays[$dStr])) {
+            if (isset($punchMap[$dStr])) {
+                $p = $punchMap[$dStr];
+                $isHD = ($p['status'] === 'half_day');
+                if (!$isHD && !empty($p['punch_out'])) {
+                    if ($p['wh_sec'] < $halfShiftSecs) $isHD = true;
+                }
+                $presentDays += ($isHD ? 0.5 : 1.0);
+                if ($dStr >= $periodStart) {
+                    $presentDaysActive += ($isHD ? 0.5 : 1.0);
+                }
+            }
+        }
+        $currDate->modify('+1 day');
+    }
+
+    // Calculate Leave Taken (Month-aware)
+    $leaveTaken = 0;
+    $leaveTakenStmt = $pdo->prepare("
+        SELECT SUM(
+            CASE
+                WHEN lr.start_date = lr.end_date AND lr.duration > 0 THEN lr.duration
+                WHEN LOWER(lt.name) LIKE '%half%' THEN 0.5
+                ELSE DATEDIFF(LEAST(lr.end_date, ?), GREATEST(lr.start_date, ?)) + 1
+            END
+        ) as total_leave_days
         FROM leave_request lr
         LEFT JOIN leave_types lt ON lr.leave_type = lt.id
-        WHERE lr.user_id = ?
-        AND lr.status = 'approved'
+        WHERE lr.user_id = ? AND lr.status = 'approved'
         AND (
             (MONTH(lr.start_date) = ? AND YEAR(lr.start_date) = ?) OR
             (MONTH(lr.end_date) = ? AND YEAR(lr.end_date) = ?) OR
-            (lr.start_date <= ? AND lr.end_date >= ?)
+            (lr.start_date < ? AND lr.end_date > ?)
         )
+    ");
+    $leaveTakenStmt->execute([$lastDayOfMonth, $periodStart, $user_id, $month, $year, $month, $year, $periodStart, $lastDayOfMonth]);
+    $leaveTakenResult = $leaveTakenStmt->fetch(PDO::FETCH_ASSOC);
+    $leaveTaken = max(0, floatval($leaveTakenResult['total_leave_days'] ?? 0));
+
+    // Fetch Yearly Usage for restricted leaves
+    $yearStartDate = "$year-01-01";
+    $yearlyLeaveStmt = $pdo->prepare("
+        SELECT lt.name as leave_type, SUM(
+            CASE
+                WHEN lr.start_date = lr.end_date AND lr.duration > 0 THEN lr.duration
+                WHEN LOWER(lt.name) LIKE '%half%' THEN 0.5
+                ELSE DATEDIFF(lr.end_date, lr.start_date) + 1
+            END
+        ) as total_days
+        FROM leave_request lr
+        LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+        WHERE lr.user_id = ? AND lr.status = 'approved' AND lr.start_date >= ? AND lr.start_date <= ?
+        GROUP BY lt.name
+    ");
+    $yearlyLeaveStmt->execute([$user_id, $yearStartDate, $lastDayOfMonth]);
+    $yearlyLeaves = $yearlyLeaveStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $leaveUsageYearly = ['sick_leave' => 0, 'paternity_leave' => 0, 'maternity_leave' => 0];
+    foreach ($yearlyLeaves as $yl) {
+        $ltName = strtolower(str_replace(' ', '_', $yl['leave_type'] ?? ''));
+        if (strpos($ltName, 'sick') !== false) $leaveUsageYearly['sick_leave'] = floatval($yl['total_days']);
+        if (strpos($ltName, 'paternity') !== false) $leaveUsageYearly['paternity_leave'] = floatval($yl['total_days']);
+        if (strpos($ltName, 'maternity') !== false) $leaveUsageYearly['maternity_leave'] = floatval($yl['total_days']);
+    }
+
+    // Fetch All Approved Leaves for the Modal List
+    $listStmt = $pdo->prepare("
+        SELECT lr.id, lr.start_date, lr.end_date, lr.duration, lt.name as leave_type,
+               DATEDIFF(lr.end_date, lr.start_date) + 1 as calculated_days
+        FROM leave_request lr
+        LEFT JOIN leave_types lt ON lr.leave_type = lt.id
+        WHERE lr.user_id = ? AND lr.status = 'approved'
+        AND ( (MONTH(lr.start_date) = ? AND YEAR(lr.start_date) = ?) OR (MONTH(lr.end_date) = ? AND YEAR(lr.end_date) = ?) OR (lr.start_date <= ? AND lr.end_date >= ?) )
         ORDER BY lr.start_date ASC
     ");
-    
-    $leaveStmt->execute([
-        $user_id,
-        $month, $year,
-        $month, $year,
-        $lastDayOfMonth, $firstDayOfMonth
-    ]);
-    
-    $leaves = $leaveStmt->fetchAll(PDO::FETCH_ASSOC);
+    $listStmt->execute([$user_id, $month, $year, $month, $year, $lastDayOfMonth, $periodStart]);
+    $leavesList = $listStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Fetch total leave days (month-aware)
-    $leaveTaken = 0;
-    try {
-        $leaveTakenStmt = $pdo->prepare("
-            SELECT SUM(
-                CASE
-                    WHEN lr.start_date = lr.end_date AND lr.duration > 0 THEN lr.duration
-                    WHEN LOWER(lt.name) LIKE '%half%' THEN 0.5
-                    ELSE DATEDIFF(
-                        LEAST(lr.end_date, :last_day),
-                        GREATEST(lr.start_date, :first_day)
-                    ) + 1
-                END
-            ) as total_leave_days
-            FROM leave_request lr
-            LEFT JOIN leave_types lt ON lr.leave_type = lt.id
-            WHERE lr.user_id = :user_id
-            AND lr.status = 'approved'
-            AND (
-                (MONTH(lr.start_date) = :month AND YEAR(lr.start_date) = :year) OR
-                (MONTH(lr.end_date) = :month AND YEAR(lr.end_date) = :year) OR
-                (lr.start_date < :first_day AND lr.end_date > :last_day)
-            )
-        ");
-        $leaveTakenStmt->execute([
-            'last_day' => $lastDayOfMonth,
-            'first_day' => $firstDayOfMonth,
-            'user_id' => $user_id,
-            'month' => $month,
-            'year' => $year
-        ]);
-        $leaveTakenResult = $leaveTakenStmt->fetch(PDO::FETCH_ASSOC);
-        $leaveTaken = max(0, floatval($leaveTakenResult['total_leave_days'] ?? 0));
-    } catch (PDOException $e) {
-        $leaveTaken = 0;
-    }
+    $finalLeaveDeductions = [];
+    $totalDeductionAmount = 0;
 
-    // Fetch present days (shift-aware)
-    $presentDays = 0;
-    try {
-        // Re-fetch shift details with start/end time
-        $fullShiftStmt = $pdo->prepare("
-            SELECT s.start_time, s.end_time
-            FROM user_shifts us
-            LEFT JOIN shifts s ON us.shift_id = s.id
-            WHERE us.user_id = ?
-            AND (
-                (us.effective_from IS NULL AND us.effective_to IS NULL) OR
-                (us.effective_from <= ? AND (us.effective_to IS NULL OR us.effective_to >= ?))
-            )
-            ORDER BY us.effective_from DESC
-            LIMIT 1
-        ");
-        $fullShiftStmt->execute([$user_id, $lastDayOfMonth, $firstDayOfMonth]);
-        $userFullShift = $fullShiftStmt->fetch(PDO::FETCH_ASSOC);
-        
-        $halfShiftSecs = 4.5 * 3600;
-        if ($userFullShift && !empty($userFullShift['start_time']) && !empty($userFullShift['end_time'])) {
-            $sTime = strtotime($userFullShift['start_time']);
-            $eTime = strtotime($userFullShift['end_time']);
-            $sDur = $eTime - $sTime;
-            if ($sDur < 0) $sDur += 24 * 3600;
-            $halfShiftSecs = $sDur / 2;
+    $dailyLeaveMap = [];
+    foreach ($leavesList as $lv) {
+        $lvStart = $lv['start_date'];
+        $lvEnd = $lv['end_date'];
+        if ($lvStart < $periodStart) {
+            $lvStart = $periodStart;
         }
-
-        $presentStmt = $pdo->prepare("
-            SELECT SUM(
-                CASE 
-                    WHEN status = 'half_day' THEN 0.5 
-                    WHEN MOD(TIME_TO_SEC(punch_out) - TIME_TO_SEC(punch_in) + 86400, 86400) < ? THEN 0.5 
-                    ELSE 1 
-                END
-            ) as present_days
-            FROM attendance
-            WHERE user_id = ?
-            AND MONTH(date) = ?
-            AND YEAR(date) = ?
-            AND punch_in IS NOT NULL AND punch_in != ''
-            AND punch_out IS NOT NULL AND punch_out != ''
-        ");
-        $presentStmt->execute([$halfShiftSecs, $user_id, $month, $year]);
-        $presentResult = $presentStmt->fetch(PDO::FETCH_ASSOC);
-        $presentDays = floatval($presentResult['present_days'] ?? 0);
-    } catch (PDOException $e) {
-        $presentDays = 0;
-    }
-    
-    // Initialize deduction tracking
-    $deductions = [
-        'total_deduction' => 0,
-        'leave_deductions' => [],
-        'leave_summary' => []
-    ];
-    
-    // Calculate leave deductions directly based on outer logic
-    $presentDaysCapped = floatval(min($presentDays, $workingDaysCount));
-    
-    $leaveCreditsToAdd = 0;
-    $sumUnpaidLeaveDays = 0;
-    
-    foreach ($leaves as $leave) {
-        $lt = strtolower(str_replace(' ', '_', $leave['leave_type'] ?? 'other'));
-        $isHalfDay = stripos($leave['leave_type'] ?? '', 'half') !== false;
-        $numDays = (isset($leave['duration']) && floatval($leave['duration']) > 0 && $leave['start_date'] === $leave['end_date']) 
-            ? floatval($leave['duration']) 
-            : ($isHalfDay ? 0.5 : intval($leave['calculated_days']));
-            
-        $deductionDays = 0;
-        $deductionType = '';
+        if ($lvEnd > $lastDayOfMonth) {
+            $lvEnd = $lastDayOfMonth;
+        }
+        if ($lvStart > $lvEnd) {
+            continue;
+        }
+        $lt = strtolower(str_replace(' ', '_', $lv['leave_type'] ?? 'other'));
+        $isHD = stripos($lv['leave_type'] ?? '', 'half') !== false;
+        $numDays = (isset($lv['duration']) && floatval($lv['duration']) > 0 && $lv['start_date'] === $lv['end_date']) 
+            ? floatval($lv['duration']) : ($isHD ? 0.5 : (intval((strtotime($lvEnd) - strtotime($lvStart)) / 86400) + 1));
         
+        $deduction = 0;
+        $reason = 'Paid Leave';
+
         switch ($lt) {
-            case 'casual_leave':
-            case 'casual leave':
-                $leaveCreditsToAdd += $numDays;
-                $deductionDays = 0;
-                $deductionType = 'No deduction - Casual leave';
+            case 'compensate_leave': case 'compensate leave': case 'casual_leave': case 'casual leave': case 'short_leave': case 'short leave':
+                $deduction = 0; $reason = 'Paid Leave (No deduction)'; break;
+            case 'sick_leave': case 'sick leave':
+                if ($leaveUsageYearly['sick_leave'] > 6) { $deduction = $numDays * $oneDaySalary; $reason = 'Beyond yearly limit (6 days)'; }
+                else { $deduction = 0; $reason = 'Within yearly limit (6 days)'; }
                 break;
-            case 'half_day':
-            case 'half day':
-            case 'half_day_leave':
-            case 'half day leave':
-                $leaveCreditsToAdd += 0.5 * $numDays;
-                $deductionDays = $numDays - (0.5 * $numDays);
-                $deductionType = 'Deduction - Half day leave';
+            case 'half_day': case 'half day': case 'half_day_leave': case 'half day leave':
+                $deduction = 0.5 * $oneDaySalary; $reason = 'Half day deduction'; break;
+            case 'unpaid_leave': case 'unpaid leave':
+                $deduction = $numDays * $oneDaySalary; $reason = 'Unpaid Leave'; break;
+            case 'paternity_leave': case 'paternity leave':
+                if ($leaveUsageYearly['paternity_leave'] > 7) { $deduction = $numDays * $oneDaySalary; $reason = 'Beyond yearly limit (7 days)'; }
+                else { $deduction = 0; $reason = 'Within yearly limit (7 days)'; }
                 break;
-            case 'compensate_leave':
-            case 'compensate leave':
-                $leaveCreditsToAdd += $numDays;
-                $deductionDays = 0;
-                $deductionType = 'No deduction - Compensate leave';
-                break;
-            case 'short_leave':
-            case 'short leave':
-                // Short leave is assumed to overlap with present days
-                $deductionDays = 0;
-                $deductionType = 'No deduction - Short leave';
+            case 'maternity_leave': case 'maternity leave':
+                if ($leaveUsageYearly['maternity_leave'] > 60) { $deduction = $numDays * $oneDaySalary; $reason = 'Beyond yearly limit (60 days)'; }
+                else { $deduction = 0; $reason = 'Within yearly limit (60 days)'; }
                 break;
             default:
-                // Other leaves (Sick, Unpaid, Paternity, Maternity) are not credited
-                // so they are fully deducted in the new logic.
-                $deductionDays = $numDays;
-                $deductionType = "Deduction - " . ($leave['leave_type'] ?? 'Leave') . " (Unpaid)";
-                break;
+                $deduction = 0; break;
         }
-        
-        $sumUnpaidLeaveDays += $deductionDays;
-        $deductionAmount = round($deductionDays * $oneDaySalary, 2);
-        
-        $deductions['leave_deductions'][] = [
-            'leave_id' => $leave['id'],
-            'leave_type' => $leave['leave_type'] ?? 'Unknown',
-            'start_date' => $leave['start_date'],
-            'end_date' => $leave['end_date'],
+
+        $totalDeductionAmount += $deduction;
+        $finalLeaveDeductions[] = [
+            'leave_type' => $lv['leave_type'],
             'num_days' => $numDays,
-            'deduction' => $deductionAmount,
-            'deduction_type' => $deductionType
+            'deduction' => round($deduction, 2),
+            'deduction_type' => $reason
         ];
-        
-        // Add to summary
-        $summary_key = $leave['leave_type'] ?? 'Unknown';
-        if (!isset($deductions['leave_summary'][$summary_key])) {
-            $deductions['leave_summary'][$summary_key] = [
-                'total_days' => 0,
-                'total_deduction' => 0
-            ];
+
+        $start = new DateTime($lvStart);
+        $end = new DateTime($lvEnd);
+        $interval = new DateInterval('P1D');
+        $period = new DatePeriod($start, $interval, $end->modify('+1 day'));
+        foreach ($period as $date) {
+            $d = $date->format('Y-m-d');
+            if (!isset($dailyLeaveMap[$d])) $dailyLeaveMap[$d] = 0;
+            $dailyLeaveMap[$d] += $numDays >= 1 ? 1.0 : $numDays;
         }
-        $deductions['leave_summary'][$summary_key]['total_days'] += $numDays;
-        $deductions['leave_summary'][$summary_key]['total_deduction'] += $deductionAmount;
     }
-    
-    $paidDaysCredits = $presentDaysCapped + $leaveCreditsToAdd;
-    $totalUnpaidDays = max(0, $workingDaysCount - $paidDaysCredits);
-    
-    // Calculate absent days by subtracting the unpaid leave days from total unpaid days
-    // Ensure it doesn't go below 0
-    $absentDays = max(0, $totalUnpaidDays - $sumUnpaidLeaveDays);
-    
-    $totalLeaveDeduction = ($totalUnpaidDays + (0.5 * $absentDays)) * $oneDaySalary;
-    
+
+    // Calculate Absent Days per date (no punch and no leave)
+    $officeHolidaysLocal = isset($officeHolidays) && is_array($officeHolidays) ? $officeHolidays : [];
+    $absentDays = 0;
+    $absentCursor = new DateTime($periodStart);
+    while ($absentCursor <= $endDate) {
+        $dStr = $absentCursor->format('Y-m-d');
+        $dayN = $absentCursor->format('l');
+        $isWO = in_array($dayN, $weeklyOffs);
+        $isH  = isset($officeHolidaysLocal[$dStr]);
+        if (!$isWO && !$isH) {
+            if (!isset($punchMap[$dStr])) {
+                $leaveAmount = isset($dailyLeaveMap[$dStr]) ? min(1.0, floatval($dailyLeaveMap[$dStr])) : 0.0;
+                $absentDays += max(0, 1.0 - $leaveAmount);
+            }
+        }
+        $absentCursor->modify('+1 day');
+    }
+
+    // Add 1.5x penalty for unauthorized absences after joining
     if ($absentDays > 0) {
-        // Absent days get 1.5x deduction penalty
-        $absentDeduction = round($absentDays * 1.5 * $oneDaySalary, 2);
-        
-        $deductions['leave_deductions'][] = [
-            'leave_id' => 0,
-            'leave_type' => 'Absent (No Punch, No Leave)',
-            'start_date' => '-',
-            'end_date' => '-',
+        $absentDeduction = $absentDays * $oneDaySalary * 1.5;
+        $totalDeductionAmount += $absentDeduction;
+        $finalLeaveDeductions[] = [
+            'leave_type' => 'Absent (Unauthorized)',
             'num_days' => round($absentDays, 2),
-            'deduction' => $absentDeduction,
-            'deduction_type' => 'Automatic deduction for missing days (1.5x penalty)'
+            'deduction' => round($absentDeduction, 2),
+            'deduction_type' => 'Absent after joining (1.5x)'
         ];
     }
-    
-    $deductions['total_deduction'] = round($totalLeaveDeduction, 2);
-    
+
     echo json_encode([
         'status' => 'success',
         'base_salary' => $baseSalary,
         'working_days' => $workingDaysCount,
         'one_day_salary' => round($oneDaySalary, 2),
-        'month' => $month,
-        'year' => $year,
-        'deductions' => $deductions
+        'deductions' => [
+            'total_deduction' => round($totalDeductionAmount, 2),
+            'leave_deductions' => $finalLeaveDeductions
+        ]
     ]);
-    
-} catch (PDOException $e) {
-    http_response_code(500);
-    error_log("Database error in calculate_leave_deductions.php: " . $e->getMessage());
-    echo json_encode(['status' => 'error', 'message' => 'Database error occurred']);
-    exit;
+
 } catch (Exception $e) {
     http_response_code(500);
-    error_log("Error in calculate_leave_deductions.php: " . $e->getMessage());
-    echo json_encode(['status' => 'error', 'message' => 'An error occurred']);
-    exit;
+    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
-?>

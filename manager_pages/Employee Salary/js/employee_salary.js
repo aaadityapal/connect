@@ -1295,8 +1295,8 @@ function showPresentDaysDetails(userId, employeeName) {
                     punchCredit = (rec.status === 'half_day' ? 0.5 : 1.0);
                 }
 
-                // Total credit for the day is sum of punch and paid leaves, capped at 1.0
-                const dailyCredit = Math.min(1.0, punchCredit + paidLeaveCredit);
+                // Total credit for the day is physical punch only (to match dashboard present_days)
+                const dailyCredit = punchCredit;
                 totalPresentCount += dailyCredit;
 
                 if (rec) {
@@ -1826,7 +1826,9 @@ function showLeaveDeductionDetails(userId, employeeName, totalDeduction) {
             }
 
             const deductions = data.deductions || {};
-            document.getElementById('leaveDeductionUserInfo').innerText = `${employeeName} — October 2025 Leave Deductions`;
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const monthName = monthNames[parseInt(month) - 1];
+            document.getElementById('leaveDeductionUserInfo').innerText = `${employeeName} — ${monthName} ${year} Leave Deductions`;
 
             const tbody = document.getElementById('leaveDeductionTbody');
             const leaveDeductions = deductions.leave_deductions || [];

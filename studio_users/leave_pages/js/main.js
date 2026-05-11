@@ -590,8 +590,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!from || !to) { alert('Please select both From and To dates.'); return; }
 
-        // Refresh balances before generating dates
-        await fetchCurrentBalances();
+        // Refresh balances before generating dates (as-of earliest requested date)
+        await fetchCurrentBalances(from);
 
         const start = new Date(from);
         const end   = new Date(to);
@@ -898,7 +898,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let pendingLeaveUsage = {}; // Will store pending leave usage by type
 
     // Function to fetch current leave balances
-    const fetchCurrentBalances = async () => {
+    const fetchCurrentBalances = async (asOfDateStr = null) => {
         try {
             const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
             const d = new Date();
@@ -906,10 +906,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const yr = d.getFullYear();
             const monthIdx = d.getMonth();
 
-            const resp = await fetch(`../api/get_leave_balances.php?year=${yr}&month=${monthIdx}`);
+            let url = `../api/get_leave_balances.php?year=${yr}&month=${monthIdx}`;
+            if (asOfDateStr) {
+                url = `../api/get_leave_balances.php?as_of_date=${encodeURIComponent(asOfDateStr)}`;
+            }
+
+            const resp = await fetch(url);
             const res = await resp.json();
             
             if (res.success && res.data) {
+                currentLeaveBalances = {};
                 res.data.forEach(leave => {
                     currentLeaveBalances[leave.leave_type] = parseFloat(leave.remaining_balance) || 0;
                     if (leave.is_locked) {
@@ -986,11 +992,29 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
             } else {
-                // Friendly warning for explicit Unpaid Leave picks
-                warnings.push({
-                    type: leaveType,
-                    message: `⚠️ Please Review:\n\nYou are explicitly requesting ${Number(totalDays)} day(s) of Unpaid Leave.\n\nClick "Confirm & Submit" to proceed anyway.`
-                });
+                // Unpaid is only allowed after Comp and Casual are exhausted
+                const compBalance = Object.entries(currentLeaveBalances).reduce((sum, [k, v]) => {
+                    if (k.toLowerCase().includes('compensate') || k.toLowerCase().includes('comp off') || k.toLowerCase().includes('compensation')) {
+                        return sum + Number(v);
+                    }
+                    return sum;
+                }, 0);
+                const casualBalance = Object.entries(currentLeaveBalances).reduce((sum, [k, v]) => {
+                    if (k.toLowerCase().includes('casual')) return sum + Number(v);
+                    return sum;
+                }, 0);
+
+                if (compBalance > 0 || casualBalance > 0) {
+                    errors.push({
+                        type: leaveType,
+                        message: `<strong>Unpaid Leave not allowed.</strong><br>You still have available paid leave. Please use Compensation first, then Casual, before Unpaid Leave.`
+                    });
+                } else {
+                    warnings.push({
+                        type: leaveType,
+                        message: `⚠️ Please Review:\n\nYou are explicitly requesting ${Number(totalDays)} day(s) of Unpaid Leave.\n\nClick "Confirm & Submit" to proceed anyway.`
+                    });
+                }
             }
         });
 

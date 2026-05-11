@@ -52,6 +52,11 @@ try {
             $userJoinDateStr = $userData['joining_date'] ?? null;
             $userGender = isset($userData['gender']) ? strtolower($userData['gender']) : '';
 
+            // Determine leave-year April start for the requested month/year
+            $leaveYearStart = ($month >= 3) ? $year : $year - 1;
+            $leaveYearApril = new DateTime("$leaveYearStart-04-01");
+            $casualDateStart = $leaveYearApril->format('Y-m-d');
+
             // 1. Fetch balances from leave_bank (Use LEFT JOIN to ensure all types show up if needed)
             $queryRaw = "SELECT lt.id as leave_type_id, lt.name as leave_type, 
                                 COALESCE(lb.remaining_balance, 0) as remaining_balance, 
@@ -229,8 +234,8 @@ try {
                         $weeklyOffsStr = $shiftRow && !empty($shiftRow['weekly_offs']) ? $shiftRow['weekly_offs'] : 'Saturday,Sunday';
                         $weeklyOffs = array_map('strtolower', array_map('trim', explode(',', $weeklyOffsStr)));
 
-                        $attStmt = $pdo->prepare("SELECT date, punch_in, punch_out FROM attendance WHERE user_id = ? AND status = 'present' AND date >= '2026-04-01'");
-                        $attStmt->execute([$user_id]);
+                        $attStmt = $pdo->prepare("SELECT date, punch_in, punch_out FROM attendance WHERE user_id = ? AND status = 'present' AND date >= ?");
+                        $attStmt->execute([$user_id, $casualDateStart]);
                         $attRecords = $attStmt->fetchAll(PDO::FETCH_ASSOC);
 
                         $earnedFromExtraWork = 0;
@@ -243,8 +248,8 @@ try {
 
                         $earnedTotal += $earnedFromExtraWork;
 
-                        $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date >= '2026-04-01'");
-                        $usedStmt->execute([$user_id, $compTypeId]);
+                        $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date >= ?");
+                        $usedStmt->execute([$user_id, $compTypeId, $casualDateStart]);
                         $used = $usedStmt->fetch(PDO::FETCH_ASSOC);
                         $usedTotal = $used && $used['used'] ? floatval($used['used']) : 0;
 

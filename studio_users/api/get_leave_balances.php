@@ -10,8 +10,24 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
+$asOfDateStr = isset($_GET['as_of_date']) ? trim($_GET['as_of_date']) : '';
+$asOfDateObj = null;
+if (!empty($asOfDateStr)) {
+    try {
+        $asOfDateObj = new DateTime($asOfDateStr);
+        $asOfDateStr = $asOfDateObj->format('Y-m-d');
+    } catch (Throwable $e) {
+        $asOfDateObj = null;
+        $asOfDateStr = '';
+    }
+}
+
 $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
 $month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('n') - 1; // 0-indexed
+if ($asOfDateObj) {
+    $year = (int)$asOfDateObj->format('Y');
+    $month = (int)$asOfDateObj->format('n') - 1;
+}
 
 // Fetch user's role and joining date
 $userStmt = $pdo->prepare("SELECT role, joining_date, gender FROM users WHERE id = ?");
@@ -20,6 +36,12 @@ $userData = $userStmt->fetch(PDO::FETCH_ASSOC);
 $userRole = $userData['role'] ?? '';
 $userJoinDateStr = $userData['joining_date'] ?? null;
 $userGender = isset($userData['gender']) ? strtolower($userData['gender']) : '';
+
+// Determine leave-year April start for the requested month/year
+$leaveYearStart = ($month >= 3) ? $year : $year - 1; // if month >= April(3), start is same year
+$leaveYearApril = new DateTime("$leaveYearStart-04-01");
+$casualDateStart = $leaveYearApril->format('Y-m-d');
+$asOfUpperBound = $asOfDateObj ? $asOfDateStr : date('Y-m-d');
 
 try {
     // 1. Fetch balances from leave_bank
@@ -66,15 +88,8 @@ try {
         if ($totalAccrued > $maxPossibleMonths) $totalAccrued = $maxPossibleMonths;
         // 2. Query ALL taken Casual Leaves in this leave year (since April 1st)
         $casualDateStart = $leaveYearApril->format('Y-m-d');
-        $usedStmt = $pdo->prepare("
-            SELECT SUM(duration) as used 
-            FROM leave_request 
-            WHERE user_id = ? 
-            AND leave_type = (SELECT id FROM leave_types WHERE LOWER(name) LIKE '%casual%')
-            AND status != 'rejected'
-            AND start_date >= ?
-        ");
-        $usedStmt->execute([$user_id, $casualDateStart]);
+        $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = (SELECT id FROM leave_types WHERE LOWER(name) LIKE '%casual%') AND status != 'rejected' AND start_date BETWEEN ? AND ?");
+        $usedStmt->execute([$user_id, $casualDateStart, $asOfUpperBound]);
         $usedRow = $usedStmt->fetch(PDO::FETCH_ASSOC);
         $totalUsed = $usedRow && $usedRow['used'] ? floatval($usedRow['used']) : 0;
         
@@ -241,8 +256,8 @@ try {
                 $weeklyOffsStr = $shiftRow && !empty($shiftRow['weekly_offs']) ? $shiftRow['weekly_offs'] : 'Saturday,Sunday';
                 $weeklyOffs = array_map('strtolower', array_map('trim', explode(',', $weeklyOffsStr)));
 
-                $attStmt = $pdo->prepare("SELECT date, punch_in, punch_out FROM attendance WHERE user_id = ? AND status = 'present' AND date >= '2026-04-01'");
-                $attStmt->execute([$user_id]);
+                $attStmt = $pdo->prepare("SELECT date, punch_in, punch_out FROM attendance WHERE user_id = ? AND status = 'present' AND date BETWEEN ? AND ?");
+                $attStmt->execute([$user_id, $casualDateStart, $asOfUpperBound]);
                 $attRecords = $attStmt->fetchAll(PDO::FETCH_ASSOC);
 
                 $earnedFromExtraWork = 0;
@@ -256,8 +271,8 @@ try {
                 $earnedTotal += $earnedFromExtraWork;
 
                 // Used: count all comp off leaves taken (pending or approved) since April 1, 2026
-                $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date >= '2026-04-01'");
-                $usedStmt->execute([$user_id, $compTypeId]);
+                $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date BETWEEN ? AND ?");
+                $usedStmt->execute([$user_id, $compTypeId, $casualDateStart, $asOfUpperBound]);
                 $used = $usedStmt->fetch(PDO::FETCH_ASSOC);
                 $usedTotal = $used && $used['used'] ? floatval($used['used']) : 0;
 

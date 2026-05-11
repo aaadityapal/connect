@@ -80,6 +80,11 @@ try {
 
     $requestedCounts = [];
     $requestedDateStrings = [];
+    $requestedByCategory = [
+        'compensation' => 0.0,
+        'casual' => 0.0,
+        'unpaid' => 0.0
+    ];
     foreach ($dates as $d) {
         $requestedDateStrings[] = $d['date'];
         $tid = $d['type_id'];
@@ -89,6 +94,25 @@ try {
         }
         if (!isset($requestedCounts[$tid])) $requestedCounts[$tid] = 0;
         $requestedCounts[$tid] += $val;
+
+        $typeNameLower = strtolower($d['type_name'] ?? '');
+        if (strpos($typeNameLower, 'compensation') !== false || strpos($typeNameLower, 'comp off') !== false || strpos($typeNameLower, 'compensate') !== false) {
+            $requestedByCategory['compensation'] += $val;
+        } elseif (strpos($typeNameLower, 'casual') !== false) {
+            $requestedByCategory['casual'] += $val;
+        } elseif (strpos($typeNameLower, 'unpaid') !== false) {
+            $requestedByCategory['unpaid'] += $val;
+        }
+    }
+
+    // Determine the earliest requested date — use balances as of that date's month/year
+    $minDateStr = null;
+    if (!empty($requestedDateStrings)) {
+        sort($requestedDateStrings);
+        $minDateStr = $requestedDateStrings[0];
+        $minDateObj = new DateTime($minDateStr);
+        $minYear  = (int)$minDateObj->format('Y');
+        $minMonth = (int)$minDateObj->format('n'); // 1-12
     }
 
     if (!empty($requestedDateStrings)) {
@@ -222,6 +246,9 @@ try {
     $currentYear = date('Y');
     $pdo->beginTransaction();
 
+    $availableComp = 0.0;
+    $availableCasual = 0.0;
+
     foreach ($requestedCounts as $tid => $count) {
         // ID 13 is Unpaid Leave. We bypass balance checks for it.
         if ($tid == 13) continue;
@@ -249,8 +276,11 @@ try {
             $weeklyOffsStr = $shiftRow && !empty($shiftRow['weekly_offs']) ? $shiftRow['weekly_offs'] : 'Saturday,Sunday';
             $weeklyOffs = array_map('strtolower', array_map('trim', explode(',', $weeklyOffsStr)));
 
-            $attStmt = $pdo->prepare("SELECT date, punch_in, punch_out FROM attendance WHERE user_id = ? AND status = 'present' AND date >= '2026-04-01'");
-            $attStmt->execute([$userId]);
+            // Count extra-work (comp off) only up to the earliest requested date and since the leave-year April start
+            $leaveYearStart = ($minMonth >= 4) ? $minYear : $minYear - 1;
+            $leaveYearApril = new DateTime("$leaveYearStart-04-01");
+            $attStmt = $pdo->prepare("SELECT date, punch_in, punch_out FROM attendance WHERE user_id = ? AND status = 'present' AND date BETWEEN ? AND ?");
+            $attStmt->execute([$userId, $leaveYearApril->format('Y-m-d'), $minDateStr]);
             $attRecords = $attStmt->fetchAll(PDO::FETCH_ASSOC);
 
             $earnedFromExtraWork = 0;
@@ -262,18 +292,25 @@ try {
             }
             $earnedTotal += $earnedFromExtraWork;
 
-            $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date >= '2026-04-01'");
-            $usedStmt->execute([$userId, $tid]);
+            $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date BETWEEN ? AND ?");
+            $usedStmt->execute([$userId, $tid, $leaveYearApril->format('Y-m-d'), $minDateStr]);
             $used = $usedStmt->fetch(PDO::FETCH_ASSOC);
             $usedTotal = $used && $used['used'] ? floatval($used['used']) : 0;
 
             $avail = max(0, $earnedTotal - $usedTotal);
+            $availableComp = $avail;
         }
         
         // 2. Casual Leave Dynamic Re-math
         if (strpos($nameLower, 'casual') !== false) {
-            $month = (int)date('n') - 1; 
-            $year = (int)date('Y');
+            // Use earliest requested date's month/year when available, otherwise fall back to current month
+            if (!empty($minDateStr)) {
+                $month = $minMonth - 1; // convert 1-12 to 0-indexed for previous logic
+                $year = $minYear;
+            } else {
+                $month = (int)date('n') - 1;
+                $year = (int)date('Y');
+            }
             $leaveYearStart = ($month >= 3) ? $year : $year - 1; 
             $leaveYearApril = new DateTime("$leaveYearStart-04-01");
 
@@ -297,19 +334,14 @@ try {
             if ($totalAccrued > $maxPossibleMonths) $totalAccrued = $maxPossibleMonths;
 
             $casualDateStart = $leaveYearApril->format('Y-m-d');
-            $usedStmt = $pdo->prepare("
-                SELECT SUM(duration) as used 
-                FROM leave_request 
-                WHERE user_id = ? 
-                AND leave_type = ?
-                AND status != 'rejected'
-                AND start_date >= ?
-            ");
-            $usedStmt->execute([$userId, $tid, $casualDateStart]);
+            $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date BETWEEN ? AND ?");
+            $upperBound = !empty($minDateStr) ? $minDateStr : date('Y-m-d');
+            $usedStmt->execute([$userId, $tid, $casualDateStart, $upperBound]);
             $usedRow = $usedStmt->fetch(PDO::FETCH_ASSOC);
             $totalUsed = $usedRow && $usedRow['used'] ? floatval($usedRow['used']) : 0;
             
             $avail = max(0, $totalAccrued - $totalUsed);
+            $availableCasual = $avail;
         }
 
         if (!$bank || $avail < $count) {
@@ -327,6 +359,27 @@ try {
                                          WHERE user_id = ? AND leave_type_id = ? AND year = ?");
             $updateBank->execute([$count, $userId, $tid, $currentYear]);
         }
+    }
+
+    $remainingComp = max(0, $availableComp - $requestedByCategory['compensation']);
+    $remainingCasual = max(0, $availableCasual - $requestedByCategory['casual']);
+
+    if ($requestedByCategory['casual'] > 0 && $remainingComp > 0) {
+        $pdo->rollBack();
+        echo json_encode([
+            'success' => false,
+            'message' => "Compensation leave must be used before Casual Leave. Remaining compensation: $remainingComp"
+        ]);
+        exit();
+    }
+
+    if ($requestedByCategory['unpaid'] > 0 && ($remainingComp > 0 || $remainingCasual > 0)) {
+        $pdo->rollBack();
+        echo json_encode([
+            'success' => false,
+            'message' => "Unpaid Leave is only allowed after using available Compensation and Casual leave. Remaining compensation: $remainingComp, remaining casual: $remainingCasual"
+        ]);
+        exit();
     }
 
     // manager_approval enum is ('approved','rejected'), so we leave it NULL for pending status

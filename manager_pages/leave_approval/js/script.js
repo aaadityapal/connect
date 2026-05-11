@@ -280,7 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isApprove = type === 'approve';
         const isDelete = type === 'delete';
-        const userRole = document.getElementById('currentUserRole').value.toLowerCase();
+        const currentUserRole = document.getElementById('currentUserRole');
+        const userRole = (currentUserRole?.value || '').toLowerCase();
         const isAdmin  = userRole === 'admin';
 
         // Set IDs and meta
@@ -361,9 +362,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Remarks Requirements
         const mgrLabelStatus = document.getElementById('mgrReasonStatus');
         const hrLabelStatus = document.getElementById('hrReasonStatus');
-        
-        mgrLabelStatus.innerText = isApprove ? '(Optional)' : '(Required - 10 words min)';
-        mgrLabelStatus.style.color = isApprove ? '#94a3b8' : '#ef4444';
+
+        if (mgrLabelStatus) {
+            mgrLabelStatus.innerText = isApprove ? '(Optional)' : '(Required - 10 words min)';
+            mgrLabelStatus.style.color = isApprove ? '#94a3b8' : '#ef4444';
+        }
 
         if (hrLabelStatus) {
             hrLabelStatus.innerText = isApprove ? '(Optional)' : '(Required - 10 words min)';
@@ -371,14 +374,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Show/Hide sections
-        document.getElementById('mgrReasonSection').style.display = isDelete ? 'none' : 'block';
-        document.getElementById('hrReasonSection').style.display = (!isDelete && isAdmin) ? 'block' : 'none';
+        const mgrReasonSection = document.getElementById('mgrReasonSection');
+        const hrReasonSection = document.getElementById('hrReasonSection');
+        if (mgrReasonSection) {
+            mgrReasonSection.style.display = isDelete ? 'none' : 'block';
+        }
+        if (hrReasonSection) {
+            hrReasonSection.style.display = (!isDelete && isAdmin) ? 'block' : 'none';
+        }
 
         // Clear previous
-        document.getElementById('mgrReason').value = '';
-        document.getElementById('hrReason').value = '';
-        document.getElementById('mgrReasonWarning').style.display = 'none';
-        document.getElementById('hrReasonWarning').style.display = 'none';
+        const mgrReason = document.getElementById('mgrReason');
+        const hrReason = document.getElementById('hrReason');
+        const mgrReasonWarning = document.getElementById('mgrReasonWarning');
+        const hrReasonWarning = document.getElementById('hrReasonWarning');
+        if (mgrReason) mgrReason.value = '';
+        if (hrReason) hrReason.value = '';
+        if (mgrReasonWarning) mgrReasonWarning.style.display = 'none';
+        if (hrReasonWarning) hrReasonWarning.style.display = 'none';
 
         modal.style.display = 'flex';
         if (window.lucide) lucide.createIcons();

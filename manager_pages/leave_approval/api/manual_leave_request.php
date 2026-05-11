@@ -302,7 +302,7 @@ try {
         exit();
     }
 
-    if (strpos($typeNameLower, 'unpaid') !== false && ($availableComp > 0 || $availableCasual > 0)) {
+    if (strpos($typeNameLower, 'unpaid') !== false && ($availableComp > 0 || ($availableCasual > 0 && $isEligibleForCasual))) {
         echo json_encode(['success' => false, 'message' => 'Unpaid Leave is only allowed after using available Compensation and Casual leave.']);
         exit();
     }

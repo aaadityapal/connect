@@ -633,7 +633,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Distribute leave types and day types based on available balance (including fractions)
         const getTName = t => typeof t === 'string' ? t : t.name;
-        const validLeaves = leaveTypes.filter(t => !(typeof t === 'object' && t.disabled));
+        const isLeaveLocked = (t) => window.leaveLocks && window.leaveLocks[getTName(t)];
+        const normalizedLeaves = leaveTypes.map((t) => {
+            const name = getTName(t);
+            const lockedMsg = isLeaveLocked(t) ? window.leaveLocks[name] : '';
+            if (typeof t === 'string') {
+                return { name, disabled: !!lockedMsg, lockMessage: lockedMsg };
+            }
+            return {
+                ...t,
+                disabled: t.disabled || !!lockedMsg,
+                lockMessage: t.lockMessage || lockedMsg
+            };
+        });
+        const validLeaves = normalizedLeaves.filter(t => !t.disabled);
+        const selectableLeaves = validLeaves.length ? validLeaves : normalizedLeaves;
         
         // Track remaining balance for distribution (allow fractions)
         let remainingBalance = { ...currentLeaveBalances };
@@ -671,11 +685,13 @@ document.addEventListener("DOMContentLoaded", () => {
             
             // Priority 3: Fallback Leave (Unpaid)
             if (!selectedLeaveType) {
-                let fallbackLeave = validLeaves.find(t => getTName(t).toLowerCase().includes('unpaid'));
+                let fallbackLeave = validLeaves.find(t => getTName(t).toLowerCase().includes('unpaid'))
+                    || selectableLeaves.find(t => getTName(t).toLowerCase().includes('unpaid'));
                 if (!fallbackLeave) {
-                    fallbackLeave = validLeaves.find(t => !getTName(t).toLowerCase().includes('compensation') && !getTName(t).toLowerCase().includes('casual'));
+                    fallbackLeave = validLeaves.find(t => !getTName(t).toLowerCase().includes('compensation') && !getTName(t).toLowerCase().includes('casual'))
+                        || selectableLeaves.find(t => !getTName(t).toLowerCase().includes('compensation') && !getTName(t).toLowerCase().includes('casual'));
                 }
-                if (!fallbackLeave) fallbackLeave = validLeaves[0];
+                if (!fallbackLeave) fallbackLeave = selectableLeaves[0];
                 
                 selectedLeaveType = getTName(fallbackLeave);
             }
@@ -708,7 +724,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             <td><input type="checkbox" ${isOff ? '' : 'checked'}></td>
                             <td style="font-variant-numeric:tabular-nums;font-size:.83rem;white-space:nowrap;">${idx === 0 ? dateStr : ''}</td>
                             <td style="color:var(--text-secondary);font-size:.8rem;">${idx === 0 ? displayDay : ''}</td>
-                            <td>${mkSelect(leaveTypes, 'table-select leave-type-dropdown', dist.leaveType)}</td>
+                            <td>${mkSelect(normalizedLeaves, 'table-select leave-type-dropdown', dist.leaveType)}</td>
                             <td>${mkSelect(validDayOptions,   'table-select day-type-dropdown', dist.dayType)}</td>
                         </tr>`;
                 });
@@ -719,7 +735,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <td><input type="checkbox"></td>
                         <td style="font-variant-numeric:tabular-nums;font-size:.83rem;white-space:nowrap;">${dateStr}</td>
                         <td style="color:var(--text-secondary);font-size:.8rem;">${displayDay}</td>
-                        <td>${mkSelect(leaveTypes, 'table-select leave-type-dropdown', getTName(validLeaves[0]))}</td>
+                        <td>${mkSelect(normalizedLeaves, 'table-select leave-type-dropdown', getTName(selectableLeaves[0]))}</td>
                         <td>${mkSelect(dayTypes,   'table-select day-type-dropdown')}</td>
                     </tr>`;
             }
@@ -1004,7 +1020,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     return sum;
                 }, 0);
 
-                if (compBalance > 0 || casualBalance > 0) {
+                const isCasualLocked = window.leaveLocks && Object.keys(window.leaveLocks)
+                    .some((k) => k.toLowerCase().includes('casual'));
+
+                if (compBalance > 0 || (casualBalance > 0 && !isCasualLocked)) {
                     errors.push({
                         type: leaveType,
                         message: `<strong>Unpaid Leave not allowed.</strong><br>You still have available paid leave. Please use Compensation first, then Casual, before Unpaid Leave.`

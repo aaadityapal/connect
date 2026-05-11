@@ -185,6 +185,30 @@ try {
     $lastDayOfMonth = date('Y-m-t', strtotime($firstDayOfMonth));
 
     foreach ($employees as $employee) {
+        $noDeductionRoles = [
+            'hr',
+            'senior manager (studio)',
+            'senior manager (site)',
+            'senior manager (sales)',
+            'senior manager(marketing)',
+            'senior manager (marketing)'
+        ];
+        $roleCandidates = [];
+        if (isset($employee['role'])) {
+            $roleCandidates[] = $employee['role'];
+        }
+        if (isset($employee['designation'])) {
+            $roleCandidates[] = $employee['designation'];
+        }
+        $isNoDeductionRole = false;
+        foreach ($roleCandidates as $roleValue) {
+            $normalizedRole = strtolower(trim((string)$roleValue));
+            if (in_array($normalizedRole, $noDeductionRoles, true)) {
+                $isNoDeductionRole = true;
+                break;
+            }
+        }
+
         // Fetch salary record
         $salaryStmt = $pdo->prepare("
             SELECT base_salary, base_salary_effective_from, tds_percentage, tds_effective_from
@@ -646,6 +670,10 @@ try {
             }
             
             $leaveDeduction = round($leaveDeduction, 2);
+
+            if ($isNoDeductionRole) {
+                $leaveDeduction = 0;
+            }
             
             } catch (PDOException $e) {
                 error_log("Error calculating leave deductions for user " . $employee['id'] . ": " . $e->getMessage());
@@ -667,6 +695,11 @@ try {
         // One hour late deduction: Each 1+ hour late = 0.5 day deduction
         $oneHourLateDaysDeductionDays = $oneHourLateDays * 0.5;
         $oneHourLateDeductionAmount = $oneHourLateDaysDeductionDays * $dailySalary;
+
+        if ($isNoDeductionRole) {
+            $lateDeductionAmount = 0;
+            $oneHourLateDeductionAmount = 0;
+        }
         
         // Calculate 4th Saturday missing deduction
         // If user has not punched in on the 4th Saturday of the month, deduct 2 days salary
@@ -928,34 +961,46 @@ try {
         // 1+ hour late deduction days (each 1+ hour late = 0.5 day)
         $oneHourLateDeductionDays = $oneHourLateDays * 0.5;
 
-        $salaryCalculatedDays -= $regularLateDeductionDays;
-        $salaryCalculatedDays -= $oneHourLateDeductionDays;
+        if ($isNoDeductionRole) {
+            $regularLateDeductionDays = 0;
+            $oneHourLateDeductionDays = 0;
+        } else {
+            $salaryCalculatedDays -= $regularLateDeductionDays;
+            $salaryCalculatedDays -= $oneHourLateDeductionDays;
+        }
 
         // Fetch and subtract penalty days from salary_penalties table - FIXED BUG: Proper NULL checking
         $penaltyDays = 0;
-        try {
-            $penaltyStmt = $pdo->prepare("
-                SELECT penalty_days FROM salary_penalties
-                WHERE user_id = ? AND penalty_month = ?
-                LIMIT 1
-            ");
-            $penaltyMonth = str_pad($month, 2, '0', STR_PAD_LEFT) . '-' . $year;
-            $penaltyStmt->execute([$employee['id'], $penaltyMonth]);
-            $penaltyRecord = $penaltyStmt->fetch(PDO::FETCH_ASSOC);
-            
-            // FIX: Check if record exists AND penalty_days is not null (handles 0 values properly)
-            if ($penaltyRecord !== false && isset($penaltyRecord['penalty_days']) && $penaltyRecord['penalty_days'] !== null) {
-                $penaltyDays = floatval($penaltyRecord['penalty_days']);
-                $salaryCalculatedDays -= $penaltyDays;
+        if (!$isNoDeductionRole) {
+            try {
+                $penaltyStmt = $pdo->prepare("
+                    SELECT penalty_days FROM salary_penalties
+                    WHERE user_id = ? AND penalty_month = ?
+                    LIMIT 1
+                ");
+                $penaltyMonth = str_pad($month, 2, '0', STR_PAD_LEFT) . '-' . $year;
+                $penaltyStmt->execute([$employee['id'], $penaltyMonth]);
+                $penaltyRecord = $penaltyStmt->fetch(PDO::FETCH_ASSOC);
+                
+                // FIX: Check if record exists AND penalty_days is not null (handles 0 values properly)
+                if ($penaltyRecord !== false && isset($penaltyRecord['penalty_days']) && $penaltyRecord['penalty_days'] !== null) {
+                    $penaltyDays = floatval($penaltyRecord['penalty_days']);
+                    $salaryCalculatedDays -= $penaltyDays;
+                }
+            } catch (PDOException $e) {
+                error_log("Error fetching penalty days for user " . $employee['id'] . ": " . $e->getMessage());
+                $penaltyDays = 0;
             }
-        } catch (PDOException $e) {
-            error_log("Error fetching penalty days for user " . $employee['id'] . ": " . $e->getMessage());
-            $penaltyDays = 0;
         }
 
         // Subtract 4th Saturday missing days (2 days) if penalty applied
-        $fourthSaturdayMissingDays = ($fourthSaturdayDeduction > 0) ? 2 : 0;
-        $salaryCalculatedDays -= $fourthSaturdayMissingDays;
+        $fourthSaturdayMissingDays = 0;
+        if (!$isNoDeductionRole) {
+            $fourthSaturdayMissingDays = ($fourthSaturdayDeduction > 0) ? 2 : 0;
+            $salaryCalculatedDays -= $fourthSaturdayMissingDays;
+        } else {
+            $fourthSaturdayDeduction = 0;
+        }
 
         // Ensure salary calculated days are within reasonable bounds [0, workingDays]
         if ($salaryCalculatedDays < 0) {
@@ -966,6 +1011,11 @@ try {
             $salaryCalculatedDays = floatval($workingDays);
         }
 
+        // Special roles always get full working days for salary calculation
+        if ($isNoDeductionRole) {
+            $salaryCalculatedDays = floatval($workingDays);
+        }
+
         // Round to 2 decimal places
         $salaryCalculatedDays = round($salaryCalculatedDays, 2);
 
@@ -973,7 +1023,7 @@ try {
         $tdsAmount = round($baseSalary * ($tdsPercentage / 100), 2);
 
         // Add 1.5x deduction for unauthorized absences after joining
-        if ($absentDays > 0) {
+        if ($absentDays > 0 && !$isNoDeductionRole) {
             $leaveDeduction += ($absentDays * $oneDaySalary * 1.5);
         }
         $leaveDeduction = round($leaveDeduction, 2);

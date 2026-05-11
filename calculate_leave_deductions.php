@@ -63,6 +63,33 @@ try {
         $baseSalary = $salaryRecord['base_salary'];
     }
 
+    $roleStmt = $pdo->prepare("SELECT role, designation FROM users WHERE id = ?");
+    $roleStmt->execute([$user_id]);
+    $roleRow = $roleStmt->fetch(PDO::FETCH_ASSOC);
+    $noDeductionRoles = [
+        'hr',
+        'senior manager (studio)',
+        'senior manager (site)',
+        'senior manager (sales)',
+        'senior manager(marketing)',
+        'senior manager (marketing)'
+    ];
+    $roleCandidates = [];
+    if (!empty($roleRow['role'])) {
+        $roleCandidates[] = $roleRow['role'];
+    }
+    if (!empty($roleRow['designation'])) {
+        $roleCandidates[] = $roleRow['designation'];
+    }
+    $isNoDeductionRole = false;
+    foreach ($roleCandidates as $roleValue) {
+        $normalizedRole = strtolower(trim((string)$roleValue));
+        if (in_array($normalizedRole, $noDeductionRoles, true)) {
+            $isNoDeductionRole = true;
+            break;
+        }
+    }
+
     // Get Weekly Offs
     $shiftStmt = $pdo->prepare("
         SELECT us.weekly_offs, us.effective_from, us.effective_to, s.start_time, s.end_time
@@ -115,6 +142,20 @@ try {
         $currDate->modify('+1 day');
     }
     $oneDaySalary = $workingDaysCount > 0 ? $baseSalary / $workingDaysCount : 0;
+
+    if ($isNoDeductionRole) {
+        echo json_encode([
+            'status' => 'success',
+            'base_salary' => $baseSalary,
+            'working_days' => $workingDaysCount,
+            'one_day_salary' => round($oneDaySalary, 2),
+            'deductions' => [
+                'total_deduction' => 0,
+                'leave_deductions' => []
+            ]
+        ]);
+        exit;
+    }
 
     // Active working days (from join date)
     $activeWorkingDays = 0;

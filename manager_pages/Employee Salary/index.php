@@ -123,10 +123,10 @@ $selectedYear = intval($selectedYear);
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h2 style="color: #1a202c; font-size: 1.3rem; margin: 0;">Analytics for <?php echo date('F', mktime(0, 0, 0, $selectedMonth, 1)); ?> <?php echo $selectedYear; ?></h2>
                         <div style="display: flex; gap: 10px;">
-                            <button type="button" class="btn btn-filter" onclick="generateReport()" style="margin: 0;">
-                                <i class="fas fa-file-alt"></i> Generate Report
+                            <button type="button" class="btn btn-filter" onclick="exportToHtml()" style="margin: 0;">
+                                <i class="fas fa-file-alt"></i> Export to PDF
                             </button>
-                            <button type="button" class="btn btn-filter" onclick="exportToExcel()" style="margin: 0;">
+                            <button type="button" class="btn btn-filter" onclick="exportToExcelDetailed()" style="margin: 0;">
                                 <i class="fas fa-download"></i> Export to Excel
                             </button>
                         </div>
@@ -579,6 +579,9 @@ $selectedYear = intval($selectedYear);
         </main>
     </div>
 
+    <script src="https://unpkg.com/xlsx@latest/dist/xlsx.full.min.js"></script>
     <script src="js/employee_salary.js"></script>
+    <script src="export_pdf.js"></script>
+    <script src="export_excel.js"></script>
 </body>
 </html>

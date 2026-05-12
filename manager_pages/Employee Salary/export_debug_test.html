@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export HTML Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f8fafc; color: #0f172a; }
+        .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; max-width: 820px; }
+        label { display: block; font-weight: 600; margin-top: 12px; }
+        input, textarea, button { width: 100%; padding: 8px; margin-top: 6px; font-size: 14px; }
+        button { cursor: pointer; background: #2563eb; color: #fff; border: none; border-radius: 6px; }
+        .row { display: flex; gap: 12px; }
+        .row > div { flex: 1; }
+        pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 6px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Export HTML Debug Test</h2>
+        <p>Uploads a test HTML file to <code>save_export_html.php</code> and shows the response.</p>
+
+        <div class="row">
+            <div>
+                <label for="filename">Filename</label>
+                <input id="filename" type="text" value="Employee_Salary_Test.html">
+            </div>
+            <div>
+                <label for="send">Action</label>
+                <button id="send" type="button">Send Test Upload</button>
+            </div>
+        </div>
+
+        <label for="html">HTML Content</label>
+        <textarea id="html" rows="10"><!DOCTYPE html>
+<html><head><title>Test Export</title></head><body><h1>Test Export</h1><p>This is a test file.</p></body></html></textarea>
+
+        <label>Response</label>
+        <pre id="output">(no response yet)</pre>
+    </div>
+
+    <script>
+        const sendBtn = document.getElementById('send');
+        const output = document.getElementById('output');
+
+        sendBtn.addEventListener('click', async () => {
+            output.textContent = 'Sending...';
+
+            const filename = document.getElementById('filename').value.trim() || 'Employee_Salary_Test.html';
+            const html = document.getElementById('html').value || '<html><body>Test</body></html>';
+
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+            const formData = new FormData();
+            formData.append('html_file', blob, filename);
+            formData.append('filename', filename);
+
+            try {
+                const res = await fetch('save_export_html.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                output.textContent = JSON.stringify(data, null, 2);
+            } catch (err) {
+                output.textContent = 'Request failed: ' + err.message;
+            }
+        });
+    </script>
+</body>
+</html>

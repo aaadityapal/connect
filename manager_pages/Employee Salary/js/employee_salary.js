@@ -158,11 +158,43 @@ function loadAnalyticsData(month, year) {
 function populateTable(employees) {
     const tableBody = document.getElementById('analyticsTableBody');
     let html = '';
+    const totals = {
+        netPayable: 0,
+        netPayableTds: 0,
+        payableAfterDeduction: 0,
+        overtimeAmount: 0,
+        otTds: 0,
+        payableOtAfterDeduction: 0,
+        totalTdsAmount: 0,
+        totalPayableSalary: 0
+    };
 
     employees.forEach(emp => {
         // store employee data for modal lookups
         window.analyticsDataById = window.analyticsDataById || {};
         window.analyticsDataById[emp.id] = emp;
+        const salaryCalcDays = Number(emp.salary_calculated_days || 0);
+        const grossSalary = Number(emp.gross_salary || 0);
+        const workingDays = Number(emp.working_days || 1);
+        const tdsPct = Number(emp.tds_percentage || 0) / 100;
+        const netSalary = salaryCalcDays * (grossSalary / workingDays);
+        const netTds = netSalary * tdsPct;
+        const netPayable = netSalary;
+        const payableAfterDeduction = Math.max(0, netSalary - netTds);
+        const overtimeAmount = Number(emp.overtime_amount || 0);
+        const otTds = overtimeAmount * tdsPct;
+        const payableOtAfterDeduction = Math.max(0, overtimeAmount - otTds);
+        const totalTdsAmount = netTds + otTds;
+        const totalPayableSalary = Math.max(0, payableAfterDeduction + payableOtAfterDeduction);
+
+        totals.netPayable += netPayable;
+        totals.netPayableTds += netTds;
+        totals.payableAfterDeduction += payableAfterDeduction;
+        totals.overtimeAmount += overtimeAmount;
+        totals.otTds += otTds;
+        totals.payableOtAfterDeduction += payableOtAfterDeduction;
+        totals.totalTdsAmount += totalTdsAmount;
+        totals.totalPayableSalary += totalPayableSalary;
         html += `
             <tr data-user-id="${emp.id}">
                 <td>${emp.employee_id || 'N/A'}</td>
@@ -239,16 +271,13 @@ function populateTable(employees) {
                     </span>
                 </td>
                 <td>
-                    ₹${formatNumber((Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1))).toFixed(2))}
+                    ₹${formatNumber(netPayable.toFixed(2))}
                 </td>
                 <td>
-                    ₹${formatNumber((Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1)) * (Number(emp.tds_percentage || 0) / 100)).toFixed(2))}
+                    ₹${formatNumber(netTds.toFixed(2))}
                 </td>
                 <td>
-                    ₹${formatNumber(Math.max(0,
-                        Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1))
-                        - Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1)) * (Number(emp.tds_percentage || 0) / 100)
-                    ).toFixed(2))}
+                    ₹${formatNumber(payableAfterDeduction.toFixed(2))}
                 </td>
                 <td>
                     ${emp.overtime_hours || 0}
@@ -258,39 +287,19 @@ function populateTable(employees) {
                     </span>
                 </td>
                 <td>
-                    ₹${formatNumber(emp.overtime_amount || 0)}
+                    ₹${formatNumber(overtimeAmount.toFixed(2))}
                 </td>
                 <td>
-                    ₹${(() => {
-                        const otTds = Number(emp.overtime_amount || 0) * (Number(emp.tds_percentage || 0) / 100);
-                        return formatNumber(otTds.toFixed(2));
-                    })()}
+                    ₹${formatNumber(otTds.toFixed(2))}
                 </td>
                 <td>
-                    ₹${(() => {
-                        const otAmt = Number(emp.overtime_amount || 0);
-                        const otTds = otAmt * (Number(emp.tds_percentage || 0) / 100);
-                        return formatNumber(Math.max(0, otAmt - otTds).toFixed(2));
-                    })()}
+                    ₹${formatNumber(payableOtAfterDeduction.toFixed(2))}
                 </td>
                 <td>
-                    ₹${(() => {
-                        // Total TDS Amount = Net Payable Salary TDS + OT TDS
-                        const netSalary = Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1));
-                        const netTds    = netSalary * (Number(emp.tds_percentage || 0) / 100);
-                        const otTds     = Number(emp.overtime_amount || 0) * (Number(emp.tds_percentage || 0) / 100);
-                        return formatNumber((netTds + otTds).toFixed(2));
-                    })()}
+                    ₹${formatNumber(totalTdsAmount.toFixed(2))}
                 </td>
                 <td style="background:#fef9c3; font-weight:700; color:#713f12;">
-                    ₹${(() => {
-                        // Total Payable Salary = Payable Salary After Deduction + Payable OT after Deduction
-                        const netSalary  = Number(emp.salary_calculated_days || 0) * (Number(emp.gross_salary || 0) / Number(emp.working_days || 1));
-                        const netPayable = netSalary * (1 - Number(emp.tds_percentage || 0) / 100);
-                        const otAmt      = Number(emp.overtime_amount || 0);
-                        const otPayable  = otAmt * (1 - Number(emp.tds_percentage || 0) / 100);
-                        return formatNumber(Math.max(0, netPayable + otPayable).toFixed(2));
-                    })()}
+                    ₹${formatNumber(totalPayableSalary.toFixed(2))}
                 </td>
                 <td style="display: flex; gap: 10px; justify-content: center;">
                     <button type="button" class="action-btn edit-btn" title="Edit" onclick="editEmployee('${emp.employee_id}', ${emp.id})">
@@ -303,6 +312,22 @@ function populateTable(employees) {
             </tr>
         `;
     });
+
+    html += `
+        <tr class="totals-row">
+            <td colspan="17" style="text-align:right; font-weight:700;">Total</td>
+            <td>₹${formatNumber(totals.netPayable.toFixed(2))}</td>
+            <td>₹${formatNumber(totals.netPayableTds.toFixed(2))}</td>
+            <td>₹${formatNumber(totals.payableAfterDeduction.toFixed(2))}</td>
+            <td></td>
+            <td>₹${formatNumber(totals.overtimeAmount.toFixed(2))}</td>
+            <td>₹${formatNumber(totals.otTds.toFixed(2))}</td>
+            <td>₹${formatNumber(totals.payableOtAfterDeduction.toFixed(2))}</td>
+            <td>₹${formatNumber(totals.totalTdsAmount.toFixed(2))}</td>
+            <td style="background:#fef9c3; font-weight:700; color:#713f12;">₹${formatNumber(totals.totalPayableSalary.toFixed(2))}</td>
+            <td></td>
+        </tr>
+    `;
 
     tableBody.innerHTML = html;
 }

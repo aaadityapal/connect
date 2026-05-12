@@ -2162,6 +2162,8 @@ function showSalaryCalcDetails(userId) {
     const casual = Number(emp.casual_leave_days || 0);
     const half = Number(emp.half_day_leave_days || 0);
     const compensate = Number(emp.compensate_leave_days || 0);
+    const backOffice = Number(emp.back_office_leave_days || 0);
+    const backOfficeUnused = Number(emp.back_office_unused_paid_days || 0);
     const leaveTaken = Number(emp.leave_taken || 0);
 
     const regularLateDays = Number(emp.late_days || 0);
@@ -2209,6 +2211,8 @@ function showSalaryCalcDetails(userId) {
                 <div style="background:#fff; padding:12px; border-radius:6px; margin-bottom:10px;">
                     <h3 style="margin:6px 0;">Credits</h3>
                     <p style="margin:4px 0;"><strong>${presentDays} (present)</strong> ${casual ? `+ <strong>${casual} (casual)</strong>` : ''}</p>
+                    ${backOffice ? `<p style="margin:4px 0;"><strong>${backOffice} (Back Office leave)</strong></p>` : ''}
+                    ${backOfficeUnused ? `<p style="margin:4px 0;"><strong>${backOfficeUnused} (Back Office unused paid)</strong></p>` : ''}
                     ${leaveDetailsHtml}
                     <p style="margin:8px 0 0 0;"><strong>Total leave days (approved):</strong> ${leaveTaken}</p>
                 </div>
@@ -2224,7 +2228,7 @@ function showSalaryCalcDetails(userId) {
                 <div style="background:#f8f9fa; padding:12px; border-radius:6px;">
                     <p style="margin:6px 0;"><strong>Calculation:</strong></p>
                     <p style="margin:4px 0; font-weight:600;">[ Credits ] - [ Deductions ] = <span style="color:#2d3748;">${salaryCalc} days</span></p>
-                    <p style="margin:4px 0; font-size:12px; color:#666;">Credits: ${presentDays} + ${casual} = ${(presentDays + casual).toFixed(2)}<br>Deductions: ${(half*0.5).toFixed(2)} (half-day) + ${regularLateDeductionDays} + ${oneHourLateDeductionDays} + ${fourthSatPenalty} = ${((half*0.5) + regularLateDeductionDays + oneHourLateDeductionDays + fourthSatPenalty).toFixed(2)}</p>
+                    <p style="margin:4px 0; font-size:12px; color:#666;">Credits: ${presentDays} + ${casual} + ${backOffice} + ${backOfficeUnused} = ${(presentDays + casual + backOffice + backOfficeUnused).toFixed(2)}<br>Deductions: ${(half*0.5).toFixed(2)} (half-day) + ${regularLateDeductionDays} + ${oneHourLateDeductionDays} + ${fourthSatPenalty} = ${((half*0.5) + regularLateDeductionDays + oneHourLateDeductionDays + fourthSatPenalty).toFixed(2)}</p>
                 </div>
             `;
         })
@@ -2240,6 +2244,8 @@ function showSalaryCalcDetails(userId) {
                 <div style="background:#fff; padding:12px; border-radius:6px; margin-bottom:10px;">
                     <h3 style="margin:6px 0;">Credits</h3>
                     <p style="margin:4px 0;"><strong>${presentDays} (present)</strong> ${casual ? `+ <strong>${casual} (casual)</strong>` : ''}</p>
+                    ${backOffice ? `<p style="margin:4px 0;"><strong>${backOffice} (Back Office leave)</strong></p>` : ''}
+                    ${backOfficeUnused ? `<p style="margin:4px 0;"><strong>${backOfficeUnused} (Back Office unused paid)</strong></p>` : ''}
                     <p style="margin:4px 0;"><strong>Total leave days (approved):</strong> ${leaveTaken}</p>
                 </div>
 
@@ -2254,7 +2260,7 @@ function showSalaryCalcDetails(userId) {
                 <div style="background:#f8f9fa; padding:12px; border-radius:6px;">
                     <p style="margin:6px 0;"><strong>Calculation:</strong></p>
                     <p style="margin:4px 0; font-weight:600;">[ Credits ] - [ Deductions ] = <span style="color:#2d3748;">${salaryCalc} days</span></p>
-                    <p style="margin:4px 0; font-size:12px; color:#666;">Credits: ${presentDays} + ${casual} = ${(presentDays + casual).toFixed(2)}<br>Deductions: ${(half*0.5).toFixed(2)} (half-day) + ${regularLateDeductionDays} + ${oneHourLateDeductionDays} + ${fourthSatPenalty} = ${((half*0.5) + regularLateDeductionDays + oneHourLateDeductionDays + fourthSatPenalty).toFixed(2)}</p>
+                    <p style="margin:4px 0; font-size:12px; color:#666;">Credits: ${presentDays} + ${casual} + ${backOffice} + ${backOfficeUnused} = ${(presentDays + casual + backOffice + backOfficeUnused).toFixed(2)}<br>Deductions: ${(half*0.5).toFixed(2)} (half-day) + ${regularLateDeductionDays} + ${oneHourLateDeductionDays} + ${fourthSatPenalty} = ${((half*0.5) + regularLateDeductionDays + oneHourLateDeductionDays + fourthSatPenalty).toFixed(2)}</p>
                 </div>
             `;
         });

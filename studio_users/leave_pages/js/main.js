@@ -371,6 +371,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 let shortLeaveFound = false;
                 let compLeaveFound = false;
                 let casualLeaveFound = false;
+                let backOfficeLeaveFound = false;
+
+                const statCasualLabel = statCasual?.closest('.stat-card')?.querySelector('.stat-label');
+                const statCasualTag = statCasual?.closest('.stat-card')?.querySelector('.stat-tag');
+
+                if (window.isBackOfficeRole) {
+                    if (statCasualLabel) statCasualLabel.textContent = 'Back Office Leaves';
+                    if (statCasualTag) statCasualTag.textContent = '3 per month limit';
+                }
 
                 balances.forEach(leave => {
                     const leaveName = leave.leave_type.toLowerCase();
@@ -388,8 +397,17 @@ document.addEventListener("DOMContentLoaded", () => {
                         compLeaveFound = true;
                     }
                     
-                    // Update Casual Leave stat
-                    if (leaveName.includes('casual')) {
+                    // Update Casual/Back Office stat
+                    if (window.isBackOfficeRole) {
+                        if (leaveName.includes('back office')) {
+                            if (statCasual) statCasual.textContent = Number(leave.remaining_balance);
+                            backOfficeLeaveFound = true;
+
+                            const usedRaw = usage[leave.leave_type] || 0;
+                            const used = Number.isInteger(parseFloat(usedRaw)) ? parseInt(usedRaw) : parseFloat(usedRaw).toFixed(1);
+                            if (statCasualTag) statCasualTag.textContent = `${used}/3 used this month`;
+                        }
+                    } else if (leaveName.includes('casual')) {
                         if (statCasual) statCasual.textContent = Number(leave.remaining_balance);
                         casualLeaveFound = true;
                         
@@ -416,6 +434,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 // If Compensation Leave not found, default to 0
                 if (!compLeaveFound && statComp) {
                     statComp.textContent = '0';
+                }
+
+                if (window.isBackOfficeRole && !backOfficeLeaveFound && statCasual) {
+                    statCasual.textContent = '0';
+                    if (statCasualTag) statCasualTag.textContent = '0/3 used this month';
                 }
 
                 // If Casual Leave not found, try to calculate
@@ -512,6 +535,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         lockMessage: type.lockMessage || ''
                     };
                 });
+                window.isBackOfficeRole = leaveTypes.some(t => String(t.name || t).toLowerCase().includes('back office'));
             }
         } catch (err) {
             console.error('Error fetching leave types:', err);
@@ -654,46 +678,66 @@ document.addEventListener("DOMContentLoaded", () => {
         const leaveDistribution = []; // Array of { dateStr, leaveType, dayType }
         
         // Assign leave types to each WORKING date based on priority, ONE row per day
+        const isBackOfficeRole = !!window.isBackOfficeRole;
         workingDates.forEach((dateInfo, dateIdx) => {
             const dateStr = dateInfo.dateStr;
             let selectedLeaveType = null;
             let dayType = 'Full Day';
             
-            // Priority 1: Compensation Leave
-            const compLeave = validLeaves.find(t => getTName(t).toLowerCase().includes('compensate'));
-            const compName = compLeave ? getTName(compLeave) : null;
-            const compBalance = compName ? (remainingBalance[compName] || 0) : 0;
-            
-            if (compLeave && compBalance > 0) {
-                selectedLeaveType = compName;
-                if (compBalance < 1) dayType = 'First Half';
-                remainingBalance[compName] = Math.max(0, compBalance - (dayType === 'Full Day' ? 1 : 0.5));
-            }
-            
-            // Priority 2: Casual Leave (if Comp not available)
-            if (!selectedLeaveType) {
-                const casualLeave = validLeaves.find(t => getTName(t).toLowerCase().includes('casual'));
-                const casualName = casualLeave ? getTName(casualLeave) : null;
-                const casualBalance = casualName ? (remainingBalance[casualName] || 0) : 0;
-                
-                if (casualLeave && casualBalance > 0) {
-                    selectedLeaveType = casualName;
-                    if (casualBalance < 1) dayType = 'First Half';
-                    remainingBalance[casualName] = Math.max(0, casualBalance - (dayType === 'Full Day' ? 1 : 0.5));
+            if (isBackOfficeRole) {
+                const backOfficeLeave = validLeaves.find(t => getTName(t).toLowerCase().includes('back office'));
+                const backOfficeName = backOfficeLeave ? getTName(backOfficeLeave) : null;
+                const backOfficeBalance = backOfficeName ? (remainingBalance[backOfficeName] || 0) : 0;
+
+                if (backOfficeLeave && backOfficeBalance > 0) {
+                    selectedLeaveType = backOfficeName;
+                    if (backOfficeBalance < 1) dayType = 'First Half';
+                    remainingBalance[backOfficeName] = Math.max(0, backOfficeBalance - (dayType === 'Full Day' ? 1 : 0.5));
                 }
-            }
-            
-            // Priority 3: Fallback Leave (Unpaid)
-            if (!selectedLeaveType) {
-                let fallbackLeave = validLeaves.find(t => getTName(t).toLowerCase().includes('unpaid'))
-                    || selectableLeaves.find(t => getTName(t).toLowerCase().includes('unpaid'));
-                if (!fallbackLeave) {
-                    fallbackLeave = validLeaves.find(t => !getTName(t).toLowerCase().includes('compensation') && !getTName(t).toLowerCase().includes('casual'))
-                        || selectableLeaves.find(t => !getTName(t).toLowerCase().includes('compensation') && !getTName(t).toLowerCase().includes('casual'));
+
+                if (!selectedLeaveType) {
+                    let fallbackLeave = validLeaves.find(t => getTName(t).toLowerCase().includes('unpaid'))
+                        || selectableLeaves.find(t => getTName(t).toLowerCase().includes('unpaid'));
+                    if (!fallbackLeave) fallbackLeave = selectableLeaves[0];
+                    selectedLeaveType = getTName(fallbackLeave);
                 }
-                if (!fallbackLeave) fallbackLeave = selectableLeaves[0];
+            } else {
+                // Priority 1: Compensation Leave
+                const compLeave = validLeaves.find(t => getTName(t).toLowerCase().includes('compensate'));
+                const compName = compLeave ? getTName(compLeave) : null;
+                const compBalance = compName ? (remainingBalance[compName] || 0) : 0;
                 
-                selectedLeaveType = getTName(fallbackLeave);
+                if (compLeave && compBalance > 0) {
+                    selectedLeaveType = compName;
+                    if (compBalance < 1) dayType = 'First Half';
+                    remainingBalance[compName] = Math.max(0, compBalance - (dayType === 'Full Day' ? 1 : 0.5));
+                }
+                
+                // Priority 2: Casual Leave (if Comp not available)
+                if (!selectedLeaveType) {
+                    const casualLeave = validLeaves.find(t => getTName(t).toLowerCase().includes('casual'));
+                    const casualName = casualLeave ? getTName(casualLeave) : null;
+                    const casualBalance = casualName ? (remainingBalance[casualName] || 0) : 0;
+                    
+                    if (casualLeave && casualBalance > 0) {
+                        selectedLeaveType = casualName;
+                        if (casualBalance < 1) dayType = 'First Half';
+                        remainingBalance[casualName] = Math.max(0, casualBalance - (dayType === 'Full Day' ? 1 : 0.5));
+                    }
+                }
+                
+                // Priority 3: Fallback Leave (Unpaid)
+                if (!selectedLeaveType) {
+                    let fallbackLeave = validLeaves.find(t => getTName(t).toLowerCase().includes('unpaid'))
+                        || selectableLeaves.find(t => getTName(t).toLowerCase().includes('unpaid'));
+                    if (!fallbackLeave) {
+                        fallbackLeave = validLeaves.find(t => !getTName(t).toLowerCase().includes('compensation') && !getTName(t).toLowerCase().includes('casual'))
+                            || selectableLeaves.find(t => !getTName(t).toLowerCase().includes('compensation') && !getTName(t).toLowerCase().includes('casual'));
+                    }
+                    if (!fallbackLeave) fallbackLeave = selectableLeaves[0];
+                    
+                    selectedLeaveType = getTName(fallbackLeave);
+                }
             }
             
             leaveDistribution.push({ dateStr, leaveType: selectedLeaveType, dayType });
@@ -975,6 +1019,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // Process each leave type independently
+        const isBackOfficeRole = !!window.isBackOfficeRole;
         Object.entries(leavesByType).forEach(([leaveType, dates]) => {
             const category = getLeaveCategory(leaveType);
             
@@ -1009,30 +1054,49 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             } else {
                 // Unpaid is only allowed after Comp and Casual are exhausted
-                const compBalance = Object.entries(currentLeaveBalances).reduce((sum, [k, v]) => {
-                    if (k.toLowerCase().includes('compensate') || k.toLowerCase().includes('comp off') || k.toLowerCase().includes('compensation')) {
-                        return sum + Number(v);
+                if (isBackOfficeRole) {
+                    const backOfficeBalance = Object.entries(currentLeaveBalances).reduce((sum, [k, v]) => {
+                        if (k.toLowerCase().includes('back office')) return sum + Number(v);
+                        return sum;
+                    }, 0);
+
+                    if (backOfficeBalance > 0) {
+                        errors.push({
+                            type: leaveType,
+                            message: `<strong>Unpaid Leave not allowed.</strong><br>You still have available Back Office leave. Please use Back Office leave before Unpaid Leave.`
+                        });
+                    } else {
+                        warnings.push({
+                            type: leaveType,
+                            message: `⚠️ Please Review:\n\nYou are explicitly requesting ${Number(totalDays)} day(s) of Unpaid Leave.\n\nClick "Confirm & Submit" to proceed anyway.`
+                        });
                     }
-                    return sum;
-                }, 0);
-                const casualBalance = Object.entries(currentLeaveBalances).reduce((sum, [k, v]) => {
-                    if (k.toLowerCase().includes('casual')) return sum + Number(v);
-                    return sum;
-                }, 0);
-
-                const isCasualLocked = window.leaveLocks && Object.keys(window.leaveLocks)
-                    .some((k) => k.toLowerCase().includes('casual'));
-
-                if (compBalance > 0 || (casualBalance > 0 && !isCasualLocked)) {
-                    errors.push({
-                        type: leaveType,
-                        message: `<strong>Unpaid Leave not allowed.</strong><br>You still have available paid leave. Please use Compensation first, then Casual, before Unpaid Leave.`
-                    });
                 } else {
-                    warnings.push({
-                        type: leaveType,
-                        message: `⚠️ Please Review:\n\nYou are explicitly requesting ${Number(totalDays)} day(s) of Unpaid Leave.\n\nClick "Confirm & Submit" to proceed anyway.`
-                    });
+                    const compBalance = Object.entries(currentLeaveBalances).reduce((sum, [k, v]) => {
+                        if (k.toLowerCase().includes('compensate') || k.toLowerCase().includes('comp off') || k.toLowerCase().includes('compensation')) {
+                            return sum + Number(v);
+                        }
+                        return sum;
+                    }, 0);
+                    const casualBalance = Object.entries(currentLeaveBalances).reduce((sum, [k, v]) => {
+                        if (k.toLowerCase().includes('casual')) return sum + Number(v);
+                        return sum;
+                    }, 0);
+
+                    const isCasualLocked = window.leaveLocks && Object.keys(window.leaveLocks)
+                        .some((k) => k.toLowerCase().includes('casual'));
+
+                    if (compBalance > 0 || (casualBalance > 0 && !isCasualLocked)) {
+                        errors.push({
+                            type: leaveType,
+                            message: `<strong>Unpaid Leave not allowed.</strong><br>You still have available paid leave. Please use Compensation first, then Casual, before Unpaid Leave.`
+                        });
+                    } else {
+                        warnings.push({
+                            type: leaveType,
+                            message: `⚠️ Please Review:\n\nYou are explicitly requesting ${Number(totalDays)} day(s) of Unpaid Leave.\n\nClick "Confirm & Submit" to proceed anyway.`
+                        });
+                    }
                 }
             }
         });
@@ -1074,7 +1138,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        if (hasCasual && compensateBalance > 0 && !casualLocked) {
+        if (!isBackOfficeRole && hasCasual && compensateBalance > 0 && !casualLocked) {
             if (compensateRequested < compensateBalance) {
                 const unspent = compensateBalance - compensateRequested;
                 errors.push({

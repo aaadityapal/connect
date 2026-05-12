@@ -18,6 +18,8 @@ try {
     $userRow = $uStmt->fetch(PDO::FETCH_ASSOC);
     $userRole = $userRow['role'] ?? '';
     $userGender = strtolower($userRow['gender'] ?? '');
+    $roleKey = preg_replace('/\s+/', '', strtolower($userRole));
+    $isBackOfficeRole = (strpos($roleKey, 'backoffice') !== false);
 
     $isEligibleForParental = false;
     $parentalLockMessage = '';
@@ -44,12 +46,19 @@ try {
     $types = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Filter leave types based on user role and gender
-    $types = array_filter($types, function($t) use ($userRole, $userGender) {
+    $types = array_filter($types, function($t) use ($isBackOfficeRole, $userRole, $userGender) {
         $leaveName = strtolower($t['name']);
+        $isBackOfficeLeave = (strpos($leaveName, 'back office') !== false);
+        $isShortLeave = (strpos($leaveName, 'short') !== false);
+        $isUnpaidLeave = (strpos($leaveName, 'unpaid') !== false);
+
+        if ($isBackOfficeRole) {
+            return $isBackOfficeLeave || $isShortLeave || $isUnpaidLeave;
+        }
         
         // Show "Back Office" leave only to "Maid Back Office" role
-        if (strpos($leaveName, 'back office') !== false) {
-            return strtolower($userRole) === 'maid back office';
+        if ($isBackOfficeLeave) {
+            return false;
         }
         
         // Show "Maternity Leave" only to female users

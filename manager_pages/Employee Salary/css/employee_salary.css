@@ -259,6 +259,14 @@ body {
     border-right: none;
 }
 
+.analytics-table tbody tr:nth-child(odd) {
+    background: #ffffff;
+}
+
+.analytics-table tbody tr:nth-child(even) {
+    background: #f5f5f5;
+}
+
 .analytics-table tbody tr:hover {
     background: #f8f9fa;
 }

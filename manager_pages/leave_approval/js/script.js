@@ -618,10 +618,16 @@ document.addEventListener('DOMContentLoaded', () => {
         leaveBankGrid.appendChild(profileHeader);
 
         data.forEach(row => {
-            const total = parseFloat(row.total_balance) || 0;
-            const remaining = parseFloat(row.remaining_balance) || 0;
-            const used = (total - remaining).toFixed(1);
             const name = row.leave_type_name.toLowerCase();
+            let total = parseFloat(row.total_balance) || 0;
+            let remaining = parseFloat(row.remaining_balance) || 0;
+            let used = (total - remaining).toFixed(1);
+
+            if (name.includes('back office')) {
+                total = 3.0;
+                remaining = Math.min(3.0, Math.max(0, remaining));
+                used = Math.max(0, total - remaining).toFixed(1);
+            }
             
             // Icon & Color mapping
             let icon = 'file-text';

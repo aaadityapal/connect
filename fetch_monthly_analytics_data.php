@@ -885,6 +885,16 @@ try {
         $halfDayCount = 0;
         $compensateCount = 0;
         $leaveCreditsToAdd = 0;
+        $backOfficeLeaveTaken = 0.0;
+        $backOfficeRemaining = 0.0;
+        $isBackOfficeRole = false;
+        foreach ($roleCandidates as $roleValue) {
+            $roleKey = preg_replace('/\s+/', '', strtolower(trim((string)$roleValue)));
+            if (strpos($roleKey, 'backoffice') !== false) {
+                $isBackOfficeRole = true;
+                break;
+            }
+        }
         
         if (!empty($leaves) && is_array($leaves)) {
             foreach ($leaves as $lv) {
@@ -920,6 +930,12 @@ try {
                         $leaveCreditsToAdd += $numDays;
                         $compensateCount += $numDays;
                         break;
+                    case 'back_office_leave':
+                    case 'back office leave':
+                        // Back Office leave is fully paid
+                        $leaveCreditsToAdd += $numDays;
+                        $backOfficeLeaveTaken += $numDays;
+                        break;
                     case 'short_leave':
                     case 'short leave':
                         $deductionDays = 0;
@@ -930,6 +946,11 @@ try {
                         break;
                 }
             }
+        }
+
+        if ($isBackOfficeRole && $firstDayOfMonth >= '2026-04-01') {
+            $backOfficeRemaining = max(0.0, 3.0 - $backOfficeLeaveTaken);
+            $leaveCreditsToAdd += $backOfficeRemaining;
         }
         
         $officeHolidaysLocal = isset($officeHolidays) && is_array($officeHolidays) ? $officeHolidays : [];
@@ -1058,7 +1079,9 @@ try {
             // detailed counts used for salary calculation breakdown
             'casual_leave_days' => $casualLeaveCount,
             'half_day_leave_days' => $halfDayCount,
-            'compensate_leave_days' => $compensateCount
+            'compensate_leave_days' => $compensateCount,
+            'back_office_leave_days' => $backOfficeLeaveTaken,
+            'back_office_unused_paid_days' => $backOfficeRemaining
         ];
     }
 

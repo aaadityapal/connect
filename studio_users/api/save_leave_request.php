@@ -34,9 +34,12 @@ try {
     }
 
     // Check Maternity/Paternity Eligibility (365 days from joining_date)
-    $uStmt = $pdo->prepare("SELECT joining_date FROM users WHERE id = ?");
+    $uStmt = $pdo->prepare("SELECT joining_date, role FROM users WHERE id = ?");
     $uStmt->execute([$userId]);
     $userRow = $uStmt->fetch(PDO::FETCH_ASSOC);
+    $userRole = $userRow['role'] ?? '';
+    $roleKey = preg_replace('/\s+/', '', strtolower($userRole));
+    $isBackOfficeRole = (strpos($roleKey, 'backoffice') !== false);
     
     $isEligibleForParental = false;
     $isEligibleForCasual = false;
@@ -75,6 +78,115 @@ try {
                 'message' => 'You cannot use Casual Leaves during your 90-day probation period. They will safely accrue in your bank until your probation ends.'
             ]);
             exit();
+        }
+    }
+
+    $backOfficeRequestedByMonth = [];
+    $backOfficeTypeIds = [];
+    $backOfficeUnpaidRequestedByMonth = [];
+    if ($isBackOfficeRole) {
+        foreach ($dates as $d) {
+            $typeNameLower = strtolower($d['type_name'] ?? '');
+            $isBackOfficeLeave = (strpos($typeNameLower, 'back office') !== false);
+            $isShortLeave = (strpos($typeNameLower, 'short') !== false);
+            $isUnpaidLeave = (strpos($typeNameLower, 'unpaid') !== false);
+
+            if (!$isBackOfficeLeave && !$isShortLeave && !$isUnpaidLeave) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Back Office users can only apply for Short Leave or Back Office Leave.'
+                ]);
+                exit();
+            }
+
+            if ($isBackOfficeLeave) {
+                if (!empty($d['date']) && $d['date'] < '2026-04-01') {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Back Office leave is available only from 2026-04-01 onwards.'
+                    ]);
+                    exit();
+                }
+
+                $typeId = (int)($d['type_id'] ?? 0);
+                $monthKey = substr((string)$d['date'], 0, 7);
+                $val = ($d['day_type'] === 'Full Day') ? 1.0 : 0.5;
+
+                if (!isset($backOfficeRequestedByMonth[$typeId])) {
+                    $backOfficeRequestedByMonth[$typeId] = [];
+                }
+                if (!isset($backOfficeRequestedByMonth[$typeId][$monthKey])) {
+                    $backOfficeRequestedByMonth[$typeId][$monthKey] = 0.0;
+                }
+                $backOfficeRequestedByMonth[$typeId][$monthKey] += $val;
+                $backOfficeTypeIds[$typeId] = true;
+            }
+
+            if ($isUnpaidLeave) {
+                $monthKey = substr((string)$d['date'], 0, 7);
+                $val = ($d['day_type'] === 'Full Day') ? 1.0 : 0.5;
+                if (!isset($backOfficeUnpaidRequestedByMonth[$monthKey])) {
+                    $backOfficeUnpaidRequestedByMonth[$monthKey] = 0.0;
+                }
+                $backOfficeUnpaidRequestedByMonth[$monthKey] += $val;
+            }
+        }
+
+        foreach ($backOfficeRequestedByMonth as $typeId => $months) {
+            foreach ($months as $monthKey => $requestedDays) {
+                $monthStart = $monthKey . '-01';
+                $monthEnd = date('Y-m-t', strtotime($monthStart));
+
+                $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date BETWEEN ? AND ?");
+                $usedStmt->execute([$userId, $typeId, $monthStart, $monthEnd]);
+                $usedRow = $usedStmt->fetch(PDO::FETCH_ASSOC);
+                $usedTotal = $usedRow && $usedRow['used'] ? floatval($usedRow['used']) : 0.0;
+
+                $available = max(0.0, 3.0 - $usedTotal);
+                if ($requestedDays > $available) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => "Back Office leave limit exceeded for $monthKey. Available: $available, Requested: $requestedDays"
+                    ]);
+                    exit();
+                }
+
+                if (!empty($backOfficeUnpaidRequestedByMonth[$monthKey]) && $available > 0) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => "Unpaid Leave is not allowed for $monthKey while Back Office leave is still available. Remaining: $available"
+                    ]);
+                    exit();
+                }
+            }
+        }
+
+        if (!empty($backOfficeUnpaidRequestedByMonth) && empty($backOfficeRequestedByMonth)) {
+            foreach ($backOfficeUnpaidRequestedByMonth as $monthKey => $requestedDays) {
+                $monthStart = $monthKey . '-01';
+                $monthEnd = date('Y-m-t', strtotime($monthStart));
+
+                $typeStmt = $pdo->prepare("SELECT id FROM leave_types WHERE LOWER(name) LIKE '%back office%' LIMIT 1");
+                $typeStmt->execute();
+                $typeRow = $typeStmt->fetch(PDO::FETCH_ASSOC);
+                $boTypeId = $typeRow ? (int)$typeRow['id'] : 0;
+
+                if ($boTypeId > 0) {
+                    $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date BETWEEN ? AND ?");
+                    $usedStmt->execute([$userId, $boTypeId, $monthStart, $monthEnd]);
+                    $usedRow = $usedStmt->fetch(PDO::FETCH_ASSOC);
+                    $usedTotal = $usedRow && $usedRow['used'] ? floatval($usedRow['used']) : 0.0;
+                    $available = max(0.0, 3.0 - $usedTotal);
+
+                    if ($available > 0) {
+                        echo json_encode([
+                            'success' => false,
+                            'message' => "Unpaid Leave is not allowed for $monthKey while Back Office leave is still available. Remaining: $available"
+                        ]);
+                        exit();
+                    }
+                }
+            }
         }
     }
 
@@ -250,6 +362,9 @@ try {
     $availableCasual = 0.0;
 
     foreach ($requestedCounts as $tid => $count) {
+        if ($isBackOfficeRole && isset($backOfficeTypeIds[$tid])) {
+            continue;
+        }
         // ID 13 is Unpaid Leave. We bypass balance checks for it.
         if ($tid == 13) continue;
 
@@ -364,22 +479,24 @@ try {
     $remainingComp = max(0, $availableComp - $requestedByCategory['compensation']);
     $remainingCasual = max(0, $availableCasual - $requestedByCategory['casual']);
 
-    if ($requestedByCategory['casual'] > 0 && $remainingComp > 0) {
-        $pdo->rollBack();
-        echo json_encode([
-            'success' => false,
-            'message' => "Compensation leave must be used before Casual Leave. Remaining compensation: $remainingComp"
-        ]);
-        exit();
-    }
+    if (!$isBackOfficeRole) {
+        if ($requestedByCategory['casual'] > 0 && $remainingComp > 0) {
+            $pdo->rollBack();
+            echo json_encode([
+                'success' => false,
+                'message' => "Compensation leave must be used before Casual Leave. Remaining compensation: $remainingComp"
+            ]);
+            exit();
+        }
 
-    if ($requestedByCategory['unpaid'] > 0 && ($remainingComp > 0 || $remainingCasual > 0)) {
-        $pdo->rollBack();
-        echo json_encode([
-            'success' => false,
-            'message' => "Unpaid Leave is only allowed after using available Compensation and Casual leave. Remaining compensation: $remainingComp, remaining casual: $remainingCasual"
-        ]);
-        exit();
+        if ($requestedByCategory['unpaid'] > 0 && ($remainingComp > 0 || $remainingCasual > 0)) {
+            $pdo->rollBack();
+            echo json_encode([
+                'success' => false,
+                'message' => "Unpaid Leave is only allowed after using available Compensation and Casual leave. Remaining compensation: $remainingComp, remaining casual: $remainingCasual"
+            ]);
+            exit();
+        }
     }
 
     // manager_approval enum is ('approved','rejected'), so we leave it NULL for pending status

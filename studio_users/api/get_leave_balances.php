@@ -36,6 +36,8 @@ $userData = $userStmt->fetch(PDO::FETCH_ASSOC);
 $userRole = $userData['role'] ?? '';
 $userJoinDateStr = $userData['joining_date'] ?? null;
 $userGender = isset($userData['gender']) ? strtolower($userData['gender']) : '';
+$roleKey = preg_replace('/\s+/', '', strtolower($userRole));
+$isBackOfficeRole = (strpos($roleKey, 'backoffice') !== false);
 
 // Determine leave-year April start for the requested month/year
 $leaveYearStart = ($month >= 3) ? $year : $year - 1; // if month >= April(3), start is same year
@@ -164,16 +166,17 @@ try {
         $balances = array_values($balances);
     }
 
-    // Remove "Back Office" leave if user is NOT "Maid Back Office"
-    $balances = array_filter($balances, function($b) use ($userRole) {
+    // Back Office role handling
+    $balances = array_filter($balances, function($b) use ($isBackOfficeRole) {
         $leaveName = strtolower($b['leave_type']);
-        
-        // Filter out "Back Office" leave for non-"Maid Back Office" roles
-        if (strpos($leaveName, 'back office') !== false) {
-            return strtolower($userRole) === 'maid back office';
+        $isBackOfficeLeave = (strpos($leaveName, 'back office') !== false);
+        $isShortLeave = (strpos($leaveName, 'short') !== false);
+
+        if ($isBackOfficeRole) {
+            return $isBackOfficeLeave || $isShortLeave;
         }
-        
-        return true;
+
+        return !$isBackOfficeLeave;
     });
     // Re-index array
     $balances = array_values($balances);
@@ -279,6 +282,54 @@ try {
                 $b['remaining_balance'] = max(0, $earnedTotal - $usedTotal);
                 $b['total_balance'] = $earnedTotal;
             }
+        }
+
+        if (strpos($nameStr, 'back office') !== false) {
+            $cycleBase = new DateTime('2026-04-01');
+            $selectedMonth = new DateTime("$year-" . str_pad($month + 1, 2, '0', STR_PAD_LEFT) . "-01");
+            $leaveYearStart = ($month >= 3) ? $year : $year - 1;
+            $leaveYearApril = new DateTime("$leaveYearStart-04-01");
+
+            $cycleStart = ($leaveYearApril < $cycleBase) ? $cycleBase : $leaveYearApril;
+            $accrualStartMonth = clone $cycleStart;
+            if (!empty($userJoinDateStr)) {
+                $joinD = new DateTime($userJoinDateStr);
+                if ($joinD > $cycleStart) {
+                    $accrualStartMonth = new DateTime($joinD->format('Y-m-01'));
+                }
+            }
+
+            $monthsSinceStart = ($selectedMonth->format('Y') - $accrualStartMonth->format('Y')) * 12
+                + ($selectedMonth->format('n') - $accrualStartMonth->format('n'));
+
+            $maxPossibleMonths = 12 - (($accrualStartMonth->format('Y') - $leaveYearApril->format('Y')) * 12
+                + ($accrualStartMonth->format('n') - 4));
+
+            $totalAccrued = 0.0;
+            $monthlyAllocation = 0.0;
+
+            if ($monthsSinceStart >= 0 && $maxPossibleMonths > 0) {
+                $totalAccrued = min($monthsSinceStart + 1, $maxPossibleMonths) * 3.0;
+                $monthlyAllocation = 3.0;
+            }
+
+            $typeStmt = $pdo->prepare("SELECT id FROM leave_types WHERE LOWER(name) = LOWER(?) LIMIT 1");
+            $typeStmt->execute([$b['leave_type']]);
+            $typeRow = $typeStmt->fetch(PDO::FETCH_ASSOC);
+            $boTypeId = $typeRow ? (int)$typeRow['id'] : null;
+
+            $usedTotal = 0.0;
+            if ($boTypeId && $monthlyAllocation > 0) {
+                $monthStart = $selectedMonth->format('Y-m-01');
+                $monthEnd = $selectedMonth->format('Y-m-t');
+                $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date BETWEEN ? AND ?");
+                $usedStmt->execute([$user_id, $boTypeId, $monthStart, $monthEnd]);
+                $usedRow = $usedStmt->fetch(PDO::FETCH_ASSOC);
+                $usedTotal = $usedRow && $usedRow['used'] ? floatval($usedRow['used']) : 0.0;
+            }
+
+            $b['total_balance'] = $totalAccrued;
+            $b['remaining_balance'] = max(0, $monthlyAllocation - $usedTotal);
         }
 
         if (strpos($nameStr, 'short') !== false) {

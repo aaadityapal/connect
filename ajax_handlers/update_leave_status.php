@@ -25,6 +25,25 @@ try {
     // Determine new status and which columns to fill
     $new_status = $action === 'approve' ? 'approved' : 'rejected';
 
+    $leaveInfoSql = "SELECT lr.user_id, lr.leave_type, lr.duration, lr.status, lr.start_date, lt.name AS leave_type_name
+                     FROM leave_request lr
+                     JOIN leave_types lt ON lr.leave_type = lt.id
+                     WHERE lr.id = ?";
+    $leaveInfoStmt = $conn->prepare($leaveInfoSql);
+    if (!$leaveInfoStmt) {
+        echo json_encode(['success' => false, 'error' => 'Prepare failed (leave info)']);
+        exit;
+    }
+    $leaveInfoStmt->bind_param('i', $id);
+    $leaveInfoStmt->execute();
+    $leaveInfoRes = $leaveInfoStmt->get_result();
+    $leaveInfo = $leaveInfoRes->fetch_assoc();
+
+    if (!$leaveInfo) {
+        echo json_encode(['success' => false, 'error' => 'Leave request not found']);
+        exit;
+    }
+
     $user_id = intval($_SESSION['user_id']);
     $now = date('Y-m-d H:i:s');
 
@@ -62,6 +81,23 @@ try {
     if (!$stmt->execute()) {
         echo json_encode(['success' => false, 'error' => 'Execution failed']);
         exit;
+    }
+
+    $oldStatus = strtolower(trim($leaveInfo['status'] ?? ''));
+    $typeNameLower = strtolower($leaveInfo['leave_type_name'] ?? '');
+    $leaveTypeId = intval($leaveInfo['leave_type']);
+    $duration = floatval($leaveInfo['duration']);
+    $leaveYear = !empty($leaveInfo['start_date']) ? date('Y', strtotime($leaveInfo['start_date'])) : date('Y');
+
+    if ($new_status === 'rejected' && $oldStatus !== 'rejected') {
+        $isStaticLeave = ($leaveTypeId != 13 && strpos($typeNameLower, 'casual') === false && strpos($typeNameLower, 'comp') === false);
+        if ($isStaticLeave) {
+            $restoreStmt = $conn->prepare("UPDATE leave_bank SET remaining_balance = remaining_balance + ? WHERE user_id = ? AND leave_type_id = ? AND year = ?");
+            if ($restoreStmt) {
+                $restoreStmt->bind_param('diii', $duration, $leaveInfo['user_id'], $leaveTypeId, $leaveYear);
+                $restoreStmt->execute();
+            }
+        }
     }
 
     echo json_encode(['success' => true, 'message' => 'Leave request updated', 'id' => $id, 'status' => $new_status]);

@@ -56,6 +56,8 @@ try {
     $uStmt->execute([$userId]);
     $userData = $uStmt->fetch(PDO::FETCH_ASSOC);
     if (!$userData) throw new Exception("User not found.");
+    $roleKey = preg_replace('/\s+/', '', strtolower($userData['role'] ?? ''));
+    $isBackOfficeRole = (strpos($roleKey, 'backoffice') !== false);
 
     // 2. Get Leave Type Name
     $ltStmt = $pdo->prepare("SELECT name FROM leave_types WHERE id = ?");
@@ -75,6 +77,108 @@ try {
         while ($start <= $end) {
             $datesRequested[] = $start->format('Y-m-d');
             $start->modify('+1 day');
+        }
+    }
+
+    $currentYear = date('Y');
+    $bank = null;
+    $avail = 0.0;
+    $totalNeeded = 0.0;
+    $skipBalanceCheck = false;
+
+    foreach ($datesRequested as $date) {
+        if ($dayType === 'Short Leave') {
+            $totalNeeded += 1.0;
+        } elseif ($dayType === 'Full Day') {
+            $totalNeeded += 1.0;
+        } else {
+            $totalNeeded += 0.5;
+        }
+    }
+
+    $bankStmt = $pdo->prepare("SELECT remaining_balance, total_balance FROM leave_bank WHERE user_id = ? AND leave_type_id = ? AND year = ?");
+    $bankStmt->execute([$userId, $typeId, $currentYear]);
+    $bank = $bankStmt->fetch(PDO::FETCH_ASSOC);
+    $avail = $bank && isset($bank['remaining_balance']) ? floatval($bank['remaining_balance']) : 0.0;
+
+    if ($isBackOfficeRole) {
+        $isBackOfficeLeave = (strpos($typeNameLower, 'back office') !== false);
+        $isShortLeave = (strpos($typeNameLower, 'short') !== false);
+        $isUnpaidLeave = (strpos($typeNameLower, 'unpaid') !== false);
+        $skipBalanceCheck = $isBackOfficeLeave;
+
+        if (!$isBackOfficeLeave && !$isShortLeave && !$isUnpaidLeave) {
+            echo json_encode(['success' => false, 'message' => 'Back Office users can only apply for Short Leave, Back Office Leave, or Unpaid Leave.']);
+            exit();
+        }
+
+        if ($isBackOfficeLeave) {
+            foreach ($datesRequested as $date) {
+                if ($date < '2026-04-01') {
+                    echo json_encode(['success' => false, 'message' => 'Back Office leave is available only from 2026-04-01 onwards.']);
+                    exit();
+                }
+            }
+        }
+
+        $backOfficeByMonth = [];
+        $unpaidByMonth = [];
+        foreach ($datesRequested as $date) {
+            $monthKey = substr((string)$date, 0, 7);
+            $val = ($dayType === 'Full Day') ? 1.0 : ($dayType === 'Short Leave' ? 0.0 : 0.5);
+
+            if ($isBackOfficeLeave) {
+                if (!isset($backOfficeByMonth[$monthKey])) $backOfficeByMonth[$monthKey] = 0.0;
+                $backOfficeByMonth[$monthKey] += $val;
+            }
+
+            if ($isUnpaidLeave) {
+                if (!isset($unpaidByMonth[$monthKey])) $unpaidByMonth[$monthKey] = 0.0;
+                $unpaidByMonth[$monthKey] += $val;
+            }
+        }
+
+        if ($isBackOfficeLeave) {
+            foreach ($backOfficeByMonth as $monthKey => $requestedDays) {
+                $monthStart = $monthKey . '-01';
+                $monthEnd = date('Y-m-t', strtotime($monthStart));
+
+                $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date BETWEEN ? AND ?");
+                $usedStmt->execute([$userId, $typeId, $monthStart, $monthEnd]);
+                $usedRow = $usedStmt->fetch(PDO::FETCH_ASSOC);
+                $usedTotal = $usedRow && $usedRow['used'] ? floatval($usedRow['used']) : 0.0;
+
+                $available = max(0.0, 3.0 - $usedTotal);
+                if ($requestedDays > $available) {
+                    echo json_encode(['success' => false, 'message' => "Back Office leave limit exceeded for $monthKey. Available: $available, Requested: $requestedDays"]);
+                    exit();
+                }
+            }
+        }
+
+        if ($isUnpaidLeave) {
+            $boTypeStmt = $pdo->prepare("SELECT id FROM leave_types WHERE LOWER(name) LIKE '%back office%' LIMIT 1");
+            $boTypeStmt->execute();
+            $boTypeRow = $boTypeStmt->fetch(PDO::FETCH_ASSOC);
+            $boTypeId = $boTypeRow ? (int)$boTypeRow['id'] : 0;
+
+            if ($boTypeId > 0) {
+                foreach ($unpaidByMonth as $monthKey => $requestedDays) {
+                    $monthStart = $monthKey . '-01';
+                    $monthEnd = date('Y-m-t', strtotime($monthStart));
+
+                    $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date BETWEEN ? AND ?");
+                    $usedStmt->execute([$userId, $boTypeId, $monthStart, $monthEnd]);
+                    $usedRow = $usedStmt->fetch(PDO::FETCH_ASSOC);
+                    $usedTotal = $usedRow && $usedRow['used'] ? floatval($usedRow['used']) : 0.0;
+
+                    $available = max(0.0, 3.0 - $usedTotal);
+                    if ($available > 0) {
+                        echo json_encode(['success' => false, 'message' => "Unpaid Leave is not allowed for $monthKey while Back Office leave is still available. Remaining: $available"]);
+                        exit();
+                    }
+                }
+            }
         }
     }
 
@@ -297,18 +401,20 @@ try {
         $availableCasual = max(0, $totalAccrued - $totalUsed);
     }
 
-    if (strpos($typeNameLower, 'casual') !== false && $availableComp > 0) {
-        echo json_encode(['success' => false, 'message' => 'Compensation leave must be used before Casual Leave.']);
-        exit();
-    }
+    if (!$isBackOfficeRole) {
+        if (strpos($typeNameLower, 'casual') !== false && $availableComp > 0) {
+            echo json_encode(['success' => false, 'message' => 'Compensation leave must be used before Casual Leave.']);
+            exit();
+        }
 
-    if (strpos($typeNameLower, 'unpaid') !== false && ($availableComp > 0 || ($availableCasual > 0 && $isEligibleForCasual))) {
-        echo json_encode(['success' => false, 'message' => 'Unpaid Leave is only allowed after using available Compensation and Casual leave.']);
-        exit();
+        if (strpos($typeNameLower, 'unpaid') !== false && ($availableComp > 0 || ($availableCasual > 0 && $isEligibleForCasual))) {
+            echo json_encode(['success' => false, 'message' => 'Unpaid Leave is only allowed after using available Compensation and Casual leave.']);
+            exit();
+        }
     }
     
     // Perform balance check unless it's unpaid
-    if ($typeId != 13 && $avail < $totalNeeded) {
+        if (!$skipBalanceCheck && $typeId != 13 && $avail < $totalNeeded) {
          echo json_encode(['success' => false, 'message' => "Insufficient balance for $typeName. Available: $avail, Requested: $totalNeeded"]);
          exit();
     }
@@ -335,7 +441,7 @@ try {
     }
 
     // 8. Update Bank (Static leaves)
-    if ($typeId != 13 && strpos($typeNameLower, 'casual') === false && strpos($typeNameLower, 'comp') === false) {
+    if ($typeId != 13 && strpos($typeNameLower, 'casual') === false && strpos($typeNameLower, 'comp') === false && strpos($typeNameLower, 'back office') === false) {
         $upd = $pdo->prepare("UPDATE leave_bank SET remaining_balance = remaining_balance - ? WHERE user_id = ? AND leave_type_id = ? AND year = ?");
         $upd->execute([$totalNeeded, $userId, $typeId, $currentYear]);
     }

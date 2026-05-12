@@ -17,8 +17,38 @@ try {
             throw new Exception('Leave ID is required for deletion');
         }
 
+        $leaveId = intval($_GET['id']);
+        $infoSql = "SELECT lr.user_id, lr.leave_type, lr.duration, lr.status, lr.start_date, lt.name AS leave_type_name
+                    FROM leave_request lr
+                    JOIN leave_types lt ON lr.leave_type = lt.id
+                    WHERE lr.id = ?";
+        $infoStmt = $conn->prepare($infoSql);
+        if ($infoStmt) {
+            $infoStmt->bind_param('i', $leaveId);
+            $infoStmt->execute();
+            $infoRes = $infoStmt->get_result();
+            $leaveInfo = $infoRes->fetch_assoc();
+
+            if ($leaveInfo) {
+                $oldStatus = strtolower(trim($leaveInfo['status'] ?? ''));
+                $typeNameLower = strtolower($leaveInfo['leave_type_name'] ?? '');
+                $leaveTypeId = intval($leaveInfo['leave_type']);
+                $duration = floatval($leaveInfo['duration']);
+                $leaveYear = !empty($leaveInfo['start_date']) ? date('Y', strtotime($leaveInfo['start_date'])) : date('Y');
+
+                $isStaticLeave = ($leaveTypeId != 13 && strpos($typeNameLower, 'casual') === false && strpos($typeNameLower, 'comp') === false);
+                if ($oldStatus !== 'rejected' && $isStaticLeave) {
+                    $restoreStmt = $conn->prepare("UPDATE leave_bank SET remaining_balance = remaining_balance + ? WHERE user_id = ? AND leave_type_id = ? AND year = ?");
+                    if ($restoreStmt) {
+                        $restoreStmt->bind_param('diii', $duration, $leaveInfo['user_id'], $leaveTypeId, $leaveYear);
+                        $restoreStmt->execute();
+                    }
+                }
+            }
+        }
+
         $stmt = $conn->prepare("DELETE FROM leave_request WHERE id = ?");
-        $stmt->bind_param('i', $_GET['id']);
+        $stmt->bind_param('i', $leaveId);
         
         if ($stmt->execute()) {
             $_SESSION['success'] = "Leave record successfully deleted";

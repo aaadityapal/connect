@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         header('Location: sales/index.php');
                         break;
                     case 'Maid Back Office':
-                        header('Location: maid/index.php');
+                        header('Location: studio_users/index.php');
                         break;
                     case 'Relationship Manager':
                         header('Location: studio_users/index.php');

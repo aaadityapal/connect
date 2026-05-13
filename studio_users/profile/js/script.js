@@ -212,6 +212,8 @@ async function loadUserInfo() {
                 setField('pi-account-holder',  bank.account_holder);
                 setField('pi-account-number',  bank.account_number);
                 setField('pi-ifsc',            bank.ifsc_code);
+                setField('pi-aadhar',          bank.aadhar_number);
+                setField('pi-pan',             bank.pan_number);
             }
 
             // ── SECTION 12: Notification Preferences ─────────────────────

@@ -71,10 +71,12 @@ function getIndianCurrency($number) {
 	}
 	$str = array_reverse($str);
 	$result = implode('', $str);
-	$paise = ($point) ?
-		"." . $words[$point / 10] . " " .
-		$words[$point = $point % 10] : '';
-	return ucwords($result) . "Rupees" . ($paise ? " and " . $paise . " Paise" : "");
+	$point = (int)$point;
+	$paiseWords = '';
+	if ($point > 0) {
+		$paiseWords = ($point < 21) ? $words[$point] : trim($words[floor($point / 10) * 10] . " " . $words[$point % 10]);
+	}
+	return ucwords($result) . "Rupees" . ($paiseWords ? " and " . ucwords($paiseWords) . " Paise" : "");
 }
 
 $tableName = 'employee_salary_snapshot_records_20260513';
@@ -107,9 +109,9 @@ try {
 		exit();
 	}
 
-	$fees = (float) $row['total_payable_salary'];
-	$tds = (float) $row['total_tds_amount'];
-	$net = $fees - $tds;
+	$fees = round((float) $row['total_payable_salary']);
+	$tds = round((float) $row['total_tds_amount']);
+	$net = round($fees + $tds);
 
 	echo json_encode([
 		'success' => true,

@@ -288,6 +288,9 @@ const openPdfWindow = async () => {
 				.receipt-amount {
 					font-size: 19px !important;
 				}
+				.receipt-note {
+					font-size: 17px !important;
+				}
 
 				/* Center the receipt content; center the table within the section */
 				.receipt-section {
@@ -342,8 +345,8 @@ const openPdfWindow = async () => {
 				@media print {
 					@page { size: A4 portrait; margin: 5mm; }
 
-					/* Adjusted zoom to comfortably fit both enhanced slips on a single page */
-					html { zoom: 0.58; }
+					/* Adjusted zoom to comfortably fit both enhanced slips and the doubled separation gap on a single page */
+					html { zoom: 0.55; }
 					body { background: #fff !important; }
 
 					/* Allow content to determine height naturally without clipping or page overflowing */
@@ -362,7 +365,7 @@ const openPdfWindow = async () => {
 					.scissors-line {
 						page-break-after: avoid !important;
 						break-after: avoid !important;
-						margin: 30px 0 !important;
+						margin: 60px 0 !important;
 						border-top: 3px dashed #334155 !important;
 					}
 				}

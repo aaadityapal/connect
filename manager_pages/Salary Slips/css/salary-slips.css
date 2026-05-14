@@ -440,19 +440,32 @@ body.el-1 {
 .scissors-line {
 	position: relative;
 	margin-top: 0.75rem;
-	border-top: 2px dashed #b6bcc7;
+	border-top: 2.5px dashed #475569;
 }
 
 .scissors-icon {
 	position: absolute;
-	top: -0.75rem;
+	top: -0.85rem;
+	background: #fff;
+	color: #334155;
+	font-size: 20px;
+	line-height: 1;
+	padding: 0 0.5rem;
+}
+
+.sc-left {
+	left: 20%;
+	transform: translateX(-50%);
+}
+
+.sc-center {
 	left: 50%;
 	transform: translateX(-50%);
-	background: #fff;
-	color: #64748b;
-	font-size: 18px;
-	line-height: 1;
-	padding: 0 0.35rem;
+}
+
+.sc-right {
+	left: 80%;
+	transform: translateX(-50%);
 }
 
 @media (max-width: 900px) {

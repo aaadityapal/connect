@@ -331,7 +331,9 @@ function getIndianCurrency($number) {
 							</div>
 
 							<div class="scissors-line" aria-hidden="true">
-								<span class="scissors-icon">&#9986;</span>
+								<span class="scissors-icon sc-left">&#9986;</span>
+								<span class="scissors-icon sc-center">&#9986;</span>
+								<span class="scissors-icon sc-right">&#9986;</span>
 							</div>
 
 							<div class="slp-duplicate">

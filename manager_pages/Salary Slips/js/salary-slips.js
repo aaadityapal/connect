@@ -211,8 +211,8 @@ const openPdfWindow = async () => {
 					display: block !important;
 					top: auto !important;
 					right: auto !important;
-					width: 240px !important;
-					max-width: 55% !important;
+					width: 350px !important;
+					max-width: 70% !important;
 					margin: 1rem 0.75rem 0.1rem auto !important;
 					/* Sharpen raster image during print scaling */
 					image-rendering: -webkit-optimize-contrast !important;
@@ -231,11 +231,12 @@ const openPdfWindow = async () => {
 					width: auto !important;
 					margin-left: auto !important;
 					line-height: 1.5 !important;
+					font-size: 16px !important;
 				}
 
 				/* Period heading — larger & bold */
 				.slp-period-line {
-					font-size: 16px !important;
+					font-size: 26px !important;
 					font-weight: 800 !important;
 					letter-spacing: 0.04em !important;
 				}
@@ -260,30 +261,32 @@ const openPdfWindow = async () => {
 
 				/* Amount section — match field size; make total bold & larger */
 				.amount-due {
-					font-size: 19px !important;
+					font-size: 23px !important;
 				}
 				.amount-total {
-					font-size: 20px !important;
+					font-size: 25px !important;
 					font-weight: 800 !important;
 				}
 				.amount-total strong {
-					font-size: 20px !important;
+					font-size: 25px !important;
 					font-weight: 800 !important;
 				}
 
 				/* Receipt section */
 				.receipt-title {
-					font-size: 18px !important;
+					font-size: 22px !important;
 					font-weight: 800 !important;
 				}
 				.receipt-text {
-					font-size: 17px !important;
+					font-size: 20px !important;
 				}
 				.receipt-table td {
-					font-size: 17px !important;
+					font-size: 19px !important;
+					white-space: nowrap !important;
+					padding: 0.25rem 0.75rem !important;
 				}
 				.receipt-amount {
-					font-size: 17px !important;
+					font-size: 19px !important;
 				}
 
 				/* Center the receipt content; center the table within the section */
@@ -291,12 +294,14 @@ const openPdfWindow = async () => {
 					text-align: center !important;
 				}
 				.receipt-table {
+					width: auto !important;
+					min-width: 380px !important;
 					margin: 0.4rem auto !important;
 					text-align: left !important;
 				}
 				.receipt-text {
 					text-align: left !important;
-					font-size: 17px !important;
+					font-size: 20px !important;
 				}
 
 				/* Border line above NET PAYABLE — like a subtotal separator */
@@ -337,8 +342,8 @@ const openPdfWindow = async () => {
 				@media print {
 					@page { size: A4 portrait; margin: 5mm; }
 
-					/* Adjusted zoom to fit large top margin and multi-line receipt text gracefully */
-					html { zoom: 0.64; }
+					/* Adjusted zoom to comfortably fit both enhanced slips on a single page */
+					html { zoom: 0.58; }
 					body { background: #fff !important; }
 
 					/* Allow content to determine height naturally without clipping or page overflowing */
@@ -357,6 +362,8 @@ const openPdfWindow = async () => {
 					.scissors-line {
 						page-break-after: avoid !important;
 						break-after: avoid !important;
+						margin: 30px 0 !important;
+						border-top: 3px dashed #334155 !important;
 					}
 				}
 			</style>

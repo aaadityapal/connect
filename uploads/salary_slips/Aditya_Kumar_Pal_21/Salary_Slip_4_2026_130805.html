@@ -1,0 +1,2226 @@
+
+		<!DOCTYPE html>
+		<html lang="en">
+		<head>
+			<meta charset="UTF-8">
+			<title>Salary Slip</title>
+			<style>
+				/* 
+ * =====================================================
+ * EMPLOYEES PROFILE — manager_pages/employees_profile/style.css
+ * =====================================================
+ */
+
+:root {
+    --primary: #111827;
+    --primary-light: #1f2937;
+    --primary-dark: #020617;
+    --secondary: #64748b;
+    --success: #059669;
+    --warning: #f59e0b;
+    --danger: #dc2626;
+    --info: #2563eb;
+    --bg-main: #f4f5f7;
+    --card-bg: #ffffff;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --sidebar-width: 260px;
+    --sidebar-collapsed: 72px;
+    --transition: all 0.18s ease;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 2px 10px rgba(17, 24, 39, 0.06);
+    --shadow-lg: 0 10px 28px rgba(17, 24, 39, 0.12);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Outfit', -apple-system, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2.5rem 3rem;
+    overflow-y: auto;
+    width: 100%;
+}
+
+/* Base Card Style - Flat and Minimal */
+.glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: none;
+    transition: var(--transition);
+}
+
+.glass-card:hover {
+    box-shadow: none;
+}
+
+/* Page Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    color: var(--text-primary);
+    box-shadow: none;
+    border-bottom: none;
+}
+
+.header-title h1 {
+    font-size: 1.65rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+    letter-spacing: -0.3px;
+    color: var(--primary);
+}
+
+.header-title p {
+    font-size: 0.95rem;
+    opacity: 0.8;
+    color: var(--text-secondary);
+}
+
+/* Stats Overview */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.85rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 0.9rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+    position: relative;
+    box-shadow: none;
+    border: 1px solid var(--border-color);
+}
+
+.stat-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    background: var(--bg-main);
+    border: 1px solid var(--border-color);
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.stat-info h3 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+}
+
+.stat-info .value {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: auto;
+    padding-top: 0.5rem;
+}
+
+.stat-trend.positive { color: var(--success); }
+.stat-trend.neutral { color: var(--secondary); }
+
+/* Table Controls */
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0.9rem;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+    background: white;
+}
+
+.search-box {
+    position: relative;
+    flex: 1;
+    max-width: 350px;
+}
+
+.search-box i,
+.search-box svg {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.6rem 1rem 0.6rem 2.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: var(--transition);
+    background: var(--bg-main);
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.filter-select {
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    background: white;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Buttons */
+.btn-primary, .btn-secondary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border-radius: 7px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+    border: 1px solid transparent;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-light);
+}
+
+.btn-secondary {
+    background: white;
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-main);
+}
+
+/* Employees Grid */
+.employees-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.employee-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: none;
+    padding: 1.2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition);
+}
+
+.employee-card:hover {
+    border-color: #d1d5db;
+}
+
+.employee-card.status-active {
+    border-left: 3px solid #86efac;
+}
+
+.employee-card.status-inactive {
+    border-left: 3px solid #fecaca;
+}
+
+.card-options {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.btn-more {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.btn-more:hover {
+    background: var(--bg-main);
+    color: var(--text-primary);
+}
+
+.employee-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+}
+
+.avatar-large {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.35rem;
+    font-weight: 500;
+    border: 2px solid white;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    position: relative;
+}
+
+.employee-avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.employee-avatar-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.employee-info h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.status-time {
+    margin-top: 0.28rem;
+    font-size: 0.73rem;
+    color: #6b7280;
+    line-height: 1.2;
+}
+
+.employee-role {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.employee-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+}
+
+.status-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 3px 8px;
+    border: 1px solid var(--border-color);
+    background: #f9fafb;
+    color: #4b5563;
+}
+
+.status-badge.active {
+    background: #f0fdf4;
+    color: #166534;
+    border-color: #bbf7d0;
+}
+
+.status-badge.inactive {
+    background: #fef2f2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+
+.employee-details {
+    margin-bottom: 1.2rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.9rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.6rem;
+}
+
+.detail-item i {
+    width: 14px;
+    height: 14px;
+}
+
+.profile-completion-row,
+.profile-completion-modal {
+    margin-top: 0.65rem;
+}
+
+.profile-completion-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+}
+
+.profile-completion-top strong {
+    color: var(--text-primary);
+    font-size: 0.8rem;
+}
+
+.profile-completion-track {
+    height: 6px;
+    width: 100%;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.profile-completion-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #10b981);
+    border-radius: inherit;
+}
+
+.card-footer {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+}
+
+.btn-view-profile {
+    flex: 1;
+    padding: 0.5rem;
+    border-radius: 7px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-main);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-view-profile:hover {
+    background: white;
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.btn-status-toggle {
+    padding: 0.48rem 0.65rem;
+    border-radius: 7px;
+    border: 1px solid var(--border-color);
+    background: #fff;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: var(--transition);
+}
+
+.btn-status-toggle svg {
+    width: 13px;
+    height: 13px;
+}
+
+.btn-status-toggle.is-active {
+    color: #b91c1c;
+    border-color: #fecaca;
+    background: #fff1f2;
+}
+
+.btn-status-toggle.is-active:hover {
+    background: #ffe4e6;
+    border-color: #fca5a5;
+}
+
+.btn-status-toggle.is-inactive {
+    color: #166534;
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+
+.btn-status-toggle.is-inactive:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+}
+
+.btn-status-toggle:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.btn-icon-action {
+    width: 32px;
+    height: 32px;
+    border-radius: 7px;
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.btn-icon-action i {
+    width: 14px;
+    height: 14px;
+}
+
+.btn-icon-action:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--bg-main);
+}
+
+.btn-reminder {
+    color: #b45309;
+    border-color: #fcd34d;
+    background: #fffbeb;
+}
+
+.btn-reminder:hover {
+    color: #92400e;
+    border-color: #f59e0b;
+    background: #fef3c7;
+}
+
+.btn-reminder.reminder-sent,
+.btn-reminder-modal.reminder-sent {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(17, 24, 39, 0.3);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 20000;
+    padding: 1.5rem;
+}
+
+.notice-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 7, 18, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 30000;
+    padding: 1rem;
+}
+
+.notice-overlay.show {
+    display: flex;
+}
+
+.notice-card {
+    width: 100%;
+    max-width: 480px;
+    background: #15131d;
+    border: 1px solid #3b334f;
+    color: #f3f4f6;
+    border-radius: 14px;
+    padding: 1.2rem 1.2rem 0.95rem;
+    box-shadow: 0 14px 36px rgba(2, 6, 23, 0.45);
+}
+
+.notice-card h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.55rem;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.notice-card p {
+    margin: 0;
+    font-size: 1rem;
+    color: #e5e7eb;
+    line-height: 1.45;
+}
+
+.notice-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.notice-ok-btn {
+    border: none;
+    background: #c4a9ff;
+    color: #24172f;
+    font-weight: 700;
+    border-radius: 999px;
+    min-width: 70px;
+    padding: 0.5rem 0.9rem;
+    cursor: pointer;
+}
+
+.notice-ok-btn:hover {
+    background: #d2bcff;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 680px;
+    max-height: calc(100vh - 3rem);
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: modal-enter 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes modal-enter {
+    from { opacity: 0; transform: translateY(10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-main);
+}
+
+.modal-header h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.btn-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.btn-close:hover {
+    background: rgba(0,0,0,0.05);
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.25rem;
+    overflow-y: auto;
+}
+
+.profile-detail-header {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.avatar-extra-large {
+    width: 72px;
+    height: 72px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: #fff;
+    font-weight: 700;
+    overflow: hidden;
+    position: relative;
+}
+
+.profile-avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.avatar-fallback-initial {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-name {
+    font-size: 1.35rem;
+    margin-bottom: 0.35rem;
+}
+
+.profile-role-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.profile-detail-header .status-time {
+    margin-top: 0.4rem;
+    font-size: 0.78rem;
+}
+
+.role-chip {
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 4px 10px;
+    background: #eef2ff;
+    color: #3730a3;
+    border: 1px solid #c7d2fe;
+}
+
+.profile-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.35rem;
+}
+
+.profile-tab {
+    padding: 0.45rem 0.8rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.profile-tab svg {
+    width: 14px;
+    height: 14px;
+}
+
+.profile-tab.active {
+    color: var(--primary);
+    background: #f3f4f6;
+    border-color: #e5e7eb;
+}
+
+.profile-tab-panel {
+    display: none;
+}
+
+.profile-tab-panel.active {
+    display: block;
+}
+
+.tab-section {
+    margin-bottom: 1rem;
+}
+
+.tab-section:last-child {
+    margin-bottom: 0;
+}
+
+.tab-section-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    margin-bottom: 0.55rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.section-icon {
+    width: 13px;
+    height: 13px;
+}
+
+.profile-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.info-item {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: #fff;
+}
+
+.info-item label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.label-with-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+}
+
+.label-icon {
+    width: 12px;
+    height: 12px;
+    color: #94a3b8;
+}
+
+.info-item p {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.info-value {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Identity Badge Styling */
+.info-item.identity-badge {
+    background: linear-gradient(135deg, #ffffff, #f9fafb);
+    border: 1.5px dashed var(--border-color);
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+    grid-column: span 2;
+}
+
+.info-item.identity-badge label {
+    margin-bottom: 0.5rem;
+}
+
+.info-item.identity-badge .label-icon {
+    color: var(--primary);
+    width: 14px;
+    height: 14px;
+}
+
+.info-item.identity-badge .info-value {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--primary);
+    text-align: center;
+    background: #f3f4f6;
+    padding: 0.65rem;
+    border-radius: 8px;
+    border: 1px inset rgba(0,0,0,0.05);
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.json-list {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.json-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fcfcfd;
+    padding: 0.55rem 0.65rem;
+}
+
+.json-card-title {
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #4b5563;
+    margin-bottom: 0.45rem;
+}
+
+.json-row {
+    display: grid;
+    grid-template-columns: minmax(90px, 135px) 1fr;
+    gap: 0.45rem;
+    align-items: start;
+    margin-bottom: 0.25rem;
+}
+
+.json-row:last-child {
+    margin-bottom: 0;
+}
+
+.json-key {
+    font-size: 0.78rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.json-value {
+    font-size: 0.84rem;
+    color: #111827;
+    font-weight: 500;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.json-bullets {
+    margin: 0;
+    padding-left: 1rem;
+    display: grid;
+    gap: 0.2rem;
+}
+
+.json-bullets li {
+    font-size: 0.84rem;
+    color: #111827;
+    line-height: 1.35;
+}
+
+.json-empty {
+    font-size: 0.82rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.documents-grid {
+    display: grid;
+    gap: 0.7rem;
+}
+
+.document-item {
+    border: 1px solid var(--border-color);
+    border-radius: 9px;
+    padding: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    background: #fff;
+}
+
+.document-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.document-icon-wrap {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #eef2ff;
+    color: #3730a3;
+    border: 1px solid #c7d2fe;
+    flex-shrink: 0;
+}
+
+.document-icon {
+    width: 15px;
+    height: 15px;
+}
+
+.document-label {
+    font-size: 0.73rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b7280;
+    font-weight: 700;
+}
+
+.document-name {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.document-actions {
+    display: inline-flex;
+    gap: 0.45rem;
+    flex-shrink: 0;
+}
+
+.btn-doc {
+    text-decoration: none;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.8rem;
+}
+
+.btn-doc svg {
+    width: 13px;
+    height: 13px;
+}
+
+.employee-edit-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.edit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.edit-item {
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.7rem;
+    background: #fff;
+}
+
+.edit-item label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+}
+
+.edit-input {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    padding: 0.52rem 0.65rem;
+    font-size: 0.86rem;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: #fff;
+}
+
+.edit-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.edit-textarea {
+    min-height: 130px;
+    resize: vertical;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.edit-section-block {
+    margin-top: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0.75rem;
+    background: #f8fafc;
+}
+
+.repeater-wrap {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.repeater-row {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.7rem;
+    background: #fff;
+}
+
+.repeater-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.55rem;
+    gap: 0.55rem;
+}
+
+.repeater-head.main {
+    margin-bottom: 0.75rem;
+}
+
+.repeater-head h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.repeater-remove {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.78rem;
+}
+
+.repeater-remove svg {
+    width: 12px;
+    height: 12px;
+}
+
+.modal-footer {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 0.6rem;
+    justify-content: flex-end;
+}
+
+.btn-reminder-modal {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.btn-reminder-modal svg {
+    width: 14px;
+    height: 14px;
+}
+
+.modal-footer .btn-status-toggle {
+    margin-right: auto;
+}
+
+.profile-empty {
+    text-align: center;
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+    padding: 1.25rem;
+    color: var(--text-secondary);
+    background: #f9fafb;
+}
+
+.profile-error {
+    color: var(--danger);
+    background: #fff7f7;
+    border-color: #fecaca;
+}
+
+.loader-container {
+    padding: 3rem;
+    display: flex;
+    justify-content: center;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--border-color);
+    border-top: 2px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .main-content {
+        padding: 1.5rem;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .table-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-box {
+        max-width: 100%;
+    }
+
+    .profile-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .document-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .document-actions {
+        width: 100%;
+    }
+
+    .document-actions .btn-doc {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .edit-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+:root {
+	--ink: #0f172a;
+	--muted: #64748b;
+	--border: #e2e8f0;
+	--panel: #ffffff;
+	--wash: #f8fafc;
+	--accent: #c81e1e;
+	--accent-soft: #fef2f2;
+}
+
+body.el-1 {
+	background: radial-gradient(circle at top left, #fff6f1 0%, #ffffff 45%) no-repeat fixed;
+}
+
+.page-shell {
+	padding: 1.5rem;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.page-card {
+	background: #fff;
+	border-radius: 20px;
+	box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+	border: 1px solid #f0f2f5;
+	min-height: calc(100vh - 120px);
+	padding: 2rem;
+}
+
+.export-actions {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-end;
+	margin-top: 1rem;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.filters-row {
+	display: flex;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.filter-item {
+	min-width: 160px;
+}
+
+.export-btn {
+	background: #0f172a;
+	color: #fff;
+	border: none;
+	border-radius: 999px;
+	padding: 0.65rem 1.4rem;
+	font-size: 0.9rem;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.export-btn:hover {
+	background: #111f3a;
+}
+
+.salary-grid {
+	display: grid;
+	grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+	gap: 1.75rem;
+	margin-top: 1.5rem;
+}
+
+.info-panel {
+	background: var(--wash);
+	border-radius: 18px;
+	padding: 1.5rem;
+	border: 1px solid var(--border);
+}
+
+.info-panel h3,
+.slp-preview h3 {
+	margin: 0 0 1rem;
+	font-size: 1.05rem;
+	letter-spacing: 0.02em;
+	color: var(--ink);
+}
+
+.info-list {
+	display: grid;
+	gap: 0.9rem;
+	margin: 0;
+}
+
+.select-label {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--muted);
+	font-weight: 600;
+}
+
+.employee-select {
+	margin-top: 0.35rem;
+	width: 100%;
+	padding: 0.55rem 0.7rem;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	background: #fff;
+	font-size: 0.9rem;
+	color: var(--ink);
+}
+
+.employee-select:focus {
+	outline: 2px solid rgba(200, 30, 30, 0.2);
+	border-color: var(--accent);
+}
+
+.info-item {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.info-item span {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--muted);
+}
+
+.info-item strong {
+	font-size: 0.95rem;
+	color: var(--ink);
+	font-weight: 600;
+}
+
+.slp-preview {
+	background: var(--panel);
+	border-radius: 18px;
+	border: 1px solid var(--border);
+	padding: 4.75rem 1.75rem 1.5rem;
+	position: relative;
+}
+
+.slp-duplicate {
+	margin-top: 2rem;
+	position: relative;
+	padding-top: 4.75rem;
+}
+
+@media print {
+	@page {
+		size: A4;
+		margin: 6mm;
+	}
+
+	.export-actions {
+		display: none;
+	}
+
+	body {
+		background: #fff;
+	}
+
+	.slp-preview {
+		border: none;
+		box-shadow: none;
+		padding: 0;
+		width: 100%;
+	}
+
+	.slp-block,
+	.slp-partitions {
+		break-inside: avoid;
+		page-break-inside: avoid;
+	}
+
+	.slp-partitions {
+		display: flex;
+		flex-wrap: nowrap;
+	}
+
+	.slp-left {
+		width: 50%;
+		border-right: 2px solid #94a3b8;
+		border-bottom: none;
+	}
+
+	.slp-right {
+		width: 50%;
+	}
+
+
+	.slp-duplicate {
+		margin-top: 4mm;
+		width: 100%;
+		display: block;
+	}
+
+	.pdf-export-page {
+		width: 100%;
+		display: block;
+		transform: scale(0.85);
+		transform-origin: top left;
+		width: 117.7%;
+	}
+
+	.scissors-line {
+		break-after: avoid;
+		page-break-after: avoid;
+	}
+}
+
+.slp-logo {
+	width: 230px;
+	max-width: 60%;
+	height: auto;
+	object-fit: contain;
+	position: absolute;
+	top: 0.75rem;
+	right: 1.25rem;
+}
+
+.slp-title {
+	font-size: 1.35rem;
+	font-weight: 700;
+	color: var(--ink);
+	margin: 0;
+}
+
+.slp-meta {
+	margin: 0.25rem 0 0;
+	font-size: 0.9rem;
+	color: var(--muted);
+}
+
+.slp-badges {
+	display: flex;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	margin: 1rem 0 1.25rem;
+}
+
+.slp-period-line {
+	text-align: center;
+	font-size: 14px;
+	font-weight: 700;
+	letter-spacing: 0.03em;
+	color: var(--ink);
+	margin: 0.75rem 0 1.5rem;
+}
+
+.slp-block {
+	border: 1px solid var(--border);
+	border-radius: 12px;
+	overflow: hidden;
+	background: #fff;
+}
+
+.badge {
+	background: var(--accent-soft);
+	color: var(--accent);
+	padding: 0.4rem 0.75rem;
+	border-radius: 999px;
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+.slp-partitions {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0;
+	margin: 0;
+	border: none;
+	border-radius: 0;
+	overflow: hidden;
+}
+
+.slp-left {
+	padding: 0.9rem 1rem;
+	border-right: 2px solid #94a3b8;
+	background: #fff;
+	display: grid;
+	gap: 0.55rem;
+}
+
+.field-row {
+	display: grid;
+	grid-template-columns: 140px minmax(0, 1fr);
+	gap: 0.75rem;
+	font-size: 0.9rem;
+}
+
+.field-row span {
+	color: var(--muted);
+	font-weight: 600;
+}
+
+.field-row strong {
+	color: var(--ink);
+	font-weight: 600;
+}
+
+.slp-right {
+	padding: 0.9rem 1rem;
+	background: #fff;
+	display: grid;
+	gap: 0.55rem;
+}
+
+.amount-due {
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--ink);
+}
+
+.amount-section {
+	margin: 0;
+	border: none;
+	border-top: 1px solid var(--border);
+	background: #fff;
+	padding: 1rem;
+	position: relative;
+	min-height: 120px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+.signature-section {
+	margin: 0;
+	border: none;
+	border-top: 1px solid var(--border);
+	background: #fff;
+	padding: 0.75rem 1rem 0.5rem;
+	min-height: 70px;
+	position: relative;
+	display: flex;
+	align-items: flex-end;
+	justify-content: flex-end;
+}
+
+
+.signature-label {
+	font-size: 16px;
+	font-weight: 800;
+	font-style: italic;
+	color: var(--ink);
+}
+
+.receipt-section {
+	margin: 0 0 1.5rem;
+	border: none;
+	border-top: 1px solid var(--border);
+	border-radius: 0;
+	background: #fff;
+	padding: 0.75rem 1rem 1rem;
+}
+
+.receipt-title {
+	text-align: center;
+	font-weight: 700;
+	font-size: 0.85rem;
+	letter-spacing: 0.08em;
+	margin-bottom: 0.4rem;
+}
+
+.receipt-text {
+	font-size: 15px;
+	line-height: 1.35;
+	color: var(--ink);
+	margin: 0 0 0.7rem;
+}
+
+.receipt-table {
+	width: 240px;
+	border-collapse: collapse;
+	margin-bottom: 0.35rem;
+}
+
+.receipt-table td {
+	padding: 0.25rem 0.5rem;
+	font-size: 14px;
+	font-weight: 800;
+}
+
+.receipt-note-row td {
+	padding-top: 0.1rem;
+	padding-bottom: 0.35rem;
+}
+
+.receipt-note {
+	display: inline-block;
+	font-size: 12px;
+	font-weight: 600;
+	color: #64748b;
+}
+
+.receipt-amount {
+	text-align: right;
+}
+
+
+.receipt-signature {
+	text-align: right;
+	font-size: 16px;
+	font-weight: 800;
+	font-style: italic;
+}
+
+.slp-footer-block {
+	margin-top: 0.75rem;
+}
+
+.footer-line {
+	height: 1px;
+	background: #b6bcc7;
+	margin: 0 0 0.5rem;
+}
+
+.footer-content {
+	display: flex;
+	justify-content: flex-end;
+	align-items: flex-end;
+	gap: 1rem;
+	font-size: 11px;
+	color: #475569;
+}
+
+.footer-left {
+	min-width: 0;
+	width: 0;
+	flex: 0 0 0;
+}
+
+.footer-right {
+	text-align: left;
+	line-height: 1.25;
+}
+
+.scissors-line {
+	position: relative;
+	margin-top: 0.75rem;
+	border-top: 2.5px dashed #475569;
+}
+
+.scissors-icon {
+	position: absolute;
+	top: -0.85rem;
+	background: #fff;
+	color: #334155;
+	font-size: 20px;
+	line-height: 1;
+	padding: 0 0.5rem;
+}
+
+.sc-left {
+	left: 20%;
+	transform: translateX(-50%);
+}
+
+.sc-center {
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.sc-right {
+	left: 80%;
+	transform: translateX(-50%);
+}
+
+@media (max-width: 900px) {
+	.footer-content {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.footer-right {
+		text-align: left;
+	}
+}
+
+.amount-total {
+	position: absolute;
+	right: 1rem;
+	bottom: 0.75rem;
+	font-size: 0.85rem;
+	font-weight: 700;
+	color: var(--ink);
+	white-space: nowrap;
+}
+
+.amount-total strong {
+	font-weight: 700;
+}
+
+.slp-table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+.slp-table th,
+.slp-table td {
+	text-align: left;
+	padding: 0.65rem 0.4rem;
+	border-bottom: 1px dashed var(--border);
+	font-size: 0.92rem;
+}
+
+.slp-table th {
+	color: var(--muted);
+	font-weight: 600;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
+.slp-table td.amount,
+.slp-table th.amount {
+	text-align: right;
+}
+
+.slp-totals {
+	display: grid;
+	gap: 0.35rem;
+	margin: 1rem 0 1.5rem;
+}
+
+.total-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 0.95rem;
+}
+
+.total-row strong {
+	font-size: 1.05rem;
+	color: var(--ink);
+}
+
+.net-pay {
+	background: #0f172a;
+	color: #fff;
+	border-radius: 14px;
+	padding: 0.9rem 1.2rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-weight: 600;
+	margin-bottom: 1rem;
+}
+
+.slp-footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-end;
+	gap: 1rem;
+	color: var(--muted);
+	font-size: 0.85rem;
+}
+
+.signature {
+	border-top: 1px solid var(--border);
+	padding-top: 0.5rem;
+	min-width: 140px;
+	text-align: center;
+}
+
+@media (max-width: 980px) {
+	.salary-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.slp-preview {
+		padding-top: 4.5rem;
+	}
+
+	.slp-logo {
+		width: 130px;
+		max-width: 60%;
+	}
+
+	.slp-details {
+		grid-template-columns: 1fr;
+	}
+
+	.slp-partitions {
+		grid-template-columns: 1fr;
+	}
+
+	.slp-left {
+		border-right: none;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.slp-right {
+		border-left: none;
+	}
+
+	.amount-section {
+		min-height: 100px;
+	}
+
+	.field-row {
+		grid-template-columns: 120px minmax(0, 1fr);
+	}
+}
+
+
+				/* ── Base export resets ── */
+				* { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+				html, body { background: #fff !important; margin: 0; padding: 0; }
+
+				/* Always two-column field layout */
+				.slp-partitions {
+					display: flex !important;
+					flex-wrap: nowrap !important;
+					grid-template-columns: unset !important;
+				}
+				.slp-left {
+					flex: 1 !important;
+					border-right: 2px solid #94a3b8 !important;
+					padding-right: 10px !important;
+					overflow: visible !important;
+				}
+				.slp-right { 
+					flex: 1 !important;
+					padding-left: 10px !important;
+					overflow: visible !important;
+				}
+
+				.slp-preview {
+					border: none !important;
+					box-shadow: none !important;
+					border-radius: 0 !important;
+					width: 100% !important;
+					padding: 0 !important;
+					box-sizing: border-box !important;
+				}
+				.pdf-export-page {
+					padding-top: 85px !important;
+				}
+				.slp-block { border-radius: 0 !important; }
+
+				/* Logo: pull out of absolute so it sits ABOVE the period line in normal flow */
+				.slip-half .slp-logo {
+					position: relative !important;
+					display: block !important;
+					top: auto !important;
+					right: auto !important;
+					width: 350px !important;
+					max-width: 70% !important;
+					margin: 1rem 0.75rem 0.1rem auto !important;
+					/* Sharpen raster image during print scaling */
+					image-rendering: -webkit-optimize-contrast !important;
+					image-rendering: crisp-edges !important;
+				}
+
+				/* Footer — full-width left-aligned address in 3 lines (Image 2 style) */
+				.footer-content {
+					display: block !important;
+				}
+				.footer-left {
+					display: none !important;
+				}
+				.footer-right {
+					text-align: right !important;
+					width: auto !important;
+					margin-left: auto !important;
+					line-height: 1.5 !important;
+					font-size: 16px !important;
+				}
+
+				/* Period heading — larger & bold */
+				.slp-period-line {
+					font-size: 26px !important;
+					font-weight: 800 !important;
+					letter-spacing: 0.04em !important;
+				}
+
+				/* Employee detail rows — increase by 3px for readability */
+				.field-row {
+					font-size: 19px !important;
+					display: flex !important;
+					white-space: nowrap !important;
+					align-items: baseline !important;
+					margin-bottom: 2px !important;
+				}
+				.field-row span {
+					width: 130px !important;
+					flex-shrink: 0 !important;
+					margin-right: 8px !important;
+					font-size: 19px !important;
+				}
+				.field-row strong {
+					font-size: 19px !important;
+				}
+
+				/* Amount section — match field size; make total bold & larger */
+				.amount-due {
+					font-size: 23px !important;
+				}
+				.amount-total {
+					font-size: 25px !important;
+					font-weight: 800 !important;
+				}
+				.amount-total strong {
+					font-size: 25px !important;
+					font-weight: 800 !important;
+				}
+
+				/* Receipt section */
+				.receipt-title {
+					font-size: 22px !important;
+					font-weight: 800 !important;
+				}
+				.receipt-text {
+					font-size: 20px !important;
+				}
+				.receipt-table td {
+					font-size: 19px !important;
+					white-space: nowrap !important;
+					padding: 0.25rem 0.75rem !important;
+				}
+				.receipt-amount {
+					font-size: 19px !important;
+				}
+				.receipt-note {
+					font-size: 17px !important;
+				}
+
+				/* Center the receipt content; center the table within the section */
+				.receipt-section {
+					text-align: center !important;
+				}
+				.receipt-table {
+					width: auto !important;
+					min-width: 380px !important;
+					margin: 0.4rem auto !important;
+					text-align: left !important;
+				}
+				.receipt-text {
+					text-align: left !important;
+					font-size: 20px !important;
+				}
+
+				/* Border line above NET PAYABLE — like a subtotal separator */
+				.receipt-total td {
+					border-top: 1.5px solid #333 !important;
+					padding-top: 4px !important;
+				}
+
+				/* ── 50 / 50 split layout ── */
+				.slp-preview {
+					display: flex !important;
+					flex-direction: column !important;
+				}
+				.slip-half {
+					flex: 1 !important;
+					min-height: 0 !important;
+					position: relative !important;
+				}
+				.slip-duplicate-half {
+					margin-top: 0 !important;
+					padding-top: 0 !important;
+				}
+				.scissors-line {
+					flex: 0 0 auto !important;
+					margin: 15px 0 !important;
+				}
+
+				/* Reduce excess whitespace inside each half */
+				.amount-section   { min-height: 35px !important; margin-top: 2px !important; }
+				.signature-section{ min-height: 25px !important; margin-top: 2px !important; }
+				.signature-label, .receipt-signature {
+					font-size: 18px !important;
+					font-weight: 800 !important;
+				}
+				.receipt-section  { margin-top: 2px !important; }
+				.slp-footer-block { margin-top: 2px !important; }
+
+				@media print {
+					@page { size: A4 portrait; margin: 5mm; }
+
+					/* Adjusted zoom to comfortably fit both enhanced slips and the doubled separation gap on a single page */
+					html { zoom: 0.55; }
+					body { background: #fff !important; }
+
+					/* Allow content to determine height naturally without clipping or page overflowing */
+					.slp-preview {
+						height: auto !important;
+						max-height: none !important;
+					}
+					.slip-half {
+						height: auto !important;
+						max-height: none !important;
+					}
+					.slip-duplicate-half {
+						height: auto !important;
+						max-height: none !important;
+					}
+					.scissors-line {
+						page-break-after: avoid !important;
+						break-after: avoid !important;
+						margin: 60px 0 !important;
+						border-top: 3px dashed #334155 !important;
+					}
+				}
+			</style>
+		</head>
+		<body>
+			<div class="pdf-export-page"><section class="slp-preview" id="pdfSlip"><div class="slip-half slip-original-half">
+							<img class="slp-logo" src="http://localhost/connect/manager_pages/Salary%20Slips/assets/company-logo.png" alt="Company logo">
+
+							<div class="slp-period-line" data-field="period_line">CONSULTANCY FEE FOR THE MONTH OF APRIL 2026</div>
+
+							<div class="slp-block">
+								<div class="slp-partitions">
+									<div class="slp-left">
+										<div class="field-row"><span>Name:</span><strong id="slipName" data-field="name">Aditya Kumar Pal</strong></div>
+										<div class="field-row"><span>M. No.:</span><strong id="slipMobile" data-field="mobile">7224864553</strong></div>
+										<div class="field-row"><span>Email ID:</span><strong id="slipEmail" data-field="email">aaadityapalbackup@gmail.com</strong></div>
+										<div class="field-row"><span>Employee ID:</span><strong id="slipEmployeeId" data-field="employee_id">DT002</strong></div>
+										<div class="field-row"><span>Joining Date:</span><strong id="slipJoiningDate" data-field="joining_date">2026-02-19</strong></div>
+									</div>
+									<div class="slp-right">
+										<div class="field-row"><span>Designation:</span><strong id="slipDesignation" data-field="designation">Studio Trainees</strong></div>
+										<div class="field-row"><span>PAN:</span><strong id="slipPan" data-field="pan">FRXPP6969D</strong></div>
+										<div class="field-row"><span>Bank A/c No:</span><strong id="slipAccount" data-field="account">696969</strong></div>
+										<div class="field-row"><span>IFSC:</span><strong id="slipIfsc" data-field="ifsc">SBIN0003965</strong></div>
+										<div class="field-row"><span>Bank Branch:</span><strong id="slipBranch" data-field="branch">Allah Hu Akbar Dadri</strong></div>
+									</div>
+								</div>
+
+								<div class="amount-section">
+									<div class="amount-due">Amount due for&nbsp;&nbsp;General Consultancy Services rendered</div>
+									<div class="amount-total">Total: <strong>Rs. <span data-field="net_amount">0</span></strong></div>
+								</div>
+
+								<div class="signature-section">
+									<div class="signature-label">Signature&nbsp;&nbsp;<span class="sig-line">________________________</span></div>
+								</div>
+
+								<div class="receipt-section">
+									<div class="receipt-title">RECEIPT</div>
+									<p class="receipt-text">
+										Received with thanks from M/S ArchitectsHive a sum of Rs. <span data-field="net_amount">0</span>/-
+										( Rupees <span data-field="net_words">Rupees</span> Only) through IMPS to A/C No. <span data-field="account">696969</span>,
+										<span data-field="bank">State Bank Of India</span> <span data-field="branch">Allah Hu Akbar Dadri</span> towards monthly consultancy fee:
+									</p>
+									<table class="receipt-table">
+										<tbody><tr>
+											<td>FEES:</td>
+											<td class="receipt-amount">Rs. <span data-field="fees_amount">0</span></td>
+										</tr>
+										<tr>
+											<td>TDS:</td>
+											<td class="receipt-amount">Rs. <span data-field="tds_amount">0</span></td>
+										</tr>
+										<tr class="receipt-note-row">
+											<td colspan="2"><span class="receipt-note">(As / Section (b) 194)</span></td>
+										</tr>
+										<tr class="receipt-total">
+											<td>NET PAYABLE:</td>
+											<td class="receipt-amount">Rs. <span data-field="net_amount">0</span></td>
+										</tr>
+									</tbody></table>
+									<div class="receipt-signature">Signature&nbsp;&nbsp;<span class="sig-line">________________________</span></div>
+								</div>
+							</div>
+
+							<div class="slp-footer-block">
+								<div class="footer-line"></div>
+								<div class="footer-content">
+									<div class="footer-left"></div>
+									<div class="footer-right">
+										F-52, First Floor, Near Gurudwara, Madhu Vihar,<br>
+										I. P. Extension, Delhi-110092 Phone: 9958600397, 7503477154<br>
+										E-Mail: <a href="mailto:contact@architectshive.com">contact@architectshive.com</a> Website: <a href="https://www.architectshive.com" target="_blank">www.architectshive.com</a>
+									</div>
+								</div>
+							</div>
+
+							</div><div class="scissors-line" aria-hidden="true">
+								<span class="scissors-icon sc-left">✂</span>
+								<span class="scissors-icon sc-center">✂</span>
+								<span class="scissors-icon sc-right">✂</span>
+							</div>
+
+							<div class="slp-duplicate slip-half slip-duplicate-half">
+								<img class="slp-logo" src="http://localhost/connect/manager_pages/Salary%20Slips/assets/company-logo.png" alt="Company logo">
+
+									<div class="slp-period-line" data-field="period_line">CONSULTANCY FEE FOR THE MONTH OF APRIL 2026</div>
+
+								<div class="slp-block">
+									<div class="slp-partitions">
+										<div class="slp-left">
+											<div class="field-row"><span>Name:</span><strong data-field="name">Aditya Kumar Pal</strong></div>
+											<div class="field-row"><span>M. No.:</span><strong data-field="mobile">7224864553</strong></div>
+											<div class="field-row"><span>Email ID:</span><strong data-field="email">aaadityapalbackup@gmail.com</strong></div>
+											<div class="field-row"><span>Employee ID:</span><strong data-field="employee_id">DT002</strong></div>
+											<div class="field-row"><span>Joining Date:</span><strong data-field="joining_date">2026-02-19</strong></div>
+										</div>
+										<div class="slp-right">
+											<div class="field-row"><span>Designation:</span><strong data-field="designation">Studio Trainees</strong></div>
+											<div class="field-row"><span>PAN:</span><strong data-field="pan">FRXPP6969D</strong></div>
+											<div class="field-row"><span>Bank A/c No:</span><strong data-field="account">696969</strong></div>
+											<div class="field-row"><span>IFSC:</span><strong data-field="ifsc">SBIN0003965</strong></div>
+											<div class="field-row"><span>Bank Branch:</span><strong data-field="branch">Allah Hu Akbar Dadri</strong></div>
+										</div>
+									</div>
+
+									<div class="amount-section">
+										<div class="amount-due">Amount due for&nbsp;&nbsp;General Consultancy Services rendered</div>
+										<div class="amount-total">Total: <strong>Rs. <span data-field="net_amount">0</span></strong></div>
+									</div>
+
+									<div class="signature-section">
+										<div class="signature-label">Signature&nbsp;&nbsp;<span class="sig-line">________________________</span></div>
+									</div>
+
+									<div class="receipt-section">
+										<div class="receipt-title">RECEIPT</div>
+										<p class="receipt-text">
+										Received with thanks from M/S ArchitectsHive a sum of Rs. <span data-field="net_amount">0</span>/-
+										( Rupees <span data-field="net_words">Rupees</span> Only) through IMPS to A/C No. <span data-field="account">696969</span>,
+										<span data-field="bank">State Bank Of India</span> <span data-field="branch">Allah Hu Akbar Dadri</span> towards monthly consultancy fee:
+									</p>
+										<table class="receipt-table">
+											<tbody><tr>
+												<td>FEES:</td>
+											<td class="receipt-amount">Rs. <span data-field="fees_amount">0</span></td>
+											</tr>
+											<tr>
+												<td>TDS:</td>
+											<td class="receipt-amount">Rs. <span data-field="tds_amount">0</span></td>
+											</tr>
+											<tr class="receipt-note-row">
+												<td colspan="2"><span class="receipt-note">(As / Section (b) 194)</span></td>
+											</tr>
+											<tr class="receipt-total">
+												<td>NET PAYABLE:</td>
+											<td class="receipt-amount">Rs. <span data-field="net_amount">0</span></td>
+											</tr>
+										</tbody></table>
+										<div class="receipt-signature">Signature&nbsp;&nbsp;<span class="sig-line">________________________</span></div>
+									</div>
+								</div>
+
+								<div class="slp-footer-block">
+									<div class="footer-line"></div>
+									<div class="footer-content">
+										<div class="footer-left"></div>
+										<div class="footer-right">
+											F-52, First Floor, Near Gurudwara, Madhu Vihar,<br>
+											I. P. Extension, Delhi-110092 Phone: 9958600397, 7503477154<br>
+											E-Mail: <a href="mailto:contact@architectshive.com">contact@architectshive.com</a> Website: <a href="https://www.architectshive.com" target="_blank">www.architectshive.com</a>
+										</div>
+									</div>
+								</div>
+							</div>
+
+						</section></div>
+		</body>
+		</html>
+	

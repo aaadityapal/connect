@@ -1,6 +1,7 @@
 "use strict";
 
 const exportButton = document.getElementById("exportPdfBtn");
+const saveButton = document.getElementById("saveSlipBtn");
 const employeeSelect = document.getElementById("employeeSelect");
 const monthSelect = document.getElementById("salaryMonth");
 const yearSelect = document.getElementById("salaryYear");
@@ -108,13 +109,13 @@ const fetchSalarySnapshot = async (userId) => {
 	}
 };
 
-const openPdfWindow = async () => {
+const generatePrintHtmlContent = async () => {
 	const slip = document.getElementById("pdfSlip");
-	if (!slip) return;
+	if (!slip) return null;
 
 	const clone = slip.cloneNode(true);
 
-	// Absolutize image paths so logo works in the blank popup
+	// Absolutize image paths so logo works in the blank popup / saved file
 	clone.querySelectorAll("img[src]").forEach((img) => {
 		img.src = new URL(img.getAttribute("src"), window.location.href).href;
 	});
@@ -154,14 +155,7 @@ const openPdfWindow = async () => {
 		console.warn("PDF export: CSS fetch failed", e);
 	}
 
-	const printWindow = window.open("", "_blank");
-	if (!printWindow) {
-		alert("Popup blocked — please allow popups for this site.");
-		return;
-	}
-
-	printWindow.document.open();
-	printWindow.document.write(`
+	return `
 		<!DOCTYPE html>
 		<html lang="en">
 		<head>
@@ -375,7 +369,21 @@ const openPdfWindow = async () => {
 			<div class="pdf-export-page">${clone.outerHTML}</div>
 		</body>
 		</html>
-	`);
+	`;
+};
+
+const openPdfWindow = async () => {
+	const html = await generatePrintHtmlContent();
+	if (!html) return;
+
+	const printWindow = window.open("", "_blank");
+	if (!printWindow) {
+		alert("Popup blocked — please allow popups for this site.");
+		return;
+	}
+
+	printWindow.document.open();
+	printWindow.document.write(html);
 
 	// Attach BEFORE document.close() — close() triggers the load event
 	printWindow.onload = () => {
@@ -386,6 +394,60 @@ const openPdfWindow = async () => {
 	};
 
 	printWindow.document.close();
+};
+
+const saveSlipToDatabase = async () => {
+	if (!employeeSelect || !employeeSelect.value) {
+		alert("Please select an employee first.");
+		return;
+	}
+
+	const saveBtn = document.getElementById("saveSlipBtn");
+	const originalText = saveBtn ? saveBtn.textContent : "Save";
+	if (saveBtn) {
+		saveBtn.disabled = true;
+		saveBtn.textContent = "Saving...";
+	}
+
+	try {
+		const html = await generatePrintHtmlContent();
+		if (!html) {
+			throw new Error("Could not generate layout content");
+		}
+
+		const userId = employeeSelect.value;
+		const userName = employeeSelect.options[employeeSelect.selectedIndex].text.replace(/\s*\([^)]*\)/g, "").trim();
+		const month = monthSelect ? monthSelect.value : "";
+		const year = yearSelect ? yearSelect.value : "";
+
+		const formData = new FormData();
+		const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+		formData.append("html_file", blob, `Salary_Slip_${month}_${year}.html`);
+		formData.append("user_id", userId);
+		formData.append("user_name", userName);
+		formData.append("month", month);
+		formData.append("year", year);
+
+		const response = await fetch("api/save_salary_slip.php", {
+			method: "POST",
+			body: formData,
+		});
+
+		const result = await response.json();
+		if (!response.ok || !result.success) {
+			throw new Error(result.message || "Failed to save salary slip");
+		}
+
+		alert("Salary slip saved successfully!");
+	} catch (error) {
+		console.error("Save salary slip error:", error);
+		alert("Error: " + error.message);
+	} finally {
+		if (saveBtn) {
+			saveBtn.disabled = false;
+			saveBtn.textContent = originalText;
+		}
+	}
 };
 
 if (employeeSelect) {
@@ -411,4 +473,110 @@ if (monthSelect && yearSelect) {
 
 if (exportButton) {
 	exportButton.addEventListener("click", openPdfWindow);
+}
+
+if (saveButton) {
+	saveButton.addEventListener("click", saveSlipToDatabase);
+}
+
+// ── Archives Modal Interactive Logic ───────────────────────────────────────
+const archivesBtn = document.getElementById("viewSavedSlipsBtn");
+const archivesOverlay = document.getElementById("archivesModalOverlay");
+const archivesClose = document.getElementById("archivesCloseBtn");
+const archivesBody = document.getElementById("archivesModalBody");
+
+const loadArchives = async () => {
+	if (!archivesBody) return;
+	archivesBody.innerHTML = `
+		<div class="archives-loading" style="text-align: center; padding: 3rem 1rem;">
+			<i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6;"></i>
+			<p style="margin-top: 1rem; color: #64748b; font-weight: 500;">Loading archives...</p>
+		</div>
+	`;
+
+	try {
+		const response = await fetch("api/list_saved_slips.php");
+		const result = await response.json();
+		if (!response.ok || !result.success) {
+			throw new Error(result.message || "Failed to load archives");
+		}
+
+		const items = result.data || [];
+		if (!items.length) {
+			archivesBody.innerHTML = `
+				<div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+					<i class="fa-solid fa-folder-open" style="font-size: 2.5rem; color: #cbd5e1; margin-bottom: 1rem;"></i>
+					<p style="font-weight: 500;">No archived salary slips found yet.</p>
+				</div>
+			`;
+			return;
+		}
+
+		let html = "";
+		items.forEach((group) => {
+			html += `
+				<div class="archive-user-group">
+					<header class="archive-user-header">
+						<i class="fa-solid fa-user-tag" style="color: #3b82f6;"></i>
+						<span>${group.user_name}</span>
+					</header>
+					<div class="archive-slips-grid">
+			`;
+
+			group.slips.forEach((slip) => {
+				html += `
+						<div class="archive-slip-card">
+							<div>
+								<div class="archive-slip-title">
+									<i class="fa-solid fa-file-invoice-dollar" style="color: #10b981;"></i>
+									<span>${slip.title}</span>
+								</div>
+								<div class="archive-slip-meta" style="margin-top: 0.3rem;">
+									<div>Saved: ${slip.date}</div>
+									<div>Size: ${slip.size}</div>
+								</div>
+							</div>
+							<div class="archive-slip-actions">
+								<a href="${slip.url}" target="_blank" class="archive-action-btn btn-view">
+									<i class="fa-solid fa-eye"></i> View
+								</a>
+								<a href="${slip.url}" download="${slip.filename}" class="archive-action-btn btn-download">
+									<i class="fa-solid fa-download"></i> Save
+								</a>
+							</div>
+						</div>
+				`;
+			});
+
+			html += `
+					</div>
+				</div>
+			`;
+		});
+
+		archivesBody.innerHTML = html;
+	} catch (err) {
+		archivesBody.innerHTML = `
+			<div style="text-align: center; padding: 2rem 1rem; color: #dc2626;">
+				<i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+				<p>${err.message}</p>
+			</div>
+		`;
+	}
+};
+
+if (archivesBtn && archivesOverlay) {
+	archivesBtn.addEventListener("click", () => {
+		archivesOverlay.style.display = "flex";
+		loadArchives();
+	});
+
+	const closeModal = () => {
+		archivesOverlay.style.display = "none";
+	};
+
+	if (archivesClose) archivesClose.addEventListener("click", closeModal);
+	archivesOverlay.addEventListener("click", (e) => {
+		if (e.target === archivesOverlay) closeModal();
+	});
 }

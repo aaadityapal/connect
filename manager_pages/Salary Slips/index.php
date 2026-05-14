@@ -193,7 +193,11 @@ function getIndianCurrency($number) {
 								</select>
 							</div>
 						</div>
-						<button class="export-btn" id="exportPdfBtn" type="button">Export to PDF</button>
+						<div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+							<button class="export-btn" id="viewSavedSlipsBtn" type="button" style="background-color: #3b82f6;"><i class="fa-solid fa-folder-open" style="margin-right: 5px;"></i> Archives</button>
+							<button class="export-btn" id="saveSlipBtn" type="button" style="background-color: #10b981;"><i class="fa-solid fa-cloud-arrow-up" style="margin-right: 5px;"></i> Save</button>
+							<button class="export-btn" id="exportPdfBtn" type="button"><i class="fa-solid fa-file-pdf" style="margin-right: 5px;"></i> Export to PDF</button>
+						</div>
 					</div>
 
 					<div class="salary-grid">
@@ -418,6 +422,32 @@ function getIndianCurrency($number) {
 				</div>
 			</div>
 		</main>
+	</div>
+
+	<!-- Premium Archives Modal Overlay -->
+	<div class="archives-modal-overlay" id="archivesModalOverlay" style="display: none;">
+		<div class="archives-modal-card">
+			<header class="archives-modal-header">
+				<div style="display: flex; align-items: center; gap: 0.75rem;">
+					<div class="modal-icon-bg">
+						<i class="fa-solid fa-folder-tree" style="color: #3b82f6;"></i>
+					</div>
+					<div>
+						<h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #0f172a;">Archived Salary Slips</h3>
+						<p style="margin: 0.2rem 0 0; font-size: 0.85rem; color: #64748b;">Browse and view saved salary slips categorized by employee</p>
+					</div>
+				</div>
+				<button class="archives-close-btn" id="archivesCloseBtn" aria-label="Close modal">
+					<i class="fa-solid fa-xmark"></i>
+				</button>
+			</header>
+			<div class="archives-modal-body" id="archivesModalBody">
+				<div class="archives-loading" style="text-align: center; padding: 3rem 1rem;">
+					<i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #3b82f6;"></i>
+					<p style="margin-top: 1rem; color: #64748b; font-weight: 500;">Loading archives...</p>
+				</div>
+			</div>
+		</div>
 	</div>
 </body>
 </html>

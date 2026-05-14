@@ -37,7 +37,7 @@ if (!file_exists($uploadDir)) {
     }
 }
 
-$requestedName = trim((string)($_POST['filename'] ?? ''));
+$requestedName = trim((string) ($_POST['filename'] ?? ''));
 if ($requestedName === '') {
     $requestedName = 'employee_salary_export_' . date('Ymd_His') . '.html';
 }
@@ -64,8 +64,7 @@ try {
     $waService = new WhatsAppService();
     $recipients = [
         '917224864553',
-        '919958600397',
-        '919718637664'
+        '919958600397'
     ];
 
     $prevMonth = new DateTime('first day of last month');

@@ -6,8 +6,8 @@ require_once __DIR__ . '/../../config/db_connect.php';
 require_once __DIR__ . '/../../whatsapp/WhatsAppService.php';
 
 $reportDate = new DateTime('first day of last month');
-$month = (int)$reportDate->format('m');
-$year = (int)$reportDate->format('Y');
+$month = (int) $reportDate->format('m');
+$year = (int) $reportDate->format('Y');
 $monthName = $reportDate->format('F');
 
 $_SESSION['user_id'] = 21;
@@ -29,12 +29,14 @@ if (!is_array($data) || ($data['status'] ?? '') !== 'success') {
     exit;
 }
 
-function h($value) {
-    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
+function h($value)
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
-function fmt($num, $decimals = 2) {
-    return number_format((float)$num, $decimals, '.', ',');
+function fmt($num, $decimals = 2)
+{
+    return number_format((float) $num, $decimals, '.', ',');
 }
 
 $headers = [
@@ -79,17 +81,17 @@ $totals = [
 ];
 
 foreach ($data['data'] as $emp) {
-    $baseSalary = (float)($emp['base_salary'] ?? 0);
-    $grossSalary = (float)($emp['gross_salary'] ?? $baseSalary);
-    $workingDays = (float)($emp['working_days'] ?? 1);
-    $salaryCalculatedDays = (float)($emp['salary_calculated_days'] ?? 0);
-    $tdsPct = (float)($emp['tds_percentage'] ?? 0) / 100;
+    $baseSalary = (float) ($emp['base_salary'] ?? 0);
+    $grossSalary = (float) ($emp['gross_salary'] ?? $baseSalary);
+    $workingDays = (float) ($emp['working_days'] ?? 1);
+    $salaryCalculatedDays = (float) ($emp['salary_calculated_days'] ?? 0);
+    $tdsPct = (float) ($emp['tds_percentage'] ?? 0) / 100;
 
     $netSalary = $workingDays > 0 ? ($salaryCalculatedDays * ($grossSalary / $workingDays)) : 0;
     $netTds = $netSalary * $tdsPct;
     $payableAfterDeduction = max(0, $netSalary - $netTds);
 
-    $overtimeAmount = (float)($emp['overtime_amount'] ?? 0);
+    $overtimeAmount = (float) ($emp['overtime_amount'] ?? 0);
     $otTds = $overtimeAmount * $tdsPct;
     $payableOtAfterDeduction = max(0, $overtimeAmount - $otTds);
 
@@ -110,23 +112,23 @@ foreach ($data['data'] as $emp) {
         . '<td>' . h($emp['name'] ?? '') . '</td>'
         . '<td>' . h($emp['role'] ?? '') . '</td>'
         . '<td>' . fmt($baseSalary) . '</td>'
-        . '<td>' . fmt((float)($emp['tds_percentage'] ?? 0), 2) . '%</td>'
+        . '<td>' . fmt((float) ($emp['tds_percentage'] ?? 0), 2) . '%</td>'
         . '<td>' . fmt($baseSalary * (1 - $tdsPct)) . '</td>'
-        . '<td>' . fmt((float)($emp['working_days'] ?? 0), 2) . '</td>'
-        . '<td>' . fmt((float)($emp['present_days'] ?? 0), 2) . '</td>'
-        . '<td>' . fmt((float)($emp['late_days'] ?? 0), 2) . '</td>'
-        . '<td>' . fmt((float)($emp['one_hour_late'] ?? 0), 2) . '</td>'
-        . '<td>' . fmt((float)($emp['leave_taken'] ?? 0), 2) . '</td>'
-        . '<td>' . fmt((float)($emp['leave_deduction'] ?? 0)) . '</td>'
-        . '<td>' . fmt((float)($emp['late_deduction'] ?? 0)) . '</td>'
-        . '<td>' . fmt((float)($emp['one_hour_late_deduction'] ?? 0)) . '</td>'
-        . '<td>' . fmt((float)($emp['fourth_saturday_deduction'] ?? 0)) . '</td>'
-        . '<td>' . fmt((float)($emp['penalty_days'] ?? 0), 2) . '</td>'
+        . '<td>' . fmt((float) ($emp['working_days'] ?? 0), 2) . '</td>'
+        . '<td>' . fmt((float) ($emp['present_days'] ?? 0), 2) . '</td>'
+        . '<td>' . fmt((float) ($emp['late_days'] ?? 0), 2) . '</td>'
+        . '<td>' . fmt((float) ($emp['one_hour_late'] ?? 0), 2) . '</td>'
+        . '<td>' . fmt((float) ($emp['leave_taken'] ?? 0), 2) . '</td>'
+        . '<td>' . fmt((float) ($emp['leave_deduction'] ?? 0)) . '</td>'
+        . '<td>' . fmt((float) ($emp['late_deduction'] ?? 0)) . '</td>'
+        . '<td>' . fmt((float) ($emp['one_hour_late_deduction'] ?? 0)) . '</td>'
+        . '<td>' . fmt((float) ($emp['fourth_saturday_deduction'] ?? 0)) . '</td>'
+        . '<td>' . fmt((float) ($emp['penalty_days'] ?? 0), 2) . '</td>'
         . '<td>' . fmt($salaryCalculatedDays, 2) . '</td>'
         . '<td>' . fmt($netSalary) . '</td>'
         . '<td>' . fmt($netTds) . '</td>'
         . '<td>' . fmt($payableAfterDeduction) . '</td>'
-        . '<td>' . fmt((float)($emp['overtime_hours'] ?? 0), 2) . '</td>'
+        . '<td>' . fmt((float) ($emp['overtime_hours'] ?? 0), 2) . '</td>'
         . '<td>' . fmt($overtimeAmount) . '</td>'
         . '<td>' . fmt($otTds) . '</td>'
         . '<td>' . fmt($payableOtAfterDeduction) . '</td>'
@@ -178,8 +180,8 @@ $html = '<!DOCTYPE html>
                 </thead>
                 <tbody>
                     ' . $rowsHtml .
-                    $totalsRow .
-                '</tbody>
+    $totalsRow .
+    '</tbody>
             </table>
         </div>
     </div>
@@ -199,8 +201,7 @@ $publicUrl = 'https://conneqts.io/uploads/employee_salary_exports/' . $filename;
 
 $recipients = [
     '917224864553',
-    '919958600397',
-    '919718637664'
+    '919958600397'
 ];
 
 $waService = new WhatsAppService();

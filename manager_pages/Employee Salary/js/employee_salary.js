@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableScrollTopInner = document.getElementById('tableScrollTopInner');
     const tableScrollMain = document.getElementById('tableScrollMain');
     const analyticsTable = document.querySelector('.analytics-table');
+    const saveAllBtn = document.getElementById('saveAllSalariesBtn');
 
     // Load data if filters are already selected
     const selectedMonth = monthSelect.value;
@@ -67,11 +68,135 @@ document.addEventListener('DOMContentLoaded', function() {
         enableDragScroll(tableScrollTop);
     }
 
+    if (saveAllBtn) {
+        saveAllBtn.addEventListener('click', saveAllSalariesSnapshot);
+    }
+
 
     // Optional: Auto-submit when filters change
     // monthSelect.addEventListener('change', () => form.submit());
     // yearSelect.addEventListener('change', () => form.submit());
 });
+
+function toNumber(value, fallback = 0) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+}
+
+function buildSalarySnapshotRows() {
+    const dataById = window.analyticsDataById || {};
+    const rows = [];
+
+    Object.keys(dataById).forEach((key) => {
+        const emp = dataById[key] || {};
+        const salaryCalcDays = toNumber(emp.salary_calculated_days, 0);
+        const baseSalary = toNumber(emp.base_salary, 0);
+        const grossSalary = toNumber(emp.gross_salary, baseSalary);
+        const workingDays = Math.max(1, toNumber(emp.working_days, 0));
+        const tdsPct = toNumber(emp.tds_percentage, 0);
+        const tdsRate = tdsPct / 100;
+
+        const netSalary = salaryCalcDays * (grossSalary / workingDays);
+        const netTds = netSalary * tdsRate;
+        const payableAfterDeduction = Math.max(0, netSalary - netTds);
+        const overtimeAmount = toNumber(emp.overtime_amount, 0);
+        const overtimeHours = toNumber(emp.overtime_hours, 0);
+        const otTds = overtimeAmount * tdsRate;
+        const payableOtAfterDeduction = Math.max(0, overtimeAmount - otTds);
+        const totalTdsAmount = netTds + otTds;
+        const totalPayableSalary = Math.max(0, payableAfterDeduction + payableOtAfterDeduction);
+        const payableSalary = Math.max(0, baseSalary * (1 - tdsRate));
+
+        rows.push({
+            user_id: toNumber(emp.id, 0),
+            employee_id: String(emp.employee_id || ''),
+            employee_name: String(emp.name || ''),
+            role: String(emp.role || ''),
+            gross_salary: grossSalary,
+            base_salary: baseSalary,
+            tds_percentage: tdsPct,
+            payable_salary: payableSalary,
+            working_days: toNumber(emp.working_days, 0),
+            present_days: toNumber(emp.present_days, 0),
+            late_days: toNumber(emp.late_days, 0),
+            one_hour_late: toNumber(emp.one_hour_late, 0),
+            leave_taken: toNumber(emp.leave_taken, 0),
+            leave_deduction: toNumber(emp.leave_deduction, 0),
+            late_deduction: toNumber(emp.late_deduction, 0),
+            one_hour_late_deduction: toNumber(emp.one_hour_late_deduction, 0),
+            fourth_saturday_deduction: toNumber(emp.fourth_saturday_deduction, 0),
+            penalty_days: toNumber(emp.penalty_days, 0),
+            salary_calculated_days: salaryCalcDays,
+            net_payable_salary: netSalary,
+            net_payable_salary_tds: netTds,
+            payable_salary_after_deduction: payableAfterDeduction,
+            overtime_hours: overtimeHours,
+            overtime_amount: overtimeAmount,
+            ot_tds: otTds,
+            payable_ot_after_deduction: payableOtAfterDeduction,
+            total_tds_amount: totalTdsAmount,
+            total_payable_salary: totalPayableSalary
+        });
+    });
+
+    return rows;
+}
+
+function saveAllSalariesSnapshot() {
+    const month = document.getElementById('month')?.value;
+    const year = document.getElementById('year')?.value;
+    const button = document.getElementById('saveAllSalariesBtn');
+
+    if (!month || !year) {
+        showNotification('Warning', 'Please select month and year before saving.', 'warning');
+        return;
+    }
+
+    const rows = buildSalarySnapshotRows();
+    if (!rows.length) {
+        showNotification('Warning', 'No data available to save. Please load analytics first.', 'warning');
+        return;
+    }
+
+    if (button) {
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    }
+
+    fetch('save_salary_snapshot.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            month: parseInt(month, 10),
+            year: parseInt(year, 10),
+            rows: rows
+        })
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Request failed');
+            }
+            return response.json();
+        })
+        .then((data) => {
+            if (data && data.status === 'success') {
+                showNotification('Success', data.message || 'All salaries saved successfully.', 'success');
+            } else {
+                showNotification('Error', data.message || 'Failed to save salaries.', 'error');
+            }
+        })
+        .catch(() => {
+            showNotification('Error', 'Error saving salaries. Please try again.', 'error');
+        })
+        .finally(() => {
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-database"></i> Save All Salaries';
+            }
+        });
+}
 
 // Notification Modal Functions
 function showNotification(title, message, type = 'success') {

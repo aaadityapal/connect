@@ -1,6 +1,112 @@
 "use strict";
 
 const exportButton = document.getElementById("exportPdfBtn");
+const employeeSelect = document.getElementById("employeeSelect");
+const monthSelect = document.getElementById("salaryMonth");
+const yearSelect = document.getElementById("salaryYear");
+
+const textFallback = "--";
+
+const setFieldText = (field, value) => {
+	const nodes = document.querySelectorAll(`[data-field="${field}"]`);
+	if (!nodes.length) return;
+	const nextValue = value && String(value).trim().length ? value : textFallback;
+	nodes.forEach((node) => {
+		node.textContent = nextValue;
+	});
+};
+
+const applyEmployeeDetails = (data) => {
+	setFieldText("name", data.name);
+	setFieldText("employee_id", data.employee_id);
+	setFieldText("designation", data.designation);
+	setFieldText("department", data.department);
+	setFieldText("mobile", data.mobile);
+	setFieldText("email", data.email);
+	setFieldText("pan", data.pan);
+	setFieldText("bank", data.bank);
+	setFieldText("account", data.account);
+	setFieldText("ifsc", data.ifsc);
+	setFieldText("joining_date", data.joining_date);
+	setFieldText("branch", data.branch);
+};
+
+const applySalarySnapshot = (data) => {
+	setFieldText("fees_amount", data.fees_amount);
+	setFieldText("tds_amount", data.tds_amount);
+	setFieldText("net_amount", data.net_amount);
+	setFieldText("net_words", data.net_words);
+};
+
+const updatePeriodLine = () => {
+	if (!monthSelect || !yearSelect) return;
+	const monthIndex = parseInt(monthSelect.value, 10);
+	const yearValue = yearSelect.value;
+	const monthNames = [
+		"January",
+		"February",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"August",
+		"September",
+		"October",
+		"November",
+		"December"
+	];
+	const monthLabel = monthNames[monthIndex - 1] || "";
+	const periodText = monthLabel ? `CONSULTANCY FEE FOR THE MONTH OF ${monthLabel} ${yearValue}` : "CONSULTANCY FEE";
+	setFieldText("period_line", periodText.toUpperCase());
+};
+
+const fetchEmployeeDetails = async (userId) => {
+	if (!userId) {
+		applyEmployeeDetails({});
+		applySalarySnapshot({});
+		return;
+	}
+
+	try {
+		const response = await fetch(`api/get_user_details.php?user_id=${encodeURIComponent(userId)}`);
+		const payload = await response.json();
+		if (!response.ok || !payload.success) {
+			throw new Error(payload.message || "Unable to load employee details");
+		}
+		applyEmployeeDetails(payload.data || {});
+	} catch (error) {
+		console.error("Salary slips: employee fetch failed", error);
+		alert("Unable to load employee details. Please try again.");
+	}
+};
+
+const fetchSalarySnapshot = async (userId) => {
+	if (!userId) {
+		applySalarySnapshot({});
+		return;
+	}
+
+	const month = monthSelect ? monthSelect.value : "";
+	const year = yearSelect ? yearSelect.value : "";
+	const query = new URLSearchParams({
+		user_id: userId,
+		month,
+		year
+	});
+
+	try {
+		const response = await fetch(`api/get_salary_snapshot.php?${query.toString()}`);
+		const payload = await response.json();
+		if (!response.ok || !payload.success) {
+			throw new Error(payload.message || "Unable to load salary snapshot");
+		}
+		applySalarySnapshot(payload.data || {});
+	} catch (error) {
+		console.error("Salary slips: snapshot fetch failed", error);
+		applySalarySnapshot({});
+	}
+};
 
 const openPdfWindow = async () => {
 	const slip = document.getElementById("pdfSlip");
@@ -231,21 +337,22 @@ const openPdfWindow = async () => {
 				@media print {
 					@page { size: A4 portrait; margin: 5mm; }
 
-					/* Adjusted zoom to 0.70 to fit large top margin and shifted cut */
-					html { zoom: 0.70; }
+					/* Adjusted zoom to fit large top margin and multi-line receipt text gracefully */
+					html { zoom: 0.64; }
 					body { background: #fff !important; }
 
-					/* Full page height split 50/50 */
+					/* Allow content to determine height naturally without clipping or page overflowing */
 					.slp-preview {
-						height: calc((297mm - 10mm) / 0.78) !important;
+						height: auto !important;
+						max-height: none !important;
 					}
 					.slip-half {
-						height: 56% !important;
-						max-height: 56% !important;
+						height: auto !important;
+						max-height: none !important;
 					}
 					.slip-duplicate-half {
-						height: 44% !important;
-						max-height: 44% !important;
+						height: auto !important;
+						max-height: none !important;
 					}
 					.scissors-line {
 						page-break-after: avoid !important;
@@ -270,6 +377,27 @@ const openPdfWindow = async () => {
 
 	printWindow.document.close();
 };
+
+if (employeeSelect) {
+	employeeSelect.addEventListener("change", (event) => {
+		const userId = event.target.value;
+		fetchEmployeeDetails(userId);
+		fetchSalarySnapshot(userId);
+	});
+}
+
+if (monthSelect && yearSelect) {
+	const refreshSnapshot = () => {
+		updatePeriodLine();
+		if (employeeSelect && employeeSelect.value) {
+			fetchSalarySnapshot(employeeSelect.value);
+		}
+	};
+
+	monthSelect.addEventListener("change", refreshSnapshot);
+	yearSelect.addEventListener("change", refreshSnapshot);
+	updatePeriodLine();
+}
 
 if (exportButton) {
 	exportButton.addEventListener("click", openPdfWindow);

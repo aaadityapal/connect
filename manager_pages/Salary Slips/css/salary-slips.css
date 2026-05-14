@@ -29,8 +29,21 @@ body.el-1 {
 
 .export-actions {
 	display: flex;
-	justify-content: flex-end;
+	justify-content: space-between;
+	align-items: flex-end;
 	margin-top: 1rem;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.filters-row {
+	display: flex;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.filter-item {
+	min-width: 160px;
 }
 
 .export-btn {
@@ -74,6 +87,30 @@ body.el-1 {
 	display: grid;
 	gap: 0.9rem;
 	margin: 0;
+}
+
+.select-label {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.12em;
+	color: var(--muted);
+	font-weight: 600;
+}
+
+.employee-select {
+	margin-top: 0.35rem;
+	width: 100%;
+	padding: 0.55rem 0.7rem;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	background: #fff;
+	font-size: 0.9rem;
+	color: var(--ink);
+}
+
+.employee-select:focus {
+	outline: 2px solid rgba(200, 30, 30, 0.2);
+	border-color: var(--accent);
 }
 
 .info-item {
@@ -344,6 +381,18 @@ body.el-1 {
 	padding: 0.25rem 0.5rem;
 	font-size: 14px;
 	font-weight: 800;
+}
+
+.receipt-note-row td {
+	padding-top: 0.1rem;
+	padding-bottom: 0.35rem;
+}
+
+.receipt-note {
+	display: inline-block;
+	font-size: 12px;
+	font-weight: 600;
+	color: #64748b;
 }
 
 .receipt-amount {

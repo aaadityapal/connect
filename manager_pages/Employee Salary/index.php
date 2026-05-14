@@ -129,6 +129,9 @@ $selectedYear = intval($selectedYear);
                             <button type="button" class="btn btn-filter" onclick="exportToExcelDetailed()" style="margin: 0;">
                                 <i class="fas fa-download"></i> Export to Excel
                             </button>
+                            <button type="button" class="btn btn-filter" id="saveAllSalariesBtn" style="margin: 0;">
+                                <i class="fas fa-database"></i> Save All Salaries
+                            </button>
                         </div>
                     </div>
                     

@@ -43,7 +43,14 @@ $isBackOfficeRole = (strpos($roleKey, 'backoffice') !== false);
 $leaveYearStart = ($month >= 3) ? $year : $year - 1; // if month >= April(3), start is same year
 $leaveYearApril = new DateTime("$leaveYearStart-04-01");
 $casualDateStart = $leaveYearApril->format('Y-m-d');
-$asOfUpperBound = $asOfDateObj ? $asOfDateStr : date('Y-m-d');
+// We want to calculate balance based on the selected month.
+// Instead of stopping at 'today', we should calculate up to the end of the selected month
+// so that any future leaves booked within this month are correctly deducted from the balance.
+if ($asOfDateObj) {
+    $asOfUpperBound = date('Y-m-t', strtotime($asOfDateStr));
+} else {
+    $asOfUpperBound = date('Y-m-t', strtotime("$year-" . ($month + 1) . "-01"));
+}
 
 try {
     // 1. Fetch balances from leave_bank

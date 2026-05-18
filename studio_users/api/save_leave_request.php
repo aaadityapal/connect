@@ -368,16 +368,19 @@ try {
         // ID 13 is Unpaid Leave. We bypass balance checks for it.
         if ($tid == 13) continue;
 
-        $stmt = $pdo->prepare("SELECT remaining_balance, total_balance, lt.name 
-                               FROM leave_bank lb 
-                               JOIN leave_types lt ON lb.leave_type_id = lt.id 
-                               WHERE lb.user_id = ? AND lb.leave_type_id = ? AND lb.year = ? FOR UPDATE");
+        $ltStmt = $pdo->prepare("SELECT name FROM leave_types WHERE id = ?");
+        $ltStmt->execute([$tid]);
+        $ltRow = $ltStmt->fetch(PDO::FETCH_ASSOC);
+        $name = $ltRow['name'] ?? 'Unknown Leave Type';
+        $nameLower = strtolower($name);
+
+        $stmt = $pdo->prepare("SELECT remaining_balance, total_balance 
+                               FROM leave_bank 
+                               WHERE user_id = ? AND leave_type_id = ? AND year = ? FOR UPDATE");
         $stmt->execute([$userId, $tid, $currentYear]);
         $bank = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $name = $bank['name'] ?? 'Unknown Leave Type';
         $avail = $bank['remaining_balance'] ?? 0;
-        $nameLower = strtolower($name);
 
         // --- DYNAMIC RECALCULATIONS FOR ACCURATE VALIDATION ---
         
@@ -407,8 +410,8 @@ try {
             }
             $earnedTotal += $earnedFromExtraWork;
 
-            $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date BETWEEN ? AND ?");
-            $usedStmt->execute([$userId, $tid, $leaveYearApril->format('Y-m-d'), $minDateStr]);
+            $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date >= ?");
+            $usedStmt->execute([$userId, $tid, $leaveYearApril->format('Y-m-d')]);
             $used = $usedStmt->fetch(PDO::FETCH_ASSOC);
             $usedTotal = $used && $used['used'] ? floatval($used['used']) : 0;
 
@@ -450,13 +453,48 @@ try {
 
             $casualDateStart = $leaveYearApril->format('Y-m-d');
             $usedStmt = $pdo->prepare("SELECT SUM(duration) as used FROM leave_request WHERE user_id = ? AND leave_type = ? AND status != 'rejected' AND start_date BETWEEN ? AND ?");
-            $upperBound = !empty($minDateStr) ? $minDateStr : date('Y-m-d');
+            $upperBound = !empty($minDateStr) ? date('Y-m-t', strtotime($minDateStr)) : date('Y-m-t');
             $usedStmt->execute([$userId, $tid, $casualDateStart, $upperBound]);
             $usedRow = $usedStmt->fetch(PDO::FETCH_ASSOC);
             $totalUsed = $usedRow && $usedRow['used'] ? floatval($usedRow['used']) : 0;
             
             $avail = max(0, $totalAccrued - $totalUsed);
             $availableCasual = $avail;
+        }
+
+        // 3. Short Leave Dynamic Re-math
+        if (strpos($nameLower, 'short') !== false) {
+            // Uses month of the earliest requested date
+            if (!empty($minDateStr)) {
+                $month = $minMonth;
+                $year = $minYear;
+            } else {
+                $month = (int)date('n');
+                $year = (int)date('Y');
+            }
+            
+            $dateObj = new DateTime("$year-$month-01");
+            $mStart = $dateObj->format('Y-m-01');
+            $mEnd = $dateObj->format('Y-m-t');
+
+            $uStmt = $pdo->prepare("
+                SELECT COUNT(*) as used 
+                FROM leave_request 
+                WHERE user_id = ? 
+                AND leave_type = ?
+                AND status != 'rejected'
+                AND start_date BETWEEN ? AND ?
+            ");
+            $uStmt->execute([$userId, $tid, $mStart, $mEnd]);
+            $uRow = $uStmt->fetch(PDO::FETCH_ASSOC);
+            $mUsed = $uRow && $uRow['used'] ? floatval($uRow['used']) : 0;
+
+            $avail = max(0, 2.0 - $mUsed);
+            
+            // If the bank record doesn't exist, spoof it so the check below passes
+            if (!$bank) {
+                $bank = ['total_balance' => 2.0];
+            }
         }
 
         if (!$bank || $avail < $count) {
@@ -469,7 +507,7 @@ try {
         }
 
         // Only explicitly decrement static leaves (like Sick Leave) because dynamic leaves compute on the fly
-        if (strpos($nameLower, 'compensation') === false && strpos($nameLower, 'comp off') === false && strpos($nameLower, 'compensate') === false && strpos($nameLower, 'casual') === false) {
+        if (strpos($nameLower, 'compensation') === false && strpos($nameLower, 'comp off') === false && strpos($nameLower, 'compensate') === false && strpos($nameLower, 'casual') === false && strpos($nameLower, 'short') === false) {
             $updateBank = $pdo->prepare("UPDATE leave_bank SET remaining_balance = remaining_balance - ? 
                                          WHERE user_id = ? AND leave_type_id = ? AND year = ?");
             $updateBank->execute([$count, $userId, $tid, $currentYear]);

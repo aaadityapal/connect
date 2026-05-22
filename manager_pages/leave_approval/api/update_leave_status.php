@@ -189,7 +189,7 @@ try {
             && !$wasManagerApproved;
 
         if ($isManagerForwardingToHR) {
-            $dStmt = $pdo->prepare("SELECT lr.start_date, lr.end_date, lr.reason, u.username AS employee_name, lt.name AS leave_type_name FROM leave_request lr JOIN users u ON lr.user_id = u.id JOIN leave_types lt ON lr.leave_type = lt.id WHERE lr.id = ? LIMIT 1");
+            $dStmt = $pdo->prepare("SELECT lr.start_date, lr.end_date, lr.reason, lr.day_type, lr.duration, lr.time_from, lr.time_to, u.username AS employee_name, lt.name AS leave_type_name FROM leave_request lr JOIN users u ON lr.user_id = u.id JOIN leave_types lt ON lr.leave_type = lt.id WHERE lr.id = ? LIMIT 1");
             $dStmt->execute([$requestId]);
             $dRow = $dStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -197,12 +197,25 @@ try {
             $leaveTypeName = $dRow['leave_type_name'] ?? ('Leave #' . ($leaveData['leave_type'] ?? 'N/A'));
             $startDate = $dRow['start_date'] ?? null;
             $endDate = $dRow['end_date'] ?? null;
+            $startDateStr = $startDate ? date('d M Y', strtotime($startDate)) : 'N/A';
+            $endDateStr = $endDate ? date('d M Y', strtotime($endDate)) : 'N/A';
             $range = ($startDate && $endDate)
                 ? (($startDate === $endDate) ? $startDate : ($startDate . ' to ' . $endDate))
                 : 'N/A';
             $reasonSnippet = isset($dRow['reason']) ? substr((string)$dRow['reason'], 0, 120) : '';
+            
+            // Format time context for WhatsApp
+            $timeInfo = "Full Day";
+            if (isset($dRow['duration']) && $dRow['duration'] < 1) {
+                if (!empty($dRow['time_from'])) {
+                    $timeInfo = date('h:i A', strtotime($dRow['time_from'])) . " - " . date('h:i A', strtotime($dRow['time_to']));
+                } else {
+                    $timeInfo = ucfirst(str_replace('_', ' ', $dRow['day_type']));
+                }
+            }
+            $leaveTypeWithTime = $leaveTypeName . ($timeInfo !== "Full Day" ? " (" . $timeInfo . ")" : "");
 
-            $hrStmt = $pdo->prepare("SELECT id, username FROM users WHERE LOWER(role) = 'hr'");
+            $hrStmt = $pdo->prepare("SELECT id, username, phone FROM users WHERE LOWER(role) = 'hr'");
             $hrStmt->execute();
             $hrUsers = $hrStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -240,13 +253,38 @@ try {
                         'due_time' => '18:00:00'
                     ]);
 
-                    foreach ($assignedIds as $hrUserId) {
+                    require_once __DIR__ . '/../../../whatsapp/WhatsAppService.php';
+                    $waService = new WhatsAppService();
+
+                    foreach ($hrUsers as $hrUser) {
+                        // Insert activity log
                         $taskLogStmt->execute([
-                            $hrUserId,
+                            $hrUser['id'],
                             $newTaskID,
                             "Conneqts Bot assigned it to you: Manager approved {$leaveTypeName} for {$employeeName}. Remaining approval is yours.",
                             $meta
                         ]);
+
+                        // Send WhatsApp Notification to HR
+                        if (!empty($hrUser['phone'])) {
+                            try {
+                                $waService->sendTemplateMessage(
+                                    $hrUser['phone'],
+                                    'admin_leave_action_required',
+                                    'en_US',
+                                    [
+                                        $hrUser['username'],        // {{1}} HR Name
+                                        $employeeName,              // {{2}} Employee Name
+                                        $startDateStr,              // {{3}} Start Date
+                                        $endDateStr,                // {{4}} End Date
+                                        $leaveTypeWithTime,         // {{5}} Leave Type
+                                        $reasonSnippet              // {{6}} Reason
+                                    ]
+                                );
+                            } catch (Throwable $waErr) {
+                                error_log("WhatsApp Error HR Notification: " . $waErr->getMessage());
+                            }
+                        }
                     }
                 }
             }

@@ -52,6 +52,9 @@ foreach ($allowedFields as $field) {
         $value = $data[$field];
         if (is_string($value)) {
             $value = trim($value);
+            if ($value === '') {
+                $value = null;
+            }
         }
         $params[":{$field}"] = $value;
     }
@@ -95,6 +98,6 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'message' => 'Failed to update employee profile'
+        'message' => 'Failed to update employee profile: ' . $e->getMessage()
     ]);
 }

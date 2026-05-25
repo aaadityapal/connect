@@ -8,3 +8,4 @@ cron_alerts.log
 config/constants.php
 whatsapp_sales_api/WhatsAppClient.php
 whatsapp_sales_api/config.php
+*.zip

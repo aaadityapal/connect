@@ -1,0 +1,31 @@
+# WhatsApp Sequence Automation — macOS Setup Guide
+# ═══════════════════════════════════════════════════
+
+# ── STEP 1: The LaunchAgent is already installed and running! ──
+# File: ~/Library/LaunchAgents/com.archweb.sequence.queue.plist
+# It fires every 60 seconds automatically in IST (Asia/Kolkata).
+
+# ── To check if it's running ──────────────────────────────────
+#   launchctl list | grep archweb
+# Output: "-    0    com.archweb.sequence.queue"  ← means active
+
+# ── To view live log output ───────────────────────────────────
+#   tail -f /tmp/archweb_sequence_queue.log
+
+# ── To view errors ────────────────────────────────────────────
+#   tail -f /tmp/archweb_sequence_queue_error.log
+
+# ── To stop the scheduler ─────────────────────────────────────
+#   launchctl unload ~/Library/LaunchAgents/com.archweb.sequence.queue.plist
+
+# ── To start the scheduler (after stop or reboot) ─────────────
+#   launchctl load ~/Library/LaunchAgents/com.archweb.sequence.queue.plist
+
+# ── To trigger it manually RIGHT NOW ──────────────────────────
+#   launchctl start com.archweb.sequence.queue
+
+# ── To test manually via browser (one-time trigger): ──────────
+#   http://localhost/archweb/admin/whatsapp_loop_new/api/process_sequence_queue.php
+
+# NOTE: This LaunchAgent auto-starts on login. No crontab needed on macOS.
+# NOTE: All times are calculated in IST (Asia/Kolkata = UTC+5:30)

@@ -1,0 +1,88 @@
+    <!-- ══════════ PAGE: CAMPAIGN REPORTS ══════════ -->
+    <div class="page-section" data-page="campaign-reports">
+      <div class="page-header">
+        <div>
+          <h1 class="page-heading">Campaign Reports</h1>
+          <p class="page-desc">Detailed view of campaigns, client totals, and queue status</p>
+        </div>
+        <button class="btn btn-secondary" id="refresh-campaign-reports" type="button">Refresh</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="#fff" stroke-width="2"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="cr-total-campaigns">0</span>
+            <span class="stat-label">Total Campaigns</span>
+          </div>
+          <div class="stat-delta positive">All time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon teal">
+            <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="2.5"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="cr-completed-campaigns">0</span>
+            <span class="stat-label">Completed Campaigns</span>
+          </div>
+          <div class="stat-delta positive">Finished</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon purple">
+            <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><circle cx="12" cy="12" r="10" stroke="#fff" stroke-width="2"/><polyline points="12,6 12,12 16,14" stroke="#fff" stroke-width="2"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="cr-queued-campaigns">0</span>
+            <span class="stat-label">Queued Campaigns</span>
+          </div>
+          <div class="stat-delta">Running</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">
+            <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#fff" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="#fff" stroke-width="2"/></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value" id="cr-total-clients">0</span>
+            <span class="stat-label">Clients in Campaigns</span>
+          </div>
+          <div class="stat-delta">Live total</div>
+        </div>
+      </div>
+
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <div class="card-icon blue">
+              <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M4 6h16M4 12h16M4 18h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <h2 class="card-title">Campaign Details</h2>
+              <p class="card-subtitle">Client totals and delivery breakdown per campaign</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Campaign</th>
+                <th>Status</th>
+                <th>Clients</th>
+                <th>Pending</th>
+                <th>Sent</th>
+                <th>Delivered</th>
+                <th>Read</th>
+                <th>Failed</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="campaign-report-tbody">
+              <tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:20px;">Loading reports...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>

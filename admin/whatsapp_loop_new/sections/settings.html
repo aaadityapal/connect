@@ -1,0 +1,24 @@
+    <!-- ══════════ PAGE: SETTINGS ══════════ -->
+    <div class="page-section" data-page="settings">
+      <div class="page-header"><div><h1 class="page-heading">Settings</h1><p class="page-desc">Configure your WhatsApp API and account preferences</p></div></div>
+      <div class="settings-grid">
+        <div class="card">
+          <div class="card-header"><div class="card-title-group"><div class="card-icon green"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="#fff" stroke-width="2"/></svg></div><div><h2 class="card-title">WhatsApp API</h2><p class="card-subtitle">Connection settings</p></div></div></div>
+          <div class="settings-form">
+            <div class="form-group"><label class="form-label">Business Phone Number ID</label><input class="form-input" type="text" value="+91 98765 00000" placeholder="Phone Number ID"/></div>
+            <div class="form-group"><label class="form-label">Access Token</label><input class="form-input" type="password" value="EAAxxxxxxxxxxxxxxx" placeholder="Meta Access Token"/></div>
+            <div class="form-group"><label class="form-label">Webhook Verify Token</label><input class="form-input" type="text" value="architectshive_wh_2026" placeholder="Verify Token"/></div>
+            <div class="wa-status" style="padding:0;margin-top:4px"><span class="status-dot pulse"></span><span style="color:var(--green-dark);font-weight:600">WhatsApp Connected</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title-group"><div class="card-icon purple"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="8" r="4" stroke="#fff" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div><div><h2 class="card-title">Profile</h2><p class="card-subtitle">Account details</p></div></div></div>
+          <div class="settings-form">
+            <div class="form-group"><label class="form-label">Business Name</label><input class="form-input" type="text" value="ArchitectsHive"/></div>
+            <div class="form-group"><label class="form-label">Admin Email</label><input class="form-input" type="email" value="admin@architectshive.com"/></div>
+            <div class="form-group"><label class="form-label">Timezone</label><select class="form-input form-select"><option selected>Asia/Kolkata (IST)</option><option>UTC</option><option>America/New_York</option></select></div>
+            <button class="btn btn-primary" style="margin-top:8px" onclick="showToast('Profile updated!', 'success')">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>

@@ -1,0 +1,144 @@
+<!-- ═══════════════════════════════════════════
+     Assign Loop Section
+═══════════════════════════════════════════ -->
+<div class="section-header">
+  <div>
+    <h1 class="section-title">Assign Loop</h1>
+    <p class="section-subtitle">Assign clients to master loops and manage their enrollment list.</p>
+  </div>
+</div>
+
+<div class="assign-modal-overlay" id="assign-timeline-modal">
+  <div class="assign-modal">
+    <div class="assign-modal-header">
+      <div>
+        <div class="assign-modal-title" id="assign-modal-title">Enrollment Timeline</div>
+        <div class="assign-modal-sub" id="assign-modal-sub">—</div>
+      </div>
+      <button class="assign-modal-close" type="button" onclick="closeAssignTimeline()">×</button>
+    </div>
+    <div class="assign-modal-stats" id="assign-modal-stats"></div>
+    <div class="assign-modal-body" id="assign-modal-body">
+      <div class="assign-modal-loading">Loading timeline...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── STATS ROW ─────────────────────────────── -->
+<div class="stats-row" style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px;">
+  <div class="stat-card" style="background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);">
+    <div style="font-size:.8rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Active Enrollments</div>
+    <div id="assign-stat-active" style="font-size:2rem;font-weight:800;color:var(--green);margin-top:4px;">—</div>
+  </div>
+  <div class="stat-card" style="background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);">
+    <div style="font-size:.8rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Completed</div>
+    <div id="assign-stat-completed" style="font-size:2rem;font-weight:800;color:var(--blue);margin-top:4px;">—</div>
+  </div>
+  <div class="stat-card" style="background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);">
+    <div style="font-size:.8rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;">Messages Sent</div>
+    <div id="assign-stat-messages" style="font-size:2rem;font-weight:800;color:var(--text);margin-top:4px;">—</div>
+  </div>
+</div>
+
+<!-- ── MAIN SPLIT ─────────────────────────────── -->
+<div style="display:grid; grid-template-columns:380px 1fr; gap:20px; align-items:start; height:calc(100vh - 220px);">
+
+  <!-- LEFT: Assign Form -->
+  <div style="display:flex;flex-direction:column;gap:16px;max-height:100%;overflow-y:auto;padding-right:6px;">
+
+    <!-- Enroll Card -->
+    <div class="sidebar-settings-card" style="background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);">
+      <div class="sidebar-title" style="font-size:.95rem;font-weight:700;padding-bottom:10px;border-bottom:1px solid var(--border);">Enroll Client into Loop</div>
+      
+      <div style="display:flex;flex-direction:column;gap:14px;margin-top:14px;">
+        <!-- Client Select -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px;">
+            <label style="font-size:.8rem;font-weight:600;color:var(--text-muted);">Select Client(s)</label>
+            <span id="assign-client-selected-count" style="font-size:.75rem;color:var(--text-muted);">0 selected</span>
+          </div>
+          <div class="assign-client-actions">
+            <button type="button" onclick="toggleAllAssignClients(true)">Select All</button>
+            <button type="button" onclick="toggleAllAssignClients(false)">Clear</button>
+          </div>
+          <div id="assign-client-checklist" class="assign-client-checklist">
+            <div class="assign-client-empty">Loading clients...</div>
+          </div>
+        </div>
+
+        <!-- Loop Select -->
+        <div>
+          <label style="font-size:.8rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;">Select Master Loop</label>
+          <select id="assign-loop-select" class="step-input" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:.9rem;background:var(--surface);color:var(--text);">
+            <option value="">-- Choose Loop --</option>
+          </select>
+        </div>
+
+        <!-- Loop Preview -->
+        <div id="assign-loop-preview" style="display:none;background:var(--bg);border-radius:8px;padding:12px;border:1px solid var(--border);font-size:.82rem;">
+          <div style="font-weight:700;margin-bottom:8px;color:var(--text);">Loop Timeline Preview</div>
+          <div id="assign-loop-preview-steps" style="display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+
+        <button class="btn btn-primary" onclick="assignLoopToClient()" style="width:100%;justify-content:center;padding:12px;">
+          <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Enroll Client(s)
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: Enrollment Table + History -->
+  <div style="display:flex;flex-direction:column;gap:16px;max-height:100%;overflow-y:auto;padding-right:6px;" id="assign-right-panel">
+
+    <div class="sidebar-settings-card" style="background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:0;box-shadow:var(--shadow);overflow:hidden;">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-weight:700;font-size:.95rem;">All Enrollments</div>
+        <button onclick="loadAssignData()" class="btn btn-secondary" style="font-size:.8rem;padding:6px 12px;">
+          <svg viewBox="0 0 24 24" fill="none" width="14" height="14"><path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="assign-table-filters">
+        <input type="text" id="assign-table-search" placeholder="Search client name or phone..." oninput="filterAssignTable()" />
+        <select id="assign-month-filter" onchange="filterAssignTable()">
+          <option value="">All Months</option>
+          <option value="1">Jan</option>
+          <option value="2">Feb</option>
+          <option value="3">Mar</option>
+          <option value="4">Apr</option>
+          <option value="5">May</option>
+          <option value="6">Jun</option>
+          <option value="7">Jul</option>
+          <option value="8">Aug</option>
+          <option value="9">Sep</option>
+          <option value="10">Oct</option>
+          <option value="11">Nov</option>
+          <option value="12">Dec</option>
+        </select>
+        <select id="assign-year-filter" onchange="filterAssignTable()">
+          <option value="">All Years</option>
+        </select>
+      </div>
+      <div class="assign-table-scroll" style="overflow-x:auto;">
+        <table id="assign-table" style="width:100%;border-collapse:collapse;font-size:.85rem;">
+          <thead>
+            <tr style="background:var(--bg);text-align:left;">
+              <th style="padding:12px 16px;font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Client</th>
+              <th style="padding:12px 16px;font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Loop</th>
+              <th style="padding:12px 16px;font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Progress</th>
+              <th style="padding:12px 16px;font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Next Send</th>
+              <th style="padding:12px 16px;font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Status</th>
+              <th style="padding:12px 16px;font-size:.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="assign-table-body">
+            <tr><td colspan="6" style="padding:40px;text-align:center;color:var(--text-muted);">Loading enrollments...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>

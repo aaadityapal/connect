@@ -1,0 +1,24 @@
+CREATE TABLE IF NOT EXISTS master_loops (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  status ENUM('draft','active') NOT NULL DEFAULT 'draft',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS master_loop_steps (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  master_loop_id INT NOT NULL,
+  step_order INT NOT NULL,
+  template_key VARCHAR(255) NOT NULL,
+  header_type VARCHAR(20) NOT NULL DEFAULT 'NONE',
+  delay_value INT NOT NULL DEFAULT 0,
+  delay_unit VARCHAR(20) NOT NULL DEFAULT 'days',
+  media_path VARCHAR(500) DEFAULT NULL,
+  media_filename VARCHAR(255) DEFAULT NULL,
+  media_wa_id VARCHAR(255) DEFAULT NULL,
+  media_wa_id_updated_at DATETIME DEFAULT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (master_loop_id) REFERENCES master_loops(id) ON DELETE CASCADE,
+  INDEX idx_master_loop_id (master_loop_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

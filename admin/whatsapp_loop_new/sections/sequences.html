@@ -1,0 +1,193 @@
+<!-- ═══════════════════════════════════════════
+   Automated Sequences (Nurture Loops) Section
+═══════════════════════════════════════════ -->
+
+<div class="page-section" id="sequences-section">
+  
+  <!-- VIEW 1: SEQUENCES LIST DASHBOARD -->
+  <div id="seq-list-view">
+    <div class="page-header">
+      <div>
+        <h1 class="page-heading">Automated Drip Loops</h1>
+        <p class="page-desc">Design year-long continuous template sequences sent on autopilot</p>
+      </div>
+      <button class="btn btn-primary" id="btn-new-sequence" onclick="openSequenceBuilder()">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Create New Loop
+      </button>
+    </div>
+
+    <!-- STATS OVERVIEW -->
+    <section class="stats-grid" style="margin-top: 8px;">
+      <div class="stat-card">
+        <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M8 6h10M8 12h10M8 18h10M4 6h.01M4 12h.01M4 18h.01" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-active-loops">2</span>
+          <span class="stat-label">Active Sequences</span>
+        </div>
+        <div class="stat-delta positive">Running 24/7</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="#fff" stroke-width="2"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-clients-enrolled">48</span>
+          <span class="stat-label">Clients Enrolled</span>
+        </div>
+        <div class="stat-delta positive">+6 enrolled today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon teal"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="stat-loop-messages">312</span>
+          <span class="stat-label">Loop Messages Sent</span>
+        </div>
+        <div class="stat-delta neutral">Automated drips</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M18 8c-2.5 0-4.5 3.5-6 8s-3.5 8-6 8a4 4 0 010-8c2.5 0 4.5-3.5 6-8s3.5-8 6-8a4 4 0 010 8z" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value">100%</span>
+          <span class="stat-label">Reply Persistence</span>
+        </div>
+        <div class="stat-delta neutral">Never stops on reply</div>
+      </div>
+    </section>
+
+    <!-- ACTIVE SEQUENCES GRID -->
+    <div class="sequences-list-grid" id="sequences-grid" style="margin-top: 24px;">
+      <!-- Populated dynamically by JS -->
+    </div>
+  </div>
+
+  <!-- VIEW 2: SEQUENCE BUILDER -->
+  <div id="seq-builder-view" class="hidden">
+    <div class="page-header">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button class="btn-icon-only" onclick="closeSequenceBuilder()" title="Back to list" style="background: var(--surface); border: 1px solid var(--border);">
+          <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+        <div>
+          <input type="text" id="builder-seq-title" class="page-heading" value="New Nurture Loop" style="border: none; background: transparent; width: 100%; border-bottom: 2px dashed transparent; padding-bottom: 2px;" onfocus="this.style.borderBottomColor='var(--green)'" onblur="this.style.borderBottomColor='transparent'"/>
+          <p class="page-desc">Click title above to edit. Manage template loop triggers below.</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-secondary" onclick="simulateSequenceTick()">
+          <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Simulate Cron Tick
+        </button>
+        <button class="btn btn-primary" onclick="saveCurrentSequence()">
+          <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="7,3 7,8 15,8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Save Sequence
+        </button>
+      </div>
+    </div>
+
+    <div class="sequence-builder-container" style="margin-top: 16px;">
+      
+      <!-- LEFT BUILDER TIMELINE (CANVAS) -->
+      <div class="builder-main" id="dropZone" ondrop="dropTemplateOnCanvas(event)" ondragover="allowTemplateDrop(event)" style="background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px; border-radius: var(--radius); border: 1px solid var(--border); min-height: 400px; padding: 24px; position: relative; background-color: var(--surface);">
+        
+        <div class="empty-canvas-state" id="builder-empty-state" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--text-muted); pointer-events: none;">
+            <svg viewBox="0 0 24 24" fill="none" width="48" height="48" style="margin-bottom:16px; opacity: 0.5;"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <h4>Start Building</h4>
+            <p style="font-size: .9rem;">Drag and drop templates from the right panel to create your loop.</p>
+        </div>
+
+        <div class="sequence-steps-timeline" id="builder-steps-container" style="padding-left: 0;">
+          <!-- Populated by JS -->
+        </div>
+        
+        <div id="addNodePlaceholder" style="text-align: center; padding: 20px; border: 2px dashed var(--green); border-radius: var(--radius); color: var(--green-dark); margin-top: 20px; display: none; background: var(--green-light);">
+          Drop template here to add step
+        </div>
+      </div>
+
+      <!-- RIGHT SIDEBAR: TOOLBOX & LOOP RULES -->
+      <div class="builder-sidebar">
+        
+        <!-- TOOLBOX: TEMPLATES LIST -->
+        <div class="sidebar-settings-card">
+          <div class="sidebar-title">Templates Toolbox</div>
+          <p style="font-size: .8rem; color: var(--text-muted); margin-top:-6px; margin-bottom: 12px;">Drag to the canvas to add a step</p>
+          <div id="templates-toolbox-list" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto; padding-right: 4px;">
+            <!-- Populated by JS -->
+            <div style="font-size: .8rem; color: var(--text-muted); text-align: center; padding: 10px;">Loading templates...</div>
+          </div>
+        </div>
+        
+        <!-- RULE: PERSISTENT LOOP -->
+        <div class="sidebar-settings-card">
+          <div class="sidebar-title">Execution Rules</div>
+          
+          <label class="persistent-loop-toggle" title="Ensures clients receive all scheduled drip messages without stopping">
+            <input type="checkbox" id="seq-persist-toggle" checked/>
+            <div class="toggle-texts">
+              <span class="toggle-title">Persistent Loop</span>
+              <span class="toggle-hint">Chronological triggers continue regardless of client replies.</span>
+            </div>
+          </label>
+
+          <label class="persistent-loop-toggle" style="margin-top: 12px; border-top: 1px solid var(--border); padding-top: 12px;" title="Automatically pauses this sequence for a client if they send a reply">
+            <input type="checkbox" id="seq-stop-reply-toggle" checked/>
+            <div class="toggle-texts">
+              <span class="toggle-title">Auto-Stop on Reply</span>
+              <span class="toggle-hint">Highly Recommended. Pauses the loop if client replies to prevent pestering.</span>
+            </div>
+          </label>
+
+          <div class="info-alert" style="margin-top: 12px;">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span>Templates are scheduled relative to previous sent dates.</span>
+          </div>
+        </div>
+
+        <!-- ENROLL CLIENTS -->
+        <div class="sidebar-settings-card">
+          <div class="sidebar-title">Enrolled Audience</div>
+          
+          <div class="setting-row">
+            <label class="step-label">Add Specific Clients</label>
+            <div style="display: flex; gap: 8px; position: relative;">
+              <div class="custom-dropdown-container" style="flex: 1;">
+                <div class="custom-dropdown-trigger" id="seq-client-trigger" onclick="toggleDropdown(this)">
+                  <span class="selected-text">-- Choose Client --</span>
+                  <svg class="chevron" viewBox="0 0 24 24" fill="none" width="14" height="14" stroke="currentColor"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="custom-dropdown-menu" id="seq-client-drawer-options" style="max-height: 250px; overflow-y: auto;">
+                  <!-- Populated dynamically -->
+                </div>
+                <input type="hidden" id="seq-client-select" value=""/>
+              </div>
+              <button class="btn btn-secondary" style="padding: 0 14px;" onclick="enrollClientToSequence()">Add</button>
+            </div>
+          </div>
+
+          <!-- PROJECTED TIMELINE (Appears on client selection) -->
+          <div id="timeline-card" style="display:none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+            <div class="sidebar-title" style="border-bottom: 0; padding-bottom: 4px; font-size: .8rem;">Projected Timeline</div>
+            <div id="projection-container" class="timeline-projection-list">
+              <!-- Dates injected via JS -->
+            </div>
+            <div style="font-size: .62rem; color: var(--text-muted); margin-top: 10px; font-style: italic;">
+              *Schedule relative to enrollment date.
+            </div>
+          </div>
+
+          <div class="setting-row" style="margin-top: 16px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="step-label">Active Enrollees</span>
+              <span style="font-size: .75rem; color: var(--blue); cursor: pointer;" onclick="enrollAllClientsToSequence()">Enroll All</span>
+            </div>
+            <div class="enrollment-list" id="seq-enrolled-list">
+              <!-- Enrollees appear here -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+</div>

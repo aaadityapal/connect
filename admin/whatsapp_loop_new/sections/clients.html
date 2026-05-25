@@ -1,0 +1,414 @@
+    <!-- ══════════ PAGE: CLIENTS ══════════ -->
+    <div class="page-section" data-page="clients">
+      <div class="page-header">
+        <div>
+          <h1 class="page-heading">Clients</h1>
+          <p class="page-desc">Manage your broadcast audience list</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" id="import-excel-btn" onclick="openImportExcelModal()">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Import Excel
+          </button>
+          <button class="btn btn-primary" id="add-client-btn" onclick="openAddClientModal()"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Add Client</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title-group"><div class="card-icon blue"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#fff" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="#fff" stroke-width="2"/></svg></div><div><h2 class="card-title">All Clients</h2><p class="card-subtitle" id="client-count-subtitle">0 contacts in your list</p></div></div>
+          <div style="display: flex; gap: 10px;">
+            <select id="clients-month-filter" style="border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;outline:none;font-size:.875rem;background:var(--bg);color:var(--text);cursor:pointer;" onchange="renderClientsTable()">
+              <option value="All">All Months</option>
+            </select>
+            <select id="clients-tag-filter" style="border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;outline:none;font-size:.875rem;background:var(--bg);color:var(--text);cursor:pointer;" onchange="renderClientsTable()">
+              <option value="All">All Tags</option>
+            </select>
+            <div class="client-search-wrap" style="border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;width:220px;display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" fill="none" width="15" height="15"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input class="client-search" id="clients-page-search" type="text" placeholder="Search clients…" style="border:none;outline:none;flex:1;font-size:.875rem;background:transparent;"/></div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="clients-table">
+            <thead><tr><th>Name</th><th>Phone</th><th>Added</th><th>Active Sequences</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="clients-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination-controls" style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-top:1px solid var(--border);">
+          <div style="font-size:0.85rem; color:var(--text-muted);" id="clients-pagination-info">Showing 0 to 0 of 0 entries</div>
+          <div style="display:flex; gap:5px;">
+            <button class="btn btn-secondary" id="btn-prev-page" onclick="changeClientsPage(-1)" style="padding:5px 10px; font-size:0.85rem;" disabled>Previous</button>
+            <button class="btn btn-secondary" id="btn-next-page" onclick="changeClientsPage(1)" style="padding:5px 10px; font-size:0.85rem;" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- ══ ADD CLIENT MODAL ══ -->
+<div class="modal-overlay" id="add-client-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="#fff" stroke-width="2"/><line x1="19" y1="8" x2="19" y2="14" stroke="#fff" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="11" x2="22" y2="11" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <h2 class="modal-title" id="client-modal-title">Add New Client</h2>
+          <p class="modal-subtitle" id="client-modal-subtitle">Add a contact to your broadcast list</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeAddClientModal()" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-form-grid">
+        <div class="modal-form-group">
+          <label class="form-label" for="new-client-name">Full Name <span class="required-star">*</span></label>
+          <input class="form-input" id="new-client-name" type="text" placeholder="e.g. Rahul Sharma"/>
+        </div>
+        <div class="modal-form-group">
+          <label class="form-label" for="new-client-phone">WhatsApp Number <span class="required-star">*</span></label>
+          <div class="phone-input-wrap">
+            <span class="phone-prefix">+91</span>
+            <input class="form-input phone-input" id="new-client-phone" type="tel" placeholder="98765 43210" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')"/>
+          </div>
+        </div>
+        <div class="modal-form-group full-width">
+          <label class="form-label" for="new-client-email">Email Address <span class="optional-tag">Optional</span></label>
+          <input class="form-input" id="new-client-email" type="email" placeholder="rahul@example.com"/>
+        </div>
+        <div class="modal-form-group full-width">
+          <label class="form-label">Tags <span class="optional-tag">Optional</span></label>
+          <div class="custom-tag-input-wrap" style="display:flex; gap:8px; margin-bottom:8px;">
+            <input type="text" class="form-input" id="custom-tag-input" placeholder="Type custom tag and press Enter..." onkeypress="if(event.key==='Enter') { event.preventDefault(); addCustomTag('tag-selector', 'custom-tag-input'); }">
+            <button type="button" class="btn btn-secondary" onclick="addCustomTag('tag-selector', 'custom-tag-input')">Add</button>
+          </div>
+          <div class="tag-selector" id="tag-selector">
+            <!-- Dynamic tags will be loaded here -->
+          </div>
+        </div>
+        <div class="modal-form-group full-width">
+          <label class="form-label" for="new-client-notes">Notes <span class="optional-tag">Optional</span></label>
+          <textarea class="form-input" id="new-client-notes" rows="2" placeholder="Any notes about this client…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeAddClientModal()">Cancel</button>
+      <button class="btn btn-primary" id="save-client-btn" onclick="saveNewClient()">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="save-client-btn-text">Save Client</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM DELETE MODAL ══ -->
+<div class="modal-overlay" id="confirm-delete-modal">
+  <div class="modal-box" style="max-width: 400px; text-align: center;">
+    <div class="modal-body" style="padding-top: 30px;">
+      <div style="width: 50px; height: 50px; background: #fee2e2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+        <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h3 style="margin-bottom: 8px; font-size: 1.1rem; color: var(--text);">Remove Client?</h3>
+      <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.4;" id="confirm-delete-text">Are you sure you want to remove this client?</p>
+    </div>
+    <div class="modal-footer" style="justify-content: center; border-top: none; padding-bottom: 24px; background: transparent;">
+      <button class="btn btn-secondary" onclick="closeConfirmDeleteModal()">Cancel</button>
+      <button class="btn btn-primary" id="confirm-delete-btn" style="background: #ef4444; border-color: #ef4444;" onclick="executeClientDeletion()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ IMPORT EXCEL MODAL ══ -->
+<div class="modal-overlay" id="import-excel-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-icon" style="background: linear-gradient(135deg, #10b981, #047857); box-shadow: 0 2px 8px rgba(16,185,129,.3);">
+          <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="14 2 14 8 20 8" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="18" x2="12" y2="12" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="9 15 12 18 15 15" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <h2 class="modal-title">Import Clients (Excel/CSV)</h2>
+          <p class="modal-subtitle">Upload a file to bulk add contacts.</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeImportExcelModal()" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="upload-dropzone" id="excel-dropzone" onclick="document.getElementById('excel-file-input').click()">
+        <svg viewBox="0 0 24 24" fill="none" width="40" height="40" style="color: var(--green); margin-bottom: 12px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17 8 12 3 7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h4 style="margin-bottom: 4px; color: var(--text);">Click or drag file to this area to upload</h4>
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Support for a single or bulk upload. Strictly prohibit from uploading company data or other band files. Expected columns: Name, Phone (with or without country code), Email (Optional).</p>
+        <input type="file" id="excel-file-input" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" style="display: none;">
+      </div>
+      <div id="excel-preview-container" style="display: none; margin-top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h4 style="font-size: 0.9rem; color: var(--text);">Data Preview <span id="excel-preview-count" style="color: var(--text-muted); font-size: 0.8rem; font-weight: normal; margin-left: 5px;">(0 rows)</span></h4>
+          <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="resetExcelUpload()">Change File</button>
+        </div>
+        <div class="table-wrap" style="max-height: 200px; overflow-y: auto;">
+          <table class="data-table" style="font-size: 0.8rem;">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody id="excel-preview-tbody">
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-form-group full-width" style="margin-top: 15px;">
+          <label class="form-label">Assign Default Tags to Imported Clients <span class="optional-tag">Optional</span></label>
+          <div class="custom-tag-input-wrap" style="display:flex; gap:8px; margin-bottom:8px;">
+            <input type="text" class="form-input" id="import-custom-tag-input" placeholder="Type custom tag and press Enter..." onkeypress="if(event.key==='Enter') { event.preventDefault(); addCustomTag('import-tag-selector', 'import-custom-tag-input'); }">
+            <button type="button" class="btn btn-secondary" onclick="addCustomTag('import-tag-selector', 'import-custom-tag-input')">Add</button>
+          </div>
+          <div class="tag-selector" id="import-tag-selector">
+            <!-- Dynamic tags will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeImportExcelModal()">Cancel</button>
+      <button class="btn btn-primary" id="import-confirm-btn" onclick="executeExcelImport()" disabled>
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="7 10 12 15 17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Import Data
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ IMPORT DUPLICATES MODAL ══ -->
+<div class="modal-overlay" id="import-duplicates-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 2px 8px rgba(245,158,11,.3);">
+          <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="13" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="17" x2="12.01" y2="17" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <h2 class="modal-title">Duplicates Skipped</h2>
+          <p class="modal-subtitle" id="duplicates-subtitle">The following contacts were already in your database.</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeDuplicatesModal()" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="table-wrap" style="max-height: 300px; overflow-y: auto;">
+        <table class="data-table" style="font-size: 0.8rem;">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone Number</th>
+            </tr>
+          </thead>
+          <tbody id="duplicates-tbody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeDuplicatesModal()">Acknowledge</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIEW CLIENT MODAL ══ -->
+<div class="modal-overlay" id="view-client-modal">
+  <div class="modal-box" style="max-width: 600px;">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb); box-shadow: 0 2px 8px rgba(59,130,246,.3);">
+          <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="#fff" stroke-width="2"/></svg>
+        </div>
+        <div>
+          <h2 class="modal-title">Client Details</h2>
+          <p class="modal-subtitle">View contact and sequence information</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeViewClientModal()" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" style="padding-bottom: 30px;">
+      
+      <!-- Client Info Section -->
+      <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="font-size: 1rem; margin-bottom: 15px; display:flex; justify-content:space-between;">
+          <span id="view-client-name" style="font-weight: 700;">Name</span>
+          <span id="view-client-status" class="status-badge badge-delivered">Active</span>
+        </h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.85rem;">
+          <div>
+            <div style="color: var(--text-muted); margin-bottom: 3px;">Phone Number</div>
+            <div id="view-client-phone" style="font-weight: 600;">--</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); margin-bottom: 3px;">Email Address</div>
+            <div id="view-client-email" style="font-weight: 600;">--</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); margin-bottom: 3px;">Added Date</div>
+            <div id="view-client-date" style="font-weight: 600;">--</div>
+          </div>
+          <div>
+            <div style="color: var(--text-muted); margin-bottom: 3px;">Tags</div>
+            <div id="view-client-tags" class="client-tags-list">--</div>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <div style="color: var(--text-muted); margin-bottom: 3px;">Notes</div>
+            <div id="view-client-notes" style="background: var(--surface); padding: 10px; border-radius: 6px; border: 1px dashed var(--border); min-height: 40px; white-space: pre-wrap;">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dummy Sequence Section -->
+      <h3 style="font-size: 0.9rem; font-weight: 700; margin-bottom: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Active Sequences</h3>
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+        <div style="padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(37,211,102,.05);">
+          <div>
+            <h4 style="font-size: 1rem; font-weight: 700; color: var(--green-dark);">Annual Nurture Campaign</h4>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">365 Days Sequence</div>
+          </div>
+          <span style="background: var(--green); color: #fff; font-size: 0.7rem; padding: 3px 8px; border-radius: 10px; font-weight: 700;">Running</span>
+        </div>
+        <div style="padding: 20px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px;">
+            <span style="font-weight: 600;">Overall Progress</span>
+            <span style="color: var(--text-muted);">Day 142 of 365</span>
+          </div>
+          <!-- Progress Bar -->
+          <div style="height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-bottom: 25px;">
+            <div style="height: 100%; width: 38%; background: linear-gradient(90deg, var(--green), #4ade80); border-radius: 4px;"></div>
+          </div>
+          
+          <!-- Timeline View Container (Scrollable) -->
+          <div style="max-height: 250px; overflow-y: auto; padding-right: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 15px;">
+            <div style="position: relative; padding-left: 18px; margin-left: 8px; border-left: 2px solid var(--border);">
+              
+              <!-- Completed Event -->
+              <div style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); z-index: 2; display: flex; align-items: center; justify-content: center;">
+                  <svg viewBox="0 0 24 24" fill="none" width="8" height="8"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div style="padding-left: 5px;">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 3px;">Day 1 (Added)</div>
+                  <div style="font-size: 0.9rem; font-weight: 700; color: var(--text);">Welcome Message Sent</div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; background: var(--bg); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); display: inline-block;">"Hi there! Welcome to ArchitectsHive..."</div>
+                </div>
+              </div>
+
+              <!-- Completed Event -->
+              <div style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); z-index: 2; display: flex; align-items: center; justify-content: center;">
+                  <svg viewBox="0 0 24 24" fill="none" width="8" height="8"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div style="padding-left: 5px;">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 3px;">Day 30</div>
+                  <div style="font-size: 0.9rem; font-weight: 700; color: var(--text);">First Month Check-in</div>
+                </div>
+              </div>
+
+              <!-- Completed Event -->
+              <div style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); z-index: 2; display: flex; align-items: center; justify-content: center;">
+                  <svg viewBox="0 0 24 24" fill="none" width="8" height="8"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div style="padding-left: 5px;">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 3px;">Day 60</div>
+                  <div style="font-size: 0.9rem; font-weight: 700; color: var(--text);">New Features Update</div>
+                </div>
+              </div>
+
+              <!-- Completed Event -->
+              <div style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); z-index: 2; display: flex; align-items: center; justify-content: center;">
+                  <svg viewBox="0 0 24 24" fill="none" width="8" height="8"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div style="padding-left: 5px;">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 3px;">Day 90</div>
+                  <div style="font-size: 0.9rem; font-weight: 700; color: var(--text);">Quarterly Feedback Survey</div>
+                </div>
+              </div>
+
+              <!-- Completed Event -->
+              <div style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--green); border: 2px solid var(--surface); z-index: 2; display: flex; align-items: center; justify-content: center;">
+                  <svg viewBox="0 0 24 24" fill="none" width="8" height="8"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div style="padding-left: 5px;">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 3px;">Day 120</div>
+                  <div style="font-size: 0.9rem; font-weight: 700; color: var(--text);">Exclusive Resource Drop</div>
+                </div>
+              </div>
+
+              <!-- Current/Active Event -->
+              <div style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2.5px solid var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); z-index: 2;">
+                  <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 5px; height: 5px; background: var(--blue); border-radius: 50%;"></div>
+                </div>
+                <div style="padding-left: 5px;">
+                  <div style="font-size: 0.75rem; color: var(--blue); font-weight: 700; margin-bottom: 3px;">Day 142 (Today)</div>
+                  <div style="font-size: 0.9rem; font-weight: 700; color: var(--text);">Mid-Year Resource Guide</div>
+                  <div style="font-size: 0.8rem; color: var(--blue); margin-top: 4px;">Processing... Will be sent at 10:00 AM</div>
+                </div>
+              </div>
+
+              <!-- Future Event -->
+              <div style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border); z-index: 2;"></div>
+                <div style="padding-left: 5px; opacity: 0.6;">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 3px;">Day 180</div>
+                  <div style="font-size: 0.9rem; font-weight: 600; color: var(--text);">6 Month Check-in</div>
+                </div>
+              </div>
+
+              <!-- Future Event -->
+              <div style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border); z-index: 2;"></div>
+                <div style="padding-left: 5px; opacity: 0.6;">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 3px;">Day 240</div>
+                  <div style="font-size: 0.9rem; font-weight: 600; color: var(--text);">Pro Tips Series</div>
+                </div>
+              </div>
+
+              <!-- Future Event -->
+              <div style="position: relative; margin-bottom: 25px;">
+                <div style="position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border); z-index: 2;"></div>
+                <div style="padding-left: 5px; opacity: 0.6;">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 3px;">Day 300</div>
+                  <div style="font-size: 0.9rem; font-weight: 600; color: var(--text);">Upcoming Renewal Notice</div>
+                </div>
+              </div>
+
+              <!-- Future Event -->
+              <div style="position: relative; margin-bottom: 0;">
+                <div style="position: absolute; left: -26px; top: 0; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border); z-index: 2;"></div>
+                <div style="padding-left: 5px; opacity: 0.6;">
+                  <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 3px;">Day 365</div>
+                  <div style="font-size: 0.9rem; font-weight: 600; color: var(--text);">Anniversary Celebration</div>
+                  <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">223 messages remaining until completion</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+          <div style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: var(--text-muted);">
+            <em>Note: This is dummy data. Backend connection coming soon.</em>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>

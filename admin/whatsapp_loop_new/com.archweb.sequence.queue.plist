@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.archweb.sequence.queue</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Applications/XAMPP/xamppfiles/bin/php</string>
+        <string>/Applications/XAMPP/xamppfiles/htdocs/archweb/admin/whatsapp_loop_new/api/process_sequence_queue.php</string>
+    </array>
+
+    <!-- Run every 60 seconds -->
+    <key>StartInterval</key>
+    <integer>60</integer>
+
+    <!-- Auto-restart if it crashes -->
+    <key>KeepAlive</key>
+    <false/>
+
+    <!-- Log output to files -->
+    <key>StandardOutPath</key>
+    <string>/tmp/archweb_sequence_queue.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/tmp/archweb_sequence_queue_error.log</string>
+
+    <!-- Run in IST environment -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>TZ</key>
+        <string>Asia/Kolkata</string>
+    </dict>
+</dict>
+</plist>

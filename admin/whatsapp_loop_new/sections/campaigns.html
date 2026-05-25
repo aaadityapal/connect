@@ -1,0 +1,266 @@
+    <!-- ══ A. CAMPAIGN SETUP CARD ══ -->
+    <section class="card campaign-setup" id="campaign-setup">
+      <div class="card-header">
+        <div class="card-title-group">
+          <div class="card-icon green">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <h2 class="card-title">New Broadcast Campaign</h2>
+            <p class="card-subtitle">Configure and launch your WhatsApp broadcast</p>
+          </div>
+        </div>
+        <span class="status-chip draft">Draft</span>
+      </div>
+
+      <div class="form-grid">
+        <!-- Campaign Name -->
+        <div class="form-group full-width">
+          <label class="form-label" for="campaign-name">Campaign Name</label>
+          <input class="form-input" id="campaign-name" type="text" placeholder="e.g. May Promo Blast – 2026"/>
+        </div>
+
+        <!-- Select Template -->
+        <div class="form-group">
+          <label class="form-label" for="template-select">Select Template</label>
+          <div class="select-wrapper">
+            <select class="form-input form-select" id="template-select">
+              <option value="">-- Choose a template --</option>
+            </select>
+            <svg class="select-arrow" viewBox="0 0 24 24" fill="none" width="16" height="16"><polyline points="6,9 12,15 18,9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+
+        <!-- Template Media Upload -->
+        <div class="form-group hidden" id="template-media-group">
+          <label class="form-label" for="template-media">Template Media</label>
+          <input class="form-input" id="template-media" type="file" />
+          <span class="template-media-help" id="template-media-help"></span>
+        </div>
+
+        <!-- Preview Message -->
+        <div class="form-group full-width" id="preview-group">
+          <label class="form-label">Message Preview</label>
+          <div class="wa-preview" id="wa-preview">
+            <div class="wa-bubble">
+              <div class="preview-media-wrap hidden" id="preview-media-wrap"></div>
+              <p id="preview-text">Select a template above to preview the message here.</p>
+              <div class="wa-meta">
+                <span>15:14</span>
+                <svg class="tick-icon delivered" viewBox="0 0 16 11" fill="none" width="16" height="11">
+                  <path d="M1 5.5L5 9.5L11 1.5" stroke="#53bdeb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M5 5.5L9 9.5L15 1.5" stroke="#53bdeb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audience -->
+        <div class="form-group full-width">
+          <label class="form-label">Select Audience</label>
+          <div class="audience-row">
+            <div class="toggle-group">
+              <label class="toggle-label" for="all-clients-toggle">Send to All Clients</label>
+              <label class="toggle-switch">
+                <input type="checkbox" id="all-clients-toggle"/>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="client-multiselect" id="client-multiselect">
+            <div class="client-search-wrap">
+              <svg viewBox="0 0 24 24" fill="none" width="15" height="15"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <input class="client-search" id="client-search" type="text" placeholder="Search clients…"/>
+            </div>
+            <div class="client-list" id="client-list">
+              <!-- Populated by JS -->
+            </div>
+            <div class="client-tags" id="client-tags"></div>
+          </div>
+        </div>
+
+        <!-- Scheduling -->
+        <div class="form-group full-width">
+          <label class="form-label">Scheduling</label>
+          <div class="radio-group" id="schedule-group">
+            <label class="radio-option" for="send-now">
+              <input type="radio" name="schedule" id="send-now" value="now" checked/>
+              <span class="radio-custom"></span>
+              <span>Send Now</span>
+            </label>
+            <label class="radio-option" for="send-later">
+              <input type="radio" name="schedule" id="send-later" value="later"/>
+              <span class="radio-custom"></span>
+              <span>Schedule</span>
+            </label>
+          </div>
+          <div class="datetime-row hidden" id="datetime-row">
+            <input type="date" class="form-input" id="schedule-date"/>
+            <input type="time" class="form-input" id="schedule-time"/>
+          </div>
+        </div>
+
+        <!-- Repeat -->
+        <div class="form-group">
+          <label class="form-label">Repeat Message</label>
+          <div class="toggle-group inline-toggle">
+            <label class="toggle-label" for="repeat-toggle">Enable Repeat</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="repeat-toggle"/>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="repeat-options hidden" id="repeat-options">
+            <label class="radio-option small" for="r-24"><input type="radio" name="repeat" id="r-24" value="24h" checked/><span class="radio-custom"></span><span>Every 24 Hours</span></label>
+            <label class="radio-option small" for="r-48"><input type="radio" name="repeat" id="r-48" value="48h"/><span class="radio-custom"></span><span>Every 2 Days</span></label>
+            <label class="radio-option small" for="r-custom"><input type="radio" name="repeat" id="r-custom" value="custom"/><span class="radio-custom"></span><span>Custom Interval</span></label>
+            <div class="custom-interval hidden" id="custom-interval">
+              <input type="number" class="form-input small-input" id="interval-val" min="1" value="3" placeholder="3"/>
+              <select class="form-input small-input" id="interval-unit">
+                <option value="hours">Hours</option>
+                <option value="days" selected>Days</option>
+                <option value="weeks">Weeks</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stop Condition -->
+        <div class="form-group">
+          <label class="form-label">Stop Condition</label>
+          <label class="checkbox-option" for="stop-on-reply">
+            <input type="checkbox" id="stop-on-reply" checked/>
+            <span class="checkbox-custom"></span>
+            <div>
+              <span class="checkbox-label">Stop sending if client replies</span>
+              <span class="checkbox-hint">Prevents spam when a conversation starts</span>
+            </div>
+          </label>
+        </div>
+
+        <!-- CTA Buttons -->
+        <div class="form-group full-width cta-row">
+          <button class="btn btn-primary" id="start-campaign-btn">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><polygon points="5,3 19,12 5,21" fill="currentColor"/></svg>
+            Start Campaign
+          </button>
+          <button class="btn btn-secondary" id="save-draft-btn">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="7,3 7,8 15,8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Save Draft
+          </button>
+        </div>
+      </div>
+
+    <!-- ══ B. STATS CARDS ══ -->
+    <section class="stats-grid" id="stats-section" style="margin-top:24px">
+      <div class="stat-card" id="stat-total">
+        <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="#fff" stroke-width="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="sv-total">248</span>
+          <span class="stat-label">Total Clients</span>
+        </div>
+        <div class="stat-delta positive">+12 this week</div>
+      </div>
+      <div class="stat-card" id="stat-sent">
+        <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="sv-sent">0</span>
+          <span class="stat-label">Messages Sent</span>
+        </div>
+        <div class="stat-delta neutral">Current campaign</div>
+      </div>
+      <div class="stat-card" id="stat-delivered">
+        <div class="stat-icon teal"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="sv-delivered">0</span>
+          <span class="stat-label">Delivered</span>
+        </div>
+        <div class="stat-delta neutral" id="delivery-rate">0% rate</div>
+      </div>
+      <div class="stat-card" id="stat-replies">
+        <div class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="stat-info">
+          <span class="stat-value" id="sv-replies">0</span>
+          <span class="stat-label">Replies Received</span>
+        </div>
+        <div class="stat-delta neutral" id="reply-rate">0% response</div>
+      </div>
+    </section>
+
+    <!-- ══ C. DELIVERY TABLE ══ -->
+    <section class="card" id="delivery-table-section" style="margin-top:24px">
+      <div class="card-header">
+        <div class="card-title-group">
+          <div class="card-icon teal">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="9" y="3" width="6" height="4" rx="1" stroke="#fff" stroke-width="2"/></svg>
+          </div>
+          <div>
+            <h2 class="card-title">Client Delivery Status</h2>
+            <p class="card-subtitle">Real-time delivery tracking for each client</p>
+          </div>
+        </div>
+        <div class="table-filters">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="sent">Sent</button>
+          <button class="filter-btn" data-filter="delivered">Delivered</button>
+          <button class="filter-btn" data-filter="read">Read</button>
+          <button class="filter-btn" data-filter="replied">Replied</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="delivery-table">
+          <thead>
+            <tr>
+              <th>Client Name</th>
+              <th>Phone Number</th>
+              <th>Status</th>
+              <th>Last Sent</th>
+              <th>Next Scheduled</th>
+            </tr>
+          </thead>
+          <tbody id="delivery-tbody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="campaign-log-section" style="margin-top:24px">
+      <div class="card-header">
+        <div class="card-title-group">
+          <div class="card-icon purple">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M4 6h16M4 12h16M4 18h10" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <h2 class="card-title">Campaign Status Log</h2>
+            <p class="card-subtitle">Queued, sent, delivered, read, and failed message events</p>
+          </div>
+        </div>
+        <button class="btn btn-secondary" id="refresh-campaign-log-btn" type="button">Refresh Log</button>
+      </div>
+      <div class="campaign-log-list" id="campaign-log-list">
+        <div class="campaign-log-empty">No campaign log loaded yet.</div>
+      </div>
+    </section>
+
+    <!-- ══ D. ACTIVITY FEED ══ 
+    <section class="card activity-card" id="activity-section" style="margin-top:24px">
+      <div class="card-header">
+        <div class="card-title-group">
+          <div class="card-icon purple">
+            <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="12" r="10" stroke="#fff" stroke-width="2"/><polyline points="12,6 12,12 16,14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <h2 class="card-title">Activity Feed</h2>
+            <p class="card-subtitle">Live campaign event logs</p>
+          </div>
+        </div>
+        <span class="live-badge">
+          <span class="live-dot"></span>Live
+        </span>
+      </div>
+      <div class="activity-list" id="activity-list">
+      </div>
+    </section>
+    -->

@@ -1,0 +1,31 @@
+    <!-- ══════════ PAGE: DASHBOARD ══════════ -->
+    <div class="page-section" data-page="dashboard">
+      <div class="page-header">
+        <h1 class="page-heading">Dashboard</h1>
+        <p class="page-desc">Overview of your WhatsApp broadcast performance</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="#fff" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="#fff" stroke-width="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#fff" stroke-width="2"/></svg></div><div class="stat-info"><span class="stat-value" id="dash-total-clients">...</span><span class="stat-label">Total Clients</span></div><div class="stat-delta positive">Live DB Data</div></div>
+        <div class="stat-card"><div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="#fff" stroke-width="2"/></svg></div><div class="stat-info"><span class="stat-value" id="dash-active-campaigns">...</span><span class="stat-label">Active Campaigns</span></div><div class="stat-delta positive">Live DB Data</div></div>
+        <div class="stat-card"><div class="stat-icon teal"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M20 6L9 17l-5-5" stroke="#fff" stroke-width="2.5"/></svg></div><div class="stat-info"><span class="stat-value" id="dash-messages-sent">...</span><span class="stat-label">Messages Sent</span></div><div class="stat-delta positive">Live DB Data</div></div>
+        <div class="stat-card"><div class="stat-icon purple"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#fff" stroke-width="2"/></svg></div><div class="stat-info"><span class="stat-value" id="dash-delivery-rate">...</span><span class="stat-label">Delivery Rate</span></div><div class="stat-delta positive">Live DB Data</div></div>
+      </div>
+      <div class="dash-grid">
+        <div class="card">
+          <div class="card-header"><div class="card-title-group"><div class="card-icon green"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="#fff" stroke-width="2"/></svg></div><div><h2 class="card-title">Recent Campaigns</h2><p class="card-subtitle">Last 5 broadcast runs</p></div></div></div>
+          <div class="dash-campaign-list" id="dash-recent-activity">
+            <!-- Populated by JS from DB -->
+            <div style="padding: 20px; text-align: center; color: var(--text-muted);">Loading recent activity...</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title-group"><div class="card-icon purple"><svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="12" r="10" stroke="#fff" stroke-width="2"/><polyline points="12,6 12,12 16,14" stroke="#fff" stroke-width="2"/></svg></div><div><h2 class="card-title">Quick Actions</h2><p class="card-subtitle">Common tasks</p></div></div></div>
+          <div class="quick-actions">
+            <button class="quick-action-btn" onclick="navigateTo('campaigns', event)"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2"/></svg><span>New Campaign</span></button>
+            <button class="quick-action-btn" onclick="navigateTo('clients', event)"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/></svg><span>Manage Clients</span></button>
+            <button class="quick-action-btn" onclick="navigateTo('templates', event)"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2"/><polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2"/></svg><span>View Templates</span></button>
+            <button class="quick-action-btn" onclick="navigateTo('analytics', event)"><svg viewBox="0 0 24 24" fill="none" width="20" height="20"><line x1="18" y1="20" x2="18" y2="10" stroke="currentColor" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" stroke-width="2"/><line x1="6" y1="20" x2="6" y2="14" stroke="currentColor" stroke-width="2"/></svg><span>Analytics</span></button>
+          </div>
+        </div>
+      </div>
+    </div>

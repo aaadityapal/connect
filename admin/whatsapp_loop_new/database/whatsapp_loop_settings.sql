@@ -1,0 +1,12 @@
+DROP TABLE IF EXISTS `settings`;
+
+CREATE TABLE `settings` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `setting_key` VARCHAR(50) NOT NULL,
+  `setting_value` TEXT DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `key_unique` (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+

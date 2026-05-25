@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Broadcast Campaign – ArchitectsHive</title>
+  <meta name="description" content="WhatsApp Broadcast Campaign System – send approved template messages to multiple clients with scheduling and tracking."/>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  
+  <!-- Core CSS -->
+  <link rel="stylesheet" href="css/main.css"/>
+  
+  <!-- Section CSS -->
+  <link rel="stylesheet" href="css/dashboard.css"/>
+  <link rel="stylesheet" href="css/clients.css"/>
+  <link rel="stylesheet" href="css/templates.css"/>
+  <link rel="stylesheet" href="css/campaigns.css"/>
+  <link rel="stylesheet" href="css/analytics.css"/>
+  <link rel="stylesheet" href="css/settings.css"/>
+  <link rel="stylesheet" href="css/sequences.css"/>
+  <link rel="stylesheet" href="css/create-master-loop.css"/>
+  <link rel="stylesheet" href="css/whatsapp-web.css"/>
+  <link rel="icon" href="data:,">
+</head>
+<body>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="nav-left">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" width="20" height="20">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="9,22 9,12 15,12 15,22" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="logo-text">ArchitectsHive</span>
+    </div>
+    <div class="page-title">
+      <span class="breadcrumb">Campaigns</span>
+      <span class="breadcrumb-sep">›</span>
+      <span class="page-name" id="current-page-name">Broadcast Campaign</span>
+    </div>
+  </div>
+  <div class="nav-right">
+    <button class="nav-btn" id="notif-btn" title="Notifications">
+      <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+        <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="notif-badge">3</span>
+    </button>
+    
+    <!-- NOTIFICATION DROPDOWN -->
+    <div class="notif-dropdown" id="notif-dropdown">
+      <div class="notif-header">
+        <h3>Notifications</h3>
+        <span onclick="document.querySelectorAll('.notif-item').forEach(el=>el.classList.remove('unread')); document.querySelector('.notif-badge').style.display='none';">Mark all read</span>
+      </div>
+      <div class="notif-body" id="notif-body">
+        <div style="padding:30px;text-align:center;color:var(--text-muted);font-size:.875rem;">Loading notifications…</div>
+      </div>
+      <div class="notif-footer">
+        <a href="#analytics" onclick="navigateTo('analytics'); document.getElementById('notif-dropdown').classList.remove('show');">View Activity Logs</a>
+      </div>
+    </div>
+    <div class="nav-avatar" id="nav-avatar">
+      <img src="https://ui-avatars.com/api/?name=Admin+User&background=25D366&color=fff&size=36" alt="Profile" width="36" height="36"/>
+      <div class="avatar-info">
+        <span class="avatar-name">Admin User</span>
+        <span class="avatar-role">Super Admin</span>
+      </div>
+    </div>
+
+    <!-- PROFILE DROPDOWN -->
+    <div class="profile-dropdown" id="profile-dropdown">
+      <div class="profile-dropdown-header">
+        <img src="https://ui-avatars.com/api/?name=Admin+User&background=25D366&color=fff&size=48" alt="Profile" width="48" height="48" style="border-radius:50%;"/>
+        <div>
+          <div style="font-weight:700;font-size:.95rem;">Admin User</div>
+          <div style="font-size:.75rem;color:var(--text-muted);">admin@architectshive.com</div>
+          <span class="profile-role-badge">Super Admin</span>
+        </div>
+      </div>
+      <div class="profile-dropdown-divider"></div>
+      <a class="profile-dropdown-item" onclick="navigateTo('settings'); document.getElementById('profile-dropdown').classList.remove('show');">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        My Profile
+      </a>
+      <a class="profile-dropdown-item" onclick="navigateTo('settings'); document.getElementById('profile-dropdown').classList.remove('show');">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="2"/></svg>
+        Settings
+      </a>
+      <a class="profile-dropdown-item" onclick="navigateTo('analytics'); document.getElementById('profile-dropdown').classList.remove('show');">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><line x1="18" y1="20" x2="18" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="20" x2="6" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Activity Logs
+      </a>
+      <div class="profile-dropdown-divider"></div>
+      <a class="profile-dropdown-item" style="color:#6b7280;">
+        <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Help &amp; Support
+      </a>
+      <div class="profile-dropdown-divider"></div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════ LAYOUT WRAPPER ═══════════════════ -->
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" id="sidebar">
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item" id="nav-dashboard" onclick="navigateTo('dashboard', event)">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-clients" onclick="navigateTo('clients', event)">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Clients</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-templates" onclick="navigateTo('templates', event)">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="14,2 14,8 20,8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polyline points="10,9 9,9 8,9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Templates</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-campaigns" onclick="navigateTo('campaigns', event)">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Campaigns</span>
+        <span class="nav-badge">2</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-campaign-reports" onclick="navigateTo('campaign-reports', event)">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><line x1="18" y1="20" x2="18" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="20" x2="6" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Campaign Reports</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-assign" onclick="navigateTo('assign', event)">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="19" y1="8" x2="19" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="22" y1="11" x2="16" y2="11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Assign Loop</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-create-master-loop" onclick="navigateTo('create-master-loop', event)">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="2"/></svg>
+        <span>Create Master Loop</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-analytics" onclick="navigateTo('analytics', event)">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><line x1="18" y1="20" x2="18" y2="10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="20" x2="12" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="6" y1="20" x2="6" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span>Analytics</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-whatsapp-web" onclick="navigateTo('whatsapp-web', event)">
+        <svg viewBox="0 0 448 512" fill="currentColor" width="18" height="18"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L3 496l133.9-35.1c32.7 17.8 69.4 27.2 107.1 27.2 122.4 0 222-99.6 222-222 0-59.3-23-115.1-65-157.1zM223.9 446.2c-33.2 0-65.7-8.9-94-25.7l-6.7-4-79.8 20.9 21.3-77.8-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.7-184.6 184.7zm100.6-115.1c-5.5-2.7-32.6-16.1-37.7-17.9-5.1-1.8-8.8-2.7-12.5 2.7-3.7 5.5-14.3 17.9-17.6 21.6-3.2 3.7-6.5 4.1-12 1.4-5.5-2.7-23.2-8.5-44.2-27.1-16.4-14.6-27.4-32.7-30.6-38.2-3.2-5.5-.3-8.5 2.4-11.2 2.5-2.4 5.5-6.4 8.2-9.6 2.7-3.2 3.7-5.5 5.5-9.1 1.8-3.7.9-6.9-.5-9.6-1.4-2.7-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.5-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 13.2 5.7 23.6 9.2 31.6 11.7 13.3 4.2 25.4 3.6 35 2.2 10.7-1.6 32.6-13.3 37.2-26.2 4.6-12.8 4.6-23.8 3.2-26.2-1.3-2.4-5-3.8-10.5-6.5z"/></svg>
+        <span>WhatsApp</span>
+      </a>
+      <a href="#" class="nav-item" id="nav-settings" onclick="navigateTo('settings', event)">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="2"/></svg>
+        <span>Settings</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="wa-status">
+        <span class="status-dot pulse"></span>
+        <span>WhatsApp Connected</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main-content" id="main-content">
+    <!-- Sections will be loaded here -->
+    <div id="section-container"></div>
+  </main>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- SheetJS for Excel Import -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- Core Scripts -->
+<script src="js/app.js"></script>
+
+<!-- Section Scripts -->
+<script src="js/dashboard.js"></script>
+<script src="js/clients.js"></script>
+<script src="js/templates.js"></script>
+<script src="js/campaigns.js"></script>
+<script src="js/campaign-reports.js"></script>
+<script src="js/analytics.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/sequences.js"></script>
+<script src="js/assign.js"></script>
+<script src="js/create-master-loop.js"></script>
+<script src="js/whatsapp-web.js"></script>
+
+
+</body>
+</html>

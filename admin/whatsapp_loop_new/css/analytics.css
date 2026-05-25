@@ -1,0 +1,15 @@
+/* ANALYTICS BARS */
+.analytics-bars { display:flex; flex-direction:column; gap:16px; padding:8px 0; }
+.analytics-row { display:flex; flex-direction:column; gap:6px; }
+.analytics-row-header { display:flex; justify-content:space-between; align-items:center; }
+.analytics-row-name { font-size:.875rem; font-weight:600; }
+.analytics-row-val { font-size:.8rem; color:var(--text-muted); }
+.analytics-bar-track {
+  height:10px; background:var(--bg); border-radius:20px; overflow:hidden;
+  display:flex; gap:2px;
+}
+.analytics-bar-fill {
+  height:100%; border-radius:20px; transition:width .8s cubic-bezier(.4,0,.2,1);
+}
+.bar-delivered { background:linear-gradient(90deg,var(--green),var(--green-dark)); }
+.bar-replied   { background:linear-gradient(90deg,var(--purple),#7c3aed); }

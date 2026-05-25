@@ -1,0 +1,84 @@
+[
+    {
+        "name": "2_day_followup_loop",
+        "language": "en_US",
+        "components": [
+            {
+                "type": "HEADER",
+                "format": "IMAGE",
+                "example": {
+                    "header_handle": [
+                        "https:\/\/scontent.whatsapp.net\/v\/t61.29466-34\/636726895_1461637735322757_3671337021495262159_n.jpg?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=Q9eYCgRxGEYQ7kNvwHDOxAw&_nc_oc=AdnTAocermECFEOH90Uo_YB7qy8n8vSC7NSPJEimUB_Yp-zpzK7u2Lltn6V9bvZChrnLcNHGYc6otOXUodPe6Wyg&_nc_zt=3&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&_nc_gid=cJi0K-f-XnNBCMIg7FpGFw&_nc_tpa=Q5bMBQH56xW2pY8u5H--4tn3tF5ik8y71I8uvobaI0czTsct0tmNz1XPfOyMAq_OU0VMFUdnzrhHebyEdw&oh=01_Q5Aa3wEFEKtfPkgqoZyvaWiU_LnXMz15LPqafes8sS08s0j4Gg&oe=69BFC6DD"
+                    ]
+                }
+            },
+            {
+                "type": "BODY",
+                "text": "Hello *{{1}}*, \ud83d\udc4b\n\nGreetings from *ArchitectsHive!* \ud83c\udfdb\ufe0f\u2728\n\n*YOUR DReAM, OUR DESGN, WE CNSTRCT*\n\n*We provide services like:*\n\n\u27a4 Concept Finalization \u2014 Finalizing your design vision\n\u27a4 3D Views \u2014 Realistic space previews\n\u27a4 Working Drawings \u2014 Execution-ready plans\n\u27a4 Vendor Management \u2014 Coordinating partners\n\u27a4 Site Execution \u2014 On-site work delivery\n\u27a4 Regular Site Visits \u2014 Progress monitoring\n\u27a4 Audio-Video Support \u2014 Ongoing assistance\n\nWarm Regards,\n*Team ArchitectsHive* \ud83c\udfe2\n*(A-Hive Sales)*",
+                "example": {
+                    "body_text": [
+                        [
+                            "Aditya"
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "BUTTONS",
+                "buttons": [
+                    {
+                        "type": "URL",
+                        "text": "Book Consultation",
+                        "url": "https:\/\/architectshive.com\/#quick-services"
+                    },
+                    {
+                        "type": "URL",
+                        "text": "Browse Projects",
+                        "url": "https:\/\/architectshive.com\/projects-showcase"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "day_1_follow_up_template",
+        "language": "en_US",
+        "components": [
+            {
+                "type": "HEADER",
+                "format": "VIDEO",
+                "example": {
+                    "header_handle": [
+                        "https:\/\/scontent.whatsapp.net\/v\/t61.29466-34\/534415314_2056844004858847_5126336537140205670_n.mp4?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=vzejJMdyMgQQ7kNvwFVWgUy&_nc_oc=Adk7UtVCMWUbYTUxVUyQJ7-ZHwYKOa4LlKbC8qXNOL7kOLzQJN4YeKjojraOSFAkVnp2O5fXIpyL6kwbaKRBlpkl&_nc_zt=28&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&_nc_gid=cJi0K-f-XnNBCMIg7FpGFw&_nc_tpa=Q5bMBQExRrbZa-5zJQ_LKeL_UpUa2AODUR_JtHyTK2QhFaxKPI8OZd2y-VcplQN9KKC-8x8RIxZPcVnVqw&oh=01_Q5Aa3wEzDuZHnkwlKcmXuieUIva2l7C3yYB0IFNV7D2v0OgVJg&oe=69BFB662"
+                    ]
+                }
+            },
+            {
+                "type": "BODY",
+                "text": "Hello *{{1}}*, \ud83d\udc4b\n\nGreetings from *ArchitectsHive!* \ud83c\udfdb\ufe0f\u2728\n\nAs one of the fast-growing brands in *Architectural & Interior Design Services across the NCR region* \ud83d\ude80, we are recognized for delivering quality work and ensuring complete client satisfaction \ud83e\udd1d\n\n*Your opinion matters to us!*\nWe would love to know about your experience with our services.\n\nPlease select an option below that best describes your experience:\n\n\u2b07\ufe0f *Rate Your Experience* \u2b07\ufe0f\n\nWarm Regards,\n*Team ArchitectsHive* \ud83c\udfe2\n*(A-Hive Sales)*",
+                "example": {
+                    "body_text": [
+                        [
+                            "Aditya"
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "BUTTONS",
+                "buttons": [
+                    {
+                        "type": "URL",
+                        "text": "Loved It",
+                        "url": "https:\/\/www.google.com\/maps\/place\/ArchitectsHive\/@28.636965,77.3002958,17z\/data=!3m2!4b1!5s0x390cfb4c1cfaaa45:0xbbc95304a87ad5b4!4m18!1m9!3m8!1s0x390cfb3b59c3fd59:0x93d892655b4e58af!2sArchitectsHive!8m2!3d28.6369603!4d77.3028707!9m1!1b1!16s%2Fg%2F11y7hxkg95!3m7!1s0x390cfb3b59c3fd59:0x93d892655b4e58af!8m2!3d28.6369603!4d77.3028707!9m1!1b1!16s%2Fg%2F11y7hxkg95?entry=ttu&g_ep=EgoyMDI2MDIxNy4wIKXMDSoASAFQAw%3D%3D"
+                    },
+                    {
+                        "type": "PHONE_NUMBER",
+                        "text": "Need Improvement",
+                        "phone_number": "+917503468992"
+                    }
+                ]
+            }
+        ]
+    }
+]
